@@ -22,10 +22,15 @@ class Data: NSObject, DataProtocal {
     
     static let LastExpandedKey = "lastExpanded";
     static let likesKey = "likes";
-
+    internal var likesCache:[String]?;
     
     override init(){
         self.defaults = NSUserDefaults.standardUserDefaults()
+        if (likesCache == nil){
+            likesCache =  defaults.stringArrayForKey(Data.likesKey) ?? [];
+            print("likes:")
+            print(likesCache)
+        }
     }
     
     var lastExpanded:[String]{
@@ -44,20 +49,28 @@ class Data: NSObject, DataProtocal {
     
     var likes:[String]{
         get {
-            return defaults.stringArrayForKey(Data.likesKey) ?? [];
+            return likesCache!
         }
     }
     
     func like(path:String){
-        let likes = NSMutableArray(array: self.likes);
-        likes.addObject(path);
-        defaults.setObject(likes, forKey: Data.likesKey)
+        likesCache?.append(path)
+        defaults.setObject(likesCache, forKey: Data.likesKey)
     }
     
     func unlike(path:String){
-        let likes = NSMutableArray(array: self.likes);
-        likes.addObject(path);
-        defaults.setObject(likes, forKey: Data.likesKey)
+        likesCache?.removeAtIndex((likesCache?.indexOf(path))!);
+//        let likes = NSMutableSet(array: self.likes);
+//        likes.removeObject(path);
+//        defaults.setObject(likes.allObjects, forKey: Data.likesKey)
+    }
+    
+    func isLike(path:String) -> Bool{
+        return likesCache?.contains(path) ?? false
+    }
+    
+    func persist(){
+        defaults.synchronize()
     }
 
 }

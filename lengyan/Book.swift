@@ -8,6 +8,67 @@
 
 import UIKit
 
+let KEY_PATHS = [
+    "/A2/B1",
+    "/A2/B1/C2/D1/E2",
+    "/A2/B1/C2/D1/E2/F1",
+    "/A2/B1/C2/D1/E2/F1/G1/H1",
+    "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K1",
+    "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K2",
+    "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K3",
+    "/A2/B1/C2/D1/E2/F1/G1/H2",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M1",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M2",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M3",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M4",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K3",
+    "/A2/B1/C2/D1/E2/F1/G2",
+    "/A2/B1/C2/D1/E2/F2",
+    "/A2/B1/C2/D1/E2/F2/G2/H2/I1/J1",
+    "/A2/B1/C2/D1/E2/F2/G2/H2/I1/J2",
+    "/A2/B1/C2/D1/E3",
+    "/A2/B1/C2/D1/E3/F1",
+    "/A2/B1/C2/D1/E3/F1/G2/H1",
+    "/A2/B1/C2/D1/E3/F1/G2/H1/I2/J2/K1",
+    "/A2/B1/C2/D1/E3/F1/G2/H1/I2/J2/K2",
+    "/A2/B1/C2/D1/E3/F1/G2/H2",
+    "/A2/B1/C2/D1/E3/F1/G2/H3",
+    "/A2/B1/C2/D1/E3/F1/G2/H4",
+    "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K1/L1",
+    "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K1/L2",
+    "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K1/L3",
+    "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K1/L4",
+    "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K2",
+    "/A2/B1/C2/D1/E3/F1/G2/H4/I4",
+    "/A2/B1/C2/D1/E3/F2",
+    "/A2/B1/C2/D1/E3/F2/G1/H2",
+    "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M1",
+    "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M2",
+    "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M3",
+    "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M4",
+    "/A2/B1/C2/D1/E3/F2/G2/H1",
+    "/A2/B1/C2/D1/E3/F2/G2/H2",
+    "/A2/B1/C2/D1/E4",
+    "/A2/B1/C2/D1/E4/F2/G3",
+    "/A2/B1/C2/D1/E4/F2/G4",
+    "/A2/B2",
+    "/A2/B2/C1",
+    "/A2/B2/C1/D2/E2/F1",
+    "/A2/B2/C1/D2/E2/F2",
+    "/A2/B2/C1/D2/E3",
+    "/A2/B2/C2",
+    "/A2/B2/C2/D1",
+    "/A2/B2/C2/D1/E3/F1",
+    "/A2/B2/C2/D1/E3/F2",
+    "/A2/B2/C2/D1/E3/F3",
+    "/A2/B2/C2/D2",
+    "/A2/B2/C2/D2/E2/F1/G1",
+    "/A2/B2/C2/D2/E2/F1/G2",
+]
+
 class Book: NSObject {
     static let data:Book = Book()
     
@@ -16,12 +77,12 @@ class Book: NSObject {
     var index:[[String:String]]? = nil
     
     func itemOfPath(path:String) -> [String:AnyObject] {
-        if path == "" || path == "/" {
+        if path == "" || path == "/" || path == (self.tree!["path"] as! String){
             return self.tree!
         }
         var node = tree;
         for id in path.componentsSeparatedByString("/") {
-            if(id==""){continue}
+            if(id == "" || node!["children"] == nil ){continue}
             let children = node!["children"] as! NSArray as! [[String:AnyObject]]
             node = children.filter({
                 $0["id"] as! String == id

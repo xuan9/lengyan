@@ -12,17 +12,18 @@ import UIKit
 class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
     private var treeView: RATreeView!
-    internal var tree:NSArray?
+    internal var tree:[[String:AnyObject]]?;
     
     override func viewDidLoad() {
         super.viewDidLoad()
         let bounds:CGRect = self.view.bounds;
         
         treeView = RATreeView(frame: CGRect(
-            origin: CGPoint(x:bounds.origin.x  ,y:bounds.origin.y),
-            size:   CGSize(width: bounds.size.width , height:bounds.size.height-(self.tabBarController?.tabBar.bounds.size.height ?? 0))));
+            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 110),
+            size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height  - 110 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
         treeView.delegate = self
         treeView.dataSource = self
+        treeView.rowHeight = 34;
         treeView.backgroundColor = UIColor.whiteColor()
         view.backgroundColor = UIColor.whiteColor()
         treeView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
@@ -31,8 +32,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(SutraFrontViewController.longPress(_:)))
         self.treeView.addGestureRecognizer(longPressRecognizer)
         
-        self.loadRootTree();
-        
+        Book.data.loadDataWithCompletionHandler { (Void) in
+            self.showList()
+        }
         NSNotificationCenter.defaultCenter().addObserver(
             self,
             selector: #selector(SutraIndexViewController.onApplicationWillTerminate),
@@ -40,23 +42,23 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             object: nil)
     }
     
-    func loadRootTree(){
-        Book.data.loadDataWithCompletionHandler { (Void) in
+    func showList(){
             var firstLevelItems=[[String:AnyObject]]();
-            firstLevelItems.append(["name":"总科","header":true]);
-            firstLevelItems.append(Book.data.itemOfPath("/A1"));
-            firstLevelItems.append(Book.data.itemOfPath("/A2"));
-            firstLevelItems.append(Book.data.itemOfPath("/A3"));
-            firstLevelItems.append(["name":"精选","header":true]);
-            firstLevelItems.append(Book.data.itemOfPath("/A2/B1"));
-            firstLevelItems.append(Book.data.itemOfPath("/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M1"));
-            firstLevelItems.append(Book.data.itemOfPath("/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M2"));
+//            firstLevelItems.append(["name":"大佛頂如來密因修證了義諸菩薩萬行首楞嚴經","header":true]);
+//            for item in (Book.data.tree!["children"] as! NSArray) {
+//                firstLevelItems.append(item as! [String : AnyObject]);
+//            }
+//            firstLevelItems.append(["name":"★精选","header":true]);
+            let sortedLikes = KEY_PATHS;//Data.shared.likes.sort({$0 < $1})
+            for like in sortedLikes {
+                firstLevelItems.append(Book.data.itemOfPath(like))
+            }
             self.tree = firstLevelItems;
             dispatch_async(dispatch_get_main_queue()){
                 self.treeView.reloadData()
             }
-        }
     }
+
     
     //Called, when long press occurred
     func longPress(longPressGestureRecognizer: UILongPressGestureRecognizer) {
@@ -69,7 +71,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     func openItem(item: NSDictionary){
         if(item["children"] == nil){
-            openContent(item)
+            if item["header"] == nil {
+                openContent(item)
+            }
         } else {
             openIndex(item);
         }
@@ -87,20 +91,19 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         let navVC = UINavigationController.init(rootViewController: pageVC);
         
-        self.presentViewController(navVC, animated: true, completion: {
-            
-        })
+        self.presentViewController(navVC, animated: true, completion: nil)
     }
     
     func openIndex(item: NSDictionary){
         let indexVC = SutraIndexViewController();
         indexVC.tree = item;
         indexVC.defaultExpandLevel = 1;
-        let navVC = UINavigationController.init(rootViewController: indexVC);
+        indexVC.onDismiss = {
+            self.showList()
+        }
         
-        self.presentViewController(navVC, animated: true, completion: {
-            
-        })
+        let navVC = UINavigationController.init(rootViewController: indexVC);
+        self.presentViewController(navVC, animated: true, completion: nil)
     }
     
     // MARK - RATreeView
@@ -128,9 +131,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(item["header"] != nil){
             cell.accessoryType = .None
             cell.backgroundColor =  UIColor.groupTableViewBackgroundColor()
-            cell.textLabel?.textColor = UIColor.darkTextColor()
+//            cell.textLabel?.textColor = UIColor.darkTextColor()
         }else{
-            cell.textLabel?.textColor = self.view.tintColor;
+//            cell.textLabel?.textColor = UIColor.init(red: 0, green: 0, blue:76/255, alpha: 0.8)//very darkblue
             cell.backgroundColor=UIColor.clearColor();
             cell.accessoryType = .DisclosureIndicator
         }
@@ -149,11 +152,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     
     func treeView(treeView:RATreeView, indentationLevelForRowForItem item:AnyObject) -> Int{
-        if( item["header"] == nil ){
-            return 2;
-        } else{
-            return 0;
-        }
+        let path = item["path"] as! String
+        let level = path.componentsSeparatedByString("/").count
+        return (level - 3)
     }
     
     func treeView(treeView:RATreeView,  didSelectRowForItem item:AnyObject){
@@ -167,9 +168,21 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
     
+    func treeView(treeView:RATreeView,  commitEditingStyle editingStyle:UITableViewCellEditingStyle, forRowForItem item:AnyObject){
+        if (editingStyle == .Delete) {
+            let item = item as! NSDictionary as! [String:AnyObject];
+            Data.shared.unlike(item["path"] as! String)
+            if let i = tree!.indexOf({$0["path"] as? String == item["path"] as? String }) {
+                tree?.removeAtIndex(i)
+            }
+
+            treeView.reloadData()
+        }
+    }
+ 
     // MARK: - view controller functions overwrites
     override func prefersStatusBarHidden() -> Bool {
-        return true
+        return false
     }
     
     override func didReceiveMemoryWarning() {

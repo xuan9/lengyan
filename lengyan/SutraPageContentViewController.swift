@@ -26,6 +26,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     internal var pageIndex = 0;
     var meta:[String:AnyObject] = [:];
     var contents:[[String:String]] = [];
+    private var showHeader = true;
+    let toobar = UIToolbar();
+
     override func viewDidLoad() {
         super.viewDidLoad()
         meta = (Book.data.index?[pageIndex])!;
@@ -33,18 +36,35 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         let content = Book.data.contents?[path];
         if(content != nil){
             contents = content ?? []
+            self.tableView.rowHeight = UITableViewAutomaticDimension
         } else {
             meta = Book.data.itemOfPath(path)
             for child in (meta["children"] as! NSArray) {
                 let name:String = child["name"] as! String
-                contents.append(["type":"index", "content":name])
+                contents.append(["type":"index", "content": "• " + name])
             }
+            self.tableView.rowHeight = 44;
         }
         
         self.tableView.estimatedRowHeight=100;
-        self.tableView.rowHeight = UITableViewAutomaticDimension
+        self.tableView.separatorStyle = .None;
     }
-
+    
+    
+    func titleWasTapped (){
+        print("titleWasTapped");
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        tableView.scrollsToTop = true
+    }
+    
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        tableView.scrollsToTop = false
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -63,7 +83,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return contents.count
+        return contents.count + 1
     }
     
     func treeView(treeView:RATreeView, willDisplayCell cell:UITableViewCell, forItem item:AnyObject){
@@ -82,6 +102,10 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
      override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        if indexPath.row == contents.count {
+            return self.actionRow();
+        }
+        
         let cell = tableView.dequeueReusableCellWithIdentifier("SutraTableViewCell", forIndexPath: indexPath) as! SutraTableViewCell
         cell.textView.backgroundColor = UIColor.clearColor()
         
@@ -95,7 +119,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         } else if p["type"] == "index" {
             cell.textView.font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody);
             cell.textView.textColor = UIColor.blackColor()
-            cell.backgroundColor = UIColor.lightGrayColor()
+            cell.backgroundColor = UIColor.clearColor()
+
+//            cell.backgroundColor = UIColor.groupTableViewBackgroundColor()
         }  else {
             cell.textView.font = UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
             cell.textView.textColor = UIColor(red: 33/255, green: 33/255, blue: 33/255, alpha: 1)
@@ -104,6 +130,47 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         }
         return cell
      }
+    
+    func actionRow() -> UITableViewCell{
+        //action group
+//        let actions = SutraActionGroupView();
+//        actions.path = meta["path"] as? String
+//        actions.frame = CGRectMake(0, 0, tableView.frame.size.width, 50);
+//        actions.backgroundColor = UIColor.whiteColor()
+        
+//        let actionBtn = UIBarButtonItem.init(barButtonSystemItem: .Action, target: self, action: nil);
+        
+//        let composeBtn = UIBarButtonItem.init(barButtonSystemItem: .Compose, target: self, action: nil);
+        
+        let composeBtn = UIBarButtonItem.init(image: UIImage.init(named: "comment_outline_18pt"), style: .Plain, target: self, action: nil)
+        
+        let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .Plain, target: self, action: nil)
+
+        let starBtn = UIBarButtonItem.init(image: UIImage.init(named: "like_outline_18pt"), style: .Plain, target: self, action: nil)
+
+        
+        let spaceEdge = UIBarButtonItem.init(barButtonSystemItem: .FixedSpace, target: nil, action: nil)
+        spaceEdge.width = 22;
+        let space = UIBarButtonItem.init(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil)
+//        space.width = 44;
+//        starBtn.setTitleTextAttributes([NSFontAttributeName : UIFont.systemFontOfSize(22)], forState: .Normal)
+
+//        let toobar = UIToolbar();
+        toobar.tintColor = UIColor.lightGrayColor()
+        toobar.frame = CGRectMake(0, 0, tableView.frame.size.width, 40);
+        toobar.hidden = false;
+//        toobar.backgroundColor = UIColor.groupTableViewBackgroundColor()
+        toobar.setItems([spaceEdge, starBtn, space,composeBtn, space, actionBtn,spaceEdge], animated: true)
+        toobar.backgroundColor = UIColor.whiteColor()
+        toobar.barTintColor = UIColor.whiteColor()
+        let cell = UITableViewCell()
+        cell.addSubview(toobar)
+        return cell;
+    }
+//    
+//    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+//        return showHeader ? 50.0 : 0;
+//    }
     
     
     /*

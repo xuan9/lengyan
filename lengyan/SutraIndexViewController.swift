@@ -10,13 +10,15 @@ import UIKit
 
 class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
+    var onDismiss: (Void -> Void)?
     private var treeView: RATreeView!
     
-    internal var tree:NSDictionary?
+    internal var tree:NSDictionary?, path:String?
     
     var defaultExpandLevel:Int = 0
     var expandedItemPaths:[String] = []
     var isRootIndex = false;
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let bounds:CGRect = self.view.bounds;
@@ -48,48 +50,37 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 name: UIApplicationWillTerminateNotification,
                 object: nil)
         } else {
+            path = tree!["path"] as? String;
             self.treeView.reloadData()
             self.autoExpandNode(tree!)
-            self.setTitle()
+            self.updateHeader()
         }
-        
     }
+    
     func loadRootTree(){
         Book.data.loadDataWithCompletionHandler { (Void) in
-            var firstLevelItems=[[String:AnyObject]]();
-            firstLevelItems.append(["name":"总科","header":true]);
-            firstLevelItems.append(Book.data.itemOfPath("/A1"));
-            firstLevelItems.append(Book.data.itemOfPath("/A2"));
-            firstLevelItems.append(Book.data.itemOfPath("/A3"));
-            firstLevelItems.append(["name":"精选","header":true]);
-            firstLevelItems.append(Book.data.itemOfPath("/A2/B1"));
-            firstLevelItems.append(Book.data.itemOfPath("/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M1"));
-            firstLevelItems.append(Book.data.itemOfPath("/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M2"));
-            self.tree = ["children":firstLevelItems,"name":Book.data.tree!["name"]!];
-
+            self.tree = Book.data.tree
+            self.path = self.tree!["path"] as? String;
             dispatch_async(dispatch_get_main_queue()){
                 self.treeView.reloadData()
-                self.expandItemsAsLastTime();
-                
-                //                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(1 * NSEC_PER_SEC)),dispatch_get_main_queue()){
-                //                    }
             }
         }
     }
+    
     func onApplicationWillTerminate(){
         Data.shared.lastExpanded = self.expandedItemPaths;
     }
     
-    func expandItemsAsLastTime(){
-        Data.shared.lastExpanded.sort {
-            $0.localizedCaseInsensitiveCompare($1) == NSComparisonResult.OrderedAscending
-        } .forEach { (path) in
-            let item = Book.data.itemOfPath(path);
-            print("Expand: ", path)
-            self.treeView.expandRowForItem(item, withRowAnimation: RATreeViewRowAnimationNone)
-            
-        }
-    }
+    //    func expandItemsAsLastTime(){
+    //        Data.shared.lastExpanded.sort {
+    //            $0.localizedCaseInsensitiveCompare($1) == NSComparisonResult.OrderedAscending
+    //        } .forEach { (path) in
+    //            let item = Book.data.itemOfPath(path);
+    //            print("Expand: ", path)
+    //            self.treeView.expandRowForItem(item, withRowAnimation: RATreeViewRowAnimationNone)
+    //
+    //        }
+    //    }
     
     func autoExpandNode(node:NSDictionary){
         let currentLevel = treeView.levelForCellForItem(node);
@@ -107,19 +98,68 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
     
-    func setTitle(){
+    func updateHeader(){
         if(tree != nil) {
             self.title = tree?["name"] as? String ?? ""
         }
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "x", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))
         self.navigationController?.navigationBar.translucent = false;
+        
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))//✕
+        
+        //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
+        //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: likeTitle, style: .Plain, target: self, action: #selector(SutraIndexViewController.toggleLike))
+        
+        //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.init(named: "book_18pt"), style: .Plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
+        
+        
+        
+        //        let detailBtn = UIButton.init(type: .DetailDisclosure);
+        //        detailBtn.addTarget(self, action: #selector(SutraIndexViewController.openAsPage), forControlEvents: .TouchUpInside)
+        //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: detailBtn);
+        //               let buttonEdges = UIEdgeInsetsMake(0, 10, 0, -10);
+        //        detailBtn.imageEdgeInsets = buttonEdges;
+        
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.init(named: "book_18pt"), style: .Plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
+        
+        
     }
     
+    
     func close(){
+        onDismiss?();
         self.dismissViewControllerAnimated(true) {
             
         }
+    }
+    
+    func menu(){
+        let alert = UIAlertController(title: "菜單", message: nil, preferredStyle: .ActionSheet)
+        
+        let firstAction:UIAlertAction
+        if(!Data.shared.isLike(path!)){
+            firstAction = UIAlertAction(title: "★加入精選", style: .Default) { (alert: UIAlertAction!) -> Void in
+                Data.shared.like(self.path!)
+                self.updateHeader();
+            }
+        } else {
+            firstAction = UIAlertAction(title: "☆移除精選", style: .Destructive) { (alert: UIAlertAction!) -> Void in
+                Data.shared.unlike(self.path!)
+                self.updateHeader();
+            }
+        }
+        
+        let secondAction = UIAlertAction(title: "👍讚", style: .Default) { (alert: UIAlertAction!) -> Void in
+            Data.shared.like(self.path!)
+        }
+        
+        let cancelAction = UIAlertAction(title: "取消", style: .Cancel) { (alert: UIAlertAction!) -> Void in
+        }
+        alert.addAction(firstAction)
+        alert.addAction(secondAction)
+        alert.addAction(cancelAction)
+        presentViewController(alert, animated: true, completion:nil) // 6
+        
     }
     //Called, when long press occurred
     func longPress(longPressGestureRecognizer: UILongPressGestureRecognizer) {
@@ -137,7 +177,19 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
     
+    func openAsPage(){
+        openItem(self.tree!)
+    }
+    
+    func openAsPageFromCellButton(sender:UIButton){
+        let cell:UITableViewCell = sender.superview as! UITableViewCell
+        let item = self.treeView.itemForCell(cell)
+        openItem(item as! NSDictionary)
+    }
+    
+    
     func openItem(item: NSDictionary){
+        
         let pageVC = SutraPageViewController.init( transitionStyle:.PageCurl,
                                                    navigationOrientation:.Horizontal,
                                                    options: .None)
@@ -163,6 +215,10 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         indexVC.defaultExpandLevel = 1;
         let navVC = UINavigationController.init(rootViewController: indexVC);
         
+        indexVC.onDismiss = {
+            self.openPath(indexVC.tree!["path"] as! String);
+        }
+        
         self.presentViewController(navVC, animated: true, completion: {
             
         })
@@ -172,12 +228,21 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if path == "" || path == "/" {
             return;
         }
+        let rootPath = tree!["path"] as!String;
+        if rootPath.characters.count > path.characters.count {
+            return
+        }
+        let subPath = path.substringFromIndex(rootPath.endIndex);
         var node = tree, isExpanded = false;
-        for id in path.componentsSeparatedByString("/") {
+        for id in subPath.componentsSeparatedByString("/") {
             if(id==""){continue}
-            node = (node!["children"] as! NSArray).filter({
-                $0["id"] as! String == id
-            }).first as? NSDictionary
+            if(node!["children"] != nil) {
+                node = (node!["children"] as! NSArray).filter({
+                    $0["id"] as! String == id
+                }).first as? NSDictionary
+            } else {
+                return;
+            }
             if(node == nil) {return}
             if !treeView.isCellForItemExpanded(node!) {
                 treeView.expandRowForItem(node, withRowAnimation: RATreeViewRowAnimationNone);
@@ -199,10 +264,13 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(treeView: RATreeView, cellForItem item: AnyObject?) -> UITableViewCell {
-        var newCell = treeView.dequeueReusableCellWithIdentifier("indexCell") as? UITableViewCell;
+        let item = item as! NSDictionary;
+        let isLeaf = item["children"] == nil
+        let identifier = isLeaf ? "leafCell" : "indexCell"
+        var newCell = treeView.dequeueReusableCellWithIdentifier(identifier) as? UITableViewCell;
         
         if (newCell == nil) {
-            newCell = UITableViewCell.init(style:.Value1,reuseIdentifier:"indexCell");
+            newCell = UITableViewCell.init(style:.Value1,reuseIdentifier:identifier);
             
             //            newCell!.detailTextLabel?.lineBreakMode = .ByWordWrapping;
             //            newCell!.detailTextLabel?.font = UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
@@ -212,12 +280,24 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
             newCell!.textLabel?.font = UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
             
+            if (!isLeaf) {
+                let bookBtn = UIButton.init(type: .Custom)
+                bookBtn.frame = CGRectMake(0, 0.0, 38, treeView.rowHeight)
+//                bookBtn.backgroundColor = UIColor.redColor()
+                bookBtn.setTitle("❭", forState: .Normal)
+//                bookBtn.tintColor = UIColor.whiteColor()
+//                bookBtn.setTitleColor(UIColor.lightGrayColor(), forState: .Normal)
+//                let bookImage = UIImage.init(named: "book_18pt")
+//                bookBtn.setImage(bookImage, forState: .Normal)
+                bookBtn.addTarget(self, action: #selector(SutraIndexViewController.openAsPageFromCellButton(_:)) , forControlEvents: .TouchUpInside)
+                newCell!.accessoryView = bookBtn;
+            }
+            
         } else {
             //            print(newCell!.bounds.height);
         }
         
         let cell = newCell!;
-        let item = item as! NSDictionary;
         let name = item["name"]! as? String
         if item["children"] == nil {
             //            cell.detailTextLabel!.text = ""
@@ -232,6 +312,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             //            }
             //            cell.accessoryType = .DetailButton;
             cell.textLabel?.textColor = self.view.tintColor;
+//            cell.accessoryType = .None;
             
         } else {
             //            cell.detailTextLabel!.text = ""
@@ -240,17 +321,15 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             //                cell.detailTextLabel!.text = (cell.detailTextLabel!.text ?? "")  + (child["name"] as? String ?? "") + " "
             //            }
             //            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            //            cell.accessoryType = .None;
+//            cell.accessoryType = .DisclosureIndicator
+            //            UIImage.init(named: "book_18pt")
             cell.textLabel?.textColor =  UIColor.darkTextColor();
             
             
         }
-        cell.textLabel?.text =  name!;
-        if(item["header"] != nil && item["header"] as! Bool){
-            cell.backgroundColor=UIColor.darkGrayColor();
-        }else{
-            cell.backgroundColor=UIColor.clearColor();
-        }
+        
+        let path = item["path"]! as? String
+        cell.textLabel?.text =  Data.shared.isLike(path!) ? name! + " ★" : name!;
         
         //
         //        cell.detailTextLabel?.preferredMaxLayoutWidth = CGRectGetWidth(self.view.bounds)
@@ -303,16 +382,59 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(treeView:RATreeView,  didSelectRowForItem item:AnyObject){
-        self.treeView(treeView,accessoryButtonTappedForRowForItem: item);
+        let item = item as! NSDictionary;
+        if(item["children"] == nil){
+            self.openItem(item)
+        }
     }
     
     func treeView(treeView:RATreeView,  accessoryButtonTappedForRowForItem item:AnyObject){
         let item = item as! NSDictionary;
-        if item["children"] == nil {
-            self.openItem(item);
+        self.openItem(item);
+    }
+    
+    func treeView(treeView: RATreeView, editActionsForItem item: AnyObject) -> [AnyObject] {
+        let likeAction:UITableViewRowAction;
+        let path = (item as! NSDictionary)["path"] as! String;
+        if(!Data.shared.isLike(path)){
+            likeAction = UITableViewRowAction(style: .Normal, title: "☆") { (action: UITableViewRowAction!, indexPath: NSIndexPath!) -> Void in
+                Data.shared.like(path)
+                self.treeView.setEditing(false, animated: true)
+                self.treeView.reloadRowsForItems([item], withRowAnimation: RATreeViewRowAnimationNone)
+            }
+        } else {
+            likeAction = UITableViewRowAction(style: .Default, title: "★") { (action: UITableViewRowAction!, indexPath: NSIndexPath!) -> Void in
+                Data.shared.unlike(path)
+                self.treeView.setEditing(false, animated: true)
+                self.treeView.reloadRowsForItems([item], withRowAnimation: RATreeViewRowAnimationNone)
+            }
+        }
+        likeAction.backgroundColor = self.treeView.tintColor;
+        
+        if item["children"]! == nil {
+            return [likeAction]
+        } else {
+            let newWindowAction = UITableViewRowAction(style: .Default, title: "⇪") { (action: UITableViewRowAction!, indexPath: NSIndexPath!) -> Void in
+                self.openIndex(item as! NSDictionary)
+                self.treeView.setEditing(false, animated: true)
+            }
+            newWindowAction.backgroundColor = self.treeView.tintColor;
+            
+            //            let pageViewAction = UITableViewRowAction(style: .Default, title: "📖") { (action: UITableViewRowAction!, indexPath: NSIndexPath!) -> Void in
+            //                self.openItem(item as! NSDictionary)
+            //                self.treeView.setEditing(false, animated: true)
+            //            }
+            //            pageViewAction.backgroundColor = self.treeView.tintColor;
+            
+            
+            return [likeAction, newWindowAction]
         }
     }
     
+    //    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+    //
+    //        // Intentionally blank. Required to use UITableViewRowActions
+    //    }
     
     
     // MARK: - view controller functions overwrites
@@ -324,4 +446,14 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         super.didReceiveMemoryWarning()
     }
     
+    
+    
+    func toggleLike() {
+        if Data.shared.isLike(self.path!) {
+            Data.shared.unlike(self.path!)
+        } else {
+            Data.shared.like(self.path!)
+        }
+        self.updateHeader();
+    }
 }

@@ -8,39 +8,65 @@
 
 import UIKit
 
- class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
+class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
     var sutraStoryBoard:UIStoryboard?;
     var onDismiss: (Void -> Void)?
     var page:Int = 0
-
+    
+    var path:String?
+    var item:[String:AnyObject]?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.edgesForExtendedLayout = .None;
         self.extendedLayoutIncludesOpaqueBars = false;
         self.automaticallyAdjustsScrollViewInsets = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "X", style: .Plain, target: self, action: #selector(SutraPageViewController.close))
-        self.navigationController?.navigationBar.translucent = false;
- 
         if page < 0 {
             self.close()
         }
         
-        let item = Book.data.index![page]
-        self.setPageTitle(item as NSDictionary)
+        item = Book.data.index![page]
+        self.path = item!["path"] as? String;
+        
+        self.setPageTitle()
         self.dataSource = self;
         self.delegate = self;
         sutraStoryBoard = UIStoryboard(name: "SutraStoryboard", bundle: nil)
-
+        
         self.setViewControllers([getViewControllerAtIndex(page)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.Forward, animated: false, completion: nil)
         
+        self.setTitle()
+    }
+    
+    func like() {
+        Data.shared.like(self.path!)
+        self.setTitle()
+    }
+    
+    func unlike() {
+        Data.shared.unlike(self.path!)
+        self.setTitle()
     }
     
     func close() {
         onDismiss?();
-        self.navigationController?.dismissViewControllerAnimated(true, completion: { 
+        self.navigationController?.dismissViewControllerAnimated(true, completion: {
             
         })
+    }
+    
+    func setTitle() {
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))
+        
+//        if(Data.shared.likes.contains(path!)){
+//            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .Plain, target: self, action: #selector(SutraPageViewController.unlike))
+//        } else {
+//            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .Plain, target: self, action: #selector(SutraPageViewController.like))
+//        }
+//        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.blackColor()
+//        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.blackColor()
+        self.navigationController?.navigationBar.translucent = false;
     }
     
     func pageViewController(pageViewController: UIPageViewController, viewControllerBeforeViewController viewController: UIViewController) -> UIViewController?
@@ -58,7 +84,7 @@ import UIKit
     
     func getViewControllerAtIndex(index: Int) -> UIViewController
     {
-
+        
         let pageContent:SutraPageContentViewController = self.sutraStoryBoard!.instantiateViewControllerWithIdentifier("SutraPageContentViewController") as! SutraPageContentViewController
         
         pageContent.pageIndex = index
@@ -66,8 +92,8 @@ import UIKit
         let frame = self.view.frame;
         let navigationBarHeight = (self.navigationController?.navigationBar.frame.size.height)!;
         
-       pageContent.view.frame = CGRect(
-        origin: CGPoint(x:frame.origin.x,y:frame.origin.y + navigationBarHeight),
+        pageContent.view.frame = CGRect(
+            origin: CGPoint(x:frame.origin.x,y:frame.origin.y + navigationBarHeight),
             size:   CGSize(width: frame.size.width, height:frame.size.height - navigationBarHeight))
         
         return pageContent
@@ -83,7 +109,7 @@ import UIKit
             return nil;
         }
         index += 1;
-
+        
         return getViewControllerAtIndex(index)
     }
     // MARK - UIPageViewControllerDelegate
@@ -91,32 +117,35 @@ import UIKit
         
         let pageContent = pageViewController.viewControllers![0] as! SutraPage
         self.page = pageContent.pageIndex;
-        self.setPageTitle(Book.data.index![page] as NSDictionary)
+        self.item = Book.data.index![page];
+        self.path = item!["path"] as? String;
+        
+        self.setPageTitle()
     }
     
-    func setPageTitle(item:NSDictionary) {
-//        let children = Book.data.itemOfPath(item["path"] as! String)["children"] as? NSArray
-        let title:String = (item["name"] as? String ?? "")
+    func setPageTitle() {
+        //        let children = Book.data.itemOfPath(item["path"] as! String)["children"] as? NSArray
+        let title:String = (item!["name"] as? String ?? "")
         
         // (item["id"] as! String) + " " +
-        let parent = Book.data.parentOfItem(item as! [String : AnyObject]);
+        let parent = Book.data.parentOfItem(item!);
         let parentTitle = (parent?["name"] as! String)  ;
-//        let titleAttributes = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline), NSForegroundColorAttributeName: UIColor.purpleColor()]
+        //        let titleAttributes = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline), NSForegroundColorAttributeName: UIColor.purpleColor()]
         
-        let font:UIFont? = UIFont(name: "Arial", size: 14.0)
+        let font:UIFont? = UIFont(name: "Arial", size: 12.0)
         let attrString = NSMutableAttributedString(
             string: parentTitle as String,
             attributes: [NSFontAttributeName: font!])
-      
+        
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .Center;
         
-        let font2:UIFont? = UIFont(name: "Arial", size: 11.0)
+        let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
         let attrString2 = NSMutableAttributedString(
             string: " 之" as String,
             attributes: [NSFontAttributeName: font2!]);
         
-        let font1:UIFont? = UIFont(name: "Arial", size: 17.0)
+        let font1:UIFont? = UIFont(name: "Arial", size: 16.0)
         let attrString1 = NSMutableAttributedString(
             string: "\n" + title as String,
             attributes: [NSFontAttributeName: font1!,     NSParagraphStyleAttributeName : paragraphStyle]);
@@ -128,7 +157,12 @@ import UIKit
         label.numberOfLines = 2
         label.textAlignment = NSTextAlignment.Left
         label.attributedText = attrString;
+        label.userInteractionEnabled = true
         self.navigationItem.titleView = label
+  
+//        let recognizer = UITapGestureRecognizer(target: self, action: Selector("titleWasTapped"))
+//        self.navigationItem.titleView!.addGestureRecognizer(recognizer)
+   
     }
     
     // MARK: - view controller functions overwrites
