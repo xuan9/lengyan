@@ -52,7 +52,21 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         } else {
             path = tree!["path"] as? String;
             self.treeView.reloadData()
-            self.autoExpandNode(tree!)
+            var rows = self.treeView.numberOfRows();
+            repeat {
+                print("to expend to level: \(self.defaultExpandLevel)")
+                self.autoExpandNode(tree!)
+                self.defaultExpandLevel =  self.defaultExpandLevel + 1
+                if rows == self.treeView.numberOfRows() {
+                    break;
+                }
+                rows = self.treeView.numberOfRows()
+            } while rows < Int(view.height * 1.5 / 34)
+            
+            if rows > Int(view.height / 34) {
+                let height = self.treeView.rowHeight * view.height / CGFloat(Float(34 * rows))
+                self.treeView.rowHeight = height > 24 ? height : 24
+            }
             self.updateHeader()
         }
     }

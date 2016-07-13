@@ -13,26 +13,27 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     private var treeView: RATreeView!
     internal var tree:[[String:AnyObject]]?;
+    private var sutraIndexButtons = [String]();
     
     override func viewDidLoad() {
         super.viewDidLoad()
         let bounds:CGRect = self.view.bounds;
         
         treeView = RATreeView(frame: CGRect(
-            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 110),
-            size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height  - 110 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
+            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 20),
+            size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height - 20 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
         treeView.delegate = self
         treeView.dataSource = self
-        treeView.rowHeight = 34;
+        treeView.rowHeight = 24;
         treeView.backgroundColor = UIColor.whiteColor()
         view.backgroundColor = UIColor.whiteColor()
         treeView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         view.addSubview(treeView)
-        
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(SutraFrontViewController.longPress(_:)))
         self.treeView.addGestureRecognizer(longPressRecognizer)
         
         Book.data.loadDataWithCompletionHandler { (Void) in
+            self.setupHeaderView()
             self.showList()
         }
         NSNotificationCenter.defaultCenter().addObserver(
@@ -40,6 +41,69 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             selector: #selector(SutraIndexViewController.onApplicationWillTerminate),
             name: UIApplicationWillTerminateNotification,
             object: nil)
+    }
+    
+    func setupHeaderView() {
+        dispatch_async(dispatch_get_main_queue()){
+            let width = self.view.bounds.width
+            
+            let header:UIView = UIView(frame: CGRectMake(0, 0, width, 110))
+//            header.backgroundColor = UIColor.init(red: 247.0/255.0, green: 247.0/255, blue: 247.0/255, alpha: 1)
+            
+            let title = self.makeSutraIndexButton("", frame: CGRectMake(0, 10, width, 21));
+            let subTitle = UIButton.init(type: .Custom);
+            subTitle.frame = CGRectMake(0, 40, width, 17);
+            
+            let indexes = UIView(frame: CGRectMake(0, 70, width, 21));
+            let i1 = self.makeSutraIndexButton("/A1",frame: CGRectMake((width - 51)/2 - 40 - 36, 0, 36, 21));
+            let i2 =  self.makeSutraIndexButton("/A2",frame: CGRectMake((width - 51)/2 , 0, 51, 21));
+            let i3 =  self.makeSutraIndexButton("/A3",frame: CGRectMake((width + 51)/2 + 40,0, 51, 21));
+//            let underlineAttriString = NSAttributedString(string:(i2.titleLabel?.text)!, attributes: [NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleSingle.rawValue])
+//            i2.titleLabel?.attributedText = underlineAttriString
+            
+            subTitle.setTitle("上宣下化老和尚釋義 法界佛教總會编辑", forState: .Normal)
+            subTitle.titleLabel?.font = UIFont.systemFontOfSize(14)
+            subTitle.titleLabel!.adjustsFontSizeToFitWidth = true;
+            subTitle.setTitleColor(UIColor.darkTextColor(), forState: .Normal)
+
+            indexes.addSubview(i1);
+            indexes.addSubview(i2);
+            indexes.addSubview(i3);
+            header.addSubview(title)
+            header.addSubview(subTitle)
+            header.addSubview(indexes)
+            
+            
+            let px = 1 / UIScreen.mainScreen().scale
+            let frame = CGRectMake(0, 110 - px, self.treeView.frame.size.width, px)
+            let line: UIView = UIView(frame: frame)
+            line.backgroundColor = self.treeView.separatorColor
+            header.addSubview(line)
+//            self.treeView.scrollView.contentInset = UIEdgeInsetsMake(110, 0, 0, 0);
+//            self.treeView.scrollView.addSubview(header)
+            
+            self.treeView.treeHeaderView = header
+        }
+    }
+    func makeSutraIndexButton(path:String, frame:CGRect?) ->UIButton {
+        let btn = UIButton.init(type: .Custom);
+        if(frame != nil) {
+            btn.frame = frame!
+        }
+        btn.setTitle(Book.data.itemOfPath(path)["name"] as! String?, forState: .Normal)
+        btn.addTarget(self, action: #selector(SutraFrontViewController.onSutraIndexButtonTouchUp(_:)), forControlEvents: .TouchUpInside)
+        let count = sutraIndexButtons.count;
+        btn.tag = count
+        btn.titleLabel?.adjustsFontSizeToFitWidth = true;
+        btn.setTitleColor(UIColor.blackColor(), forState: .Normal)
+        btn.titleLabel?.font = UIFont.systemFontOfSize(16)
+        sutraIndexButtons.append(path)
+        return btn;
+    }
+    
+    func onSutraIndexButtonTouchUp(sender:UIButton){
+        let path = sutraIndexButtons[sender.tag]
+        self.openIndex(Book.data.itemOfPath(path))
     }
     
     func showList(){
@@ -180,6 +244,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
  
+    
     // MARK: - view controller functions overwrites
     override func prefersStatusBarHidden() -> Bool {
         return false
