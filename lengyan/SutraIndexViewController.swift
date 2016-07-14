@@ -24,8 +24,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let bounds:CGRect = self.view.bounds;
         
         treeView = RATreeView(frame: CGRect(
-            origin: CGPoint(x:bounds.origin.x - 10 ,y:bounds.origin.y),
-            size:   CGSize(width: bounds.size.width + 20, height:bounds.size.height-(self.tabBarController?.tabBar.bounds.size.height ?? 0))));
+            origin: CGPoint(x:bounds.origin.x ,y:bounds.origin.y + 5),
+            size:   CGSize(width: bounds.size.width , height:bounds.size.height - 5 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
         treeView.delegate = self
         treeView.dataSource = self
         treeView.backgroundColor = UIColor.whiteColor()
@@ -338,12 +338,10 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
 //            cell.accessoryType = .DisclosureIndicator
             //            UIImage.init(named: "book_18pt")
             cell.textLabel?.textColor =  UIColor.darkTextColor();
-            
-            
         }
         
-        let path = item["path"]! as? String
-        cell.textLabel?.text =  Data.shared.isLike(path!) ? name! + " ★" : name!;
+//        let path = item["path"]! as? String
+        cell.textLabel?.text = name!; //Data.shared.isLike(path!) ? name! + " ★"
         
         //
         //        cell.detailTextLabel?.preferredMaxLayoutWidth = CGRectGetWidth(self.view.bounds)
@@ -408,7 +406,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(treeView: RATreeView, editActionsForItem item: AnyObject) -> [AnyObject] {
-        let likeAction:UITableViewRowAction;
+        /*let likeAction:UITableViewRowAction;
         let path = (item as! NSDictionary)["path"] as! String;
         if(!Data.shared.isLike(path)){
             likeAction = UITableViewRowAction(style: .Normal, title: "☆") { (action: UITableViewRowAction!, indexPath: NSIndexPath!) -> Void in
@@ -443,6 +441,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             
             return [likeAction, newWindowAction]
         }
+     */
+     
+        return [AnyObject]()
     }
     
     //    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {

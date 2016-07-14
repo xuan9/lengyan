@@ -243,6 +243,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             treeView.reloadData()
         }
     }
+    func treeView(treeView: RATreeView, editActionsForItem item: AnyObject) -> [AnyObject] {
+        return [AnyObject]()
+    }
  
     
     // MARK: - view controller functions overwrites

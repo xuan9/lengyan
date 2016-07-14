@@ -59,7 +59,10 @@ class Data: NSObject, DataProtocal {
     }
     
     func unlike(path:String){
-        likesCache?.removeAtIndex((likesCache?.indexOf(path))!);
+        let index = likesCache?.indexOf(path);
+        if (index == nil){
+            likesCache?.removeAtIndex(index!);
+        }
 //        let likes = NSMutableSet(array: self.likes);
 //        likes.removeObject(path);
 //        defaults.setObject(likes.allObjects, forKey: Data.likesKey)
