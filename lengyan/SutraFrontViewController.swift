@@ -148,10 +148,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                                                    navigationOrientation:.Horizontal,
                                                    options: .None)
         let path:String = item["path"] as! String
+        TICK()
         pageVC.page=Book.data.index!.indexOf({ (
             item) -> Bool in
             return item["path"] == path
         })!;
+        TOCK()
+
         
         let navVC = UINavigationController.init(rootViewController: pageVC);
         

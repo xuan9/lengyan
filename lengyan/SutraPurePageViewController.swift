@@ -1,14 +1,14 @@
 //
-//  SutraPageViewController.swift
+//  SutraPurePageViewController.swift
 //  lengyan
 //
-//  Created by Xuan on 16/6/19.
+//  Created by Xuan on 16/7/20.
 //  Copyright © 2016年 xuan. All rights reserved.
 //
 
 import UIKit
 
-class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
+class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
     var sutraStoryBoard:UIStoryboard?;
     var onDismiss: (Void -> Void)?
     var page:Int = 0
@@ -59,20 +59,21 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     func setTitle() {
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))
         
-//        if(Data.shared.likes.contains(path!)){
-//            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .Plain, target: self, action: #selector(SutraPageViewController.unlike))
-//        } else {
-//            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .Plain, target: self, action: #selector(SutraPageViewController.like))
-//        }
-//        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.blackColor()
-//        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.blackColor()
+        //        if(Data.shared.likes.contains(path!)){
+        //            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .Plain, target: self, action: #selector(SutraPageViewController.unlike))
+        //        } else {
+        //            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .Plain, target: self, action: #selector(SutraPageViewController.like))
+        //        }
+        //        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.blackColor()
+        //        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.blackColor()
         self.navigationController?.navigationBar.translucent = false;
     }
     
     func pageViewController(pageViewController: UIPageViewController, viewControllerBeforeViewController viewController: UIViewController) -> UIViewController?
     {
-        let pageContent:  SutraPage = viewController as!  SutraPage
-        var index = pageContent.pageIndex
+        let pageContent:SutraPurePageContentViewController = self.sutraStoryBoard!.instantiateViewControllerWithIdentifier("SutraPurePageContentViewController") as! SutraPurePageContentViewController
+
+        var index = pageContent.getBeforePageIndex()
         if ((index == 0) || (index == NSNotFound))
         {
             self.close();
@@ -85,7 +86,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     func getViewControllerAtIndex(index: Int) -> UIViewController
     {
         
-        let pageContent:SutraPageContentViewController = self.sutraStoryBoard!.instantiateViewControllerWithIdentifier("SutraPageContentViewController") as! SutraPageContentViewController
+        let pageContent:SutraPurePageContentViewController = self.sutraStoryBoard!.instantiateViewControllerWithIdentifier("SutraPurePageContentViewController") as! SutraPurePageContentViewController
         
         pageContent.pageIndex = index
         
@@ -101,9 +102,9 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     func pageViewController(pageViewController: UIPageViewController, viewControllerAfterViewController viewController: UIViewController) -> UIViewController?
     {
-        let pageContent: SutraPage = viewController as! SutraPage
-        var index = pageContent.pageIndex
-        if (index == NSNotFound || index + 1 == Book.data.index?.count)
+        let pageContent: SutraPurePageContentViewController = viewController as! SutraPurePageContentViewController
+        var index = pageContent.getNextPageIndex()
+        if (index == NSNotFound || index  == Book.data.index?.count)
         {
             self.close();
             return nil;
@@ -124,11 +125,45 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     func setPageTitle() {
-        self.navigationItem.titleView = Book.data.getTitleView(item!);
-
-//        let recognizer = UITapGestureRecognizer(target: self, action: Selector("titleWasTapped"))
-//        self.navigationItem.titleView!.addGestureRecognizer(recognizer)
-   
+        //        let children = Book.data.itemOfPath(item["path"] as! String)["children"] as? NSArray
+        let title:String = (item!["name"] as? String ?? "")
+        
+        // (item["id"] as! String) + " " +
+        let parent = Book.data.parentOfItem(item!);
+        let parentTitle = parent?["name"] as? String ?? ""
+        //        let titleAttributes = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline), NSForegroundColorAttributeName: UIColor.purpleColor()]
+        
+        let font:UIFont? = UIFont(name: "Arial", size: 12.0)
+        let attrString = NSMutableAttributedString(
+            string: parentTitle as String,
+            attributes: [NSFontAttributeName: font!])
+        
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .Center;
+        
+        let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
+        let attrString2 = NSMutableAttributedString(
+            string: parent == nil ? "" : " 之",
+            attributes: [NSFontAttributeName: font2!]);
+        
+        let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
+        let attrString1 = NSMutableAttributedString(
+            string: "\n" + title as String,
+            attributes: [NSFontAttributeName: font1!,     NSParagraphStyleAttributeName : paragraphStyle]);
+        
+        attrString.appendAttributedString(attrString2)
+        attrString.appendAttributedString(attrString1)
+        let label = UILabel(frame: CGRectMake(0, 0, 400, 44))
+        label.backgroundColor = UIColor.clearColor()
+        label.numberOfLines = 2
+        label.textAlignment = NSTextAlignment.Left
+        label.attributedText = attrString;
+        label.userInteractionEnabled = true
+        self.navigationItem.titleView = label
+        
+        //        let recognizer = UITapGestureRecognizer(target: self, action: Selector("titleWasTapped"))
+        //        self.navigationItem.titleView!.addGestureRecognizer(recognizer)
+        
     }
     
     // MARK: - view controller functions overwrites

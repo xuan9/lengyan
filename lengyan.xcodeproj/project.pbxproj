@@ -13,15 +13,18 @@
 		133192E01D14901300F4984F /* HidingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133192DE1D14901300F4984F /* HidingViewController.swift */; };
 		1344EA5D1D21CAA5001E215B /* String+Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1344EA5C1D21CAA5001E215B /* String+Common.swift */; };
 		1344FB7A1D3254A600E926F4 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1344FB791D3254A600E926F4 /* Utils.swift */; };
+		1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */; };
 		135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D605C1D16FA4A00029090 /* SutraPageViewController.swift */; };
 		135D605F1D16FABE00029090 /* SutraStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */; };
-		135D60611D16FB7400029090 /* SutraPageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60601D16FB7400029090 /* SutraPageContentViewController.swift */; };
+		135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60601D16FB7400029090 /* SutraBookViewController.swift */; };
 		135D60631D173B1B00029090 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60621D173B1B00029090 /* Book.swift */; };
 		135D60651D174CC300029090 /* SutraTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60641D174CC300029090 /* SutraTableViewCell.swift */; };
 		13643B291D2B1B8A00EB4372 /* SutraActionGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */; };
 		13643B2B1D2B207900EB4372 /* SutraActionGroupView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 13643B2A1D2B207900EB4372 /* SutraActionGroupView.xib */; };
+		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
+		1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */; };
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
-		139073111D109193003A3333 /* SecondViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073101D109193003A3333 /* SecondViewController.swift */; };
+		139073111D109193003A3333 /* StarsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073101D109193003A3333 /* StarsTableViewController.swift */; };
 		139073141D109193003A3333 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073121D109193003A3333 /* Main.storyboard */; };
 		139073161D109194003A3333 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 139073151D109194003A3333 /* Assets.xcassets */; };
 		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
@@ -50,6 +53,7 @@
 		139073901D109B3F003A3333 /* RATreeView+TableViewDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 139073831D109B3F003A3333 /* RATreeView+TableViewDelegate.m */; };
 		13978CCD1D2028E5005031EE /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13978CCC1D2028E5005031EE /* Data.swift */; };
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
+		13E2230B1D5150C5000F763F /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E2230A1D5150C5000F763F /* Macros.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -76,16 +80,19 @@
 		133192DE1D14901300F4984F /* HidingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HidingViewController.swift; sourceTree = "<group>"; };
 		1344EA5C1D21CAA5001E215B /* String+Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Common.swift"; sourceTree = "<group>"; };
 		1344FB791D3254A600E926F4 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewControllera.swift; sourceTree = "<group>"; };
 		135D605C1D16FA4A00029090 /* SutraPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageViewController.swift; sourceTree = "<group>"; };
 		135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = SutraStoryboard.storyboard; sourceTree = "<group>"; };
-		135D60601D16FB7400029090 /* SutraPageContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewController.swift; sourceTree = "<group>"; };
+		135D60601D16FB7400029090 /* SutraBookViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraBookViewController.swift; sourceTree = "<group>"; };
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		135D60641D174CC300029090 /* SutraTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraTableViewCell.swift; sourceTree = "<group>"; };
 		13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraActionGroupView.swift; sourceTree = "<group>"; };
 		13643B2A1D2B207900EB4372 /* SutraActionGroupView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SutraActionGroupView.xib; sourceTree = "<group>"; };
+		1372181B1D402B720037332A /* SutraPurePageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageViewController.swift; sourceTree = "<group>"; };
+		1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageContentViewController.swift; sourceTree = "<group>"; };
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390730C1D109193003A3333 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		139073101D109193003A3333 /* SecondViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondViewController.swift; sourceTree = "<group>"; };
+		139073101D109193003A3333 /* StarsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarsTableViewController.swift; sourceTree = "<group>"; };
 		139073131D109193003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		139073151D109194003A3333 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		139073181D109194003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -138,6 +145,7 @@
 		139073831D109B3F003A3333 /* RATreeView+TableViewDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RATreeView+TableViewDelegate.m"; sourceTree = "<group>"; };
 		13978CCC1D2028E5005031EE /* Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
+		13E2230A1D5150C5000F763F /* Macros.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macros.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -215,13 +223,16 @@
 				13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */,
 				130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */,
 				135D605C1D16FA4A00029090 /* SutraPageViewController.swift */,
-				135D60601D16FB7400029090 /* SutraPageContentViewController.swift */,
+				1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */,
+				1372181B1D402B720037332A /* SutraPurePageViewController.swift */,
+				1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */,
+				135D60601D16FB7400029090 /* SutraBookViewController.swift */,
 				135D60641D174CC300029090 /* SutraTableViewCell.swift */,
 				13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */,
 				135D60621D173B1B00029090 /* Book.swift */,
 				13978CCC1D2028E5005031EE /* Data.swift */,
 				1390730C1D109193003A3333 /* AppDelegate.swift */,
-				139073101D109193003A3333 /* SecondViewController.swift */,
+				139073101D109193003A3333 /* StarsTableViewController.swift */,
 				139073121D109193003A3333 /* Main.storyboard */,
 				135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */,
 				13643B2A1D2B207900EB4372 /* SutraActionGroupView.xib */,
@@ -230,6 +241,7 @@
 				1390731A1D109194003A3333 /* Info.plist */,
 				139073521D1093D8003A3333 /* lengyan-Bridging-Header.h */,
 				1344FB791D3254A600E926F4 /* Utils.swift */,
+				13E2230A1D5150C5000F763F /* Macros.swift */,
 			);
 			path = lengyan;
 			sourceTree = "<group>";
@@ -451,14 +463,17 @@
 				139073841D109B3F003A3333 /* RABatchChangeEntity.m in Sources */,
 				139073481D10926A003A3333 /* NeonGroupable.swift in Sources */,
 				13643B291D2B1B8A00EB4372 /* SutraActionGroupView.swift in Sources */,
-				139073111D109193003A3333 /* SecondViewController.swift in Sources */,
-				135D60611D16FB7400029090 /* SutraPageContentViewController.swift in Sources */,
+				139073111D109193003A3333 /* StarsTableViewController.swift in Sources */,
+				1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */,
+				135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */,
 				1390738A1D109B3F003A3333 /* RATreeNodeItem.m in Sources */,
 				1390738E1D109B3F003A3333 /* RATreeView+RATreeNodeCollectionControllerDataSource.m in Sources */,
+				1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */,
 				1344FB7A1D3254A600E926F4 /* Utils.swift in Sources */,
 				135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */,
 				13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */,
 				139073651D109B0B003A3333 /* RATreeView.m in Sources */,
+				1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */,
 				139073471D10926A003A3333 /* NeonFrameable.swift in Sources */,
 				139073891D109B3F003A3333 /* RATreeNodeController.m in Sources */,
 				1390734A1D109274003A3333 /* FirstViewController.swift in Sources */,
@@ -479,6 +494,7 @@
 				135D60631D173B1B00029090 /* Book.swift in Sources */,
 				1390730D1D109193003A3333 /* AppDelegate.swift in Sources */,
 				130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */,
+				13E2230B1D5150C5000F763F /* Macros.swift in Sources */,
 				139073851D109B3F003A3333 /* RABatchChanges.m in Sources */,
 				133192E01D14901300F4984F /* HidingViewController.swift in Sources */,
 			);

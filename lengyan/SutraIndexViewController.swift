@@ -65,7 +65,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             
             if rows > Int(view.height / 34) {
                 let height = self.treeView.rowHeight * view.height / CGFloat(Float(34 * rows))
-                self.treeView.rowHeight = height > 24 ? height : 24
+                self.treeView.rowHeight = height > 28 ? height : 28
             }
             self.updateHeader()
         }
@@ -116,15 +116,13 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(tree != nil) {
             self.title = tree?["name"] as? String ?? ""
         }
-        
         self.navigationController?.navigationBar.translucent = false;
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))//✕
         
         //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: likeTitle, style: .Plain, target: self, action: #selector(SutraIndexViewController.toggleLike))
-        
-        //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.init(named: "book_18pt"), style: .Plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
+            let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .Plain, target: self, action: #selector(SutraIndexViewController.openSutra))
         
         
         
@@ -134,9 +132,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         //               let buttonEdges = UIEdgeInsetsMake(0, 10, 0, -10);
         //        detailBtn.imageEdgeInsets = buttonEdges;
         
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.init(named: "book_18pt"), style: .Plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
+       let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .Plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
         
-        
+        self.navigationItem.setRightBarButtonItems([listButton,sutraButton], animated: false)
     }
     
     
@@ -191,6 +189,13 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
     
+    func openSutra(){
+        let sutraVC = SutraPurePageContentViewController.init();
+        sutraVC.item = tree as? [String:AnyObject]
+        let navVC = UINavigationController.init(rootViewController: sutraVC);
+        self.navigationController?.presentViewController(navVC, animated: true, completion: nil)
+    }
+    
     func openAsPage(){
         openItem(self.tree!)
     }
@@ -201,17 +206,18 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         openItem(item as! NSDictionary)
     }
     
-    
     func openItem(item: NSDictionary){
         
         let pageVC = SutraPageViewController.init( transitionStyle:.PageCurl,
                                                    navigationOrientation:.Horizontal,
                                                    options: .None)
         let path:String = item["path"] as! String
-        pageVC.page=Book.data.index!.indexOf({ (
+        TICK()
+        pageVC.page = Book.data.index!.indexOf({ (
             item) -> Bool in
             return item["path"] == path
         })!;
+        TOCK()
         
         pageVC.onDismiss = {
             self.openPath((Book.data.index?[pageVC.page] as NSDictionary?)?["path"] as! String);
@@ -285,7 +291,6 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         if (newCell == nil) {
             newCell = UITableViewCell.init(style:.Value1,reuseIdentifier:identifier);
-            
             //            newCell!.detailTextLabel?.lineBreakMode = .ByWordWrapping;
             //            newCell!.detailTextLabel?.font = UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
             //            newCell!.detailTextLabel?.numberOfLines = 2
@@ -461,14 +466,4 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         super.didReceiveMemoryWarning()
     }
     
-    
-    
-    func toggleLike() {
-        if Data.shared.isLike(self.path!) {
-            Data.shared.unlike(self.path!)
-        } else {
-            Data.shared.like(self.path!)
-        }
-        self.updateHeader();
-    }
 }

@@ -26,13 +26,15 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     internal var pageIndex = 0;
     var meta:[String:AnyObject] = [:];
     var contents:[[String:String]] = [];
+    var path:String = ""
+
     private var showHeader = true;
     let toobar = UIToolbar();
 
     override func viewDidLoad() {
         super.viewDidLoad()
         meta = (Book.data.index?[pageIndex])!;
-        let path = meta["path"] as! String;
+        path = meta["path"] as! String;
         let content = Book.data.contents?[path];
         if(content != nil){
             contents = content ?? []
@@ -46,7 +48,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             self.tableView.rowHeight = 44;
         }
         
-        self.tableView.estimatedRowHeight=100;
+        self.tableView.estimatedRowHeight = 100;
         self.tableView.separatorStyle = .None;
     }
     
@@ -86,20 +88,6 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         return contents.count + 1
     }
     
-    func treeView(treeView:RATreeView, willDisplayCell cell:UITableViewCell, forItem item:AnyObject){
-        let level = treeView.levelForCell(cell) % 5;
-        if (level == 0) {
-            cell.backgroundColor = UIColorFromRGB(0xF7F7F7);
-        } else if (level == 1) {
-            cell.backgroundColor = UIColorFromRGB(0xD1EEFC);
-        } else if (level == 2) {
-            cell.backgroundColor = UIColorFromRGB(0xE0F8D8);
-        }  else if (level == 3) {
-            cell.backgroundColor = UIColorFromRGB(0xE0F8D8);
-        }  else {
-            cell.backgroundColor = UIColorFromRGB(0xE0F8D8);
-        }
-    }
 
      override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         if indexPath.row == contents.count {
@@ -113,7 +101,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         
         cell.textView.text = p["content"];
         if p["type"] == "sutra" {
-            cell.textView.font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody);
+            cell.textView.font = UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline);
             cell.textView.textColor = UIColor.darkTextColor()
             cell.backgroundColor = UIColor.clearColor()
         } else if p["type"] == "index" {
@@ -123,7 +111,11 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
 //            cell.backgroundColor = UIColor.groupTableViewBackgroundColor()
         }  else {
-            cell.textView.font = UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
+            var font =  UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
+            if font.pointSize < 13 {
+                font = UIFont.systemFontOfSize(13, weight: UIFontWeightRegular)
+            }
+            cell.textView.font = font;
             cell.textView.textColor = UIColor(red: 33/255, green: 33/255, blue: 33/255, alpha: 1)
             cell.backgroundColor = UIColor.clearColor()
 
@@ -142,32 +134,110 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         
 //        let composeBtn = UIBarButtonItem.init(barButtonSystemItem: .Compose, target: self, action: nil);
         
-        let composeBtn = UIBarButtonItem.init(image: UIImage.init(named: "comment_outline_18pt"), style: .Plain, target: self, action: nil)
+//        let composeBtn = UIBarButtonItem.init(image: UIImage.init(named: "comment_outline_18pt"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.comment))
         
-        let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .Plain, target: self, action: nil)
+        let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.share))
 
-        let starBtn = UIBarButtonItem.init(image: UIImage.init(named: "like_outline_18pt"), style: .Plain, target: self, action: nil)
+        let likeBtn = UIBarButtonItem.init(image: UIImage.init(named: "ic_star_border_18pt"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.toggleLike))
+        
+        if Data.shared.isLike(path) {
+            likeBtn.tintColor = view.tintColor
+        }
+       
+        let pureSutraBtn = UIBarButtonItem.init(image: UIImage.init(named: "sutra"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.pureSutra))
+
+        let leftBtn = UIBarButtonItem.init(customView: UIImageView.init(image: UIImage.init(named: "ic_chevron_left_18pt")?.imageWithRenderingMode(.AlwaysTemplate)));
+        let rightBtn = UIBarButtonItem.init(customView: UIImageView.init(image: UIImage.init(named: "ic_chevron_right_18pt")?.imageWithRenderingMode(.AlwaysTemplate)));
+        leftBtn.customView?.tintColor = UIColor.lightGrayColor()
+        rightBtn.customView?.tintColor = UIColor.lightGrayColor()
 
         
-        let spaceEdge = UIBarButtonItem.init(barButtonSystemItem: .FixedSpace, target: nil, action: nil)
-        spaceEdge.width = 22;
-        let space = UIBarButtonItem.init(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil)
+        let space44 = UIBarButtonItem.init(barButtonSystemItem: .FixedSpace, target: nil, action: nil)
+        space44.width = 44;
+        let spaceFlexible = UIBarButtonItem.init(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil)
 //        space.width = 44;
 //        starBtn.setTitleTextAttributes([NSFontAttributeName : UIFont.systemFontOfSize(22)], forState: .Normal)
 
-//        let toobar = UIToolbar();
+//        let btnInsets = UIEdgeInsetsMake(-20, 0.0, 0, 0.0)
+//        likeBtn.imageInsets = btnInsets
+//        actionBtn.imageInsets = btnInsets
+//        pureSutraBtn.imageInsets = btnInsets
+//        leftBtn.imageInsets = btnInsets
+//        rightBtn.imageInsets = btnInsets
+//        composeBtn.imageInsets = btnInsets
+        
         toobar.tintColor = UIColor.lightGrayColor()
-        toobar.frame = CGRectMake(0, 0, tableView.frame.size.width, 40);
+        toobar.frame = CGRectMake(0, 0, tableView.frame.size.width, 60);
         toobar.hidden = false;
 //        toobar.backgroundColor = UIColor.groupTableViewBackgroundColor()
-        toobar.setItems([spaceEdge, starBtn, space,composeBtn, space, actionBtn,spaceEdge], animated: true)
+        if meta["children"] != nil {
+            toobar.setItems([leftBtn, spaceFlexible, likeBtn, spaceFlexible, pureSutraBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
+        } else {
+            toobar.setItems([leftBtn, spaceFlexible, likeBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
+        }
         toobar.backgroundColor = UIColor.whiteColor()
         toobar.barTintColor = UIColor.whiteColor()
         let cell = UITableViewCell()
         cell.addSubview(toobar)
         return cell;
+        //todo add a button to read pure sutra 
+        //todo add a tab to show started sutra
+        
     }
-//    
+    
+    func toggleLike() {
+        if Data.shared.isLike(path) {
+            Data.shared.unlike(path)
+            toobar.items![2].tintColor = UIColor.lightGrayColor()
+        } else {
+            Data.shared.like(path)
+            toobar.items![2].tintColor = view.tintColor
+        }
+    }
+    
+    func pureSutra(){
+        
+//        let sutraVC = SutraPurePageViewController.init( transitionStyle:.PageCurl, navigationOrientation:.Horizontal, options: .None)
+        let sutraVC = SutraPurePageContentViewController.init();
+        sutraVC.item = meta;
+        
+//        let sutraVC:SutraBookViewController = self.storyboard!.instantiateViewControllerWithIdentifier("SutraBookViewController") as! SutraBookViewController
+//        sutraVC.initialRow = self.pageIndex
+        
+        let navVC = UINavigationController.init(rootViewController: sutraVC);
+        self.navigationController?.presentViewController(navVC, animated: true, completion: nil)
+    }
+    
+    func share() {
+        //todo attribute string
+        var shareContents = [String]()
+        if meta["children"] == nil {
+            var hasTitlePrefix:Bool = false;
+            var hasCommentaryPrefix:Bool = false;
+            for c in contents {
+                if c["type"] == "sutra" {
+                    if !hasTitlePrefix {
+                        shareContents.append("《楞嚴經》")
+                        hasTitlePrefix = true;
+                    }
+                   shareContents.append(c["content"]!)
+                } else  if c["type"] == "commentary" {
+                    if !hasCommentaryPrefix {
+                        shareContents.append("\n「宣化上人講解」")
+                        hasCommentaryPrefix = true;
+                    }
+                    shareContents.append(c["content"]!)
+                }
+            }
+        } else {
+            shareContents.append("《楞嚴經》之「" + (meta["name"] as! String) + "」")
+            shareContents.append(Book.data.getSutra(meta))
+        }
+        let activityViewController = UIActivityViewController(activityItems:[shareContents.joinWithSeparator("\n")], applicationActivities: nil)
+        presentViewController(activityViewController, animated: true, completion: {})
+    }
+    
+//
 //    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
 //        return showHeader ? 50.0 : 0;
 //    }
