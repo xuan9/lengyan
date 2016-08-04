@@ -87,12 +87,13 @@ class Book: NSObject {
     var tree:[String:AnyObject]? = nil
     var contents:[String:[[String:String]]]? = nil
     var index:[[String:String]]? = nil
-    
+    var media:[[String:String]]? = nil
+    var loaded = false;
     func itemOfPath(path:String) -> [String:AnyObject] {
         if path == "" || path == "/" || path == (self.tree!["path"] as! String){
             return self.tree!
         }
-        var node = tree;
+        var node = tree
         for id in path.componentsSeparatedByString("/") {
             if(id == "" || node!["children"] == nil ){continue}
             let children = node!["children"] as! NSArray as! [[String:AnyObject]]
@@ -100,13 +101,13 @@ class Book: NSObject {
                 $0["id"] as! String == id
             }).first
         }
-        return node!;
+        return node!
     }
     
     func parentOfItem(item:[String:AnyObject]) -> [String:AnyObject]? {
         var path = item["path"] as! String
         if path == "" || path == "/" {
-            return nil;
+            return nil
         } else {
             path = (path as NSString).substringToIndex(path.lastIndexOf("/")!)
         }
@@ -114,23 +115,24 @@ class Book: NSObject {
     }
     
     func loadDataWithCompletionHandler(handler:Void->Void) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)){
+            if self.loaded {
+                handler()
+                return
+            }
             
             let treeFileURL = NSBundle.mainBundle().URLForResource("data/lengyanjing-index-tree", withExtension: "json")
             
-            let data = NSData(contentsOfURL: treeFileURL!);
+            let data = NSData(contentsOfURL: treeFileURL!)
             do {
                 self.tree = try (NSJSONSerialization.JSONObjectWithData(data!, options: .AllowFragments)) as? NSDictionary as? [String: AnyObject]
             } catch _ {
-                self.tree = [:];
+                self.tree = [:]
             }
-            
-            
-            //
             
             let contentFile = NSBundle.mainBundle().URLForResource("data/lengyanjing-content", withExtension: "json")
             
-            let contentData = NSData(contentsOfURL: contentFile!);
+            let contentData = NSData(contentsOfURL: contentFile!)
             do {
                 self.contents = try (NSJSONSerialization.JSONObjectWithData(contentData!, options: .AllowFragments)) as? NSDictionary
                     as? [String:[[String:String]]]
@@ -138,10 +140,9 @@ class Book: NSObject {
                 self.contents  = [:]
             }
             
-            
             let indexFile = NSBundle.mainBundle().URLForResource("data/lengyanjing-index", withExtension: "json")
             
-            let indexData = NSData(contentsOfURL: indexFile!);
+            let indexData = NSData(contentsOfURL: indexFile!)
             do {
                 let indexArray = try (NSJSONSerialization.JSONObjectWithData(indexData!, options: .AllowFragments)) as? NSArray
                 //--check if any wront type item
@@ -149,59 +150,71 @@ class Book: NSObject {
                 //                    let d = a as? [String:String]
                 //                    if d == nil {
                 //                        print(( a as? NSDictionary)!["path"])
-                //                        return false;
+                //                        return false
                 //                    }
-                //                    return true;
+                //                    return true
                 //                }).count)
                 self.index = indexArray as? [[String:String]]
             } catch _ {
                 self.index = []
             }
-            handler();
+            
+            let mediaFile = NSBundle.mainBundle().URLForResource("data/lengyanjing-media", withExtension: "json")
+            
+            let mediaData = NSData(contentsOfURL: mediaFile!)
+            do {
+                self.media = try (NSJSONSerialization.JSONObjectWithData(mediaData!, options: .AllowFragments)) as? NSArray
+                    as? [[String:String]]
+            } catch _ {
+                self.media  = []
+            }
+            
+            self.loaded = true;
+            handler()
         }
         
     }
     
     func getTitleLine(item:[String:AnyObject])->NSAttributedString{
-        let prefix = "－－ ";
+        let prefix = "－－ "
         let title:String = (item["name"] as? String ?? "")
         // (item["id"] as! String) + " " +
-        let parent = Book.data.parentOfItem(item);
+        let parent = Book.data.parentOfItem(item)
         let parentTitle = parent?["name"] as? String ?? ""
         //        let titleAttributes = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline), NSForegroundColorAttributeName: UIColor.purpleColor()]
         
         let font:UIFont? = UIFont(name: "Arial", size: 14.0)
         
-             let attrString = NSMutableAttributedString(
+        let attrString = NSMutableAttributedString(
             string: prefix + parentTitle as String,
             attributes: [NSFontAttributeName: font!])
         
         let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
         let attrString2 = NSMutableAttributedString(
             string: (parent == nil ? "" : " 之 "),
-            attributes: [NSFontAttributeName: font2!]);
+            attributes: [NSFontAttributeName: font2!])
         
         let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
         let attrString1 = NSMutableAttributedString(
             string: title as String,
-            attributes: [NSFontAttributeName: font1!]);
+            attributes: [NSFontAttributeName: font1!])
         
         attrString.appendAttributedString(attrString2)
         attrString.appendAttributedString(attrString1)
-        return attrString;
+        return attrString
     }
     
     func getTitle(item:[String:AnyObject])->NSAttributedString{
         let title:String = (item["name"] as? String ?? "")
         // (item["id"] as! String) + " " +
-        let parent = Book.data.parentOfItem(item);
+        let parent = Book.data.parentOfItem(item)
         let parentTitle = parent?["name"] as? String ?? ""
         //        let titleAttributes = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline), NSForegroundColorAttributeName: UIColor.purpleColor()]
         
         let font:UIFont? = UIFont(name: "Arial", size: 12.0)
         
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.paragraphSpacing = 5;
+        paragraphStyle.paragraphSpacing = 5
         
         let attrString = NSMutableAttributedString(
             string: parentTitle as String,
@@ -211,20 +224,19 @@ class Book: NSObject {
         let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
         let attrString2 = NSMutableAttributedString(
             string: parent == nil ? "" : " 之",
-            attributes: [NSFontAttributeName: font2!,     NSParagraphStyleAttributeName : paragraphStyle]);
-        
+            attributes: [NSFontAttributeName: font2!,     NSParagraphStyleAttributeName : paragraphStyle])
         
         let paragraphStyle2 = NSMutableParagraphStyle()
-        paragraphStyle2.alignment = .Center;
+        paragraphStyle2.alignment = .Center
         
         let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
         let attrString1 = NSMutableAttributedString(
             string: "\n" + title as String,
-            attributes: [NSFontAttributeName: font1!,     NSParagraphStyleAttributeName : paragraphStyle2]);
+            attributes: [NSFontAttributeName: font1!,     NSParagraphStyleAttributeName : paragraphStyle2])
         
         attrString.appendAttributedString(attrString2)
         attrString.appendAttributedString(attrString1)
-        return attrString;
+        return attrString
     }
     
     func getTitleView(item:[String:AnyObject])->UILabel{
@@ -232,72 +244,63 @@ class Book: NSObject {
         label.backgroundColor = UIColor.clearColor()
         label.numberOfLines = 2
         label.textAlignment = NSTextAlignment.Left
-        label.attributedText = getTitle(item);
+        label.attributedText = getTitle(item)
         label.userInteractionEnabled = true
-        return label;
+        return label
     }
     
     func getSutraAttributeString(item:[String:AnyObject])->NSAttributedString{
-            let text = getSutra(item, maxLength: Int.max)
-            let pStyle = NSMutableParagraphStyle()
-            pStyle.lineSpacing = 10
-//            pStyle.paragraphSpacing = 5;
-            pStyle.firstLineHeadIndent = 30
-            
-            let pAttributes = [NSParagraphStyleAttributeName : pStyle,
-                               NSFontAttributeName: UIFont.systemFontOfSize(17)]
-            
-            return NSAttributedString(string: text, attributes:pAttributes)
-     }
+        let text = getSutra(item, maxLength: Int.max)
+        let pStyle = NSMutableParagraphStyle()
+        pStyle.lineSpacing = 10
+        //pStyle.paragraphSpacing = 5
+        pStyle.firstLineHeadIndent = 30
+        
+        let pAttributes = [NSParagraphStyleAttributeName : pStyle,
+                           NSFontAttributeName: UIFont.systemFontOfSize(17)]
+        
+        return NSAttributedString(string: text, attributes:pAttributes)
+    }
     
     func getSutra(item:[String:AnyObject])->String{
-        return getSutra(item,maxLength: Int.max);
+        return getSutra(item,maxLength: Int.max)
     }
     
     func getSutra(item:[String:AnyObject], maxLength:Int)->String{
         var sutraContents = [String]()
-        let children = item["children"];
+        let children = item["children"]
         if (children == nil) {
-            let content = Book.data.contents?[item["path"] as! String];
+            let content = Book.data.contents?[item["path"] as! String]
             if content != nil {
-                var length = 0;
+                var length = 0
                 for c in content! {
                     if c["type"] == "sutra" {
-                        let sutra = c["content"]!;
-                        length = length + sutra.characters.count
-                        if length <= maxLength {
-                            sutraContents.append(sutra);
-                        } else if sutraContents.count == 0 {
+                        let sutra = c["content"]!
+                        if length + sutra.characters.count <= maxLength {
+                            sutraContents.append(sutra)
+                            length = length + sutra.characters.count
+                        } else {
                             if maxLength <= 3 {
-                                sutraContents.append("...");
+                                sutraContents.append("...")
                             } else {
-                                sutraContents.append((sutra as NSString).substringWithRange(NSRange(location: 0, length: maxLength - 3)) + "...");
+                                sutraContents.append((sutra as NSString).substringWithRange(NSRange(location: 0, length:  maxLength -  length - 3)) + "...")
                             }
-                        }else{
-                            break;
+                            break
                         }
                     }
                 }
             }
-            
         } else {
-            var length = 0;
+            var length = 0
             for i in children as! NSArray {
-                let sutra = getSutra(i as! [String:AnyObject], maxLength:maxLength - length );
+                let sutra = getSutra(i as! [String:AnyObject], maxLength:maxLength - length )
+                sutraContents.append(sutra)
                 length = length + sutra.characters.count
-                if length <= maxLength {
-                    sutraContents.append(sutra)
-                    if length == maxLength {
-                        break
-                    }
-                } else {
+                if length >= maxLength {
                     break;
                 }
-                    
             }
-            
         }
         return sutraContents.joinWithSeparator("\n")
     }
-    
 }

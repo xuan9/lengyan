@@ -47,6 +47,7 @@
                     <connections>
                         <segue destination="E2C-VD-JHn" kind="relationship" relationship="viewControllers" id="ERA-Hh-j1d"/>
                         <segue destination="qUX-ch-lYt" kind="relationship" relationship="viewControllers" id="caR-bu-zPG"/>
+                        <segue destination="M0n-cg-fJY" kind="relationship" relationship="viewControllers" id="nji-g6-bUC"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="HuB-VB-40B" sceneMemberID="firstResponder"/>
@@ -70,11 +71,62 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qSz-Sz-6Tj" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="541" y="-456"/>
+            <point key="canvasLocation" x="324" y="-586"/>
+        </scene>
+        <!--聽經-->
+        <scene sceneID="l3r-Tb-nBs">
+            <objects>
+                <tableViewController title="聽經" id="M0n-cg-fJY" customClass="MediaTableViewController" customModule="lengyan" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" id="JhB-Pd-txI">
+                        <rect key="frame" x="0.0" y="64" width="600" height="536"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <inset key="scrollIndicatorInsets" minX="10" minY="20" maxX="10" maxY="10"/>
+                        <prototypes>
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" restorationIdentifier="MediaTableViewCell" selectionStyle="default" indentationWidth="10" reuseIdentifier="MediaTableViewCell" id="9dA-Th-gqc" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="28" width="600" height="44"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="9dA-Th-gqc" id="Kdc-5Q-h9h">
+                                    <rect key="frame" x="0.0" y="0.0" width="600" height="43"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UZ2-wr-MwL">
+                                            <rect key="frame" x="8" y="-1" width="135" height="44"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                        <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0IH-oZ-29T">
+                                            <rect key="frame" x="167" y="-1" width="425" height="44"/>
+                                            <items>
+                                                <barButtonItem id="XVz-Hb-Xeh"/>
+                                            </items>
+                                        </toolbar>
+                                    </subviews>
+                                </tableViewCellContentView>
+                                <connections>
+                                    <outlet property="nameLabel" destination="UZ2-wr-MwL" id="I0T-W0-NpW"/>
+                                    <outlet property="toolbar" destination="0IH-oZ-29T" id="UDF-bD-CZd"/>
+                                </connections>
+                            </tableViewCell>
+                        </prototypes>
+                        <connections>
+                            <outlet property="dataSource" destination="M0n-cg-fJY" id="sRb-Wm-u17"/>
+                            <outlet property="delegate" destination="M0n-cg-fJY" id="Qz8-ZP-iz8"/>
+                        </connections>
+                    </tableView>
+                    <tabBarItem key="tabBarItem" title="聽經" image="ic_library_music" id="HOD-70-xfN"/>
+                    <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" translucent="NO" prompted="NO"/>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="LuO-H1-s6S" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="314" y="-1316"/>
         </scene>
     </scenes>
     <resources>
         <image name="book" width="24" height="24"/>
+        <image name="ic_library_music" width="24" height="24"/>
         <image name="ic_star_18pt" width="18" height="18"/>
     </resources>
 </document>
