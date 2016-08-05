@@ -6,10 +6,11 @@ class StarsTableViewController: UITableViewController{
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.contentInset = UIEdgeInsetsMake(0.0, 0.0, 44, 0)
         
+//        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
+        tableView.separatorInset = UIEdgeInsetsMake(15, 0.0, 15, 0)
         //        self.tableView.rowHeight = 300;
-        //        self.tableView.separatorStyle = .None;
+        self.tableView.separatorStyle = .None;
         self.setTitleBar()
     }
     
@@ -23,9 +24,11 @@ class StarsTableViewController: UITableViewController{
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
-        tableView.scrollsToTop = true
-        
-        if (initialRow >= 0) {
+        let rows = tableView.numberOfRowsInSection(0)
+        if rows != Data.shared.likes.count {
+                tableView.reloadData()
+        }
+        if (initialRow > 0) {
             print("viewWillAppear, scroll to row: \(initialRow)");
             self.tableView.selectRowAtIndexPath(NSIndexPath.init(forRow: initialRow, inSection: 0), animated: false, scrollPosition: .Top)
             initialRow = -1;
@@ -35,7 +38,6 @@ class StarsTableViewController: UITableViewController{
     
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
-        tableView.scrollsToTop = false
     }
     
     override func didReceiveMemoryWarning() {
@@ -75,11 +77,11 @@ class StarsTableViewController: UITableViewController{
         var cell = tableView.dequeueReusableCellWithIdentifier(identifier);
         if (cell == nil) {
             cell = UITableViewCell.init(style:.Subtitle,reuseIdentifier:identifier);
-            cell?.detailTextLabel?.textColor = UIColor.brownColor()
+            cell?.detailTextLabel?.textColor = UIColor.lightGrayColor()
         }
         
         cell?.textLabel?.numberOfLines = 20;
-        cell?.textLabel?.text = Book.data.getSutra(item, maxLength: 300);
+        cell?.textLabel?.text = "☸ " + Book.data.getSutra(item, maxLength: 300);
         
         cell?.detailTextLabel?.attributedText = Book.data.getTitleLine(item);
         return cell!

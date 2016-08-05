@@ -176,7 +176,7 @@ class Book: NSObject {
     }
     
     func getTitleLine(item:[String:AnyObject])->NSAttributedString{
-        let prefix = "－－ "
+        let prefix = "• "
         let title:String = (item["name"] as? String ?? "")
         // (item["id"] as! String) + " " +
         let parent = Book.data.parentOfItem(item)

@@ -45,7 +45,7 @@ class SutraBookViewController: UITableViewController{
         super.viewWillAppear(animated)
         tableView.scrollsToTop = true
         
-        if (initialRow >= 0) {
+        if (initialRow > 0) {
             print("viewWillAppear, scroll to row: \(initialRow)");
 //            self.tableView.reloadData()
             self.tableView.selectRowAtIndexPath(NSIndexPath.init(forRow: initialRow, inSection: 0), animated: false, scrollPosition: .Top)

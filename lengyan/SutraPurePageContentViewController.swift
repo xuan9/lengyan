@@ -38,6 +38,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         
         addSutra(item!);
         updateHeader(item!)
+
     }
     
     override func prefersStatusBarHidden() -> Bool {

@@ -50,6 +50,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         
         self.tableView.estimatedRowHeight = 100;
         self.tableView.separatorStyle = .None;
+        self.tableView.allowsSelection = false;
     }
     
     
