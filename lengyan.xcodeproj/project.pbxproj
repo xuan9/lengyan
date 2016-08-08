@@ -21,7 +21,6 @@
 		135D60631D173B1B00029090 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60621D173B1B00029090 /* Book.swift */; };
 		135D60651D174CC300029090 /* SutraTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60641D174CC300029090 /* SutraTableViewCell.swift */; };
 		13643B291D2B1B8A00EB4372 /* SutraActionGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */; };
-		13643B2B1D2B207900EB4372 /* SutraActionGroupView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 13643B2A1D2B207900EB4372 /* SutraActionGroupView.xib */; };
 		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
 		1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */; };
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
@@ -89,7 +88,6 @@
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		135D60641D174CC300029090 /* SutraTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraTableViewCell.swift; sourceTree = "<group>"; };
 		13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraActionGroupView.swift; sourceTree = "<group>"; };
-		13643B2A1D2B207900EB4372 /* SutraActionGroupView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SutraActionGroupView.xib; sourceTree = "<group>"; };
 		1372181B1D402B720037332A /* SutraPurePageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageViewController.swift; sourceTree = "<group>"; };
 		1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageContentViewController.swift; sourceTree = "<group>"; };
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -238,7 +236,6 @@
 				1313C43D1D53E99800395429 /* MediaTableViewController.swift */,
 				139073121D109193003A3333 /* Main.storyboard */,
 				135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */,
-				13643B2A1D2B207900EB4372 /* SutraActionGroupView.xib */,
 				139073151D109194003A3333 /* Assets.xcassets */,
 				139073171D109194003A3333 /* LaunchScreen.storyboard */,
 				1390731A1D109194003A3333 /* Info.plist */,
@@ -435,7 +432,6 @@
 				139073161D109194003A3333 /* Assets.xcassets in Resources */,
 				139073141D109193003A3333 /* Main.storyboard in Resources */,
 				135D605F1D16FABE00029090 /* SutraStoryboard.storyboard in Resources */,
-				13643B2B1D2B207900EB4372 /* SutraActionGroupView.xib in Resources */,
 				1390734C1D109284003A3333 /* data in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

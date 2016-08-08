@@ -21,7 +21,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         treeView = RATreeView(frame: CGRect(
             origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 20),
-            size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height - 20 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
+            size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height - 20 )));
         treeView.delegate = self
         treeView.dataSource = self
         treeView.rowHeight = 24;

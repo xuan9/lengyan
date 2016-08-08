@@ -13,8 +13,6 @@ class MediaTableViewCell: UITableViewCell {
     
     @IBOutlet weak var nameLabel: UILabel!
     
-    @IBOutlet weak var toolbar: UIToolbar!
-    
     override func awakeFromNib() {
         super.awakeFromNib()
     }
@@ -84,21 +82,38 @@ class MediaTableViewController: UITableViewController{
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let item = media[indexPath.row];
-        let isAudio = indexPath.section == 1
-        let mediaName = isAudio ? item["audio"] : item["video"]
+//        let isAudio = indexPath.section == 1
+        //let mediaName = isAudio ? item["audio"] : item["video"]
+        let row = indexPath.row
+        let isAudioHeader = row == 0, isVideoHeader = row == 11, isPlayListHeader = row == 22
         
         let isDownloaded = true;//todo check if resource file local available
-        let identifier = isDownloaded ? (isAudio ? "Media-Cell-Audio" : "Media-Cell-Audio") : "Media-Cell-Download";
+        let identifier = isAudioHeader || isVideoHeader ? "Media-Cell-Header" :
+            isPlayListHeader ?"Media-Cell-Playlist-Header" :
+            row < 22 ? (isDownloaded ? "Media-Cell" : "Media-Cell-Download"):
+            "Media-Cell-Playlist-Item"
+        
         let cell = tableView.dequeueReusableCellWithIdentifier(identifier, forIndexPath: indexPath) as! MediaTableViewCell
         
-        cell.nameLabel?.text = "• " + item["name"]!;
         
-        return cell
+        let text:String = isAudioHeader ? "🎵 屏東能淨協會讀誦" :
+            (isVideoHeader ? "🌕 聆志居士讀誦 繁體字幕" :
+                isPlayListHeader ? "播放列表" :
+                row < 11 ? "• " + media[row-1]["name"]! :
+                row < 22 ? "• " + media[row-12]["name"]! :
+                "todo: playlist item");
+        
+        cell.nameLabel?.text =  text;
+        
+        return cell;
     }
-    override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return section == 1 ? "屏東能淨協會朗讀" : "聆志居士讀誦 繁體字幕";
-    }
+    
+//    override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+//        return section == 0 ? "🎵 屏東能淨協會讀誦" : "🌕 聆志居士讀誦 繁體字幕";
+//    }
+    
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
     }
     
     // Override to support conditional editing of the table view.
