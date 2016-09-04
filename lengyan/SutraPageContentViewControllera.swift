@@ -12,7 +12,7 @@ protocol SutraPage {
     var pageIndex:Int {get set}
 }
 
-func UIColorFromRGB(rgbValue: UInt) -> UIColor {
+func UIColorFromRGB(_ rgbValue: UInt) -> UIColor {
     return UIColor(
         red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
         green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
@@ -24,11 +24,11 @@ func UIColorFromRGB(rgbValue: UInt) -> UIColor {
 class SutraPageContentViewController: UITableViewController, SutraPage{
 
     internal var pageIndex = 0;
-    var meta:[String:AnyObject] = [:];
+    var meta:[String:Any] = [:];
     var contents:[[String:String]] = [];
     var path:String = ""
 
-    private var showHeader = true;
+    fileprivate var showHeader = true;
     let toobar = UIToolbar();
 
     override func viewDidLoad() {
@@ -41,7 +41,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             self.tableView.rowHeight = UITableViewAutomaticDimension
         } else {
             meta = Book.data.itemOfPath(path)
-            for child in (meta["children"] as! NSArray) {
+            for child in (meta["children"] as! NSArray as! [[String:Any]]) {
                 let name:String = child["name"] as! String
                 contents.append(["type":"index", "content": "• " + name])
             }
@@ -49,7 +49,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         }
         
         self.tableView.estimatedRowHeight = 100;
-        self.tableView.separatorStyle = .None;
+        self.tableView.separatorStyle = .none;
         self.tableView.allowsSelection = false;
     }
     
@@ -58,12 +58,12 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         print("titleWasTapped");
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         tableView.scrollsToTop = true
     }
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         tableView.scrollsToTop = false
     }
@@ -73,52 +73,52 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         // Dispose of any resources that can be recreated.
     }
     
-    override func tableView(tableView: UITableView, estimatedHeightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+    override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         return UITableViewAutomaticDimension;
 
     }
     // MARK: - Table view data source
     
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
         return 1
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
         return contents.count + 1
     }
     
 
-     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        if indexPath.row == contents.count {
+     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if (indexPath as NSIndexPath).row == contents.count {
             return self.actionRow();
         }
         
-        let cell = tableView.dequeueReusableCellWithIdentifier("SutraTableViewCell", forIndexPath: indexPath) as! SutraTableViewCell
-        cell.textView.backgroundColor = UIColor.clearColor()
+        let cell = tableView.dequeueReusableCell(withIdentifier: "SutraTableViewCell", for: indexPath) as! SutraTableViewCell
+        cell.textView.backgroundColor = UIColor.clear
         
-        let p = contents[indexPath.row] as NSDictionary as! [String:String];
+        let p = contents[(indexPath as NSIndexPath).row] as NSDictionary as! [String:String];
         
         cell.textView.text = p["content"];
         if p["type"] == "sutra" {
-            cell.textView.font = UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline);
-            cell.textView.textColor = UIColor.darkTextColor()
-            cell.backgroundColor = UIColor.clearColor()
+            cell.textView.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.headline);
+            cell.textView.textColor = UIColor.darkText
+            cell.backgroundColor = UIColor.clear
         } else if p["type"] == "index" {
-            cell.textView.font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody);
-            cell.textView.textColor = UIColor.blackColor()
-            cell.backgroundColor = UIColor.clearColor()
+            cell.textView.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body);
+            cell.textView.textColor = UIColor.black
+            cell.backgroundColor = UIColor.clear
 
 //            cell.backgroundColor = UIColor.groupTableViewBackgroundColor()
         }  else {
-            var font =  UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
+            var font =  UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
             if font.pointSize < 13 {
-                font = UIFont.systemFontOfSize(13, weight: UIFontWeightRegular)
+                font = UIFont.systemFont(ofSize: 13, weight: UIFontWeightRegular)
             }
             cell.textView.font = font;
             cell.textView.textColor = UIColor(red: 33/255, green: 33/255, blue: 33/255, alpha: 1)
-            cell.backgroundColor = UIColor.clearColor()
+            cell.backgroundColor = UIColor.clear
 
         }
         return cell
@@ -137,25 +137,25 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         
 //        let composeBtn = UIBarButtonItem.init(image: UIImage.init(named: "comment_outline_18pt"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.comment))
         
-        let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.share))
+        let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .plain, target: self, action: #selector(SutraPageContentViewController.share))
 
-        let likeBtn = UIBarButtonItem.init(image: UIImage.init(named: "ic_star_border_18pt"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.toggleLike))
+        let likeBtn = UIBarButtonItem.init(image: UIImage.init(named: "ic_star_border_18pt"), style: .plain, target: self, action: #selector(SutraPageContentViewController.toggleLike))
         
         if Data.shared.isLike(path) {
             likeBtn.tintColor = view.tintColor
         }
        
-        let pureSutraBtn = UIBarButtonItem.init(image: UIImage.init(named: "sutra"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.pureSutra))
+        let pureSutraBtn = UIBarButtonItem.init(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(SutraPageContentViewController.pureSutra))
 
-        let leftBtn = UIBarButtonItem.init(customView: UIImageView.init(image: UIImage.init(named: "ic_chevron_left_18pt")?.imageWithRenderingMode(.AlwaysTemplate)));
-        let rightBtn = UIBarButtonItem.init(customView: UIImageView.init(image: UIImage.init(named: "ic_chevron_right_18pt")?.imageWithRenderingMode(.AlwaysTemplate)));
-        leftBtn.customView?.tintColor = UIColor.lightGrayColor()
-        rightBtn.customView?.tintColor = UIColor.lightGrayColor()
+        let leftBtn = UIBarButtonItem.init(customView: UIImageView.init(image: UIImage.init(named: "ic_chevron_left_18pt")?.withRenderingMode(.alwaysTemplate)));
+        let rightBtn = UIBarButtonItem.init(customView: UIImageView.init(image: UIImage.init(named: "ic_chevron_right_18pt")?.withRenderingMode(.alwaysTemplate)));
+        leftBtn.customView?.tintColor = UIColor.lightGray
+        rightBtn.customView?.tintColor = UIColor.lightGray
 
         
-        let space44 = UIBarButtonItem.init(barButtonSystemItem: .FixedSpace, target: nil, action: nil)
+        let space44 = UIBarButtonItem.init(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
         space44.width = 44;
-        let spaceFlexible = UIBarButtonItem.init(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil)
+        let spaceFlexible = UIBarButtonItem.init(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
 //        space.width = 44;
 //        starBtn.setTitleTextAttributes([NSFontAttributeName : UIFont.systemFontOfSize(22)], forState: .Normal)
 
@@ -167,17 +167,17 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 //        rightBtn.imageInsets = btnInsets
 //        composeBtn.imageInsets = btnInsets
         
-        toobar.tintColor = UIColor.lightGrayColor()
-        toobar.frame = CGRectMake(0, 0, tableView.frame.size.width, 60);
-        toobar.hidden = false;
+        toobar.tintColor = UIColor.lightGray
+        toobar.frame = CGRect(x: 0, y: 0, width: tableView.frame.size.width, height: 60);
+        toobar.isHidden = false;
 //        toobar.backgroundColor = UIColor.groupTableViewBackgroundColor()
         if meta["children"] != nil {
             toobar.setItems([leftBtn, spaceFlexible, likeBtn, spaceFlexible, pureSutraBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
         } else {
             toobar.setItems([leftBtn, spaceFlexible, likeBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
         }
-        toobar.backgroundColor = UIColor.whiteColor()
-        toobar.barTintColor = UIColor.whiteColor()
+        toobar.backgroundColor = UIColor.white
+        toobar.barTintColor = UIColor.white
         let cell = UITableViewCell()
         cell.addSubview(toobar)
         return cell;
@@ -189,7 +189,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     func toggleLike() {
         if Data.shared.isLike(path) {
             Data.shared.unlike(path)
-            toobar.items![2].tintColor = UIColor.lightGrayColor()
+            toobar.items![2].tintColor = UIColor.lightGray
         } else {
             Data.shared.like(path)
             toobar.items![2].tintColor = view.tintColor
@@ -206,7 +206,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 //        sutraVC.initialRow = self.pageIndex
         
         let navVC = UINavigationController.init(rootViewController: sutraVC);
-        self.navigationController?.presentViewController(navVC, animated: true, completion: nil)
+        self.navigationController?.present(navVC, animated: true, completion: nil)
     }
     
     func share() {
@@ -234,8 +234,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             shareContents.append("《楞嚴經》之「" + (meta["name"] as! String) + "」")
             shareContents.append(Book.data.getSutra(meta))
         }
-        let activityViewController = UIActivityViewController(activityItems:[shareContents.joinWithSeparator("\n")], applicationActivities: nil)
-        presentViewController(activityViewController, animated: true, completion: {})
+        let activityViewController = UIActivityViewController(activityItems:[shareContents.joined(separator: "\n")], applicationActivities: nil)
+        present(activityViewController, animated: true, completion: {})
     }
     
 //

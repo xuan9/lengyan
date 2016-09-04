@@ -10,10 +10,10 @@ import UIKit
 
 class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
-    var onDismiss: (Void -> Void)?
-    private var treeView: RATreeView!
+    var onDismiss: ((Void) -> Void)?
+    fileprivate var treeView: RATreeView!
     
-    internal var tree:NSDictionary?, path:String?
+    internal var tree:[String:Any]?, path:String?
     
     var defaultExpandLevel:Int = 0
     var expandedItemPaths:[String] = []
@@ -28,9 +28,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             size:   CGSize(width: bounds.size.width , height:bounds.size.height - 5 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
         treeView.delegate = self
         treeView.dataSource = self
-        treeView.backgroundColor = UIColor.whiteColor()
-        view.backgroundColor = UIColor.whiteColor()
-        treeView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+        treeView.backgroundColor = UIColor.white
+        view.backgroundColor = UIColor.white
+        treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(treeView)
         //        treeView.rowHeight = UITableViewAutomaticDimension
         treeView.rowHeight = 34.0
@@ -44,10 +44,10 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.isRootIndex = true;
             self.loadRootTree();
             
-            NSNotificationCenter.defaultCenter().addObserver(
+            NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(SutraIndexViewController.onApplicationWillTerminate),
-                name: UIApplicationWillTerminateNotification,
+                name: NSNotification.Name.UIApplicationWillTerminate,
                 object: nil)
         } else {
             path = tree!["path"] as? String;
@@ -75,7 +75,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         Book.data.loadDataWithCompletionHandler { (Void) in
             self.tree = Book.data.tree
             self.path = self.tree!["path"] as? String;
-            dispatch_async(dispatch_get_main_queue()){
+            DispatchQueue.main.async{
                 self.treeView.reloadData()
             }
         }
@@ -96,18 +96,18 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     //        }
     //    }
     
-    func autoExpandNode(node:NSDictionary){
-        let currentLevel = treeView.levelForCellForItem(node);
+        func autoExpandNode(_ node:[String:Any]){
+        let currentLevel = treeView.levelForCell(forItem: node);
         if(currentLevel >= defaultExpandLevel) {return}
         
-        treeView.expandRowForItem(node, withRowAnimation: RATreeViewRowAnimationNone)
+        treeView.expandRow(forItem: node, with: RATreeViewRowAnimationNone)
         //        print("Expanded level \(currentLevel) \(node["name"])");
         if(currentLevel+1 > defaultExpandLevel) {return}
         
         let children:NSArray? = node["children"] as? NSArray;
         if(children != nil ) {
             children?.forEach({ (item) in
-                self.autoExpandNode(item as! NSDictionary)
+                self.autoExpandNode(item as! [String : Any])
             })
         }
     }
@@ -116,13 +116,13 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(tree != nil) {
             self.title = tree?["name"] as? String ?? ""
         }
-        self.navigationController?.navigationBar.translucent = false;
+        self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))//✕
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraIndexViewController.close))//✕
         
         //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: likeTitle, style: .Plain, target: self, action: #selector(SutraIndexViewController.toggleLike))
-            let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .Plain, target: self, action: #selector(SutraIndexViewController.openSutra))
+            let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(SutraIndexViewController.openSutra))
         
         
         
@@ -132,7 +132,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         //               let buttonEdges = UIEdgeInsetsMake(0, 10, 0, -10);
         //        detailBtn.imageEdgeInsets = buttonEdges;
         
-       let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .Plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
+       let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
         
         self.navigationItem.setRightBarButtonItems([listButton,sutraButton], animated: false)
     }
@@ -140,50 +140,50 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     func close(){
         onDismiss?();
-        self.dismissViewControllerAnimated(true) {
+        self.dismiss(animated: true) {
             
         }
     }
     
     func menu(){
-        let alert = UIAlertController(title: "菜單", message: nil, preferredStyle: .ActionSheet)
+        let alert = UIAlertController(title: "菜單", message: nil, preferredStyle: .actionSheet)
         
         let firstAction:UIAlertAction
         if(!Data.shared.isLike(path!)){
-            firstAction = UIAlertAction(title: "★加入精選", style: .Default) { (alert: UIAlertAction!) -> Void in
+            firstAction = UIAlertAction(title: "★加入精選", style: .default) { (alert: UIAlertAction!) -> Void in
                 Data.shared.like(self.path!)
                 self.updateHeader();
             }
         } else {
-            firstAction = UIAlertAction(title: "☆移除精選", style: .Destructive) { (alert: UIAlertAction!) -> Void in
+            firstAction = UIAlertAction(title: "☆移除精選", style: .destructive) { (alert: UIAlertAction!) -> Void in
                 Data.shared.unlike(self.path!)
                 self.updateHeader();
             }
         }
         
-        let secondAction = UIAlertAction(title: "👍讚", style: .Default) { (alert: UIAlertAction!) -> Void in
+        let secondAction = UIAlertAction(title: "👍讚", style: .default) { (alert: UIAlertAction!) -> Void in
             Data.shared.like(self.path!)
         }
         
-        let cancelAction = UIAlertAction(title: "取消", style: .Cancel) { (alert: UIAlertAction!) -> Void in
+        let cancelAction = UIAlertAction(title: "取消", style: .cancel) { (alert: UIAlertAction!) -> Void in
         }
         alert.addAction(firstAction)
         alert.addAction(secondAction)
         alert.addAction(cancelAction)
-        presentViewController(alert, animated: true, completion:nil) // 6
+        present(alert, animated: true, completion:nil) // 6
         
     }
     //Called, when long press occurred
-    func longPress(longPressGestureRecognizer: UILongPressGestureRecognizer) {
+    func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
         
-        if longPressGestureRecognizer.state == UIGestureRecognizerState.Began {
+        if longPressGestureRecognizer.state == UIGestureRecognizerState.began {
             
-            let touchPoint = longPressGestureRecognizer.locationInView(self.treeView.scrollView)
-            if let item = treeView.itemForRowAtPoint(touchPoint) as? NSDictionary {
+            let touchPoint = longPressGestureRecognizer.location(in: self.treeView.scrollView)
+            if let item = treeView.itemForRow(at: touchPoint) as? [String : Any] {
                 if(item["children"] == nil){
                     openItem(item)
                 } else {
-                    openIndex(item);
+                    openIndex(item  );
                 }
             }
         }
@@ -191,29 +191,29 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     func openSutra(){
         let sutraVC = SutraPurePageContentViewController.init();
-        sutraVC.item = tree as? [String:AnyObject]
+        sutraVC.item = tree
         let navVC = UINavigationController.init(rootViewController: sutraVC);
-        self.navigationController?.presentViewController(navVC, animated: true, completion: nil)
+        self.navigationController?.present(navVC, animated: true, completion: nil)
     }
     
     func openAsPage(){
         openItem(self.tree!)
     }
     
-    func openAsPageFromCellButton(sender:UIButton){
+    func openAsPageFromCellButton(_ sender:UIButton){
         let cell:UITableViewCell = sender.superview as! UITableViewCell
-        let item = self.treeView.itemForCell(cell)
-        openItem(item as! NSDictionary)
+        let item = self.treeView.item(for: cell)
+        openItem((item as! NSDictionary) as! [String : Any])
     }
     
-    func openItem(item: NSDictionary){
+        func openItem(_ item: [String:Any]){
         
-        let pageVC = SutraPageViewController.init( transitionStyle:.PageCurl,
-                                                   navigationOrientation:.Horizontal,
-                                                   options: .None)
+        let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl,
+                                                   navigationOrientation:.horizontal,
+                                                   options: .none)
         let path:String = item["path"] as! String
         TICK()
-        pageVC.page = Book.data.index!.indexOf({ (
+        pageVC.page = Book.data.index!.index(where: { (
             item) -> Bool in
             return item["path"] == path
         })!;
@@ -224,14 +224,14 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
         let navVC = UINavigationController.init(rootViewController: pageVC);
         
-        self.presentViewController(navVC, animated: true, completion: {
+        self.present(navVC, animated: true, completion: {
             
         })
     }
     
-    func openIndex(item: NSDictionary){
+    func openIndex(_ item:  [String : Any]){
         let indexVC = SutraIndexViewController();
-        indexVC.tree = item;
+        indexVC.tree = item
         indexVC.defaultExpandLevel = 1;
         let navVC = UINavigationController.init(rootViewController: indexVC);
         
@@ -239,12 +239,12 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.openPath(indexVC.tree!["path"] as! String);
         }
         
-        self.presentViewController(navVC, animated: true, completion: {
+        self.present(navVC, animated: true, completion: {
             
         })
     }
     
-    func openPath(path:String) {
+    func openPath(_ path:String) {
         if path == "" || path == "/" {
             return;
         }
@@ -252,63 +252,64 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if rootPath.characters.count > path.characters.count {
             return
         }
-        let subPath = path.substringFromIndex(rootPath.endIndex);
+        let subPath = path.substring(from: rootPath.endIndex);
         var node = tree, isExpanded = false;
-        for id in subPath.componentsSeparatedByString("/") {
+        for id in subPath.components(separatedBy: "/") {
             if(id==""){continue}
             if(node!["children"] != nil) {
-                node = (node!["children"] as! NSArray).filter({
-                    $0["id"] as! String == id
-                }).first as? NSDictionary
+                let chidrens = node?["children"]
+                node = (chidrens as! NSArray).filter({
+                        (($0 as! [String:Any])["id"]) as! String == id
+                        }).first as? [String:Any]
             } else {
                 return;
             }
             if(node == nil) {return}
-            if !treeView.isCellForItemExpanded(node!) {
-                treeView.expandRowForItem(node, withRowAnimation: RATreeViewRowAnimationNone);
+            if !treeView.isCell(forItemExpanded: node!) {
+                treeView.expandRow(forItem: node, with: RATreeViewRowAnimationNone);
                 isExpanded = true;
             }
         }
         if isExpanded {
-            treeView.selectRowForItem(node, animated: true, scrollPosition: RATreeViewScrollPositionMiddle)
+            treeView.selectRow(forItem: node, animated: true, scrollPosition: RATreeViewScrollPositionMiddle)
         }
     }
     
     // MARK - RATreeView
-    func treeView(treeView: RATreeView, numberOfChildrenOfItem item: AnyObject?) -> Int {
+    func treeView(_ treeView: RATreeView, numberOfChildrenOfItem item: Any?) -> Int {
         if(item == nil){
-            return self.tree?["children"]?.count ?? 0
+            return (self.tree?["children"] as? NSArray)?.count ?? 0
         } else {
-            return item!["children"]!?.count ?? 0
+                return ((item as! [String:Any])["children"] as? NSArray)?.count ?? 0
         }
     }
     
-    func treeView(treeView: RATreeView, cellForItem item: AnyObject?) -> UITableViewCell {
+    func treeView(_ treeView: RATreeView, cellForItem item: Any?) -> UITableViewCell {
         let item = item as! NSDictionary;
         let isLeaf = item["children"] == nil
         let identifier = isLeaf ? "leafCell" : "indexCell"
-        var newCell = treeView.dequeueReusableCellWithIdentifier(identifier) as? UITableViewCell;
+        var newCell = treeView.dequeueReusableCell(withIdentifier: identifier) as? UITableViewCell;
         
         if (newCell == nil) {
-            newCell = UITableViewCell.init(style:.Value1,reuseIdentifier:identifier);
+            newCell = UITableViewCell.init(style:.value1,reuseIdentifier:identifier);
             //            newCell!.detailTextLabel?.lineBreakMode = .ByWordWrapping;
             //            newCell!.detailTextLabel?.font = UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
             //            newCell!.detailTextLabel?.numberOfLines = 2
             //            newCell!.detailTextLabel?.font = UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote).fontWithSize(14);
             //            newCell!.detailTextLabel?.adjustsFontSizeToFitWidth = true;
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
-            newCell!.textLabel?.font = UIFont.preferredFontForTextStyle(UIFontTextStyleFootnote);
+            newCell!.textLabel?.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
             
             if (!isLeaf) {
-                let bookBtn = UIButton.init(type: .Custom)
-                bookBtn.frame = CGRectMake(0, 0.0, 38, treeView.rowHeight)
+                let bookBtn = UIButton.init(type: .custom)
+                bookBtn.frame = CGRect(x: 0, y: 0.0, width: 38, height: treeView.rowHeight)
 //                bookBtn.backgroundColor = UIColor.redColor()
-                bookBtn.setTitle("❭", forState: .Normal)
+                bookBtn.setTitle("❭", for: UIControlState())
 //                bookBtn.tintColor = UIColor.whiteColor()
 //                bookBtn.setTitleColor(UIColor.lightGrayColor(), forState: .Normal)
 //                let bookImage = UIImage.init(named: "book_18pt")
 //                bookBtn.setImage(bookImage, forState: .Normal)
-                bookBtn.addTarget(self, action: #selector(SutraIndexViewController.openAsPageFromCellButton(_:)) , forControlEvents: .TouchUpInside)
+                bookBtn.addTarget(self, action: #selector(SutraIndexViewController.openAsPageFromCellButton(_:)) , for: .touchUpInside)
                 newCell!.accessoryView = bookBtn;
             }
             
@@ -342,7 +343,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             //            cell.selectionStyle = UITableViewCellSelectionStyleNone;
 //            cell.accessoryType = .DisclosureIndicator
             //            UIImage.init(named: "book_18pt")
-            cell.textLabel?.textColor =  UIColor.darkTextColor();
+            cell.textLabel?.textColor =  UIColor.darkText;
         }
         
 //        let path = item["path"]! as? String
@@ -369,48 +370,49 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     
-    //    func treeView(treeView:RATreeView, estimatedHeightForRowForItem item: AnyObject) -> CGFloat {
+    //    func treeView(treeView:RATreeView, estimatedHeightForRowForItem item: Any) -> CGFloat {
     //        return 53;
     //    }
     
     
-    func treeView(treeView: RATreeView, child index: Int, ofItem item: AnyObject?) -> AnyObject {
+    func treeView(_ treeView: RATreeView, child index: Int, ofItem item: Any?) -> Any {
         if(item != nil){
-            return (item!["children"]?![index])!
+                return (((item as! [String:Any])["children"] as! NSArray)[index]) as Any
         }else{
-            return (self.tree?["children"]?[index])!
+                
+            return ((self.tree?["children"] as! NSArray)[index])  as Any
         }
     }
     
     
-    func treeView(treeView:RATreeView, indentationLevelForRowForItem item:AnyObject) -> Int{
-        return treeView.levelForCellForItem(item) * 2;
+    func treeView(_ treeView:RATreeView, indentationLevelForRowForItem item:Any) -> Int{
+        return treeView.levelForCell(forItem: item) * 2;
     }
     
-    func treeView(treeView:RATreeView, didExpandRowForItem item:AnyObject){
+    func treeView(_ treeView:RATreeView, didExpandRowForItem item:Any){
         self.expandedItemPaths.append((item as! NSDictionary)["path"] as! String)
     }
     
-    func treeView(treeView:RATreeView, didCollapseRowForItem item:AnyObject){
-        let index = expandedItemPaths.indexOf((item as! NSDictionary)["path"] as! String)
+    func treeView(_ treeView:RATreeView, didCollapseRowForItem item:Any){
+        let index = expandedItemPaths.index(of: (item as! NSDictionary)["path"] as! String)
         if index != nil {
-            self.expandedItemPaths.removeAtIndex(index!)
+            self.expandedItemPaths.remove(at: index!)
         }
     }
     
-    func treeView(treeView:RATreeView,  didSelectRowForItem item:AnyObject){
-        let item = item as! NSDictionary;
+    func treeView(_ treeView:RATreeView,  didSelectRowForItem item:Any){
+        let item = item   as! [String:Any];
         if(item["children"] == nil){
             self.openItem(item)
         }
     }
     
-    func treeView(treeView:RATreeView,  accessoryButtonTappedForRowForItem item:AnyObject){
-        let item = item as! NSDictionary;
+    func treeView(_ treeView:RATreeView,  accessoryButtonTappedForRowForItem item:Any){
+        let item = item  as! [String:Any];
         self.openItem(item);
     }
     
-    func treeView(treeView: RATreeView, editActionsForItem item: AnyObject) -> [AnyObject] {
+    func treeView(_ treeView: RATreeView, editActionsForItem item: Any) -> [Any] {
         /*let likeAction:UITableViewRowAction;
         let path = (item as! NSDictionary)["path"] as! String;
         if(!Data.shared.isLike(path)){
@@ -448,7 +450,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
      */
      
-        return [AnyObject]()
+        return [Any]()
     }
     
     //    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
@@ -458,9 +460,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     
     // MARK: - view controller functions overwrites
-    override func prefersStatusBarHidden() -> Bool {
-        return true
-    }
+//    override func prefersStatusBarHidden() -> Bool {
+//        return true
+//    }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()

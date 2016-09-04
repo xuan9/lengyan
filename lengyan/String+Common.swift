@@ -11,12 +11,12 @@ import Foundation
 extension String
 {
     
-    func lastIndexOf(s: String) -> Int? {
-        if let r: Range<Index> = self.rangeOfString(s, options: .BackwardsSearch) {
-            return self.startIndex.distanceTo(r.startIndex)
+    func lastIndexOf(_ s: String) -> Int? {
+        if let r: Range<Index> = self.range(of: s, options: .backwards) {
+            return self.characters.distance(from: self.startIndex, to: r.lowerBound)
         }
         
-        return Optional<Int>()
+        return nil;
     }
     
     /*func contains(s: String) -> Bool

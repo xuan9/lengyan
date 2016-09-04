@@ -17,7 +17,7 @@ class MediaTableViewCell: UITableViewCell {
         super.awakeFromNib()
     }
     
-    override func setSelected(selected: Bool, animated: Bool){
+    override func setSelected(_ selected: Bool, animated: Bool){
         super.setSelected(selected, animated: animated)
     }
     
@@ -39,14 +39,10 @@ class MediaTableViewController: UITableViewController{
         
         Book.data.loadDataWithCompletionHandler { (Void) in
             self.media = Book.data.media!
-            dispatch_async(dispatch_get_main_queue()){
+            DispatchQueue.main.async{
                 self.tableView.reloadData()
             }
         }
-    }
-    
-    override func prefersStatusBarHidden() -> Bool {
-        return false
     }
     //
     //    override func viewWillAppear(animated: Bool) {
@@ -63,28 +59,28 @@ class MediaTableViewController: UITableViewController{
     }
     
     func setTitleBar() {
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"選擇", style: .Plain, target: self, action: nil)
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"選擇", style: .plain, target: self, action: nil)
         self.title = "聽經"
     }
     
     // MARK: - Table view data source
     
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
         return 2
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
         return media.count;
     }
     
     
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let item = media[indexPath.row];
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//        let item = media[(indexPath as NSIndexPath).row];
 //        let isAudio = indexPath.section == 1
         //let mediaName = isAudio ? item["audio"] : item["video"]
-        let row = indexPath.row
+        let row = (indexPath as NSIndexPath).row
         let isAudioHeader = row == 0, isVideoHeader = row == 11, isPlayListHeader = row == 22
         
         let isDownloaded = true;//todo check if resource file local available
@@ -93,7 +89,7 @@ class MediaTableViewController: UITableViewController{
             row < 22 ? (isDownloaded ? "Media-Cell" : "Media-Cell-Download"):
             "Media-Cell-Playlist-Item"
         
-        let cell = tableView.dequeueReusableCellWithIdentifier(identifier, forIndexPath: indexPath) as! MediaTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: identifier, for: indexPath) as! MediaTableViewCell
         
         
         let text:String = isAudioHeader ? "🎵 屏東能淨協會讀誦" :
@@ -112,12 +108,12 @@ class MediaTableViewController: UITableViewController{
 //        return section == 0 ? "🎵 屏東能淨協會讀誦" : "🌕 聆志居士讀誦 繁體字幕";
 //    }
     
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
     }
     
     // Override to support conditional editing of the table view.
-    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         // Return false if you do not want the specified item to be editable.
         return true
     }
@@ -125,12 +121,12 @@ class MediaTableViewController: UITableViewController{
     
     
     // Override to support editing the table view.
-    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == .Delete {
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
             // Delete the row from the data source
             //        tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
             //todo
-        } else if editingStyle == .Insert {
+        } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
         }
     }

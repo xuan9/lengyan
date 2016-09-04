@@ -8,10 +8,10 @@
 
 import Foundation
 
-var startTime = NSDate()
+var startTime = Date()
 
-func TICK(){ startTime =  NSDate() }
+func TICK(){ startTime =  Date() }
 
-func TOCK(function: String = #function, file: String = #file, line: Int = #line){
+func TOCK(_ function: String = #function, file: String = #file, line: Int = #line){
     print("\(function) Time: \(-startTime.timeIntervalSinceNow)\nLine:\(line) File: \(file)")
 }

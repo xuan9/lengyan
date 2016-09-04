@@ -9,8 +9,8 @@
 import UIKit
 
 class FirstViewController: UIViewController {
-    private var tree:NSDictionary?;
-    private var fullIndexVC:SutraIndexViewController?;
+        fileprivate var tree:[String:Any]?;
+    fileprivate var fullIndexVC:SutraIndexViewController?;
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -18,7 +18,7 @@ class FirstViewController: UIViewController {
         Book.data.loadDataWithCompletionHandler { (Void) in
             self.tree = Book.data.tree
             fullIndexVC.tree =  Book.data.tree
-            dispatch_async(dispatch_get_main_queue()){
+            DispatchQueue.main.async{
                 self.view.addSubview(fullIndexVC.view);
             }
         }
@@ -28,9 +28,5 @@ class FirstViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    override func canBecomeFirstResponder() -> Bool {
-        return true;
-    }
-
 }
 

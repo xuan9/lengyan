@@ -7,7 +7,7 @@
 //
 
 class SutraActionGroupView: UIView {
-    var item:[String:AnyObject]?
+    var item:[String:Any]?
     var path:String?
     
     var star: UIButton?;
@@ -32,14 +32,14 @@ class SutraActionGroupView: UIView {
         
     }
     
-    override func willMoveToSuperview(newSuperview: UIView?){
+    override func willMove(toSuperview newSuperview: UIView?){
         print("willMoveToSuperview");
-        star = UIButton(type: .System);
-        star?.backgroundColor = UIColor.whiteColor()
-        star?.setTitleColor(UIColor.darkGrayColor(), forState: .Normal)
-        star!.frame=CGRectMake(0, 0, 80, 30)
-        star!.setTitle( Data.shared.likes.contains(self.path!) ? "☆" : "★", forState: UIControlState.Normal)
-        star!.addTarget(self, action:  #selector(SutraActionGroupView.toggleLike), forControlEvents: UIControlEvents.TouchUpInside)
+        star = UIButton(type: .system);
+        star?.backgroundColor = UIColor.white
+        star?.setTitleColor(UIColor.darkGray, for: UIControlState())
+        star!.frame=CGRect(x: 0, y: 0, width: 80, height: 30)
+        star!.setTitle( Data.shared.likes.contains(self.path!) ? "☆" : "★", for: UIControlState())
+        star!.addTarget(self, action:  #selector(SutraActionGroupView.toggleLike), for: UIControlEvents.touchUpInside)
         
         
         self.addSubview(star!)
@@ -49,10 +49,10 @@ class SutraActionGroupView: UIView {
     func toggleLike() {
         if Data.shared.likes.contains(self.path!) {
             Data.shared.unlike(self.path!)
-            star?.setTitle("★" , forState: .Normal)
+            star?.setTitle("★" , for: UIControlState())
         } else {
             Data.shared.like(self.path!)
-            star?.setTitle("☆" , forState: .Normal)
+            star?.setTitle("☆" , for: UIControlState())
         }
     }
 

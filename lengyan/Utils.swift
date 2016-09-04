@@ -8,38 +8,38 @@
 
 import Foundation
 
-func imageScaledToFillSize(size: CGSize, image: UIImage) -> UIImage
+func imageScaledToFillSize(_ size: CGSize, image: UIImage) -> UIImage
 {
     let aspect = image.size.width / image.size.height;
     UIGraphicsBeginImageContextWithOptions(size, false, 0)
     if (size.width / aspect <= size.height) {
         let resizedImg = imageScaledToSize(CGSize(width: size.height * aspect, height: size.height), image: image)
-        resizedImg.drawInRect(CGRectMake((size.width - resizedImg.size.width)/2, 0, resizedImg.size.width, resizedImg.size.height))
+        resizedImg.draw(in: CGRect(x: (size.width - resizedImg.size.width)/2, y: 0, width: resizedImg.size.width, height: resizedImg.size.height))
     } else {
         let resizedImg = imageScaledToSize(CGSize(width: size.width, height: size.width / aspect), image: image)
-        resizedImg.drawInRect(CGRectMake(0, (size.height-resizedImg.size.height)/2, resizedImg.size.width, resizedImg.size.height))
+        resizedImg.draw(in: CGRect(x: 0, y: (size.height-resizedImg.size.height)/2, width: resizedImg.size.width, height: resizedImg.size.height))
     }
     let imageR = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-    return imageR;
+    return imageR!;
 }
 
-func imageScaledToSize(size: CGSize, image: UIImage) -> UIImage {
+func imageScaledToSize(_ size: CGSize, image: UIImage) -> UIImage {
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0);
-    image.drawInRect(CGRectMake(0.0, 0.0, size.width, size.height))
+    image.draw(in: CGRect(x: 0.0, y: 0.0, width: size.width, height: size.height))
     let imageR = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext();
-    return imageR;
+    return imageR!;
 }
 
-func SetBackgroundImage(view:UIView, imageName:String){
+func SetBackgroundImage(_ view:UIView, imageName:String){
     let targetImage = UIImage.init(named: imageName)
     
     // redraw the image to fit |yourView|'s size
     UIGraphicsBeginImageContextWithOptions(view.frame.size, false, 0);
-    targetImage!.drawInRect(CGRectMake(0,0, view.frame.size.width, view.frame.size.height));
+    targetImage!.draw(in: CGRect(x: 0,y: 0, width: view.frame.size.width, height: view.frame.size.height));
     let resultImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
-    view.backgroundColor = UIColor.init(patternImage: resultImage)
+    view.backgroundColor = UIColor.init(patternImage: resultImage!)
 }

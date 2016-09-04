@@ -20,7 +20,7 @@
 extension View : Frameable, Anchorable, Alignable, Groupable {
     public var superFrame: CGRect {
         guard let superview = superview else {
-            return CGRectZero
+            return CGRect.zero
         }
 
         return superview.frame
@@ -42,7 +42,7 @@ extension View : Frameable, Anchorable, Alignable, Groupable {
 extension CALayer : Frameable, Anchorable, Alignable, Groupable {
     public var superFrame: CGRect {
         guard let superlayer = superlayer else {
-            return CGRectZero
+            return CGRect.zero
         }
 
         return superlayer.frame
@@ -76,10 +76,10 @@ public let AutoWidth : CGFloat = -1
 /// **BottomRight**: The upper-right corner of the frame.
 ///
 public enum Corner {
-    case TopLeft
-    case TopRight
-    case BottomLeft
-    case BottomRight
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
 }
 
 
@@ -97,10 +97,10 @@ public enum Corner {
 /// **Right**: The right edge of the frame.
 ///
 public enum Edge {
-    case Top
-    case Left
-    case Bottom
-    case Right
+    case top
+    case left
+    case bottom
+    case right
 }
 
 
@@ -148,18 +148,18 @@ public enum Edge {
 /// the horizontal center of the sibling's frame or centered horizontally within the superview, depending on the context.
 ///
 public enum Align {
-    case ToTheRightMatchingTop
-    case ToTheRightMatchingBottom
-    case ToTheRightCentered
-    case ToTheLeftMatchingTop
-    case ToTheLeftMatchingBottom
-    case ToTheLeftCentered
-    case UnderMatchingLeft
-    case UnderMatchingRight
-    case UnderCentered
-    case AboveMatchingLeft
-    case AboveMatchingRight
-    case AboveCentered
+    case toTheRightMatchingTop
+    case toTheRightMatchingBottom
+    case toTheRightCentered
+    case toTheLeftMatchingTop
+    case toTheLeftMatchingBottom
+    case toTheLeftCentered
+    case underMatchingLeft
+    case underMatchingRight
+    case underCentered
+    case aboveMatchingLeft
+    case aboveMatchingRight
+    case aboveCentered
 }
 
 
@@ -173,6 +173,6 @@ public enum Align {
 /// **Vertical**: Specifies that the views should be aligned relative to eachother vertically.
 ///
 public enum Group {
-    case Horizontal
-    case Vertical
+    case horizontal
+    case vertical
 }

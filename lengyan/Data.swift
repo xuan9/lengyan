@@ -12,22 +12,22 @@ protocol DataProtocal {
     var lastExpanded:[String]{get set}
     var likes:[String]{get}
     
-    func like(path:String)
-    func unlike(path:String)
+    func like(_ path:String)
+    func unlike(_ path:String)
 }
 
 class Data: NSObject, DataProtocal {
     static let shared = Data()
-    var defaults:NSUserDefaults
+    var defaults:UserDefaults
     
     static let LastExpandedKey = "lastExpanded";
     static let likesKey = "likes";
     internal var likesCache:[String]?;
     
     override init(){
-        self.defaults = NSUserDefaults.standardUserDefaults()
+        self.defaults = UserDefaults.standard
         if (likesCache == nil){
-            likesCache =  defaults.stringArrayForKey(Data.likesKey) ?? [];
+            likesCache =  defaults.stringArray(forKey: Data.likesKey) ?? [];
             print("likes:")
             print(likesCache)
         }
@@ -35,14 +35,14 @@ class Data: NSObject, DataProtocal {
     
     var lastExpanded:[String]{
         get {
-            print(defaults.stringArrayForKey(Data.LastExpandedKey))
+            print(defaults.stringArray(forKey: Data.LastExpandedKey))
 
-            return defaults.stringArrayForKey(Data.LastExpandedKey) ?? [];
+            return defaults.stringArray(forKey: Data.LastExpandedKey) ?? [];
         }
         
         set (expanded){
             print(expanded)
-            defaults.setObject(expanded, forKey: Data.LastExpandedKey)
+            defaults.set(expanded, forKey: Data.LastExpandedKey)
             defaults.synchronize()
         }
     }
@@ -53,22 +53,22 @@ class Data: NSObject, DataProtocal {
         }
     }
     
-    func like(path:String){
+    func like(_ path:String){
         likesCache?.append(path)
-        defaults.setObject(likesCache, forKey: Data.likesKey)
+        defaults.set(likesCache, forKey: Data.likesKey)
     }
     
-    func unlike(path:String){
-        let index = likesCache?.indexOf(path);
+    func unlike(_ path:String){
+        let index = likesCache?.index(of: path);
         if (index != nil){
-            likesCache?.removeAtIndex(index!);
+            likesCache?.remove(at: index!);
         }
 //        let likes = NSMutableSet(array: self.likes);
 //        likes.removeObject(path);
 //        defaults.setObject(likes.allObjects, forKey: Data.likesKey)
     }
     
-    func isLike(path:String) -> Bool{
+    func isLike(_ path:String) -> Bool{
         return likesCache?.contains(path) ?? false
     }
     

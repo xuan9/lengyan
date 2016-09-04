@@ -10,33 +10,29 @@ class StarsTableViewController: UITableViewController{
 //        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
         tableView.separatorInset = UIEdgeInsetsMake(15, 0.0, 15, 0)
         //        self.tableView.rowHeight = 300;
-        self.tableView.separatorStyle = .None;
+        self.tableView.separatorStyle = .none;
         self.setTitleBar()
-    }
-    
-    override func prefersStatusBarHidden() -> Bool {
-        return true
     }
     
     func titleWasTapped (){
         print("titleWasTapped");
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        let rows = tableView.numberOfRowsInSection(0)
+        let rows = tableView.numberOfRows(inSection: 0)
         if rows != Data.shared.likes.count {
                 tableView.reloadData()
         }
         if (initialRow > 0) {
             print("viewWillAppear, scroll to row: \(initialRow)");
-            self.tableView.selectRowAtIndexPath(NSIndexPath.init(forRow: initialRow, inSection: 0), animated: false, scrollPosition: .Top)
+            self.tableView.selectRow(at: IndexPath.init(row: initialRow, section: 0), animated: false, scrollPosition: .top)
             initialRow = -1;
         }
         
     }
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
     }
     
@@ -51,33 +47,33 @@ class StarsTableViewController: UITableViewController{
         //        self.navigationController?.navigationBar.showHeader = false;
     }
     
-    override func tableView(tableView: UITableView, estimatedHeightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+    override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         return UITableViewAutomaticDimension;
         
     }
     // MARK: - Table view data source
     
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
         return 1
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
         return Data.shared.likes.count;
     }
     
     
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let path = Data.shared.likes[indexPath.row];
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let path = Data.shared.likes[(indexPath as NSIndexPath).row];
         let item =  Book.data.itemOfPath(path);
         
         //        let cell = tableView.dequeueReusableCellWithIdentifier("StarsTableViewCell", forIndexPath: indexPath) as UITableViewCell
         let identifier = "StarsTableViewCell";
-        var cell = tableView.dequeueReusableCellWithIdentifier(identifier);
+        var cell = tableView.dequeueReusableCell(withIdentifier: identifier);
         if (cell == nil) {
-            cell = UITableViewCell.init(style:.Subtitle,reuseIdentifier:identifier);
-            cell?.detailTextLabel?.textColor = UIColor.lightGrayColor()
+            cell = UITableViewCell.init(style:.subtitle,reuseIdentifier:identifier);
+            cell?.detailTextLabel?.textColor = UIColor.lightGray
         }
         
         cell?.textLabel?.numberOfLines = 20;
@@ -87,20 +83,20 @@ class StarsTableViewController: UITableViewController{
         return cell!
     }
     
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        let pageVC = SutraPageViewController.init( transitionStyle:.PageCurl, navigationOrientation:.Horizontal, options: .None)
-        let path:String = Data.shared.likes[indexPath.row];
-        pageVC.page = Book.data.index!.indexOf({ (
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
+        let path:String = Data.shared.likes[(indexPath as NSIndexPath).row];
+        pageVC.page = Book.data.index!.index(where: { (
             item) -> Bool in
             return item["path"] == path
         })!;
         
         let navVC = UINavigationController.init(rootViewController: pageVC);
-        self.presentViewController(navVC, animated: true, completion: nil)
+        self.present(navVC, animated: true, completion: nil)
     }
     
-    func getIndexAttributeText(name:String)->NSAttributedString{
-        let attributes = [NSForegroundColorAttributeName : UIColor.grayColor(),NSFontAttributeName: UIFont.systemFontOfSize(14)]
+    func getIndexAttributeText(_ name:String)->NSAttributedString{
+        let attributes = [NSForegroundColorAttributeName : UIColor.gray,NSFontAttributeName: UIFont.systemFont(ofSize: 14)]
         return NSAttributedString(string: name, attributes:attributes)
     }
     

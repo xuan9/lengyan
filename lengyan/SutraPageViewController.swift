@@ -10,15 +10,15 @@ import UIKit
 
 class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
     var sutraStoryBoard:UIStoryboard?;
-    var onDismiss: (Void -> Void)?
+    var onDismiss: ((Void) -> Void)?
     var page:Int = 0
     
     var path:String?
-    var item:[String:AnyObject]?
+    var item:[String:String]?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.edgesForExtendedLayout = .None;
+        self.edgesForExtendedLayout = [];
         self.extendedLayoutIncludesOpaqueBars = false;
         self.automaticallyAdjustsScrollViewInsets = false;
         
@@ -27,14 +27,14 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         }
         
         item = Book.data.index![page]
-        self.path = item!["path"] as? String;
+        self.path = item!["path"]
         
         self.setPageTitle()
         self.dataSource = self;
         self.delegate = self;
         sutraStoryBoard = UIStoryboard(name: "SutraStoryboard", bundle: nil)
         
-        self.setViewControllers([getViewControllerAtIndex(page)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.Forward, animated: false, completion: nil)
+        self.setViewControllers([getViewControllerAtIndex(index: page)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
         
         self.setTitle()
     }
@@ -51,13 +51,13 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     func close() {
         onDismiss?();
-        self.navigationController?.dismissViewControllerAnimated(true, completion: {
+        self.navigationController?.dismiss(animated: true, completion: {
             
         })
     }
     
     func setTitle() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
         
 //        if(Data.shared.likes.contains(path!)){
 //            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .Plain, target: self, action: #selector(SutraPageViewController.unlike))
@@ -66,10 +66,9 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 //        }
 //        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.blackColor()
 //        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.blackColor()
-        self.navigationController?.navigationBar.translucent = false;
+        self.navigationController?.navigationBar.isTranslucent = false;
     }
-    
-    func pageViewController(pageViewController: UIPageViewController, viewControllerBeforeViewController viewController: UIViewController) -> UIViewController?
+        public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
     {
         let pageContent:  SutraPage = viewController as!  SutraPage
         var index = pageContent.pageIndex
@@ -79,13 +78,13 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             return nil;
         }
         index -= 1;
-        return getViewControllerAtIndex(index)
+        return getViewControllerAtIndex(index: index)
     }
     
     func getViewControllerAtIndex(index: Int) -> UIViewController
     {
         
-        let pageContent:SutraPageContentViewController = self.sutraStoryBoard!.instantiateViewControllerWithIdentifier("SutraPageContentViewController") as! SutraPageContentViewController
+        let pageContent:SutraPageContentViewController = self.sutraStoryBoard!.instantiateViewController(withIdentifier: "SutraPageContentViewController") as! SutraPageContentViewController
         
         pageContent.pageIndex = index
         
@@ -98,9 +97,9 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         
         return pageContent
     }
-    
-    func pageViewController(pageViewController: UIPageViewController, viewControllerAfterViewController viewController: UIViewController) -> UIViewController?
-    {
+        public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
+
+{
         let pageContent: SutraPage = viewController as! SutraPage
         var index = pageContent.pageIndex
         if (index == NSNotFound || index + 1 == Book.data.index?.count)
@@ -110,7 +109,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         }
         index += 1;
         
-        return getViewControllerAtIndex(index)
+        return getViewControllerAtIndex(index: index)
     }
     // MARK - UIPageViewControllerDelegate
     func pageViewController(pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
@@ -118,13 +117,12 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let pageContent = pageViewController.viewControllers![0] as! SutraPage
         self.page = pageContent.pageIndex;
         self.item = Book.data.index![page];
-        self.path = item!["path"] as? String;
-        
+        self.path = item!["path"]        
         self.setPageTitle()
     }
     
     func setPageTitle() {
-        self.navigationItem.titleView = Book.data.getTitleView(item!);
+        self.navigationItem.titleView = Book.data.getTitleView(item! as [String : AnyObject]);
 
 //        let recognizer = UITapGestureRecognizer(target: self, action: Selector("titleWasTapped"))
 //        self.navigationItem.titleView!.addGestureRecognizer(recognizer)
@@ -132,10 +130,9 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     // MARK: - view controller functions overwrites
-    override func prefersStatusBarHidden() -> Bool {
-        return true
-    }
-    
+//    override func prefersStatusBarHidden() -> Bool {
+//        return true
+//    }
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
