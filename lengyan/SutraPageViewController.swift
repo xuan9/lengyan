@@ -68,6 +68,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 //        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.blackColor()
         self.navigationController?.navigationBar.isTranslucent = false;
     }
+        
         public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
     {
         let pageContent:  SutraPage = viewController as!  SutraPage
@@ -112,7 +113,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         return getViewControllerAtIndex(index: index)
     }
     // MARK - UIPageViewControllerDelegate
-    func pageViewController(pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
+    func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
         
         let pageContent = pageViewController.viewControllers![0] as! SutraPage
         self.page = pageContent.pageIndex;
@@ -122,8 +123,11 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     func setPageTitle() {
-        self.navigationItem.titleView = Book.data.getTitleView(item! as [String : AnyObject]);
-
+        if  self.navigationItem.titleView is UILabel {
+                (self.navigationItem.titleView as! UILabel).attributedText = Book.data.getTitle(item!)
+        } else {
+                self.navigationItem.titleView = Book.data.getTitleView(item!);
+        }
 //        let recognizer = UITapGestureRecognizer(target: self, action: Selector("titleWasTapped"))
 //        self.navigationItem.titleView!.addGestureRecognizer(recognizer)
    

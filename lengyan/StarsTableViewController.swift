@@ -7,8 +7,8 @@ class StarsTableViewController: UITableViewController{
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
-        tableView.separatorInset = UIEdgeInsetsMake(15, 0.0, 15, 0)
+        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
+        tableView.separatorInset = UIEdgeInsetsMake(2, 0.0, 0, 0)
         //        self.tableView.rowHeight = 300;
         self.tableView.separatorStyle = .none;
         self.setTitleBar()
