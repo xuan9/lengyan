@@ -39,7 +39,7 @@
                     <connections>
                         <segue destination="E2C-VD-JHn" kind="relationship" relationship="viewControllers" id="ERA-Hh-j1d"/>
                         <segue destination="qUX-ch-lYt" kind="relationship" relationship="viewControllers" id="caR-bu-zPG"/>
-                        <segue destination="M0n-cg-fJY" kind="relationship" relationship="viewControllers" id="nji-g6-bUC"/>
+                        <segue destination="R2C-F6-C2B" kind="relationship" relationship="viewControllers" id="57m-tS-Bpx"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="HuB-VB-40B" sceneMemberID="firstResponder"/>
@@ -66,262 +66,179 @@
             <point key="canvasLocation" x="524" y="62"/>
         </scene>
         <!--聽經-->
-        <scene sceneID="l3r-Tb-nBs">
+        <scene sceneID="nMn-9H-BqY">
             <objects>
-                <tableViewController title="聽經" id="M0n-cg-fJY" customClass="MediaTableViewController" customModule="lengyan" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" allowsSelection="NO" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" id="JhB-Pd-txI">
-                        <rect key="frame" x="0.0" y="64" width="375" height="554"/>
+                <viewController title="聽經" id="R2C-F6-C2B" customClass="MediaTableViewController" customModule="lengyan" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="QCr-mk-bJM"/>
+                        <viewControllerLayoutGuide type="bottom" id="wGV-ZO-VvU"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="Mqh-Xy-K5H">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="618"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <inset key="scrollIndicatorInsets" minX="10" minY="20" maxX="10" maxY="10"/>
-                        <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Header" id="M3y-uy-WhP" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="28" width="375" height="44"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="M3y-uy-WhP" id="p51-pI-OJA">
-                                    <frame key="frameInset" width="375" height="44"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="🎵 屏東能淨協會朗讀" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WXo-gc-4vA" userLabel="title">
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="207" id="2Lg-Rf-9dL"/>
-                                            </constraints>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="b8S-Xb-wc4">
-                                            <frame key="frameInset" minX="548" minY="10" width="24" height="24"/>
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="24" id="HZp-Zb-WWD"/>
-                                            </constraints>
-                                            <state key="normal" title="播放" image="ic_play_arrow"/>
-                                        </button>
-                                    </subviews>
-                                    <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
-                                    <constraints>
-                                        <constraint firstAttribute="trailingMargin" secondItem="b8S-Xb-wc4" secondAttribute="trailing" constant="20" id="QJR-ct-VwY"/>
-                                        <constraint firstItem="WXo-gc-4vA" firstAttribute="leading" secondItem="p51-pI-OJA" secondAttribute="leadingMargin" id="bVY-Wq-2Q0"/>
-                                        <constraint firstItem="b8S-Xb-wc4" firstAttribute="centerY" secondItem="WXo-gc-4vA" secondAttribute="centerY" id="gkY-m1-Mpv"/>
-                                        <constraint firstItem="WXo-gc-4vA" firstAttribute="top" secondItem="p51-pI-OJA" secondAttribute="topMargin" id="kZU-ek-sQW"/>
-                                        <constraint firstItem="WXo-gc-4vA" firstAttribute="bottom" secondItem="p51-pI-OJA" secondAttribute="bottomMargin" id="osN-6c-sI5"/>
-                                    </constraints>
-                                </tableViewCellContentView>
-                            </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Download" id="9dA-Th-gqc" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="72" width="375" height="44"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="9dA-Th-gqc" id="Kdc-5Q-h9h">
-                                    <frame key="frameInset" width="375" height="44"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UZ2-wr-MwL">
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="80" id="sat-RH-L0g"/>
-                                            </constraints>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="s1N-yc-s4M">
-                                            <frame key="frameInset" minX="548" minY="7" width="24" height="30"/>
-                                            <constraints>
-                                                <constraint firstAttribute="height" constant="30" id="1dd-m5-udm"/>
-                                                <constraint firstAttribute="width" constant="24" id="sqR-vO-Kii"/>
-                                            </constraints>
-                                            <state key="normal" title="下載" image="ic_cloud_download"/>
-                                        </button>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="UZ2-wr-MwL" firstAttribute="top" secondItem="Kdc-5Q-h9h" secondAttribute="topMargin" id="7sU-U6-fQ4"/>
-                                        <constraint firstItem="s1N-yc-s4M" firstAttribute="centerY" secondItem="Kdc-5Q-h9h" secondAttribute="centerY" id="GpR-JX-i92"/>
-                                        <constraint firstItem="UZ2-wr-MwL" firstAttribute="leading" secondItem="Kdc-5Q-h9h" secondAttribute="leadingMargin" id="Sh8-gK-QhI"/>
-                                        <constraint firstAttribute="trailingMargin" secondItem="s1N-yc-s4M" secondAttribute="trailing" constant="20" id="nCO-PH-opZ"/>
-                                        <constraint firstItem="UZ2-wr-MwL" firstAttribute="centerY" secondItem="Kdc-5Q-h9h" secondAttribute="centerY" id="tnN-8s-CdH"/>
-                                    </constraints>
-                                </tableViewCellContentView>
-                                <connections>
-                                    <outlet property="nameLabel" destination="UZ2-wr-MwL" id="I0T-W0-NpW"/>
-                                </connections>
-                            </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell" id="2Nx-Tk-Nor" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="116" width="375" height="44"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="2Nx-Tk-Nor" id="VSn-5D-HPd">
-                                    <frame key="frameInset" width="375" height="44"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ieb-Ig-470">
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="80" id="9Uq-0L-bKe"/>
-                                            </constraints>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TQC-xB-dcg">
-                                            <frame key="frameInset" minX="548" minY="7" width="24" height="30"/>
-                                            <constraints>
-                                                <constraint firstAttribute="height" constant="30" id="6Yz-h2-MTQ"/>
-                                                <constraint firstAttribute="width" constant="24" id="ebI-PY-LO2"/>
-                                            </constraints>
-                                            <state key="normal" title="播放" image="ic_play_arrow"/>
-                                        </button>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wEC-Qi-em1">
-                                            <frame key="frameInset" minX="480" minY="10" width="24" height="24"/>
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="24" id="hh0-JF-0k1"/>
-                                            </constraints>
-                                            <state key="normal" title="加入列表" image="ic_playlist_add"/>
-                                        </button>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="wEC-Qi-em1" firstAttribute="centerY" secondItem="ieb-Ig-470" secondAttribute="centerY" id="LYq-it-qgD"/>
-                                        <constraint firstItem="ieb-Ig-470" firstAttribute="leading" secondItem="VSn-5D-HPd" secondAttribute="leadingMargin" id="UFr-Nk-Adh"/>
-                                        <constraint firstAttribute="trailingMargin" secondItem="TQC-xB-dcg" secondAttribute="trailing" constant="20" id="YxV-aM-a3h"/>
-                                        <constraint firstItem="wEC-Qi-em1" firstAttribute="baseline" secondItem="TQC-xB-dcg" secondAttribute="baseline" id="psc-fj-Bky"/>
-                                        <constraint firstItem="ieb-Ig-470" firstAttribute="centerY" secondItem="VSn-5D-HPd" secondAttribute="centerY" id="r5h-np-SWT"/>
-                                        <constraint firstItem="ieb-Ig-470" firstAttribute="top" secondItem="VSn-5D-HPd" secondAttribute="topMargin" id="swX-pb-ZF0"/>
-                                        <constraint firstItem="TQC-xB-dcg" firstAttribute="leading" secondItem="wEC-Qi-em1" secondAttribute="trailing" constant="44" id="tDl-En-mvH"/>
-                                        <constraint firstAttribute="trailingMargin" secondItem="TQC-xB-dcg" secondAttribute="trailing" constant="20" id="ya7-QM-lfT"/>
-                                    </constraints>
-                                    <variation key="default">
-                                        <mask key="constraints">
-                                            <exclude reference="YxV-aM-a3h"/>
-                                        </mask>
-                                    </variation>
-                                </tableViewCellContentView>
-                                <connections>
-                                    <outlet property="nameLabel" destination="ieb-Ig-470" id="YFZ-8l-UJV"/>
-                                </connections>
-                            </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Playlist-Header" id="QfP-yd-snr" userLabel="Media-Cell-Playlist-Header" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="160" width="375" height="44"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="QfP-yd-snr" id="sZ2-j6-41w">
-                                    <frame key="frameInset" width="375" height="44"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="播放列表" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZJN-Yo-jic" userLabel="title">
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="207" id="L8f-i5-CEy"/>
-                                            </constraints>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="umN-7l-VGs">
-                                            <frame key="frameInset" minX="8" minY="8" width="60" height="24"/>
-                                            <color key="tintColor" red="0.30980392156862746" green="0.29803921568627451" blue="0.54509803921568623" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                            <state key="normal" title="播放" image="ic_featured_play_list"/>
-                                        </button>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3Sl-zI-IJd">
-                                            <frame key="frameInset" minX="480" minY="10" width="24" height="24"/>
-                                            <constraints>
-                                                <constraint firstAttribute="height" constant="24" id="XIy-9Z-NfI"/>
-                                                <constraint firstAttribute="width" constant="24" id="fvA-nX-Zsx"/>
-                                            </constraints>
-                                            <state key="normal" image="ic_repeat"/>
-                                        </button>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cWS-bi-mxF">
-                                            <frame key="frameInset" minX="548" minY="10" width="24" height="24"/>
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="24" id="4ah-QO-48S"/>
-                                                <constraint firstAttribute="height" constant="24" id="kOP-87-O9i"/>
-                                            </constraints>
-                                            <state key="normal" title="播放" image="ic_play_arrow"/>
-                                        </button>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ByI-vM-R9y">
-                                            <frame key="frameInset" minX="412" minY="10" width="24" height="24"/>
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="24" id="nWN-FW-i44"/>
-                                            </constraints>
-                                            <state key="normal" title="播放" image="ic_delete"/>
-                                        </button>
-                                    </subviews>
-                                    <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
-                                    <constraints>
-                                        <constraint firstItem="ZJN-Yo-jic" firstAttribute="bottom" secondItem="3Sl-zI-IJd" secondAttribute="bottom" id="0a2-p3-TBX"/>
-                                        <constraint firstAttribute="trailing" secondItem="3Sl-zI-IJd" secondAttribute="trailing" constant="82" id="6xm-c0-CCT"/>
-                                        <constraint firstItem="ZJN-Yo-jic" firstAttribute="top" secondItem="sZ2-j6-41w" secondAttribute="topMargin" constant="-2" id="818-nT-jmL"/>
-                                        <constraint firstItem="ByI-vM-R9y" firstAttribute="baseline" secondItem="cWS-bi-mxF" secondAttribute="baseline" id="AU5-wE-qur"/>
-                                        <constraint firstItem="3Sl-zI-IJd" firstAttribute="leading" secondItem="ByI-vM-R9y" secondAttribute="trailing" constant="44" id="KTa-Kf-CdH"/>
-                                        <constraint firstAttribute="trailingMargin" secondItem="cWS-bi-mxF" secondAttribute="trailing" constant="20" id="MZ0-7V-f9E"/>
-                                        <constraint firstItem="cWS-bi-mxF" firstAttribute="leading" secondItem="3Sl-zI-IJd" secondAttribute="trailing" constant="44" id="gzq-ey-mR8"/>
-                                        <constraint firstItem="ZJN-Yo-jic" firstAttribute="leading" secondItem="sZ2-j6-41w" secondAttribute="leadingMargin" constant="33" id="had-ze-aag"/>
-                                        <constraint firstItem="umN-7l-VGs" firstAttribute="leading" secondItem="sZ2-j6-41w" secondAttribute="leadingMargin" id="jBd-9D-kqX"/>
-                                        <constraint firstAttribute="bottomMargin" secondItem="ZJN-Yo-jic" secondAttribute="bottom" constant="2" id="oXL-Y3-vad"/>
-                                        <constraint firstItem="ZJN-Yo-jic" firstAttribute="bottom" secondItem="cWS-bi-mxF" secondAttribute="bottom" id="pws-PH-tl2"/>
-                                        <constraint firstItem="ZJN-Yo-jic" firstAttribute="centerY" secondItem="umN-7l-VGs" secondAttribute="centerY" id="wqC-fd-hyo"/>
-                                    </constraints>
-                                    <variation key="default">
-                                        <mask key="constraints">
-                                            <exclude reference="6xm-c0-CCT"/>
-                                        </mask>
-                                    </variation>
-                                </tableViewCellContentView>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="yYt-Un-2dV" userLabel="statusBackground">
+                                <color key="backgroundColor" red="0.98431372549999996" green="0.98431372549999996" blue="0.98431372549999996" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="20" id="Qes-77-ip8"/>
+                                </constraints>
+                            </view>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" sectionIndexMinimumDisplayRowCount="2" rowHeight="40" sectionHeaderHeight="18" sectionFooterHeight="18" translatesAutoresizingMaskIntoConstraints="NO" id="JhB-Pd-txI">
                                 <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
-                            </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Playlist-Item" id="NgI-wq-y7D" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="204" width="375" height="44"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="NgI-wq-y7D" id="boc-36-9fh">
-                                    <frame key="frameInset" width="375" height="44"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="l5E-DV-Cdo">
+                                <inset key="scrollIndicatorInsets" minX="10" minY="20" maxX="10" maxY="10"/>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Header" id="M3y-uy-WhP" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="56" width="375" height="40"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="M3y-uy-WhP" id="p51-pI-OJA">
+                                            <frame key="frameInset" width="375" height="39"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="屏東能淨協會朗讀" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WXo-gc-4vA" userLabel="title">
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="207" id="2Lg-Rf-9dL"/>
+                                                    </constraints>
+                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                            <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                             <constraints>
-                                                <constraint firstAttribute="width" constant="80" id="XjX-iR-xG7"/>
+                                                <constraint firstItem="WXo-gc-4vA" firstAttribute="centerY" secondItem="p51-pI-OJA" secondAttribute="centerY" id="2Dn-Tp-YOX"/>
+                                                <constraint firstItem="WXo-gc-4vA" firstAttribute="leading" secondItem="p51-pI-OJA" secondAttribute="leadingMargin" constant="10" id="bVY-Wq-2Q0"/>
                                             </constraints>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2U2-Cl-BaX">
-                                            <frame key="frameInset" minX="548" minY="7" width="24" height="30"/>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="nameLabel" destination="WXo-gc-4vA" id="ib7-Pe-8qN"/>
+                                        </connections>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Download" id="9dA-Th-gqc" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="96" width="375" height="40"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="9dA-Th-gqc" id="Kdc-5Q-h9h">
+                                            <frame key="frameInset" width="375" height="39"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UZ2-wr-MwL">
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="80" id="sat-RH-L0g"/>
+                                                    </constraints>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
                                             <constraints>
-                                                <constraint firstAttribute="height" constant="30" id="U00-Co-47u"/>
-                                                <constraint firstAttribute="width" constant="24" id="Uh0-vA-PXn"/>
+                                                <constraint firstItem="UZ2-wr-MwL" firstAttribute="top" secondItem="Kdc-5Q-h9h" secondAttribute="topMargin" id="7sU-U6-fQ4"/>
+                                                <constraint firstItem="UZ2-wr-MwL" firstAttribute="leading" secondItem="Kdc-5Q-h9h" secondAttribute="leadingMargin" constant="20" id="Sh8-gK-QhI"/>
+                                                <constraint firstItem="UZ2-wr-MwL" firstAttribute="centerY" secondItem="Kdc-5Q-h9h" secondAttribute="centerY" id="tnN-8s-CdH"/>
                                             </constraints>
-                                            <state key="normal" title="➖"/>
-                                        </button>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="2U2-Cl-BaX" firstAttribute="centerY" secondItem="boc-36-9fh" secondAttribute="centerY" id="6m6-jR-uwd"/>
-                                        <constraint firstItem="l5E-DV-Cdo" firstAttribute="top" secondItem="boc-36-9fh" secondAttribute="topMargin" id="LfG-2c-dzW"/>
-                                        <constraint firstAttribute="trailingMargin" secondItem="2U2-Cl-BaX" secondAttribute="trailing" constant="20" id="O7h-Du-Esn"/>
-                                        <constraint firstItem="l5E-DV-Cdo" firstAttribute="leading" secondItem="boc-36-9fh" secondAttribute="leadingMargin" id="V3m-Be-Rif"/>
-                                        <constraint firstItem="l5E-DV-Cdo" firstAttribute="centerY" secondItem="boc-36-9fh" secondAttribute="centerY" id="gqD-Cn-MLu"/>
-                                    </constraints>
-                                </tableViewCellContentView>
-                                <connections>
-                                    <outlet property="nameLabel" destination="l5E-DV-Cdo" id="uJg-Z7-Mkk"/>
-                                </connections>
-                            </tableViewCell>
-                        </prototypes>
-                        <connections>
-                            <outlet property="dataSource" destination="M0n-cg-fJY" id="sRb-Wm-u17"/>
-                            <outlet property="delegate" destination="M0n-cg-fJY" id="Qz8-ZP-iz8"/>
-                        </connections>
-                    </tableView>
-                    <tabBarItem key="tabBarItem" title="聽經" image="ic_library_music" id="HOD-70-xfN"/>
-                    <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
-                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" translucent="NO" prompted="NO"/>
-                </tableViewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="LuO-H1-s6S" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="nameLabel" destination="UZ2-wr-MwL" id="c5t-g0-UvV"/>
+                                        </connections>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell" id="2Nx-Tk-Nor" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="136" width="375" height="40"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="2Nx-Tk-Nor" id="VSn-5D-HPd">
+                                            <frame key="frameInset" width="375" height="39"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ieb-Ig-470">
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="80" id="9Uq-0L-bKe"/>
+                                                    </constraints>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="ieb-Ig-470" firstAttribute="leading" secondItem="VSn-5D-HPd" secondAttribute="leadingMargin" constant="20" id="UFr-Nk-Adh"/>
+                                                <constraint firstItem="ieb-Ig-470" firstAttribute="centerY" secondItem="VSn-5D-HPd" secondAttribute="centerY" id="r5h-np-SWT"/>
+                                                <constraint firstItem="ieb-Ig-470" firstAttribute="top" secondItem="VSn-5D-HPd" secondAttribute="topMargin" id="swX-pb-ZF0"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="nameLabel" destination="ieb-Ig-470" id="ztU-KO-hxe"/>
+                                        </connections>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qcb-XZ-UpI" userLabel="footer">
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BFs-fV-2mt" userLabel="title">
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5Kv-la-AbJ">
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="24" id="mda-hC-qar"/>
+                                            <constraint firstAttribute="height" constant="24" id="tuf-Cp-cqu"/>
+                                        </constraints>
+                                        <state key="normal" title="模式" image="ic_repeat_one"/>
+                                        <state key="highlighted" image="ic_repeat"/>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="oxc-Jp-xbk">
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="48" id="7Wp-fo-ksJ"/>
+                                        </constraints>
+                                        <state key="normal" title="播放" image="ic_play_circle_outline_48pt"/>
+                                        <state key="highlighted" image="ic_pause_circle_outline_48pt"/>
+                                    </button>
+                                </subviews>
+                                <color key="backgroundColor" red="0.85098039219999999" green="0.74901960779999999" blue="0.54901960780000003" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstItem="5Kv-la-AbJ" firstAttribute="trailing" secondItem="oxc-Jp-xbk" secondAttribute="leading" constant="-30" id="1wd-Oi-tET"/>
+                                    <constraint firstAttribute="trailing" secondItem="oxc-Jp-xbk" secondAttribute="trailing" constant="30" id="5CH-dI-4d7"/>
+                                    <constraint firstAttribute="trailing" secondItem="BFs-fV-2mt" secondAttribute="trailing" constant="162" id="HHd-5c-b0K"/>
+                                    <constraint firstAttribute="height" constant="60" id="NFT-4E-ocs"/>
+                                    <constraint firstItem="5Kv-la-AbJ" firstAttribute="centerY" secondItem="qcb-XZ-UpI" secondAttribute="centerY" id="dZc-wB-ta6"/>
+                                    <constraint firstItem="BFs-fV-2mt" firstAttribute="leading" secondItem="qcb-XZ-UpI" secondAttribute="leading" constant="30" id="eGq-kW-XT0"/>
+                                    <constraint firstAttribute="bottom" secondItem="BFs-fV-2mt" secondAttribute="bottom" id="ntu-0j-cY5"/>
+                                    <constraint firstItem="oxc-Jp-xbk" firstAttribute="centerY" secondItem="BFs-fV-2mt" secondAttribute="centerY" id="tab-qx-rvN"/>
+                                    <constraint firstItem="BFs-fV-2mt" firstAttribute="top" secondItem="qcb-XZ-UpI" secondAttribute="top" id="y9r-Ol-KnQ"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="yYt-Un-2dV" firstAttribute="top" secondItem="Mqh-Xy-K5H" secondAttribute="top" id="9AA-g6-oky"/>
+                            <constraint firstAttribute="trailing" secondItem="JhB-Pd-txI" secondAttribute="trailing" id="I3y-zo-Dwd"/>
+                            <constraint firstAttribute="trailing" secondItem="qcb-XZ-UpI" secondAttribute="trailing" id="Iwz-BI-R7n"/>
+                            <constraint firstItem="JhB-Pd-txI" firstAttribute="top" secondItem="yYt-Un-2dV" secondAttribute="bottom" id="Mq8-NY-Rvr"/>
+                            <constraint firstItem="wGV-ZO-VvU" firstAttribute="top" secondItem="qcb-XZ-UpI" secondAttribute="bottom" id="VqJ-0r-eXd"/>
+                            <constraint firstAttribute="trailing" secondItem="yYt-Un-2dV" secondAttribute="trailing" id="ZPh-Ol-wTk"/>
+                            <constraint firstItem="JhB-Pd-txI" firstAttribute="leading" secondItem="Mqh-Xy-K5H" secondAttribute="leading" id="e0h-gf-CmG"/>
+                            <constraint firstItem="qcb-XZ-UpI" firstAttribute="leading" secondItem="Mqh-Xy-K5H" secondAttribute="leading" id="kIK-zb-I1b"/>
+                            <constraint firstItem="yYt-Un-2dV" firstAttribute="leading" secondItem="Mqh-Xy-K5H" secondAttribute="leading" id="tl5-e1-8k0"/>
+                            <constraint firstItem="wGV-ZO-VvU" firstAttribute="top" secondItem="JhB-Pd-txI" secondAttribute="bottom" constant="60" id="wkb-Y2-jHI"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="聽經" image="ic_library_music" id="6Nt-CP-pZF"/>
+                    <connections>
+                        <outlet property="footer" destination="qcb-XZ-UpI" id="VEP-Ly-qTd"/>
+                        <outlet property="tableView" destination="JhB-Pd-txI" id="MHJ-xx-5Q5"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="NuO-GR-JY0" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="162" y="-756"/>
+            <point key="canvasLocation" x="650" y="-810"/>
         </scene>
     </scenes>
     <resources>
         <image name="book" width="24" height="24"/>
-        <image name="ic_cloud_download" width="24" height="24"/>
-        <image name="ic_delete" width="24" height="24"/>
-        <image name="ic_featured_play_list" width="24" height="24"/>
         <image name="ic_library_music" width="24" height="24"/>
-        <image name="ic_play_arrow" width="24" height="24"/>
-        <image name="ic_playlist_add" width="24" height="24"/>
+        <image name="ic_pause_circle_outline_48pt" width="48" height="48"/>
+        <image name="ic_play_circle_outline_48pt" width="48" height="48"/>
         <image name="ic_repeat" width="24" height="24"/>
+        <image name="ic_repeat_one" width="24" height="24"/>
         <image name="ic_star_18pt" width="18" height="18"/>
     </resources>
 </document>

@@ -165,7 +165,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         func openIndex(_ item: [String:Any]){
         let indexVC = SutraIndexViewController();
         indexVC.tree = item;
-        indexVC.defaultExpandLevel = 1;
+        indexVC.defaultExpandLevel = 2;
         indexVC.onDismiss = {
             self.showList()
         }
@@ -185,13 +185,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
         public func treeView(_ treeView: RATreeView, cellForItem item: Any?) -> UITableViewCell {
-        var newCell = treeView.dequeueReusableCell(withIdentifier: "indexCell") as? UITableViewCell;
-        
-        if (newCell == nil) {
-            newCell = UITableViewCell.init(style:.value1,reuseIdentifier:"indexCell");
-            newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
-            newCell!.textLabel?.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
-        }
+                var newCell = treeView.dequeueReusableCell(withIdentifier: "indexCell") as? UITableViewCell;
+                
+                if (newCell == nil) {
+                        newCell = UITableViewCell.init(style:.value1,reuseIdentifier:"indexCell");
+                        newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
+                        let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
+                        newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize, weight: UIFontWeightRegular);
+                }
         let cell = newCell!;
         let item = item as! NSDictionary;
         let name = item["name"]! as? String

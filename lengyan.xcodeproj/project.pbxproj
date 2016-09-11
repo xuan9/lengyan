@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1303C64E1D32FD6900BEAF37 /* SutraOverviewTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1303C64D1D32FD6900BEAF37 /* SutraOverviewTableViewController.swift */; };
 		130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */; };
 		1313C43E1D53E99800395429 /* MediaTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1313C43D1D53E99800395429 /* MediaTableViewController.swift */; };
 		133192DF1D14901300F4984F /* HidingNavigationBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133192DD1D14901300F4984F /* HidingNavigationBarManager.swift */; };
@@ -74,14 +73,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		1303C64D1D32FD6900BEAF37 /* SutraOverviewTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraOverviewTableViewController.swift; sourceTree = "<group>"; };
-		130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraIndexViewController.swift; sourceTree = "<group>"; };
+		130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraIndexViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		1313C43D1D53E99800395429 /* MediaTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = MediaTableViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		133192DD1D14901300F4984F /* HidingNavigationBarManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HidingNavigationBarManager.swift; sourceTree = "<group>"; };
 		133192DE1D14901300F4984F /* HidingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HidingViewController.swift; sourceTree = "<group>"; };
 		1344EA5C1D21CAA5001E215B /* String+Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Common.swift"; sourceTree = "<group>"; };
 		1344FB791D3254A600E926F4 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
-		1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewControllera.swift; sourceTree = "<group>"; };
+		1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewControllera.swift; sourceTree = "<group>"; tabWidth = 4; };
 		135D605C1D16FA4A00029090 /* SutraPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageViewController.swift; sourceTree = "<group>"; };
 		135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = SutraStoryboard.storyboard; sourceTree = "<group>"; };
 		135D60601D16FB7400029090 /* SutraBookViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraBookViewController.swift; sourceTree = "<group>"; };
@@ -219,7 +217,6 @@
 				1390734D1D10928D003A3333 /* neon */,
 				1390734B1D109284003A3333 /* data */,
 				139073491D109274003A3333 /* FirstViewController.swift */,
-				1303C64D1D32FD6900BEAF37 /* SutraOverviewTableViewController.swift */,
 				13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */,
 				130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */,
 				135D605C1D16FA4A00029090 /* SutraPageViewController.swift */,
@@ -487,7 +484,6 @@
 				139073451D10926A003A3333 /* NeonAlignable.swift in Sources */,
 				135D60651D174CC300029090 /* SutraTableViewCell.swift in Sources */,
 				139073901D109B3F003A3333 /* RATreeView+TableViewDelegate.m in Sources */,
-				1303C64E1D32FD6900BEAF37 /* SutraOverviewTableViewController.swift in Sources */,
 				139073441D10926A003A3333 /* Neon.swift in Sources */,
 				1390738F1D109B3F003A3333 /* RATreeView+TableViewDataSource.m in Sources */,
 				139073871D109B3F003A3333 /* RATreeNode.m in Sources */,
