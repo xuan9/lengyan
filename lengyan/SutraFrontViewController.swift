@@ -10,8 +10,8 @@ import Foundation
 import UIKit
 
 class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
-
-
+    
+    
     fileprivate var treeView: RATreeView!
     internal var tree:[[String:Any]]?;
     fileprivate var sutraIndexButtons = [String]();
@@ -19,9 +19,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     override func viewDidLoad() {
         super.viewDidLoad()
         let bounds:CGRect = self.view.bounds;
-        
+        self.navigationController?.isNavigationBarHidden = true
+
         treeView = RATreeView(frame: CGRect(
-            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 20),
+            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y ),
             size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height - 20 )));
         treeView.delegate = self
         treeView.dataSource = self
@@ -44,12 +45,16 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             object: nil)
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        self.navigationController?.isNavigationBarHidden = true
+    }
+    
     func setupHeaderView() {
         DispatchQueue.main.async{
             let width = self.view.bounds.width
             
             let header:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 110))
-//            header.backgroundColor = UIColor.init(red: 247.0/255.0, green: 247.0/255, blue: 247.0/255, alpha: 1)
+            //            header.backgroundColor = UIColor.init(red: 247.0/255.0, green: 247.0/255, blue: 247.0/255, alpha: 1)
             
             let title = self.makeSutraIndexButton("", frame: CGRect(x: 0, y: 10, width: width, height: 21));
             let subTitle = UIButton.init(type: .custom);
@@ -59,14 +64,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             let i1 = self.makeSutraIndexButton("/A1",frame: CGRect(x: (width - 51)/2 - 40 - 36, y: 0, width: 36, height: 21));
             let i2 =  self.makeSutraIndexButton("/A2",frame: CGRect(x: (width - 51)/2 , y: 0, width: 51, height: 21));
             let i3 =  self.makeSutraIndexButton("/A3",frame: CGRect(x: (width + 51)/2 + 40,y: 0, width: 51, height: 21));
-//            let underlineAttriString = NSAttributedString(string:(i2.titleLabel?.text)!, attributes: [NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleSingle.rawValue])
-//            i2.titleLabel?.attributedText = underlineAttriString
+            //            let underlineAttriString = NSAttributedString(string:(i2.titleLabel?.text)!, attributes: [NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleSingle.rawValue])
+            //            i2.titleLabel?.attributedText = underlineAttriString
             
             subTitle.setTitle("上宣下化老和尚釋義 法界佛教總會编辑", for: UIControlState())
             subTitle.titleLabel?.font = UIFont.systemFont(ofSize: 14)
             subTitle.titleLabel!.adjustsFontSizeToFitWidth = true;
             subTitle.setTitleColor(UIColor.darkText, for: UIControlState())
-
+            
             indexes.addSubview(i1);
             indexes.addSubview(i2);
             indexes.addSubview(i3);
@@ -80,8 +85,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             let line: UIView = UIView(frame: frame)
             line.backgroundColor = self.treeView.separatorColor
             header.addSubview(line)
-//            self.treeView.scrollView.contentInset = UIEdgeInsetsMake(110, 0, 0, 0);
-//            self.treeView.scrollView.addSubview(header)
+            //            self.treeView.scrollView.contentInset = UIEdgeInsetsMake(110, 0, 0, 0);
+            //            self.treeView.scrollView.addSubview(header)
             
             self.treeView.treeHeaderView = header
         }
@@ -108,29 +113,29 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func showList(){
-            var firstLevelItems=[[String:Any]]();
-//            firstLevelItems.append(["name":"大佛頂如來密因修證了義諸菩薩萬行首楞嚴經","header":true]);
-//            for item in (Book.data.tree!["children"] as! NSArray) {
-//                firstLevelItems.append(item as! [String : Any]);
-//            }
-//            firstLevelItems.append(["name":"★精选","header":true]);
-            let sortedLikes = KEY_PATHS;//Data.shared.likes.sort({$0 < $1})
-            for like in sortedLikes {
-                firstLevelItems.append(Book.data.itemOfPath(like))
-            }
-            self.tree = firstLevelItems;
-            DispatchQueue.main.async{
-                self.treeView.reloadData()
-            }
+        var firstLevelItems=[[String:Any]]();
+        //            firstLevelItems.append(["name":"大佛頂如來密因修證了義諸菩薩萬行首楞嚴經","header":true]);
+        //            for item in (Book.data.tree!["children"] as! NSArray) {
+        //                firstLevelItems.append(item as! [String : Any]);
+        //            }
+        //            firstLevelItems.append(["name":"★精选","header":true]);
+        let sortedLikes = KEY_PATHS;//Data.shared.likes.sort({$0 < $1})
+        for like in sortedLikes {
+            firstLevelItems.append(Book.data.itemOfPath(like))
+        }
+        self.tree = firstLevelItems;
+        DispatchQueue.main.async{
+            self.treeView.reloadData()
+        }
     }
-
+    
     
     //Called, when long press occurred
     func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
         if longPressGestureRecognizer.state == UIGestureRecognizerState.began {
             let touchPoint = longPressGestureRecognizer.location(in: self.treeView.scrollView)
             if let item = treeView.itemForRow(at: touchPoint) as? [String : Any] {
-               openItem(item)
+                openItem(item)
             }
         }
     }
@@ -155,14 +160,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             return item["path"] == path
         })!;
         TOCK()
-
+        
         
         let navVC = UINavigationController.init(rootViewController: pageVC);
         
         self.present(navVC, animated: true, completion: nil)
     }
     
-        func openIndex(_ item: [String:Any]){
+    func openIndex(_ item: [String:Any]){
         let indexVC = SutraIndexViewController();
         indexVC.tree = item;
         indexVC.defaultExpandLevel = 2;
@@ -170,12 +175,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.showList()
         }
         
-        let navVC = UINavigationController.init(rootViewController: indexVC);
-        self.present(navVC, animated: true, completion: nil)
+//        let navVC = UINavigationController.init(rootViewController: indexVC);
+//        self.present(navVC, animated: true, completion: nil)
+        self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
     // MARK - RATreeView
-
+    
     func treeView(_ treeView: RATreeView, numberOfChildrenOfItem item: Any?) -> Int {
         if(item == nil){
             return self.tree?.count ?? 0
@@ -184,15 +190,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
     
-        public func treeView(_ treeView: RATreeView, cellForItem item: Any?) -> UITableViewCell {
-                var newCell = treeView.dequeueReusableCell(withIdentifier: "indexCell") as? UITableViewCell;
-                
-                if (newCell == nil) {
-                        newCell = UITableViewCell.init(style:.value1,reuseIdentifier:"indexCell");
-                        newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
-                        let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
-                        newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize, weight: UIFontWeightRegular);
-                }
+    public func treeView(_ treeView: RATreeView, cellForItem item: Any?) -> UITableViewCell {
+        var newCell = treeView.dequeueReusableCell(withIdentifier: "indexCell") as? UITableViewCell;
+        
+        if (newCell == nil) {
+            newCell = UITableViewCell.init(style:.value1,reuseIdentifier:"indexCell");
+            newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
+            let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
+            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize, weight: UIFontWeightRegular);
+        }
         let cell = newCell!;
         let item = item as! NSDictionary;
         let name = item["name"]! as? String
@@ -201,9 +207,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(item["header"] != nil){
             cell.accessoryType = .none
             cell.backgroundColor =  UIColor.groupTableViewBackground
-//            cell.textLabel?.textColor = UIColor.darkTextColor()
+            //            cell.textLabel?.textColor = UIColor.darkTextColor()
         }else{
-//            cell.textLabel?.textColor = UIColor.init(red: 0, green: 0, blue:76/255, alpha: 0.8)//very darkblue
+            //            cell.textLabel?.textColor = UIColor.init(red: 0, green: 0, blue:76/255, alpha: 0.8)//very darkblue
             cell.backgroundColor=UIColor.clear;
             cell.accessoryType = .disclosureIndicator
         }
@@ -211,7 +217,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         return cell
     }
     
-
+    
     func treeView(_ treeView: RATreeView, child index: Int, ofItem item: Any?) -> Any {
         if(item != nil){
             return (item as! NSArray)[index]
@@ -245,7 +251,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             if let i = tree!.index(where: {$0["path"] as? String == item["path"] as? String }) {
                 tree?.remove(at: i)
             }
-
+            
             treeView.reloadData()
         }
     }

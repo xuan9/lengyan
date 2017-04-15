@@ -9,7 +9,7 @@
 import UIKit
 
 class SutraPurePageContentViewController: UIViewController,SutraPage {
-
+    
     var pageIndex = 0;
     var item:[String:Any]? = nil;
     var path:String? = nil;
@@ -39,10 +39,10 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         addSutra(item!);
         updateHeader(item!)
     }
-
+    
     
     func addSutra(_ meta:[String:Any]){
-      
+        
         if (meta["children"] == nil) {
             item = meta;
             let meta = Book.data.parentOfItem(meta)!;
@@ -62,7 +62,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         }
         
         sutraTextView.attributedText = Book.data.getSutraAttributeString(meta);
-//        scrollToItem(item != nil ? item! : meta, text: text);
+        //        scrollToItem(item != nil ? item! : meta, text: text);
     }
     
     
@@ -82,12 +82,12 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
             }
         } else {
             sutraTextView.scrollsToTop = true;
-//            sutraTextView.scrollRangeToVisible(NSRange.init(location: 1, length: 1));
+            //            sutraTextView.scrollRangeToVisible(NSRange.init(location: 1, length: 1));
         }
         
     }
     
-
+    
     func getNextPageIndex()->Int{
         return nextPageIndex;
     }
@@ -96,16 +96,36 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     }
     
     func updateHeader(_ item:[String:Any]){
-//        self.title = item["name"] as? String ?? ""
+        //        self.title = item["name"] as? String ?? ""
         self.navigationItem.titleView = Book.data.getTitleView(item);
-
+        
         self.navigationController?.navigationBar.isTranslucent = false;
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.updateStarButton()
+        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
+        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
+        
+    }
+    func updateStarButton(){                if(Data.shared.likes.contains(path!)){
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
+    } else {
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
+        }
+    }
+    
+    func like() {
+        Data.shared.like(self.path!)
+        self.updateStarButton()
+    }
+    
+    func unlike() {
+        Data.shared.unlike(self.path!)
+        self.updateStarButton()
     }
     
     
     func close(){
-        self.navigationController?.dismiss(animated: true, completion: nil)
+        self.navigationController?.popViewController(animated: true);
     }
 }

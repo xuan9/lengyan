@@ -59,20 +59,20 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     func setTitle() {
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
         
-        //        if(Data.shared.likes.contains(path!)){
-        //            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .Plain, target: self, action: #selector(SutraPageViewController.unlike))
-        //        } else {
-        //            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .Plain, target: self, action: #selector(SutraPageViewController.like))
-        //        }
-        //        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.blackColor()
-        //        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.blackColor()
+        if(Data.shared.likes.contains(path!)){
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
+        } else {
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
+        }
+        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
+        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
         self.navigationController?.navigationBar.isTranslucent = false;
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
     {
         let pageContent:SutraPurePageContentViewController = self.sutraStoryBoard!.instantiateViewController(withIdentifier: "SutraPurePageContentViewController") as! SutraPurePageContentViewController
-
+        
         var index = pageContent.getBeforePageIndex()
         if ((index == 0) || (index == NSNotFound))
         {
