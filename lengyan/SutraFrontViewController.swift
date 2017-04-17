@@ -162,9 +162,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         TOCK()
         
         
-        let navVC = UINavigationController.init(rootViewController: pageVC);
-        
-        self.present(navVC, animated: true, completion: nil)
+        self.navigationController?.pushViewController(pageVC, animated: true)
     }
     
     func openIndex(_ item: [String:Any]){

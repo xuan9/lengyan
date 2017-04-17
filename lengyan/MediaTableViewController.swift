@@ -15,15 +15,31 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     @IBOutlet var tableView: UITableView!
     
     @IBOutlet var footer: UIView!
-
+    
+    @IBOutlet var footLabel: UILabel!
+    
+    @IBOutlet var footPlayMode: UIButton!
+    
+    @IBOutlet var footPlayButton: UIButton!
+    
+    @IBOutlet var progressBar: UISlider!
+    
+    @IBOutlet var progressLabel: UILabel!
+    
+    @IBOutlet var durationLabel: UILabel!
+    
     internal var initialRow = 0;
     
     var media:[[String:Any]] = []
-    private var player:AVAudioPlayer? = nil;
+    private var queuePlayer:AVQueuePlayer? = nil;
     
     private var tagStatus:[String:Int8] = [:]
     private var wantedTags:[String:Int8] = [:]
     private var playingName:String = "";
+    var timer: Timer!
+    private var playMode = -1;
+    
+    private var rReq:[String:NSBundleResourceRequest] = [:]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,6 +48,16 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         tableView.dataSource = self
         tableView.delegate = self
         self.setTitleBar()
+        //        let mark = UIImage.init(named: "mark_18pt");
+        //        progressBar.setThumbImage(mark, for: .normal)
+        //        progressBar.setThumbImage(mark, for: .highlighted)
+        
+        footPlayButton.addTarget(self, action: #selector(pressPlayButton(button:)), for: .touchUpInside)
+        
+        footPlayMode.addTarget(self, action: #selector(pressModeButton(button:)), for: .touchUpInside)
+        
+        progressBar.addTarget(self,action:#selector(progressBarChanged(slider:)),for:.valueChanged);
+        
         
         Book.data.loadDataWithCompletionHandler { (Void) in
             self.media = Book.data.media!
@@ -43,11 +69,14 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     }
                 })
             })
-
+            
             DispatchQueue.main.async{
                 self.tableView.reloadData()
             }
         }
+        
+        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(runTimedCode), userInfo: nil, repeats: true)
+        
     }
     //
     //    override func viewWillAppear(animated: Bool) {
@@ -100,19 +129,19 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         let group = self.media[indexPath.section];
         let files = group["files"] as! [String]
         var name = files[indexPath.row]
-
+        
         let isDownloaded = tagStatus[name] == 2;
-        let identifier =  isDownloaded ? "Media-Cell" : "Media-Cell-Download"
+        let identifier =  isDownloaded ? "Media-Cell":"Media-Cell-Download"
         let cell = tableView.dequeueReusableCell(withIdentifier: identifier, for: indexPath) as! MediaTableViewCell
         
         if(tagStatus[name]==2){
             //"Downloaded"
             cell.nameLabel.textColor=UIColor.darkText
         }else  if(tagStatus[name]==1){
-            cell.nameLabel.textColor=UIColor.darkGray
-            name = name + " -  Downloading"
+            cell.nameLabel.textColor=UIColor.lightGray
+            name = name + " -  正在下载..."
         } else {
-            cell.nameLabel.textColor = UIColor.darkGray
+            cell.nameLabel.textColor = UIColor.lightGray
         }
         
         cell.nameLabel?.text =  name;
@@ -140,23 +169,36 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         let group = self.media[indexPath.section];
         let files = group["files"] as! [String]
         let tag = files[indexPath.row]
+        let ext =  group["extension"] as! String
+        let groupName = group["name"] as! String
+        
         let cell = tableView.cellForRow(at: indexPath) as! MediaTableViewCell
+        
+        if(tagStatus[tag]==2){//available
+            self.play(name: tag, ext:ext, subdirectory: "");
+            return;
+        }
+        
+        if( self.rReq[tag] != nil) {
+            return;
+        }
         
         if(tagStatus[tag]==0 || tagStatus[tag]==nil){
             self.tagStatus[tag] = 1
-//            self.tableView.reloadData()
-            
-            cell.nameLabel.textColor=UIColor.darkGray
-            cell.nameLabel.text = tag + " -  Downloading"
+            cell.nameLabel.textColor=UIColor.lightGray
+            cell.nameLabel.text = tag + " -  正在下载..."
         }
         
         let req = NSBundleResourceRequest(tags: [tag]);
+        self.rReq[tag] = req
         req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+        print("beginAccessingResources: \(tag)")
         req.beginAccessingResources{ error in
+            print("beginAccessingResources done: \(tag), \(error)")
             if let error = error {
                 self.tagStatus[tag]=0
                 OperationQueue.main.addOperation {
-                    cell.nameLabel.text = tag + " -  Downloading failed: " + ("Fail to access remote resources: \(error)")
+                    cell.nameLabel.text = tag + " -  下载失败" + ("\(error)")
                 }
                 self.handleDownloadingError(error as NSError)
             } else {
@@ -164,9 +206,8 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 OperationQueue.main.addOperation {
                     self.tableView.reloadData()
                 }
-                print("indexPathForSelectedRow: \(self.tableView.indexPathForSelectedRow)")
                 if(self.tableView.indexPathForSelectedRow==nil || self.tableView.indexPathForSelectedRow == indexPath){
-                    self.play(req:req, tag:tag, name: tag)
+                    self.play(name: tag, ext:ext, subdirectory: "");
                 }
             }
         }
@@ -180,6 +221,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         req.conditionallyBeginAccessingResources(){available in
             if(available){
                 self.tagStatus[tag] = 2
+                self.rReq[tag] = req
             } else {
             }
             completionHandler(available)
@@ -189,7 +231,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     func handleDownloadingError(_ error: NSError) {
         switch error.code{
         case NSBundleOnDemandResourceOutOfSpaceError:
-            let message = "You don't have enough storage left to download this resource."
+            let message = "空间不足，下载失败"
             self.alert(message: message)
         case NSBundleOnDemandResourceExceededMaximumSizeError:
             assert(false, "The bundle resource was too large.")
@@ -200,31 +242,32 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         }
     }
     
-    func play(req:NSBundleResourceRequest, tag: String, name:String){
+    func play(name:String,ext:String, subdirectory:String){
+        let req:NSBundleResourceRequest = self.rReq[name]!
+        let url = req.bundle.url(forResource:name, withExtension: ext, subdirectory:subdirectory)
+        playingName = name;
         
-        let url = req.bundle.url(forResource:name, withExtension: "mp3")
-        if (player != nil){
-            if(player?.url == url){
-                player?.pause()
-            }else{
-                player?.stop();
-            }
-        }
-        do{
-            playingName = name;
+        OperationQueue.main.addOperation {
+            self.footLabel.text = self.playingName
             self.tableView.reloadData();
-            
-            player = try AVAudioPlayer(contentsOf: url!,fileTypeHint: AVFileTypeMPEGLayer3)
-            player?.numberOfLoops = -1
-            self.player?.prepareToPlay()
-            self.player?.play()
-        } catch  {
-            OperationQueue.main.addOperation {                                                        self.alert(message: "\(error)", title: "Fail to play \(name)");
+        }
+        
+        let playItem = AVPlayerItem(url:url!);
+        if (self.queuePlayer == nil) {
+            self.queuePlayer = AVQueuePlayer()
+            self.queuePlayer!.addObserver(
+                self, forKeyPath:"currentItem", options:.initial, context:nil)
+        }
+        
+        self.schedulePlayItems(newItem: playItem)
+        if(queuePlayer?.rate == 0){
+            self.queuePlayer?.play()
+            OperationQueue.main.addOperation {
+                //                    self.footPlayButton.isSelected = true;
             }
-            
         }
     }
-
+    
     func alert(message: String, title: String = "") {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "好", style: .cancel) { action in
@@ -233,8 +276,224 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             self.present(alert, animated: true, completion: nil)
         }
     }
-}
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?, context: UnsafeMutableRawPointer?) {
+        if (keyPath == "currentItem") {
+            let item = self.queuePlayer?.currentItem;
+            print( "play item: \(item)");
+            
+            if( item != nil) {
+                let meta = item?.asset.metadata;
+                meta?.forEach({ (m) in
+                    print( "\(m.commonKey): \(m.stringValue)");
+                })
+            }
+            OperationQueue.main.addOperation {
+                if(item == nil){
+                    self.durationLabel.text = ""
+                    self.progressLabel.text = ""
+                    self.progressLabel.text = ""
+                } else {
+                    self.progressLabel.text = ""
+                    self.progressLabel.text = ""
+                }
+                self.footPlayButton.isSelected = (item != nil && self.queuePlayer?.rate != 0);
+            }
+            
+        }
+    }
+    
+    func pressPlayButton(button: UIButton) {
+        NSLog("play btn pressed! isSelected:\(button.isSelected)")
+        if(!button.isSelected){
+            self.footPlayButton.isSelected = true;
+            self.queuePlayer?.play()
+        }else{
+            self.footPlayButton.isSelected = false;
+            self.queuePlayer?.pause()
+        }
+    }
+    
+    func pressModeButton(button: UIButton) {
+        NSLog("play mode btn pressed! isSelected:\(button.isSelected)")
+        self.showModeOptions()
+//        
+//        
+//        let currentItem = self.queuePlayer?.currentItem;
+//        if(button.isSelected){
+//            self.queuePlayer?.removeAllItems()
+//            button.isSelected=false;
+//            if (currentItem != nil) {
+//                for i in 0...50 {
+//                    self.queuePlayer?.insert(currentItem!, after:nil);
+//                }
+//            }
+//        }else{
+//            self.queuePlayer?.removeAllItems()
+//            button.isSelected=true;
+//            if (currentItem != nil) {
+//                for i in 0...50 {
+//                    self.queuePlayer?.insert(currentItem!, after:nil);
+//                }
+//            }
+//        }
+//        
+    }
+    
+    func progressBarChanged(slider: UISlider) {
+        print("progress changed: \(slider.value)")
+        if (self.queuePlayer?.currentItem == nil ) {
+            print("no currentItem")
+            return
+        }
+        let duration = self.queuePlayer!.currentItem!.duration
+        if (duration.isNumeric) {
+            let paused = self.queuePlayer?.rate == 0
+            let seekTime = CMTimeMakeWithSeconds(Float64(slider.value.multiplied(by: Float(duration.seconds))) , duration.timescale );
+            DispatchQueue.global(qos: .background).async {
+                if(!paused){
+                    self.queuePlayer?.pause()
+                }
+                self.queuePlayer?.seek(to: seekTime, toleranceBefore: kCMTimePositiveInfinity, toleranceAfter: kCMTimePositiveInfinity)
+                if(!paused){
+                    self.queuePlayer?.play()
+                }
+            }
+        } else {
+            print("invalid duration")
+        }
+    }
+    
+    func runTimedCode() {
+        if((self.queuePlayer?.currentItem) != nil){
+            let duration = self.queuePlayer!.currentItem!.duration
+            var durationText = "", progressText = ""
+            var progress:Float = 0;
+            
+            if(duration.isNumeric){
+                let d = Int(self.queuePlayer!.currentItem!.duration.seconds);
+                
+                durationText = "\(String(format: "%02d", d / 60)):\(String(format: "%02d", d % 60))"
+                if(self.queuePlayer!.currentTime().isNumeric){
+                    progress = Float(self.queuePlayer!.currentTime().seconds.divided(by: self.queuePlayer!.currentItem!.duration.seconds))
+                    let progressSeconds = Int((self.queuePlayer?.currentTime().seconds)!)
+                    progressText = "\(String(format: "%02d", progressSeconds / 60)):\(String(format: "%02d", progressSeconds % 60))"
+                }
+            }
+            OperationQueue.main.addOperation {
+                self.durationLabel.text = durationText
+                self.progressLabel.text = progressText
+                self.progressBar.value = progress
+            }
+        }
+    }
+    
+    func schedulePlayItems(newItem:AVPlayerItem? = nil) {
+        var currentItem = self.queuePlayer?.currentItem
+        
+        self.queuePlayer?.removeAllItems()
+        if (newItem != nil) {
+            currentItem = newItem;
+        }
+        
+        if(currentItem != nil) {
+            if(self.playMode <= 0){
+                let url = (currentItem?.asset as? AVURLAsset)?.url
+                let file = url?.lastPathComponent;
+                let ext = url?.pathExtension
+                let name:String?;
+                if (ext == nil) {
+                    name = file
+                } else if(file != nil){
+                    name = file?.substring(to:(file?.index((file?.endIndex)!, offsetBy: -(ext?.characters.count)!))!)
+                }
 
+                var downloaded = NSMutableArray();
+                var assets = NSMutableArray();
+                tagStatus.forEach({ (k,v) in
+                    if(v == 2) {
+                        downloaded.add(k);
+                    }
+                })
+                let sorted = downloaded.sorted(by: { (a, b) -> Bool in
+                    return (a as! String).localizedStandardCompare(b as! String)  == ComparisonResult.orderedAscending
+                })
+                
+                for (i,tag) in sorted.enumerated() {
+                    let req = self.rReq["\(tag)"]
+                    if( req != nil){
+                        let url = req?.bundle.url(forResource:tag as? String, withExtension: ext)
+                        let item = AVURLAsset(url: url!)
+                        assets.add(item)
+                        print("add item \(tag)")
+                    }
+                }
+                for _ in 1...30 {
+                    for asset in assets {
+                        let item = AVPlayerItem(asset: (asset as! AVURLAsset));
+                        self.queuePlayer?.insert(item, after:nil);
+                    }
+                }
+            }else if(self.playMode == Int.max || self.playMode <= 6){
+                let times = self.playMode == Int.max ? 30 : self.playMode
+                for _ in 1...times {
+                    let item = AVPlayerItem(asset: (currentItem?.asset)!);
+                    self.queuePlayer?.insert(item, after:nil);
+                }
+            } else {
+                print("invalid play mode \(playMode)")
+            }
+
+           
+        }
+   
+    }
+    
+    func selectMode(mode:Int) {
+        self.playMode = mode;
+        if(mode <= 0){
+            self.footPlayMode.setImage(UIImage(named:"ic_repeat")?.withRenderingMode(.alwaysTemplate), for: .normal)
+        }else if(mode == Int.max){self.footPlayMode.setImage( UIImage(named:"ic_repeat_one")?.withRenderingMode(.alwaysTemplate), for: .normal)
+        }else if(mode <= 6){
+            self.footPlayMode.setImage(UIImage(named:"ic_looks_\(mode)")?.withRenderingMode(.alwaysTemplate), for: .normal)
+        }
+        self.schedulePlayItems()
+    }
+    
+    func showModeOptions (){
+        let optionMenu = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+   
+        let aRepeat = UIAlertAction(title: "順序循環", style: .default, handler: {
+            (action) in
+            self.selectMode(mode: -1);
+        })
+        aRepeat.setValue(UIImage(named: "ic_repeat"), forKey: "image")
+        optionMenu.addAction(aRepeat)
+
+        let aRepeat0 = UIAlertAction(title: "單曲循環", style: .default, handler: {
+            (action) in
+            self.selectMode(mode: Int.max);
+        })
+        aRepeat0.setValue(UIImage(named: "ic_repeat_one"), forKey: "image")
+        optionMenu.addAction(aRepeat0)
+        
+        for i in 1...6 {
+            let a = UIAlertAction(title: "单曲播放\(i)次", style: .default, handler: {
+                (action) in
+                self.selectMode(mode: i);
+            })
+            a.setValue(UIImage(named: "ic_looks_\(1)"), forKey: "image")
+            optionMenu.addAction(a)
+        }
+        
+        let cancelAction = UIAlertAction(title: "Close", style: .cancel, handler: nil)
+        optionMenu.addAction(cancelAction)
+        //        optionMenu.view.tintColor =
+        
+        present(optionMenu, animated: true, completion: nil)
+    }
+    
+}
 
 class MediaTableViewCell: UITableViewCell {
     

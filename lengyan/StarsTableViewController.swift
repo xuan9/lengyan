@@ -83,7 +83,7 @@ class StarsTableViewController: UITableViewController{
         if (cell == nil) {
             cell = UITableViewCell.init(style:.subtitle,reuseIdentifier:identifier);
             let v =  cell!.contentView
-            v.layer.cornerRadius = 15
+            v.layer.cornerRadius = 10
             v.layer.borderColor = UIColor.lightGray.cgColor
             v.layer.borderWidth = 1
         }
