@@ -4,15 +4,25 @@ class StarsTableViewController: UITableViewController{
     
     internal var initialRow = 0;
     
+    override var prefersStatusBarHidden: Bool {
+        return false
+    }
+    override var preferredStatusBarStyle: UIStatusBarStyle{
+        return .default
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
-        tableView.separatorInset = UIEdgeInsetsMake(2, 0.0, 0, 0)
-        //        self.tableView.rowHeight = 300;
-        self.tableView.separatorStyle = .none;
+//        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
+        tableView.separatorInset = UIEdgeInsetsMake(5, 0.0, 0, 0)
+        tableView.separatorStyle = .singleLine
+        tableView.separatorColor = UIColor.white
+        tableView.separatorInset = UIEdgeInsetsMake(10, 0.0, 10, 0)
+
         self.setTitleBar()
     }
+    
+    
     
     func titleWasTapped (){
         print("titleWasTapped");
@@ -42,9 +52,8 @@ class StarsTableViewController: UITableViewController{
     }
     
     func setTitleBar() {
-        //        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))
-        //        self.title = "精選"
-        //        self.navigationController?.navigationBar.showHeader = false;
+        //self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.title = "收藏"
     }
     
     override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -73,13 +82,14 @@ class StarsTableViewController: UITableViewController{
         var cell = tableView.dequeueReusableCell(withIdentifier: identifier);
         if (cell == nil) {
             cell = UITableViewCell.init(style:.subtitle,reuseIdentifier:identifier);
-            cell?.detailTextLabel?.textColor = UIColor.lightGray
+            let v =  cell!.contentView
+            v.layer.cornerRadius = 10
+            v.layer.borderColor = UIColor.lightGray.cgColor
+            v.layer.borderWidth = 1
         }
-        
         cell?.textLabel?.numberOfLines = 20;
-        cell?.textLabel?.text = "☸ " + Book.data.getSutra(item, maxLength: 300);
-        
-        cell?.detailTextLabel?.attributedText = Book.data.getTitleLine(item);
+        cell?.textLabel?.attributedText =  Book.data.getSutraAttributeString(item, maxLength: 100);
+//        cell?.textLabel?.attributedText = Book.data.getTitleLine(item);
         return cell!
     }
     
@@ -90,9 +100,7 @@ class StarsTableViewController: UITableViewController{
             item) -> Bool in
             return item["path"] == path
         })!;
-        
-        let navVC = UINavigationController.init(rootViewController: pageVC);
-        self.present(navVC, animated: true, completion: nil)
+        self.navigationController?.pushViewController(pageVC, animated: true)
     }
     
     func getIndexAttributeText(_ name:String)->NSAttributedString{

@@ -53,6 +53,16 @@
 		13978CCD1D2028E5005031EE /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13978CCC1D2028E5005031EE /* Data.swift */; };
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
 		13E2230B1D5150C5000F763F /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E2230A1D5150C5000F763F /* Macros.swift */; };
+		4AD0637A1EA3801400751922 /* 楞嚴經 卷一.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063651EA244AC00751922 /* 楞嚴經 卷一.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷一", ); }; };
+		4AD0637B1EA3801900751922 /* 楞嚴經 卷七.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063661EA244AC00751922 /* 楞嚴經 卷七.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷七", ); }; };
+		4AD0637C1EA3801D00751922 /* 楞嚴經 卷三.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063671EA244AC00751922 /* 楞嚴經 卷三.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷三", ); }; };
+		4AD0637D1EA3802200751922 /* 楞嚴經 卷九.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063681EA244AC00751922 /* 楞嚴經 卷九.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷九", ); }; };
+		4AD0637E1EA3802200751922 /* 楞嚴經 卷二.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063691EA244AC00751922 /* 楞嚴經 卷二.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷二", ); }; };
+		4AD0637F1EA3802200751922 /* 楞嚴經 卷五.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636A1EA244AC00751922 /* 楞嚴經 卷五.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷五", ); }; };
+		4AD063801EA3802200751922 /* 楞嚴經 卷八.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636B1EA244AC00751922 /* 楞嚴經 卷八.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷八", ); }; };
+		4AD063811EA3802200751922 /* 楞嚴經 卷六.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636C1EA244AC00751922 /* 楞嚴經 卷六.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷六", ); }; };
+		4AD063821EA3802200751922 /* 楞嚴經 卷十.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636D1EA244AC00751922 /* 楞嚴經 卷十.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷十", ); }; };
+		4AD063831EA3802200751922 /* 楞嚴經 卷四.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636E1EA244AC00751922 /* 楞嚴經 卷四.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷四", ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,8 +96,8 @@
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		135D60641D174CC300029090 /* SutraTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraTableViewCell.swift; sourceTree = "<group>"; };
 		13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraActionGroupView.swift; sourceTree = "<group>"; };
-		1372181B1D402B720037332A /* SutraPurePageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageViewController.swift; sourceTree = "<group>"; };
-		1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageContentViewController.swift; sourceTree = "<group>"; };
+		1372181B1D402B720037332A /* SutraPurePageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
+		1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageContentViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390730C1D109193003A3333 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		139073101D109193003A3333 /* StarsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarsTableViewController.swift; sourceTree = "<group>"; };
@@ -144,6 +154,16 @@
 		13978CCC1D2028E5005031EE /* Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
 		13E2230A1D5150C5000F763F /* Macros.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macros.swift; sourceTree = "<group>"; };
+		4AD063651EA244AC00751922 /* 楞嚴經 卷一.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷一.m4a"; sourceTree = "<group>"; };
+		4AD063661EA244AC00751922 /* 楞嚴經 卷七.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷七.m4a"; sourceTree = "<group>"; };
+		4AD063671EA244AC00751922 /* 楞嚴經 卷三.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷三.m4a"; sourceTree = "<group>"; };
+		4AD063681EA244AC00751922 /* 楞嚴經 卷九.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷九.m4a"; sourceTree = "<group>"; };
+		4AD063691EA244AC00751922 /* 楞嚴經 卷二.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷二.m4a"; sourceTree = "<group>"; };
+		4AD0636A1EA244AC00751922 /* 楞嚴經 卷五.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷五.m4a"; sourceTree = "<group>"; };
+		4AD0636B1EA244AC00751922 /* 楞嚴經 卷八.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷八.m4a"; sourceTree = "<group>"; };
+		4AD0636C1EA244AC00751922 /* 楞嚴經 卷六.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷六.m4a"; sourceTree = "<group>"; };
+		4AD0636D1EA244AC00751922 /* 楞嚴經 卷十.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷十.m4a"; sourceTree = "<group>"; };
+		4AD0636E1EA244AC00751922 /* 楞嚴經 卷四.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷四.m4a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -196,7 +216,9 @@
 				1390732D1D109194003A3333 /* lengyanUITests */,
 				1390730A1D109193003A3333 /* Products */,
 			);
+			indentWidth = 4;
 			sourceTree = "<group>";
+			tabWidth = 4;
 		};
 		1390730A1D109193003A3333 /* Products */ = {
 			isa = PBXGroup;
@@ -211,6 +233,7 @@
 		1390730B1D109193003A3333 /* lengyan */ = {
 			isa = PBXGroup;
 			children = (
+				4AD063641EA244AC00751922 /* 屏東能淨協會讀誦 */,
 				1344EA5B1D21CA5F001E215B /* common */,
 				133192E21D14904700F4984F /* HidingNavigationBar */,
 				139073661D109B1A003A3333 /* RATreeView */,
@@ -320,6 +343,23 @@
 			name = private;
 			sourceTree = "<group>";
 		};
+		4AD063641EA244AC00751922 /* 屏東能淨協會讀誦 */ = {
+			isa = PBXGroup;
+			children = (
+				4AD063651EA244AC00751922 /* 楞嚴經 卷一.m4a */,
+				4AD063661EA244AC00751922 /* 楞嚴經 卷七.m4a */,
+				4AD063671EA244AC00751922 /* 楞嚴經 卷三.m4a */,
+				4AD063681EA244AC00751922 /* 楞嚴經 卷九.m4a */,
+				4AD063691EA244AC00751922 /* 楞嚴經 卷二.m4a */,
+				4AD0636A1EA244AC00751922 /* 楞嚴經 卷五.m4a */,
+				4AD0636B1EA244AC00751922 /* 楞嚴經 卷八.m4a */,
+				4AD0636C1EA244AC00751922 /* 楞嚴經 卷六.m4a */,
+				4AD0636D1EA244AC00751922 /* 楞嚴經 卷十.m4a */,
+				4AD0636E1EA244AC00751922 /* 楞嚴經 卷四.m4a */,
+			);
+			path = "屏東能淨協會讀誦";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -383,19 +423,17 @@
 			isa = PBXProject;
 			attributes = {
 				KnownAssetTags = (
-					nengjing,
-					ng5,
-					"nj-1",
-					"nj-2",
-					nj1,
-					nj10,
-					nj2,
-					nj3,
-					nj4,
-					nj6,
-					nj7,
-					nj8,
-					nj9,
+					"屏東能淨協會讀誦",
+					"楞嚴經 卷一",
+					"楞嚴經 卷七",
+					"楞嚴經 卷三",
+					"楞嚴經 卷九",
+					"楞嚴經 卷二",
+					"楞嚴經 卷五",
+					"楞嚴經 卷八",
+					"楞嚴經 卷六",
+					"楞嚴經 卷十",
+					"楞嚴經 卷四",
 				);
 				LastSwiftUpdateCheck = 0730;
 				LastUpgradeCheck = 0800;
@@ -405,6 +443,11 @@
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = A37UYHPM4V;
 						LastSwiftMigration = 0800;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 					1390731E1D109194003A3333 = {
 						CreatedOnToolsVersion = 7.3.1;
@@ -443,11 +486,21 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AD0637E1EA3802200751922 /* 楞嚴經 卷二.m4a in Resources */,
+				4AD063801EA3802200751922 /* 楞嚴經 卷八.m4a in Resources */,
+				4AD0637F1EA3802200751922 /* 楞嚴經 卷五.m4a in Resources */,
+				4AD0637D1EA3802200751922 /* 楞嚴經 卷九.m4a in Resources */,
+				4AD0637A1EA3801400751922 /* 楞嚴經 卷一.m4a in Resources */,
 				139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */,
+				4AD0637B1EA3801900751922 /* 楞嚴經 卷七.m4a in Resources */,
 				139073161D109194003A3333 /* Assets.xcassets in Resources */,
+				4AD063811EA3802200751922 /* 楞嚴經 卷六.m4a in Resources */,
 				139073141D109193003A3333 /* Main.storyboard in Resources */,
+				4AD063831EA3802200751922 /* 楞嚴經 卷四.m4a in Resources */,
 				135D605F1D16FABE00029090 /* SutraStoryboard.storyboard in Resources */,
+				4AD063821EA3802200751922 /* 楞嚴經 卷十.m4a in Resources */,
 				1390734C1D109284003A3333 /* data in Resources */,
+				4AD0637C1EA3801D00751922 /* 楞嚴經 卷三.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -667,7 +720,6 @@
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				ON_DEMAND_RESOURCES_PREFETCH_ORDER = nengjing;
 				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -687,7 +739,6 @@
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				ON_DEMAND_RESOURCES_PREFETCH_ORDER = nengjing;
 				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";

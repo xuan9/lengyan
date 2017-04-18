@@ -22,7 +22,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     override func viewDidLoad() {
         super.viewDidLoad()
         let bounds:CGRect = self.view.bounds;
-        
+        self.navigationController?.isNavigationBarHidden = false
+
         treeView = RATreeView(frame: CGRect(
             origin: CGPoint(x:bounds.origin.x ,y:bounds.origin.y + 5),
             size:   CGSize(width: bounds.size.width + 10 , height:bounds.size.height - 5 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
@@ -168,9 +169,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     func close(){
         onDismiss?();
-        self.dismiss(animated: true) {
-            
-        }
+        self.navigationController?.isNavigationBarHidden = true
+        self.navigationController?.popViewController(animated: true)
     }
     
     func menu(){
@@ -220,8 +220,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func openSutra(){
         let sutraVC = SutraPurePageContentViewController.init();
         sutraVC.item = tree
-        let navVC = UINavigationController.init(rootViewController: sutraVC);
-        self.navigationController?.present(navVC, animated: true, completion: nil)
+        self.navigationController?.pushViewController(sutraVC, animated: true)
     }
     
     func openAsPage(){
@@ -250,11 +249,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         pageVC.onDismiss = {
             self.openPath((Book.data.index?[pageVC.page] as NSDictionary?)?["path"] as! String);
         }
-        let navVC = UINavigationController.init(rootViewController: pageVC);
-        
-        self.present(navVC, animated: true, completion: {
-            
-        });
+        self.navigationController?.pushViewController(pageVC, animated: true)
         
     }
     
@@ -268,9 +263,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.openPath(indexVC.tree!["path"] as! String);
         }
         
-        self.present(navVC, animated: true, completion: {
-            
-        })
+        self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
     func openPath(_ path:String) {

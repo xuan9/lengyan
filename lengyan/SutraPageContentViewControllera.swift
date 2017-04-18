@@ -166,11 +166,11 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         
         let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .plain, target: self, action: #selector(SutraPageContentViewController.share))
         
-        let likeBtn = UIBarButtonItem.init(image: UIImage.init(named: "ic_star_border_18pt"), style: .plain, target: self, action: #selector(SutraPageContentViewController.toggleLike))
-        
-        if Data.shared.isLike(path) {
-            likeBtn.tintColor = view.tintColor
-        }
+//        let likeBtn = UIBarButtonItem.init(image: UIImage.init(named: "ic_star_border_18pt"), style: .plain, target: self, action: #selector(SutraPageContentViewController.toggleLike))
+//        
+//        if Data.shared.isLike(path) {
+//            likeBtn.tintColor = view.tintColor
+//        }
         
         let pureSutraBtn = UIBarButtonItem.init(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(SutraPageContentViewController.pureSutra))
         
@@ -199,17 +199,15 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         toobar.isHidden = false;
         //        toobar.backgroundColor = UIColor.groupTableViewBackgroundColor()
         if meta["children"] != nil {
-            toobar.setItems([leftBtn, spaceFlexible, likeBtn, spaceFlexible, pureSutraBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
+            toobar.setItems([leftBtn, spaceFlexible, pureSutraBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
         } else {
-            toobar.setItems([leftBtn, spaceFlexible, likeBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
+            toobar.setItems([leftBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
         }
         toobar.backgroundColor = UIColor.white
         toobar.barTintColor = UIColor.white
         let cell = UITableViewCell()
         cell.addSubview(toobar)
         return cell;
-        //todo add a button to read pure sutra
-        //todo add a tab to show started sutra
         
     }
     

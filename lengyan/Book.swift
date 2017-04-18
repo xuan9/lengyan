@@ -87,7 +87,7 @@ class Book: NSObject {
     var tree:[String:Any]? = nil
     var contents:[String:[[String:String]]]? = nil
     var index:[[String:String]]? = nil
-    var media:[[String:String]]? = nil
+    var media:[[String:Any]]? = nil
     var loaded = false;
     func itemOfPath(_ path:String) -> [String:Any] {
         if path == "" || path == "/" || path == (self.tree!["path"] as! String){
@@ -164,7 +164,7 @@ class Book: NSObject {
             let mediaData = try? Foundation.Data(contentsOf: mediaFile!)
             do {
                 self.media = try (JSONSerialization.jsonObject(with: mediaData!, options: .allowFragments)) as? NSArray
-                    as? [[String:String]]
+                    as? [[String:Any]]
             } catch _ {
                 self.media  = []
             }
@@ -176,7 +176,7 @@ class Book: NSObject {
     }
     
     func getTitleLine(_ item:[String:Any])->NSAttributedString{
-        let prefix = "• "
+        let prefix = "☸ " 
         let title:String = (item["name"] as? String ?? "")
         // (item["id"] as! String) + " " +
         let parent = Book.data.parentOfItem(item)
@@ -249,8 +249,8 @@ class Book: NSObject {
         return label
     }
     
-    func getSutraAttributeString(_ item:[String:Any])->NSAttributedString{
-        let text = getSutra(item, maxLength: Int.max)
+    func getSutraAttributeString(_ item:[String:Any], maxLength:Int = Int.max)->NSAttributedString{
+        let text = getSutra(item, maxLength: maxLength)
         let pStyle = NSMutableParagraphStyle()
         pStyle.lineSpacing = 10
         //pStyle.paragraphSpacing = 5
