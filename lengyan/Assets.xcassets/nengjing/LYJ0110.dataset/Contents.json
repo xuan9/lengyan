@@ -1,0 +1,17 @@
+{
+  "properties" : {
+    "on-demand-resource-tags" : [
+      "nj10"
+    ]
+  },
+  "info" : {
+    "version" : 1,
+    "author" : "xcode"
+  },
+  "data" : [
+    {
+      "idiom" : "universal",
+      "filename" : "LYJ0110.mp3"
+    }
+  ]
+}

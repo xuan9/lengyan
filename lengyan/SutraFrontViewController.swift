@@ -191,7 +191,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                         newCell = UITableViewCell.init(style:.value1,reuseIdentifier:"indexCell");
                         newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
                         let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
-                        newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize, weight: UIFontWeightRegular);
+                        newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize + 2, weight: UIFontWeightRegular);
                 }
         let cell = newCell!;
         let item = item as! NSDictionary;

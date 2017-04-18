@@ -25,7 +25,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         treeView = RATreeView(frame: CGRect(
             origin: CGPoint(x:bounds.origin.x ,y:bounds.origin.y + 5),
-            size:   CGSize(width: bounds.size.width , height:bounds.size.height - 5 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
+            size:   CGSize(width: bounds.size.width + 10 , height:bounds.size.height - 5 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
         treeView.delegate = self
         treeView.dataSource = self
         treeView.backgroundColor = UIColor.white
@@ -80,7 +80,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                     self.autoExpandNode(item as! [String : Any])
                 })
             }
-            
+        
             
             self.defaultExpandLevel =  self.defaultExpandLevel + 1
             if rows == self.treeView.numberOfRows() {
@@ -328,15 +328,15 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             //            newCell!.detailTextLabel?.adjustsFontSizeToFitWidth = true;
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
             let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
-            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize, weight: UIFontWeightRegular);
+            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize + 2, weight: UIFontWeightRegular);
             
             if (!isLeaf) {
                 let bookBtn = UIButton.init(type: .custom)
                 bookBtn.frame = CGRect(x: 0, y: 0.0, width: 38, height: treeView.rowHeight)
                 //                bookBtn.backgroundColor = UIColor.redColor()
                 bookBtn.setTitle("❭", for: UIControlState())
-                //                bookBtn.tintColor = UIColor.whiteColor()
-                //                bookBtn.setTitleColor(UIColor.lightGrayColor(), forState: .Normal)
+                bookBtn.tintColor = UIColor.black
+                bookBtn.setTitleColor(UIColor.lightGray, for: .normal)
                 //                let bookImage = UIImage.init(named: "book_18pt")
                 //                bookBtn.setImage(bookImage, forState: .Normal)
                 bookBtn.addTarget(self, action: #selector(SutraIndexViewController.openAsPageFromCellButton(_:)) , for: .touchUpInside)

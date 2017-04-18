@@ -37,6 +37,11 @@ class SutraBookViewController: UITableViewController{
         self.setTitleBar()
     }
     
+    
+    override var prefersStatusBarHidden : Bool {
+        return true
+    }
+    
     func titleWasTapped (){
         print("titleWasTapped");
     }

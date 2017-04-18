@@ -1,52 +1,59 @@
-[
- {
- "name": "卷一",
- "audio": "lengyan-1.mp3",
- "video": "lengyan-1.mp4",
- },
- {
- "name": "卷二",
- "audio": "lengyan-2.mp3",
- "video": "lengyan-2.mp4",
- },
- {
- "name": "卷三",
- "audio": "lengyan-3.mp3",
- "video": "lengyan-2.mp4",
- },
- {
- "name": "卷四",
- "audio": "lengyan-4.mp3",
- "video": "lengyan-2.mp4",
- },
- {
- "name": "卷五",
- "audio": "lengyan-5.mp3",
- "video": "lengyan-2.mp4",
- },
- {
- "name": "卷六",
- "audio": "lengyan-6.mp3",
- "video": "lengyan-2.mp4",
- },
- {
- "name": "卷七",
- "audio": "lengyan-7.mp3",
- "video": "lengyan-2.mp4",
- },
- {
- "name": "卷八",
- "audio": "lengyan-8.mp3",
- "video": "lengyan-2.mp4",
- },
- {
- "name": "卷九",
- "audio": "lengyan-9.mp3",
- "video": "lengyan-2.mp4",
- },
- {
- "name": "卷十",
- "audio": "lengyan-10.mp3",
- "video": "lengyan-2.mp4",
- }
- ]
+ [
+  {
+  name:'屏东能净协会读诵',
+  tag:'pingdong',
+  video:false,
+  items:[
+         {
+         "name":"卷一",
+         "audio":"LYJ0101.mp3",
+         
+         },
+         {
+         "name":"卷二",
+         "audio":"LYJ0102.mp3",
+         
+         },
+         {
+         "name":"卷三",
+         "audio":"LYJ0103.mp3",
+         
+         },
+         {
+         "name":"卷四",
+         "audio":"LYJ0104.mp3",
+         
+         },
+         {
+         "name":"卷五",
+         "audio":"LYJ0105.mp3",
+         
+         },
+         {
+         "name":"卷六",
+         "audio":"LYJ0106.mp3",
+         
+         },
+         {
+         "name":"卷七",
+         "audio":"LYJ0107.mp3",
+         
+         },
+         {
+         "name":"卷八",
+         "audio":"LYJ0108.mp3",
+         
+         },
+         {
+         "name":"卷九",
+         "audio":"LYJ0109.mp3",
+         
+         },
+         {
+         "name":"卷十",
+         "audio":"LYJ0110.mp3",
+         
+         }
+         ]
+  }
+  ]

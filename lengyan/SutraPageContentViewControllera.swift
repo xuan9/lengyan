@@ -86,7 +86,11 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
     
     override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableViewAutomaticDimension;
+        if (indexPath as NSIndexPath).row == contents.count {
+            return 100;
+        }else{
+            return UITableViewAutomaticDimension;
+        }
         
     }
     // MARK: - Table view data source
@@ -191,7 +195,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         //        composeBtn.imageInsets = btnInsets
         
         toobar.tintColor = UIColor.lightGray
-        toobar.frame = CGRect(x: 0, y: 0, width: tableView.frame.size.width, height: 60);
+        toobar.frame = CGRect(x: 0, y: 20, width: tableView.frame.size.width, height: 24);
         toobar.isHidden = false;
         //        toobar.backgroundColor = UIColor.groupTableViewBackgroundColor()
         if meta["children"] != nil {

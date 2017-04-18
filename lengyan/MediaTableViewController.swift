@@ -106,10 +106,6 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         return cell;
     }
     
-//    override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-//        return section == 0 ? "🎵 屏東能淨協會讀誦" : "🌕 聆志居士讀誦 繁體字幕";
-//    }
-    
      func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
     }

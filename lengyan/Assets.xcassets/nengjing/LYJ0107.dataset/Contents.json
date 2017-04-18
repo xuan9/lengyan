@@ -1,0 +1,17 @@
+{
+  "properties" : {
+    "on-demand-resource-tags" : [
+      "nj7"
+    ]
+  },
+  "info" : {
+    "version" : 1,
+    "author" : "xcode"
+  },
+  "data" : [
+    {
+      "idiom" : "universal",
+      "filename" : "LYJ0107.mp3"
+    }
+  ]
+}

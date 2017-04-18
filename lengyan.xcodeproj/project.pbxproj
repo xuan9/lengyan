@@ -382,6 +382,21 @@
 		139073011D109193003A3333 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				KnownAssetTags = (
+					nengjing,
+					ng5,
+					"nj-1",
+					"nj-2",
+					nj1,
+					nj10,
+					nj2,
+					nj3,
+					nj4,
+					nj6,
+					nj7,
+					nj8,
+					nj9,
+				);
 				LastSwiftUpdateCheck = 0730;
 				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = xuan;
@@ -652,6 +667,7 @@
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				ON_DEMAND_RESOURCES_PREFETCH_ORDER = nengjing;
 				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -671,6 +687,7 @@
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				ON_DEMAND_RESOURCES_PREFETCH_ORDER = nengjing;
 				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
