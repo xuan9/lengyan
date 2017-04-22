@@ -169,7 +169,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     func close(){
         onDismiss?();
-        self.navigationController?.isNavigationBarHidden = true
+        self.navigationController?.isNavigationBarHidden = false
         self.navigationController?.popViewController(animated: true)
     }
     

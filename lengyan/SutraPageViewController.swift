@@ -38,10 +38,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         
         self.setTitle()
     }
-    
-    override var prefersStatusBarHidden : Bool {
-        return true
-    }
+//    
+//    override var prefersStatusBarHidden : Bool {
+//        return true
+//    }
     
     func like() {
         Data.shared.like(self.path!)
