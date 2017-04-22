@@ -25,7 +25,6 @@
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
 		139073111D109193003A3333 /* StarsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073101D109193003A3333 /* StarsTableViewController.swift */; };
 		139073141D109193003A3333 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073121D109193003A3333 /* Main.storyboard */; };
-		139073161D109194003A3333 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 139073151D109194003A3333 /* Assets.xcassets */; };
 		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* lengyanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* lengyanTests.swift */; };
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
@@ -51,6 +50,7 @@
 		1390738F1D109B3F003A3333 /* RATreeView+TableViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 139073811D109B3F003A3333 /* RATreeView+TableViewDataSource.m */; };
 		139073901D109B3F003A3333 /* RATreeView+TableViewDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 139073831D109B3F003A3333 /* RATreeView+TableViewDelegate.m */; };
 		13978CCD1D2028E5005031EE /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13978CCC1D2028E5005031EE /* Data.swift */; };
+		13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13CA80F01EAB3BF600589E8F /* Assets.xcassets */; };
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
 		13E2230B1D5150C5000F763F /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E2230A1D5150C5000F763F /* Macros.swift */; };
 		4AD0637A1EA3801400751922 /* 楞嚴經 卷一.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063651EA244AC00751922 /* 楞嚴經 卷一.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷一", ); }; };
@@ -98,11 +98,11 @@
 		13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraActionGroupView.swift; sourceTree = "<group>"; };
 		1372181B1D402B720037332A /* SutraPurePageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageContentViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
+		1382E5311EAB341900EBE749 /* todo.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; };
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390730C1D109193003A3333 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		139073101D109193003A3333 /* StarsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarsTableViewController.swift; sourceTree = "<group>"; };
 		139073131D109193003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		139073151D109194003A3333 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		139073181D109194003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1390731A1D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390731F1D109194003A3333 /* lengyanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -152,6 +152,7 @@
 		139073821D109B3F003A3333 /* RATreeView+TableViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RATreeView+TableViewDelegate.h"; sourceTree = "<group>"; };
 		139073831D109B3F003A3333 /* RATreeView+TableViewDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RATreeView+TableViewDelegate.m"; sourceTree = "<group>"; };
 		13978CCC1D2028E5005031EE /* Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		13CA80F01EAB3BF600589E8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
 		13E2230A1D5150C5000F763F /* Macros.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macros.swift; sourceTree = "<group>"; };
 		4AD063651EA244AC00751922 /* 楞嚴經 卷一.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷一.m4a"; sourceTree = "<group>"; };
@@ -233,6 +234,7 @@
 		1390730B1D109193003A3333 /* lengyan */ = {
 			isa = PBXGroup;
 			children = (
+				13CA80F01EAB3BF600589E8F /* Assets.xcassets */,
 				4AD063641EA244AC00751922 /* 屏東能淨協會讀誦 */,
 				1344EA5B1D21CA5F001E215B /* common */,
 				133192E21D14904700F4984F /* HidingNavigationBar */,
@@ -256,12 +258,12 @@
 				1313C43D1D53E99800395429 /* MediaTableViewController.swift */,
 				139073121D109193003A3333 /* Main.storyboard */,
 				135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */,
-				139073151D109194003A3333 /* Assets.xcassets */,
 				139073171D109194003A3333 /* LaunchScreen.storyboard */,
 				1390731A1D109194003A3333 /* Info.plist */,
 				139073521D1093D8003A3333 /* lengyan-Bridging-Header.h */,
 				1344FB791D3254A600E926F4 /* Utils.swift */,
 				13E2230A1D5150C5000F763F /* Macros.swift */,
+				1382E5311EAB341900EBE749 /* todo.txt */,
 			);
 			path = lengyan;
 			sourceTree = "<group>";
@@ -423,6 +425,17 @@
 			isa = PBXProject;
 			attributes = {
 				KnownAssetTags = (
+					nengjing,
+					ng5,
+					nj1,
+					nj10,
+					nj2,
+					nj3,
+					nj4,
+					nj6,
+					nj7,
+					nj8,
+					nj9,
 					"屏東能淨協會讀誦",
 					"楞嚴經 卷一",
 					"楞嚴經 卷七",
@@ -490,10 +503,10 @@
 				4AD063801EA3802200751922 /* 楞嚴經 卷八.m4a in Resources */,
 				4AD0637F1EA3802200751922 /* 楞嚴經 卷五.m4a in Resources */,
 				4AD0637D1EA3802200751922 /* 楞嚴經 卷九.m4a in Resources */,
+				13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */,
 				4AD0637A1EA3801400751922 /* 楞嚴經 卷一.m4a in Resources */,
 				139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */,
 				4AD0637B1EA3801900751922 /* 楞嚴經 卷七.m4a in Resources */,
-				139073161D109194003A3333 /* Assets.xcassets in Resources */,
 				4AD063811EA3802200751922 /* 楞嚴經 卷六.m4a in Resources */,
 				139073141D109193003A3333 /* Main.storyboard in Resources */,
 				4AD063831EA3802200751922 /* 楞嚴經 卷四.m4a in Resources */,
@@ -717,9 +730,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = A37UYHPM4V;
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "楞嚴經\\ 卷一";
 				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -736,9 +751,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = A37UYHPM4V;
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "楞嚴經\\ 卷一";
 				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";

@@ -1,0 +1,9 @@
+1. initial star list
+
+2. text style
+
+3. index navigation
+
+4. initial fetch
+
+5. release on delete
