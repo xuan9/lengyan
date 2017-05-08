@@ -20,7 +20,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     override func viewDidLoad() {
         super.viewDidLoad()
         let size = view.frame.size;
-        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height - (navigationController?.navigationBar.height ?? 0));
+        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height - 110);
         view.addSubview(sutraTextView)
         sutraTextView.isSelectable = true;
         sutraTextView.isScrollEnabled = true;
@@ -101,7 +101,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         
         self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraPurePageContentViewController.close))
         self.updateStarButton()
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText

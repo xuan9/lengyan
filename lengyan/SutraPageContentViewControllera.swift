@@ -230,8 +230,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         //        let sutraVC:SutraBookViewController = self.storyboard!.instantiateViewControllerWithIdentifier("SutraBookViewController") as! SutraBookViewController
         //        sutraVC.initialRow = self.pageIndex
         
-        let navVC = UINavigationController.init(rootViewController: sutraVC);
-        self.navigationController?.present(navVC, animated: true, completion: nil)
+        self.navigationController?.pushViewController(sutraVC, animated: true)
     }
     
     func share() {
