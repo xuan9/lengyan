@@ -251,11 +251,11 @@
 				135D60601D16FB7400029090 /* SutraBookViewController.swift */,
 				135D60641D174CC300029090 /* SutraTableViewCell.swift */,
 				13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */,
-				135D60621D173B1B00029090 /* Book.swift */,
 				13978CCC1D2028E5005031EE /* Data.swift */,
 				1390730C1D109193003A3333 /* AppDelegate.swift */,
 				139073101D109193003A3333 /* StarsTableViewController.swift */,
 				1313C43D1D53E99800395429 /* MediaTableViewController.swift */,
+				135D60621D173B1B00029090 /* Book.swift */,
 				139073121D109193003A3333 /* Main.storyboard */,
 				135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */,
 				139073171D109194003A3333 /* LaunchScreen.storyboard */,
@@ -425,17 +425,6 @@
 			isa = PBXProject;
 			attributes = {
 				KnownAssetTags = (
-					nengjing,
-					ng5,
-					nj1,
-					nj10,
-					nj2,
-					nj3,
-					nj4,
-					nj6,
-					nj7,
-					nj8,
-					nj9,
 					"屏東能淨協會讀誦",
 					"楞嚴經 卷一",
 					"楞嚴經 卷七",
@@ -671,7 +660,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PROVISIONING_PROFILE = "a997049f-513c-43e9-ab9e-932c0ee144b2";
@@ -714,7 +703,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -732,7 +721,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = A37UYHPM4V;
 				INFOPLIST_FILE = lengyan/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "楞嚴經\\ 卷一";
 				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
@@ -753,7 +742,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = A37UYHPM4V;
 				INFOPLIST_FILE = lengyan/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "楞嚴經\\ 卷一";
 				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;

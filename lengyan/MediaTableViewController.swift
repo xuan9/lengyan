@@ -200,7 +200,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             if let error = error {
                 self.tagStatus[tag]=0
                 OperationQueue.main.addOperation {
-                    cell.nameLabel.text = tag + " -  下载失败" + ("\(error)")
+                    cell.nameLabel.text = tag + " -  下载失败" ;
                 }
                 self.handleDownloadingError(error as NSError)
             } else {
@@ -264,11 +264,9 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             let message = "空间不足，下载失败"
             self.alert(message: message)
         case NSBundleOnDemandResourceExceededMaximumSizeError:
-            print("The bundle resource was too large.")
-            self.alert(message:"程序错误，下载失败")
+            self.alert(message: "程序错误，文件过大" )
         case NSBundleOnDemandResourceInvalidTagError:
-            print("The requested tag does not exist.")
-            self.alert(message:"程序错误，下载失败")
+            self.alert(message: "程序错误，文件不存在" )
         default:
             self.alert(message: error.description)
         }
