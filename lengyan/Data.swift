@@ -28,6 +28,10 @@ class Data: NSObject, DataProtocal {
         self.defaults = UserDefaults.standard
         if (likesCache == nil){
             likesCache =  defaults.stringArray(forKey: Data.likesKey) ?? [];
+            
+            if likesCache?.count == 0 {
+                
+            }
             print("likes:")
             print(likesCache)
         }

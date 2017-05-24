@@ -40,8 +40,8 @@
                     </tabBar>
                     <connections>
                         <segue destination="wz3-c0-Cfx" kind="relationship" relationship="viewControllers" id="6f6-l0-OnF"/>
-                        <segue destination="p2b-Um-PK1" kind="relationship" relationship="viewControllers" id="7id-O1-hty"/>
                         <segue destination="52i-TC-vUc" kind="relationship" relationship="viewControllers" id="0Bd-Ep-HXi"/>
+                        <segue destination="p2b-Um-PK1" kind="relationship" relationship="viewControllers" id="due-Jc-hbj"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="HuB-VB-40B" sceneMemberID="firstResponder"/>
@@ -144,10 +144,10 @@
                                 <inset key="scrollIndicatorInsets" minX="10" minY="20" maxX="10" maxY="10"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Header" id="M3y-uy-WhP" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="55.5" width="375" height="40"/>
+                                        <rect key="frame" x="0.0" y="56" width="375" height="40"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="M3y-uy-WhP" id="p51-pI-OJA">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39.5"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="屏東能淨協會朗讀" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WXo-gc-4vA" userLabel="title">
@@ -171,10 +171,10 @@
                                         </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Download" id="9dA-Th-gqc" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="95.5" width="375" height="40"/>
+                                        <rect key="frame" x="0.0" y="96" width="375" height="40"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="9dA-Th-gqc" id="Kdc-5Q-h9h">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39.5"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UZ2-wr-MwL">
@@ -196,10 +196,10 @@
                                         </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell" id="2Nx-Tk-Nor" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="135.5" width="375" height="40"/>
+                                        <rect key="frame" x="0.0" y="136" width="375" height="40"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="2Nx-Tk-Nor" id="VSn-5D-HPd">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39.5"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ieb-Ig-470">

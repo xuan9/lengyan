@@ -10,6 +10,7 @@ import UIKit
 
 class SutraPurePageContentViewController: UIViewController,SutraPage {
     
+    var onDismiss: ((Void) -> Void)?
     var pageIndex = 0;
     var item:[String:Any]? = nil;
     var path:String? = nil;
@@ -19,6 +20,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = UIColor.white
         let size = view.frame.size;
         sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height - 110);
         view.addSubview(sutraTextView)
@@ -126,6 +128,13 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     
     
     func close(){
+        let topBarView = UIView(frame: CGRect(
+            origin: CGPoint(x:0 ,y:0 ),
+            size:   CGSize(width: view.bounds.size.width , height:60 )));
+        topBarView.backgroundColor = UIColor.white
+        view.addSubview(topBarView)
+        
+        onDismiss?();
         self.navigationController?.popViewController(animated: true);
     }
 }

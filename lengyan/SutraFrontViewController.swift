@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 
+
 class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
     
@@ -21,12 +22,18 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let bounds:CGRect = self.view.bounds;
         self.navigationController?.isNavigationBarHidden = true
 
+        let topBarView = UIView(frame: CGRect(
+            origin: CGPoint(x:0 ,y:0 ),
+            size:   CGSize(width: bounds.size.width , height:20 )));
+        topBarView.backgroundColor = UIColor.white
+        view.addSubview(topBarView)
+        
         treeView = RATreeView(frame: CGRect(
-            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y ),
+            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 20 ),
             size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height - 20 )));
         treeView.delegate = self
         treeView.dataSource = self
-        treeView.rowHeight = 24;
+        treeView.rowHeight = 30;
         treeView.backgroundColor = UIColor.white
         view.backgroundColor = UIColor.white
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -46,7 +53,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        self.navigationController?.isNavigationBarHidden = true
+        self.navigationController?.setNavigationBarHidden(true, animated: true)
     }
     
     func setupHeaderView() {
@@ -67,11 +74,17 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             //            let underlineAttriString = NSAttributedString(string:(i2.titleLabel?.text)!, attributes: [NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleSingle.rawValue])
             //            i2.titleLabel?.attributedText = underlineAttriString
             
-            subTitle.setTitle("上宣下化老和尚釋義 法界佛教總會编辑", for: UIControlState())
+            subTitle.setTitle("無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義", for: UIControlState())
+                        
+            subTitle.semanticContentAttribute = .forceRightToLeft
+
+//            subTitle.setImage(UIImage.init(named: "ic_link"), for: .normal)
             subTitle.titleLabel?.font = UIFont.systemFont(ofSize: 14)
             subTitle.titleLabel!.adjustsFontSizeToFitWidth = true;
-            subTitle.setTitleColor(UIColor.darkText, for: UIControlState())
-            
+            subTitle.setTitleColor(UIColor.darkGray, for: UIControlState())
+//            subTitle.addTarget(self, action: #selector(SutraFrontViewController.openDrbaLink(_:)), for: .touchUpInside)
+
+
             indexes.addSubview(i1);
             indexes.addSubview(i2);
             indexes.addSubview(i3);
@@ -112,6 +125,24 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.openIndex(Book.data.itemOfPath(path))
     }
     
+    func openDrbaLink(_ sender:UIButton) {
+//        let webView = UIWebView.init()
+//        let webVC = UIViewController.init()
+//        webVC.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraFrontViewController.close))//✕
+//
+//        webVC.view.addSubview(webView);
+//        self.navigationController?.pushViewController(webVC, animated: true)
+        
+//        let webViewController = SVWebViewController(address: )
+
+//        self.navigationController?.pushViewController(webViewController!, animated: true)
+    UIApplication.shared.openURL(URL.init(string: "http://www.drbachinese.org/online_reading/sutra_explanation/Shu/contents.htm")!)
+    }
+    
+    func close(){
+        self.navigationController?.popViewController(animated: true)
+    }
+    
     func showList(){
         var firstLevelItems=[[String:Any]]();
         //            firstLevelItems.append(["name":"大佛頂如來密因修證了義諸菩薩萬行首楞嚴經","header":true]);
@@ -148,7 +179,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             openIndex(item);
         }
     }
-    
+    func openSutra(_ item: [String : Any]){
+        let sutraVC = SutraPurePageContentViewController.init();
+        sutraVC.item = item
+        sutraVC.onDismiss = {
+            self.navigationController?.setNavigationBarHidden(false, animated: false)
+        }
+        self.navigationController?.isNavigationBarHidden = false
+        self.navigationController?.pushViewController(sutraVC, animated: true)
+    }
     func openContent(_ item: [String : Any]){
         let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl,
                                                    navigationOrientation:.horizontal,
@@ -195,7 +234,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             newCell = UITableViewCell.init(style:.value1,reuseIdentifier:"indexCell");
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
             let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
-            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize, weight: UIFontWeightRegular);
+            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize + 2, weight: UIFontWeightRegular);
         }
         let cell = newCell!;
         let item = item as! NSDictionary;
@@ -238,7 +277,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func treeView(_ treeView:RATreeView,  accessoryButtonTappedForRowForItem item:Any){
         let item = item as! [String:Any];
         if(item["header"] == nil ){
-            self.openItem(item);
+            self.openSutra(item);
         }
     }
     
