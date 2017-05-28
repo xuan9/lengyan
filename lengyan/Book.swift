@@ -44,11 +44,12 @@ let KEY_PATHS = [
     "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K2",
     "/A2/B1/C2/D1/E3/F1/G2/H4/I4",
     "/A2/B1/C2/D1/E3/F2",
-    "/A2/B1/C2/D1/E3/F2/G1/H2/I3",
+    "/A2/B1/C2/D1/E3/F2/G1",
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M1",
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M2",
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M3",
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M4",
+    "/A2/B1/C2/D1/E3/F2/G2",
     "/A2/B1/C2/D1/E3/F2/G2/H1",
     "/A2/B1/C2/D1/E3/F2/G2/H2",
     "/A2/B1/C2/D1/E4",
@@ -251,9 +252,14 @@ class Book: NSObject {
     
     func getSutraAttributeString(_ item:[String:Any], maxLength:Int = Int.max)->NSAttributedString{
         let text = getSutra(item, maxLength: maxLength)
+        
         let pStyle = NSMutableParagraphStyle()
-        pStyle.lineSpacing = 10
-        //pStyle.paragraphSpacing = 5
+        pStyle.lineHeightMultiple = 1.3
+        pStyle.maximumLineHeight = 40.0
+        pStyle.minimumLineHeight = 10.0
+        
+//        pStyle.lineSpacing = 20
+        pStyle.paragraphSpacing = 1
         pStyle.firstLineHeadIndent = 30
         
         let pAttributes = [NSParagraphStyleAttributeName : pStyle,

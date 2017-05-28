@@ -58,6 +58,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationController?.popViewController(animated: true)
     }
     func setTitle() {
+        
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
         
         if(Data.shared.likes.contains(path!)){
@@ -65,6 +66,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         } else {
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
         }
+        
+        
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
         self.navigationController?.navigationBar.isTranslucent = false;
@@ -121,6 +124,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.item = Book.data.index![page];
         self.path = item!["path"]        
         self.setPageTitle()
+        self.setTitle()
     }
     
     func setPageTitle() {

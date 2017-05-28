@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 
-
 class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
     
@@ -56,6 +55,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.setNavigationBarHidden(true, animated: true)
     }
     
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        setupHeaderView()
+    }
+    
     func setupHeaderView() {
         DispatchQueue.main.async{
             let width = self.view.bounds.width
@@ -74,16 +77,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             //            let underlineAttriString = NSAttributedString(string:(i2.titleLabel?.text)!, attributes: [NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleSingle.rawValue])
             //            i2.titleLabel?.attributedText = underlineAttriString
             
-            subTitle.setTitle("無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義", for: UIControlState())
+            subTitle.setTitle("   無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義", for: UIControlState())
                         
             subTitle.semanticContentAttribute = .forceRightToLeft
 
-//            subTitle.setImage(UIImage.init(named: "ic_link"), for: .normal)
             subTitle.titleLabel?.font = UIFont.systemFont(ofSize: 14)
             subTitle.titleLabel!.adjustsFontSizeToFitWidth = true;
             subTitle.setTitleColor(UIColor.darkGray, for: UIControlState())
 //            subTitle.addTarget(self, action: #selector(SutraFrontViewController.openDrbaLink(_:)), for: .touchUpInside)
-
+            subTitle.addTarget(self, action: #selector(SutraFrontViewController.openRootIndex), for: .touchUpInside)
 
             indexes.addSubview(i1);
             indexes.addSubview(i2);
@@ -102,6 +104,44 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             //            self.treeView.scrollView.addSubview(header)
             
             self.treeView.treeHeaderView = header
+            
+            let footerSeperator = UIView(frame: CGRect(x: 0, y: 2, width: width - 10, height: 1))
+            footerSeperator.backgroundColor = UIColor.lightGray
+
+            
+            
+            let footerLabel = UILabel(frame: CGRect(x: 20, y: 10, width: width - 20, height: 60))
+            footerLabel.text = "南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！"
+            footerLabel.numberOfLines = 3
+            footerLabel.font = UIFont.systemFont(ofSize: 12)
+            footerLabel.adjustsFontSizeToFitWidth = true;
+
+            let linkButton = UIButton(frame: CGRect(x: 10, y: 70, width: width - 30, height: 20))
+            linkButton.setTitle("經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站", for: .normal)
+            linkButton.setImage(UIImage.init(named: "ic_link")?.withRenderingMode(.alwaysTemplate), for: .normal)
+            linkButton.addTarget(self, action: #selector(SutraFrontViewController.openDrbaLink(_:)), for: .touchUpInside)
+            linkButton.semanticContentAttribute = .forceRightToLeft
+            linkButton.titleLabel?.font = UIFont.systemFont(ofSize: 10)
+            linkButton.titleLabel?.adjustsFontSizeToFitWidth = true;
+            linkButton.setTitleColor(UIColor.darkText, for: .normal)
+            linkButton.backgroundColor = UIColor.white
+            linkButton.tintColor = UIColor.darkText
+            linkButton.contentHorizontalAlignment = .left
+            
+            let footerLabel2 = UILabel(frame: CGRect(x: 10, y: 90, width: width - 20, height: 20))
+            footerLabel2.text = "本屏中間所列為部分關鍵科判，點擊經名打開完整科判。"
+            footerLabel2.numberOfLines = 1
+            footerLabel2.font = UIFont.systemFont(ofSize: 10)
+            footerLabel2.adjustsFontSizeToFitWidth = true;
+
+            let footer:UIView = UIView(frame: CGRect(x: 5, y: 2, width: width - 20, height: 130))
+            footer.backgroundColor = UIColor.white
+            footer.addSubview(footerSeperator)
+            footer.addSubview(footerLabel)
+            footer.addSubview(linkButton)
+            footer.addSubview(footerLabel2)
+
+            self.treeView.treeFooterView = footer
         }
     }
     func makeSutraIndexButton(_ path:String, frame:CGRect?) ->UIButton {
@@ -123,6 +163,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func onSutraIndexButtonTouchUp(_ sender:UIButton){
         let path = sutraIndexButtons[sender.tag]
         self.openIndex(Book.data.itemOfPath(path))
+    }
+    
+    func openRootIndex() {
+        self.openIndex(Book.data.itemOfPath(""))
     }
     
     func openDrbaLink(_ sender:UIButton) {
@@ -182,6 +226,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func openSutra(_ item: [String : Any]){
         let sutraVC = SutraPurePageContentViewController.init();
         sutraVC.item = item
+        sutraVC.isShowIndexButton = true
         sutraVC.onDismiss = {
             self.navigationController?.setNavigationBarHidden(false, animated: false)
         }
@@ -209,7 +254,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         indexVC.tree = item;
         indexVC.defaultExpandLevel = 2;
         indexVC.onDismiss = {
-            self.showList()
+//            self.showList()
         }
         
 //        let navVC = UINavigationController.init(rootViewController: indexVC);

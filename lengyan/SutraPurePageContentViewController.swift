@@ -12,17 +12,20 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     
     var onDismiss: ((Void) -> Void)?
     var pageIndex = 0;
+    var isShowIndexButton = false;
+    
     var item:[String:Any]? = nil;
     var path:String? = nil;
     var nextPageIndex = -1;
     var beforePageIndex = -1;
+
     var sutraTextView: UITextView = UITextView.init();
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.white
         let size = view.frame.size;
-        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height - 110);
+        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: UIDevice.current.orientation.isLandscape ? size.height - 80 : size.height - 110 );
         view.addSubview(sutraTextView)
         sutraTextView.isSelectable = true;
         sutraTextView.isScrollEnabled = true;
@@ -42,6 +45,14 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         updateHeader(item!)
     }
     
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        var height = size.height - 30;
+        if UIDevice.current.orientation.isLandscape {
+            height = height + 65
+        }
+        
+        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: height );
+    }
     
     func addSutra(_ meta:[String:Any]){
         
@@ -104,17 +115,42 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         self.navigationController?.navigationBar.isTranslucent = false;
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraPurePageContentViewController.close))
+        
+
+        
         self.updateStarButton()
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
-        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
-        
     }
-    func updateStarButton(){                if(Data.shared.likes.contains(path!)){
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
-    } else {
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
+    
+    func updateStarButton(){
+        var likeButton:UIBarButtonItem;
+        if Data.shared.likes.contains(path!) {
+          likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
+        } else {
+           likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
         }
+        
+        if self.isShowIndexButton {
+            let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(SutraPurePageContentViewController.openIndex))
+            
+            self.navigationItem.setRightBarButtonItems([indexButton,likeButton], animated: false)
+        } else {
+            self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
+        }
+        
+        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
+        likeButton.tintColor = UIColor.darkText
+
     }
+    
+    func openIndex(){
+        let indexVC = SutraIndexViewController();
+        indexVC.tree = item;
+        indexVC.defaultExpandLevel = 2;
+        indexVC.isShowSutraButton = false;
+        self.navigationController?.pushViewController(indexVC, animated: true)
+    }
+
     
     func like() {
         Data.shared.like(self.path!)

@@ -306,6 +306,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?, context: UnsafeMutableRawPointer?) {
         if (keyPath == "currentItem") {
             let item = self.queuePlayer?.currentItem;
+            /*
             print( "play item: \(item)");
             
             if( item != nil) {
@@ -314,6 +315,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     print( "\(m.commonKey): \(m.stringValue)");
                 })
             }
+                */
             let file = getFileNameAndExtension(item: item)
             
             if file != nil {

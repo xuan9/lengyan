@@ -11,6 +11,8 @@ import UIKit
 class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
     var onDismiss: ((Void) -> Void)?
+    var isShowSutraButton = true;
+    
     fileprivate var treeView: RATreeView!
     
     internal var tree:[String:Any]?, path:String?
@@ -26,7 +28,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         treeView = RATreeView(frame: CGRect(
             origin: CGPoint(x:bounds.origin.x ,y:bounds.origin.y + 5),
-            size:   CGSize(width: bounds.size.width + 10 , height:bounds.size.height - 5 - (self.tabBarController?.tabBar.bounds.size.height ?? 0))));
+            size:   CGSize(width: bounds.size.width + 10 , height:bounds.size.height - 5 )));
         treeView.delegate = self
         treeView.dataSource = self
         treeView.backgroundColor = UIColor.white
@@ -70,6 +72,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
 //        self .autoExpend()
     }
+    
     func autoExpend(){
         var rows = self.treeView.numberOfRows();
         repeat {
@@ -151,7 +154,6 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: likeTitle, style: .Plain, target: self, action: #selector(SutraIndexViewController.toggleLike))
-        let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(SutraIndexViewController.openSutra))
         
         
         
@@ -163,7 +165,15 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
         
-        self.navigationItem.setRightBarButtonItems([listButton,sutraButton], animated: false)
+        
+        if self.isShowSutraButton {
+            let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(SutraIndexViewController.openSutra))
+            
+            self.navigationItem.setRightBarButtonItems([listButton,sutraButton], animated: false)
+        } else {
+            self.navigationItem.setRightBarButtonItems([listButton], animated: false)
+        }
+
     }
     
     
