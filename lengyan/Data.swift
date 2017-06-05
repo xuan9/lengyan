@@ -22,18 +22,24 @@ class Data: NSObject, DataProtocal {
     
     static let LastExpandedKey = "lastExpanded";
     static let likesKey = "likes";
+    static let playFileKey = "playFile"
+    static let playModeKey = "playMode"
     internal var likesCache:[String]?;
     
+//    internal var itemOpened:String?;
+//    internal var itemOpenedAt:Date;
+    
     override init(){
+        
         self.defaults = UserDefaults.standard
         if (likesCache == nil){
-            likesCache =  defaults.stringArray(forKey: Data.likesKey) ?? [];
+            likesCache =  defaults.stringArray(forKey: Data.likesKey) ??  ["/A2/B1/C2/D1/E2/F1/G1/H1/I1/J2", "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K2", "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K2/L2/M2/N2", "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K2/L2/M3/N3", "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K3/L2/M3", "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K3/L2/M4", "/A2/B1/C2/D1/E2/F1/G1/H1/I3", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M1/N5/O2", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M10/N4/O1", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M10/N4/O2", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M2/N2/O2", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M2/N3/O1", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M2/N4/O3", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2/M3/N1/O1", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2/M3/N1/O3/P2/Q1/R1", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2/M3/N1/O3/P2/Q1/R2/S1", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2/M3/N1/O3/P2/Q1/R2/S2", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2/M3/N1/O3/P2/Q1/R3/S1", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2/M3/N1/O3/P2/Q1/R3/S2", "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K3/L2/M3/N7/O5", "/A2/B1/C2/D1/E2/F2/G2/H2/I1/J1", "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K2/L2", "/A2/B1/C2/D1/E3/F1/G2/H4/I4", "/A2/B1/C2/D1/E3/F2/G1/H2/I2", "/A2/B1/C2/D1/E3/F2/G2/H2/I2/J1/K3/L1", "/A2/B1/C2/D1/E4/F2/G4", "/A2/B2/C1/D2/E2/F1", "/A2/B2/C1/D2/E2/F2/G1", "/A2/B2/C1/D2/E2/F2/G1/H2/I1", "/A2/B2/C1/D2/E2/F2/G1/H2/I2", "/A2/B2/C1/D2/E2/F2/G1/H2/I4", "/A2/B2/C1/D2/E2/F2/G4", "/A2/B2/C1/D2/E3", "/A2/B2/C2/D1/E3/F1", "/A2/B2/C2/D1/E3/F3", "/A2/B2/C2/D2/E2/F1/G1", "/A2/B2/C2/D2/E2/F1/G2","/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K3"];
             
             if likesCache?.count == 0 {
                 
             }
-            print("likes:")
-            print(likesCache)
+//            print("likes:")
+//            print(likesCache)
         }
     }
     
@@ -47,7 +53,6 @@ class Data: NSObject, DataProtocal {
         set (expanded){
             print(expanded)
             defaults.set(expanded, forKey: Data.LastExpandedKey)
-            defaults.synchronize()
         }
     }
     
@@ -56,6 +61,7 @@ class Data: NSObject, DataProtocal {
             return likesCache!
         }
     }
+    
     
     func like(_ path:String){
         likesCache?.append(path)
@@ -76,8 +82,33 @@ class Data: NSObject, DataProtocal {
         return likesCache?.contains(path) ?? false
     }
     
+    var lastPlayFile:[String]?{
+        get {
+            return defaults.array(forKey: Data.playFileKey) as! [String]?
+        }
+        set(file) {
+            defaults.set(file, forKey: Data.playFileKey)
+        }
+        
+    }
+    
+    var lastPlayMode:Int?{
+        get {
+            return defaults.integer(forKey: Data.playModeKey)
+        }
+        set(mode) {
+            defaults.set(mode, forKey: Data.playModeKey)
+        }
+        
+    }
+    
+//    func logItemOpened(path:String){
+//    }
+//    
+//    func logItemClosed(path:String){
+//    }
+    
     func persist(){
         defaults.synchronize()
     }
-
 }

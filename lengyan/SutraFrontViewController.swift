@@ -113,7 +113,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             let footerLabel = UILabel(frame: CGRect(x: 20, y: 10, width: width - 20, height: 60))
             footerLabel.text = "南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！"
             footerLabel.numberOfLines = 3
-            footerLabel.font = UIFont.systemFont(ofSize: 12)
+            footerLabel.font = UIFont.systemFont(ofSize: 14)
             footerLabel.adjustsFontSizeToFitWidth = true;
 
             let linkButton = UIButton(frame: CGRect(x: 10, y: 70, width: width - 30, height: 20))
@@ -129,7 +129,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             linkButton.contentHorizontalAlignment = .left
             
             let footerLabel2 = UILabel(frame: CGRect(x: 10, y: 90, width: width - 20, height: 20))
-            footerLabel2.text = "本屏中間所列為部分關鍵科判，點擊經名打開完整科判。"
+            footerLabel2.text = "感恩法界佛教總會！本屏中間所列為部分關鍵科判，可點擊經名打開完整科判。"
             footerLabel2.numberOfLines = 1
             footerLabel2.font = UIFont.systemFont(ofSize: 10)
             footerLabel2.adjustsFontSizeToFitWidth = true;
@@ -223,6 +223,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             openIndex(item);
         }
     }
+    
+    func openSutraOfPath(path:String){
+        openSutra(Book.data.itemOfPath(path))
+    }
+    
     func openSutra(_ item: [String : Any]){
         let sutraVC = SutraPurePageContentViewController.init();
         sutraVC.item = item

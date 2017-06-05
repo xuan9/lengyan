@@ -96,11 +96,16 @@ class StarsTableViewController: UITableViewController{
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
         let path:String = Data.shared.likes[(indexPath as NSIndexPath).row];
-        pageVC.page = Book.data.index!.index(where: { (
-            item) -> Bool in
-            return item["path"] == path
-        })!;
-        self.navigationController?.pushViewController(pageVC, animated: true)
+        let item = Book.data.itemOfPath(path);
+        if item["children"] != nil {
+            self.openSutra(item)
+        } else {
+            pageVC.page = Book.data.index!.index(where: { (
+                item) -> Bool in
+                return item["path"] == path
+            })!;
+            self.navigationController?.pushViewController(pageVC, animated: true)
+        }
     }
     
     func getIndexAttributeText(_ name:String)->NSAttributedString{
@@ -108,6 +113,17 @@ class StarsTableViewController: UITableViewController{
         return NSAttributedString(string: name, attributes:attributes)
     }
     
+    
+    func openSutra(_ item: [String : Any]){
+        let sutraVC = SutraPurePageContentViewController.init();
+        sutraVC.item = item
+        sutraVC.isShowIndexButton = true
+        sutraVC.onDismiss = {
+            self.navigationController?.setNavigationBarHidden(false, animated: false)
+        }
+        self.navigationController?.isNavigationBarHidden = false
+        self.navigationController?.pushViewController(sutraVC, animated: true)
+    }
     
     //
     //    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {

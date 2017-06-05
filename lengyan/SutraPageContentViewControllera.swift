@@ -29,7 +29,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     var path:String = ""
     
     fileprivate var showHeader = true;
-    let toobar = UIToolbar();
+    let toolbar = UIToolbar();
     var sutraFont:UIFont? = nil, comentFont:UIFont? = nil, indexFont:UIFont? = nil;
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -194,19 +194,21 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         //        rightBtn.imageInsets = btnInsets
         //        composeBtn.imageInsets = btnInsets
         
-        toobar.tintColor = UIColor.lightGray
-        toobar.frame = CGRect(x: 0, y: 20, width: tableView.frame.size.width, height: 24);
-        toobar.isHidden = false;
-        //        toobar.backgroundColor = UIColor.groupTableViewBackgroundColor()
+        toolbar.tintColor = UIColor.lightGray
+        toolbar.frame = CGRect(x: 0, y: 20, width: tableView.frame.size.width, height: 24);
+        toolbar.isHidden = false;
+        //        toolbar.backgroundColor = UIColor.groupTableViewBackgroundColor()
         if meta["children"] != nil {
-            toobar.setItems([leftBtn, spaceFlexible, pureSutraBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
+            toolbar.setItems([leftBtn, spaceFlexible, pureSutraBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
         } else {
-            toobar.setItems([leftBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
+            toolbar.setItems([leftBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
         }
-        toobar.backgroundColor = UIColor.white
-        toobar.barTintColor = UIColor.white
+        toolbar.backgroundColor = UIColor.white
+        toolbar.barTintColor = UIColor.white
         let cell = UITableViewCell()
-        cell.addSubview(toobar)
+        let space = UIView(frame:CGRect(x: 0, y: 0, width: tableView.frame.size.width, height: 20));
+        cell.addSubview(space)
+        cell.addSubview(toolbar)
         return cell;
         
     }
@@ -214,10 +216,10 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     func toggleLike() {
         if Data.shared.isLike(path) {
             Data.shared.unlike(path)
-            toobar.items![2].tintColor = UIColor.lightGray
+            toolbar.items![2].tintColor = UIColor.lightGray
         } else {
             Data.shared.like(path)
-            toobar.items![2].tintColor = view.tintColor
+            toolbar.items![2].tintColor = view.tintColor
         }
     }
     

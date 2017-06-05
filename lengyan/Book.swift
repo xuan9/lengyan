@@ -262,8 +262,10 @@ class Book: NSObject {
         pStyle.paragraphSpacing = 1
         pStyle.firstLineHeadIndent = 30
         
+       let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
+        
         let pAttributes = [NSParagraphStyleAttributeName : pStyle,
-                           NSFontAttributeName: UIFont.systemFont(ofSize: 17)]
+                           NSFontAttributeName: font]
         
         return NSAttributedString(string: text, attributes:pAttributes)
     }

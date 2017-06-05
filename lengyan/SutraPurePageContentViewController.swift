@@ -45,6 +45,17 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         updateHeader(item!)
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(false, animated: true)
+    }
+    
+//    override func viewDidAppear(_ animated: Bool) {
+//        Data.shared.logItemOpened(path)
+//    }
+//    override func viewDidDisappear(_ animated: Bool) {
+//        Data.shared.logItemClosed(path)
+//    }
+    
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         var height = size.height - 30;
         if UIDevice.current.orientation.isLandscape {
@@ -56,16 +67,18 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     
     func addSutra(_ meta:[String:Any]){
         
-        if (meta["children"] == nil) {
-            item = meta;
-            let meta = Book.data.parentOfItem(meta)!;
-            path = (meta["path"]! as! String);
-            addSutra(meta);
-            return;
-        } else {
-            beforePageIndex = pageIndex - 1;
-        }
-        
+//        if (meta["children"] == nil) {
+//            item = meta;
+//            let meta = Book.data.parentOfItem(meta)!;
+//            path = (meta["path"]! as! String);
+//            addSutra(meta);
+//            return;
+//        } else {
+//            beforePageIndex = pageIndex - 1;
+//        }
+//        
+        beforePageIndex = pageIndex - 1;
+
         if(nextPageIndex == -1){
             if(meta["path"]! as! String == item!["path"]! as! String){
                 nextPageIndex = pageIndex + 1 ;
@@ -116,8 +129,6 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraPurePageContentViewController.close))
         
-
-        
         self.updateStarButton()
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
     }
@@ -130,7 +141,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
            likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
         }
         
-        if self.isShowIndexButton {
+        if self.isShowIndexButton && self.item?["children"] != nil {
             let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(SutraPurePageContentViewController.openIndex))
             
             self.navigationItem.setRightBarButtonItems([indexButton,likeButton], animated: false)

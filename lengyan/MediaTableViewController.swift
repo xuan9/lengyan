@@ -57,7 +57,9 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         footPlayMode.addTarget(self, action: #selector(pressModeButton(button:)), for: .touchUpInside)
         
         progressBar.addTarget(self,action:#selector(progressBarChanged(slider:event:)),for:.valueChanged);
-        
+
+        self.playMode = Data.shared.lastPlayMode ?? -1
+
         Book.data.loadDataWithCompletionHandler { (Void) in
             self.media = Book.data.media!
             self.media.forEach({ (
@@ -68,17 +70,31 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     }
                 })
             })
-            
             DispatchQueue.main.async{
                 self.tableView.reloadData()
             }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+                self.tableView.reloadData()
+            })
+            //reload last play status
+//            DispatchQueue.global().asyncAfter(deadline: .now() + 1, execute: {
+//                if self.lastPlayFile == nil {
+//                    self.lastPlayFile = Data.shared.lastPlayFile;
+//                    if self.lastPlayFile != nil {
+//                        self.schedulePlayItems()
+//                    }
+//                    self.playMode = Data.shared.lastPlayMode ?? -1
+//                    if self.playMode != -1 {
+//                        self.schedulePlayItems()
+//                    }
+//                }
+//            })
         }
-        
-        
         if lastPlayFile == nil  {
             footerHightConstraint.constant = 0
             footer.layoutIfNeeded()
         }
+        
     }
     //
     //    override func viewWillAppear(animated: Bool) {
@@ -153,15 +169,42 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     // Override to support conditional editing of the table view.
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         // Return false if you do not want the specified item to be editable.
-        return true
+//        let group = self.media[indexPath.section];
+//        let files = group["files"] as! [String]
+//        let tag = files[indexPath.row]
+//        if( self.self.tagStatus[tag] != nil && self.tagStatus[tag]! > 0) {
+//            return true;
+//        }
+        return false
     }
     
     // Override to support editing the table view.
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            // Delete the row from the data source
-            //        tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-            //todo
+            let group = self.media[indexPath.section];
+            let files = group["files"] as! [String]
+            let tag = files[indexPath.row]
+            
+            if( self.rReq[tag] != nil) {
+                if self.lastPlayFile != nil {
+                    if (self.lastPlayFile?[0] == tag) {
+                        self.pause()
+                        self.lastPlayFile = nil;
+                        self.schedulePlayItems()
+                        footerHightConstraint.constant = 0
+                        footer.layoutIfNeeded()
+                    } else if playMode <= 0 {
+                        self.pause()
+                        self.schedulePlayItems()
+                    }
+                }
+                
+                self.rReq[tag]?.endAccessingResources()
+                self.rReq[tag] = nil
+                self.tagStatus[tag]=0
+//                alert(message: "文件已经释放。若再次使用，可点击此文件再次下载。")
+                self.tableView.reloadData()
+            }
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
         }
@@ -199,6 +242,8 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             print("beginAccessingResources done: \(tag), \(error)")
             if let error = error {
                 self.tagStatus[tag]=0
+                self.rReq[tag]?.endAccessingResources()
+                self.rReq[tag] = nil
                 OperationQueue.main.addOperation {
                     cell.nameLabel.text = tag + " -  下载失败" ;
                 }
@@ -274,7 +319,6 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     
     func play(name:String, ext:String){
         DispatchQueue.global().async {
-            
             OperationQueue.main.addOperation {
                 self.footLabel.text = name
                 self.tableView.reloadData();
@@ -320,6 +364,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             
             if file != nil {
                 self.lastPlayFile = file
+                Data.shared.lastPlayFile = file
             }
             
             OperationQueue.main.addOperation {
@@ -335,6 +380,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     if self.footerHightConstraint.constant == 0 {
                         self.footerHightConstraint.constant = 90
                         self.footer.layoutIfNeeded()
+                        self.updatePlayModeIcon();
                     }
                 }
                 self.footPlayButton.isSelected = (item != nil && self.isPlaying());
@@ -545,15 +591,19 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         
     }
     
+    func updatePlayModeIcon(){
+        DispatchQueue.main.async{
+            if(self.playMode <= 0){self.footPlayMode.setImage(UIImage(named:"ic_repeat")?.withRenderingMode(.alwaysTemplate), for: .normal)
+            }else if(self.playMode == Int.max){self.footPlayMode.setImage( UIImage(named:"ic_repeat_one")?.withRenderingMode(.alwaysTemplate), for: .normal)
+            }else if(self.playMode <= 6){
+                self.footPlayMode.setImage(UIImage(named:"ic_looks_\(self.playMode)")?.withRenderingMode(.alwaysTemplate), for: .normal)
+            }}
+    }
     func selectMode(mode:Int) {
         self.playMode = mode;
-        if(mode <= 0){
-            self.footPlayMode.setImage(UIImage(named:"ic_repeat")?.withRenderingMode(.alwaysTemplate), for: .normal)
-        }else if(mode == Int.max){self.footPlayMode.setImage( UIImage(named:"ic_repeat_one")?.withRenderingMode(.alwaysTemplate), for: .normal)
-        }else if(mode <= 6){
-            self.footPlayMode.setImage(UIImage(named:"ic_looks_\(mode)")?.withRenderingMode(.alwaysTemplate), for: .normal)
-        }
+        self.updatePlayModeIcon();
         self.schedulePlayItems()
+        Data.shared.lastPlayMode = mode;
     }
     
     func showModeOptions (){
