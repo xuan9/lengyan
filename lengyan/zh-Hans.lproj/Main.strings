@@ -1,0 +1,27 @@
+
+/* Class = "UIButton"; normalTitle = "模式"; ObjectID = "5Kv-la-AbJ"; */
+"5Kv-la-AbJ.normalTitle" = "模式";
+
+/* Class = "UITabBarItem"; title = "收藏"; ObjectID = "97f-xT-WBw"; */
+"97f-xT-WBw.title" = "收藏";
+
+/* Class = "UITabBarItem"; title = "聽經"; ObjectID = "GYt-WO-jRv"; */
+"GYt-WO-jRv.title" = "听经";
+
+/* Class = "UIViewController"; title = "聽經"; ObjectID = "R2C-F6-C2B"; */
+"R2C-F6-C2B.title" = "听经";
+
+/* Class = "UILabel"; text = "卷一"; ObjectID = "UZ2-wr-MwL"; */
+"UZ2-wr-MwL.text" = "卷一";
+
+/* Class = "UILabel"; text = "屏東能淨協會朗讀"; ObjectID = "WXo-gc-4vA"; */
+"WXo-gc-4vA.text" = "屏东能净协会朗读";
+
+/* Class = "UITabBarItem"; title = "楞嚴經"; ObjectID = "c3u-oy-4g5"; */
+"c3u-oy-4g5.title" = "楞严经";
+
+/* Class = "UILabel"; text = "卷一"; ObjectID = "ieb-Ig-470"; */
+"ieb-Ig-470.text" = "卷一";
+
+/* Class = "UIButton"; normalTitle = "播放"; ObjectID = "oxc-Jp-xbk"; */
+"oxc-Jp-xbk.normalTitle" = "播放";

@@ -90,6 +90,20 @@ class Book: NSObject {
     var index:[[String:String]]? = nil
     var media:[[String:Any]]? = nil
     var loaded = false;
+    var isSimplified = false;
+    
+    override init() {
+        for lan in NSLocale.preferredLanguages {
+            if lan.hasPrefix("zh-") {
+                if lan.hasPrefix("zh-Hans"){
+                    isSimplified = true
+                }
+                break;
+            }
+        }
+    }
+    
+    
     func itemOfPath(_ path:String) -> [String:Any] {
         if path == "" || path == "/" || path == (self.tree!["path"] as! String){
             return self.tree!

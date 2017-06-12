@@ -55,7 +55,6 @@
 		13E2230B1D5150C5000F763F /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E2230A1D5150C5000F763F /* Macros.swift */; };
 		4A6C6BB21EE5A5C400B447DC /* 楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB11EE5A4F300B447DC /* 楞嚴咒.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴咒", ); }; };
 		4A6C6BB31EE5A5CA00B447DC /* 普光老和尚誦楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB01EE5A4C700B447DC /* 普光老和尚誦楞嚴咒.m4a */; settings = {ASSET_TAGS = ("普光老和尚誦楞嚴咒", ); }; };
-		4A6C89121EC24BC700C0F43A /* SVWebViewController.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C88F31EC24BC700C0F43A /* SVWebViewController.strings */; };
 		4A6C89131EC24BC700C0F43A /* SVModalWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6C88FD1EC24BC700C0F43A /* SVModalWebViewController.m */; };
 		4A6C89141EC24BC700C0F43A /* SVWebViewController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C88FE1EC24BC700C0F43A /* SVWebViewController.bundle */; };
 		4A6C89151EC24BC700C0F43A /* SVWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6C89001EC24BC700C0F43A /* SVWebViewController.m */; };
@@ -100,6 +99,8 @@
 /* Begin PBXFileReference section */
 		130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraIndexViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		1313C43D1D53E99800395429 /* MediaTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = MediaTableViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
+		1321D0681EEF141B005DC278 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
+		1321D0691EEF142A005DC278 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Main.strings"; sourceTree = "<group>"; };
 		133192DD1D14901300F4984F /* HidingNavigationBarManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HidingNavigationBarManager.swift; sourceTree = "<group>"; };
 		133192DE1D14901300F4984F /* HidingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HidingViewController.swift; sourceTree = "<group>"; };
 		1344EA5C1D21CAA5001E215B /* String+Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Common.swift"; sourceTree = "<group>"; };
@@ -172,14 +173,6 @@
 		13E2230A1D5150C5000F763F /* Macros.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macros.swift; sourceTree = "<group>"; };
 		4A6C6BB01EE5A4C700B447DC /* 普光老和尚誦楞嚴咒.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "普光老和尚誦楞嚴咒.m4a"; sourceTree = "<group>"; };
 		4A6C6BB11EE5A4F300B447DC /* 楞嚴咒.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴咒.m4a"; sourceTree = "<group>"; };
-		4A6C88F41EC24BC700C0F43A /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
-		4A6C88F51EC24BC700C0F43A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
-		4A6C88F61EC24BC700C0F43A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
-		4A6C88F71EC24BC700C0F43A /* es-ES */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-ES"; path = "es-ES.lproj/SVWebViewController.strings"; sourceTree = "<group>"; };
-		4A6C88F81EC24BC700C0F43A /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
-		4A6C88F91EC24BC700C0F43A /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
-		4A6C88FA1EC24BC700C0F43A /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
-		4A6C88FB1EC24BC700C0F43A /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
 		4A6C88FC1EC24BC700C0F43A /* SVModalWebViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVModalWebViewController.h; sourceTree = "<group>"; };
 		4A6C88FD1EC24BC700C0F43A /* SVModalWebViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SVModalWebViewController.m; sourceTree = "<group>"; };
 		4A6C88FE1EC24BC700C0F43A /* SVWebViewController.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = SVWebViewController.bundle; sourceTree = "<group>"; };
@@ -197,8 +190,6 @@
 		4A6C890D1EC24BC700C0F43A /* SVWebViewControllerActivitySafari@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "SVWebViewControllerActivitySafari@2x.png"; sourceTree = "<group>"; };
 		4A6C890E1EC24BC700C0F43A /* SVWebViewControllerActivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVWebViewControllerActivity.h; sourceTree = "<group>"; };
 		4A6C890F1EC24BC700C0F43A /* SVWebViewControllerActivity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SVWebViewControllerActivity.m; sourceTree = "<group>"; };
-		4A6C89101EC24BC700C0F43A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/SVWebViewController.strings"; sourceTree = "<group>"; };
-		4A6C89111EC24BC700C0F43A /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/SVWebViewController.strings"; sourceTree = "<group>"; };
 		4AD063651EA244AC00751922 /* 楞嚴經 卷一.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷一.m4a"; sourceTree = "<group>"; };
 		4AD063661EA244AC00751922 /* 楞嚴經 卷七.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷七.m4a"; sourceTree = "<group>"; };
 		4AD063671EA244AC00751922 /* 楞嚴經 卷三.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴經 卷三.m4a"; sourceTree = "<group>"; };
@@ -393,7 +384,6 @@
 		4A6C88F21EC24BC700C0F43A /* SVWebViewController */ = {
 			isa = PBXGroup;
 			children = (
-				4A6C88F31EC24BC700C0F43A /* SVWebViewController.strings */,
 				4A6C88FC1EC24BC700C0F43A /* SVModalWebViewController.h */,
 				4A6C88FD1EC24BC700C0F43A /* SVModalWebViewController.m */,
 				4A6C88FE1EC24BC700C0F43A /* SVWebViewController.bundle */,
@@ -573,17 +563,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
-				da,
-				de,
-				"es-ES",
-				es,
-				fr,
-				ja,
-				pt,
-				"zh-Hans",
-				"zh-Hant",
 			);
 			mainGroup = 139073001D109193003A3333;
 			productRefGroup = 1390730A1D109193003A3333 /* Products */;
@@ -616,7 +596,6 @@
 				4AD0637B1EA3801900751922 /* 楞嚴經 卷七.m4a in Resources */,
 				4A6C891A1EC24BC700C0F43A /* SVWebViewControllerActivitySafari-iPad.png in Resources */,
 				4AD063811EA3802200751922 /* 楞嚴經 卷六.m4a in Resources */,
-				4A6C89121EC24BC700C0F43A /* SVWebViewController.strings in Resources */,
 				139073141D109193003A3333 /* Main.storyboard in Resources */,
 				4AD063831EA3802200751922 /* 楞嚴經 卷四.m4a in Resources */,
 				4A6C891B1EC24BC700C0F43A /* SVWebViewControllerActivitySafari-iPad@2x.png in Resources */,
@@ -734,6 +713,8 @@
 			isa = PBXVariantGroup;
 			children = (
 				139073131D109193003A3333 /* Base */,
+				1321D0681EEF141B005DC278 /* zh-Hans */,
+				1321D0691EEF142A005DC278 /* zh-Hant */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -744,23 +725,6 @@
 				139073181D109194003A3333 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
-			sourceTree = "<group>";
-		};
-		4A6C88F31EC24BC700C0F43A /* SVWebViewController.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				4A6C88F41EC24BC700C0F43A /* da */,
-				4A6C88F51EC24BC700C0F43A /* de */,
-				4A6C88F61EC24BC700C0F43A /* en */,
-				4A6C88F71EC24BC700C0F43A /* es-ES */,
-				4A6C88F81EC24BC700C0F43A /* es */,
-				4A6C88F91EC24BC700C0F43A /* fr */,
-				4A6C88FA1EC24BC700C0F43A /* ja */,
-				4A6C88FB1EC24BC700C0F43A /* pt */,
-				4A6C89101EC24BC700C0F43A /* zh-Hans */,
-				4A6C89111EC24BC700C0F43A /* zh-Hant */,
-			);
-			name = SVWebViewController.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
