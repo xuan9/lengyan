@@ -113,11 +113,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             let footerLabel = UILabel(frame: CGRect(x: 20, y: 10, width: width - 20, height: 60))
             footerLabel.text = "南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！"
             footerLabel.numberOfLines = 3
+            footerLabel.textAlignment = .center
             footerLabel.font = UIFont.systemFont(ofSize: 14)
             footerLabel.adjustsFontSizeToFitWidth = true;
 
             let linkButton = UIButton(frame: CGRect(x: 10, y: 70, width: width - 30, height: 20))
             linkButton.setTitle("經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站", for: .normal)
+            linkButton.contentHorizontalAlignment = .center
             linkButton.setImage(UIImage.init(named: "ic_link")?.withRenderingMode(.alwaysTemplate), for: .normal)
             linkButton.addTarget(self, action: #selector(SutraFrontViewController.openDrbaLink(_:)), for: .touchUpInside)
             linkButton.semanticContentAttribute = .forceRightToLeft
@@ -126,10 +128,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             linkButton.setTitleColor(UIColor.darkText, for: .normal)
             linkButton.backgroundColor = UIColor.white
             linkButton.tintColor = UIColor.darkText
-            linkButton.contentHorizontalAlignment = .left
             
             let footerLabel2 = UILabel(frame: CGRect(x: 10, y: 90, width: width - 20, height: 20))
             footerLabel2.text = "感恩法界佛教總會！本屏中間所列為部分關鍵科判，可點擊經名打開完整科判。"
+            footerLabel2.textAlignment = .center
             footerLabel2.numberOfLines = 1
             footerLabel2.font = UIFont.systemFont(ofSize: 10)
             footerLabel2.adjustsFontSizeToFitWidth = true;

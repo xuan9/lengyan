@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11762" systemVersion="16E195" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="49e-Tb-3d3">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11761" systemVersion="16F73" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="49e-Tb-3d3">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
@@ -48,11 +48,11 @@
             </objects>
             <point key="canvasLocation" x="-1458" y="62"/>
         </scene>
-        <!--楞严经-->
+        <!--楞嚴經-->
         <scene sceneID="Tpc-T0-T39">
             <objects>
                 <navigationController id="wz3-c0-Cfx" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="楞严经" image="book" id="c3u-oy-4g5"/>
+                    <tabBarItem key="tabBarItem" title="楞嚴經" image="book" id="c3u-oy-4g5"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="uqb-nt-jhF">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>

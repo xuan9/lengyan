@@ -466,10 +466,10 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             var progress:Float = 0;
             
             if(duration.isNumeric){
-                let d = Int(self.queuePlayer!.currentItem!.duration.seconds);
+                let d = Int(duration.seconds);
                 durationText = self.getMediaDisplayTime(seconds: d)
                 if(self.queuePlayer!.currentTime().isNumeric){
-                    progress = Float(self.queuePlayer!.currentTime().seconds.divided(by: self.queuePlayer!.currentItem!.duration.seconds))
+                    progress = Float(self.queuePlayer!.currentTime().seconds.divided(by: duration.seconds))
                     let progressSeconds = Int((self.queuePlayer?.currentTime().seconds)!)
                     progressText = self.getMediaDisplayTime(seconds: progressSeconds)
                 }

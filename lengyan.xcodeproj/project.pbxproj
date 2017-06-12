@@ -54,7 +54,7 @@
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
 		13E2230B1D5150C5000F763F /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E2230A1D5150C5000F763F /* Macros.swift */; };
 		4A6C6BB21EE5A5C400B447DC /* 楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB11EE5A4F300B447DC /* 楞嚴咒.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴咒", ); }; };
-		4A6C6BB31EE5A5CA00B447DC /* 普光老和尚念誦楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB01EE5A4C700B447DC /* 普光老和尚念誦楞嚴咒.m4a */; settings = {ASSET_TAGS = ("普光老和尚念誦楞嚴咒", ); }; };
+		4A6C6BB31EE5A5CA00B447DC /* 普光老和尚誦楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB01EE5A4C700B447DC /* 普光老和尚誦楞嚴咒.m4a */; settings = {ASSET_TAGS = ("普光老和尚誦楞嚴咒", ); }; };
 		4A6C89121EC24BC700C0F43A /* SVWebViewController.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C88F31EC24BC700C0F43A /* SVWebViewController.strings */; };
 		4A6C89131EC24BC700C0F43A /* SVModalWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6C88FD1EC24BC700C0F43A /* SVModalWebViewController.m */; };
 		4A6C89141EC24BC700C0F43A /* SVWebViewController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C88FE1EC24BC700C0F43A /* SVWebViewController.bundle */; };
@@ -170,7 +170,7 @@
 		13CA80F01EAB3BF600589E8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
 		13E2230A1D5150C5000F763F /* Macros.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macros.swift; sourceTree = "<group>"; };
-		4A6C6BB01EE5A4C700B447DC /* 普光老和尚念誦楞嚴咒.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "普光老和尚念誦楞嚴咒.m4a"; sourceTree = "<group>"; };
+		4A6C6BB01EE5A4C700B447DC /* 普光老和尚誦楞嚴咒.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "普光老和尚誦楞嚴咒.m4a"; sourceTree = "<group>"; };
 		4A6C6BB11EE5A4F300B447DC /* 楞嚴咒.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = "楞嚴咒.m4a"; sourceTree = "<group>"; };
 		4A6C88F41EC24BC700C0F43A /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
 		4A6C88F51EC24BC700C0F43A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/SVWebViewController.strings; sourceTree = "<group>"; };
@@ -453,7 +453,7 @@
 				4AD0636D1EA244AC00751922 /* 楞嚴經 卷十.m4a */,
 				4AD0636E1EA244AC00751922 /* 楞嚴經 卷四.m4a */,
 				4A6C6BB11EE5A4F300B447DC /* 楞嚴咒.m4a */,
-				4A6C6BB01EE5A4C700B447DC /* 普光老和尚念誦楞嚴咒.m4a */,
+				4A6C6BB01EE5A4C700B447DC /* 普光老和尚誦楞嚴咒.m4a */,
 			);
 			name = media;
 			path = "屏東能淨協會讀誦";
@@ -524,6 +524,7 @@
 				KnownAssetTags = (
 					"屏東能淨協會讀誦",
 					"普光老和尚念誦楞嚴咒",
+					"普光老和尚誦楞嚴咒",
 					"楞嚴咒",
 					"楞嚴經 卷一",
 					"楞嚴經 卷七",
@@ -544,6 +545,7 @@
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = A37UYHPM4V;
 						LastSwiftMigration = 0800;
+						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
 								enabled = 1;
@@ -552,12 +554,16 @@
 					};
 					1390731E1D109194003A3333 = {
 						CreatedOnToolsVersion = 7.3.1;
+						DevelopmentTeam = A37UYHPM4V;
 						LastSwiftMigration = 0800;
+						ProvisioningStyle = Automatic;
 						TestTargetID = 139073081D109193003A3333;
 					};
 					139073291D109194003A3333 = {
 						CreatedOnToolsVersion = 7.3.1;
+						DevelopmentTeam = A37UYHPM4V;
 						LastSwiftMigration = 0800;
+						ProvisioningStyle = Automatic;
 						TestTargetID = 139073081D109193003A3333;
 					};
 				};
@@ -617,7 +623,7 @@
 				135D605F1D16FABE00029090 /* SutraStoryboard.storyboard in Resources */,
 				4AD063821EA3802200751922 /* 楞嚴經 卷十.m4a in Resources */,
 				4A6C891D1EC24BC700C0F43A /* SVWebViewControllerActivitySafari@2x.png in Resources */,
-				4A6C6BB31EE5A5CA00B447DC /* 普光老和尚念誦楞嚴咒.m4a in Resources */,
+				4A6C6BB31EE5A5CA00B447DC /* 普光老和尚誦楞嚴咒.m4a in Resources */,
 				1390734C1D109284003A3333 /* data in Resources */,
 				4A6C89191EC24BC700C0F43A /* SVWebViewControllerActivityChrome@2x.png in Resources */,
 				4AD0637C1EA3801D00751922 /* 楞嚴經 卷三.m4a in Resources */,
@@ -864,9 +870,10 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "楞嚴經\\ 卷一";
-				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
+				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "lengyan/lengyan-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
@@ -885,7 +892,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "楞嚴經\\ 卷一";
-				PRODUCT_BUNDLE_IDENTIFIER = org.xuan.lengyan;
+				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "lengyan/lengyan-Bridging-Header.h";
@@ -897,10 +904,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = A37UYHPM4V;
 				INFOPLIST_FILE = lengyanTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.gongfx..lengyanTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 3.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/lengyan.app/lengyan";
 			};
@@ -910,6 +920,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = A37UYHPM4V;
 				INFOPLIST_FILE = lengyanTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.gongfx..lengyanTests;
@@ -922,10 +934,14 @@
 		1390733A1D109194003A3333 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = A37UYHPM4V;
 				INFOPLIST_FILE = lengyanUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.gongfx..lengyanUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 3.0;
 				TEST_TARGET_NAME = lengyan;
 			};
@@ -934,6 +950,8 @@
 		1390733B1D109194003A3333 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = A37UYHPM4V;
 				INFOPLIST_FILE = lengyanUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.gongfx..lengyanUITests;
