@@ -135,8 +135,11 @@ class Book: NSObject {
                 handler()
                 return
             }
-            
-            let treeFileURL = Bundle.main.url(forResource: "data/lengyanjing-index-tree", withExtension: "json")
+            var path = "data/"
+            if self.isSimplified {
+                path = "data/simplified/"
+            }
+            let treeFileURL = Bundle.main.url(forResource: path + "lengyanjing-index-tree", withExtension: "json")
             
             let data = try? Foundation.Data(contentsOf: treeFileURL!)
             do {
@@ -145,7 +148,7 @@ class Book: NSObject {
                 self.tree = [:]
             }
             
-            let contentFile = Bundle.main.url(forResource: "data/lengyanjing-content", withExtension: "json")
+            let contentFile = Bundle.main.url(forResource:  path + "lengyanjing-content", withExtension: "json")
             
             let contentData = try? Foundation.Data(contentsOf: contentFile!)
             do {
@@ -155,7 +158,7 @@ class Book: NSObject {
                 self.contents  = [:]
             }
             
-            let indexFile = Bundle.main.url(forResource: "data/lengyanjing-index", withExtension: "json")
+            let indexFile = Bundle.main.url(forResource:  path + "lengyanjing-index", withExtension: "json")
             
             let indexData = try? Foundation.Data(contentsOf: indexFile!)
             do {
@@ -174,7 +177,7 @@ class Book: NSObject {
                 self.index = []
             }
             
-            let mediaFile = Bundle.main.url(forResource: "data/lengyanjing-media", withExtension: "json")
+            let mediaFile = Bundle.main.url(forResource:  path + "lengyanjing-media", withExtension: "json")
             
             let mediaData = try? Foundation.Data(contentsOf: mediaFile!)
             do {
