@@ -53,8 +53,8 @@
 		13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13CA80F01EAB3BF600589E8F /* Assets.xcassets */; };
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
 		13E2230B1D5150C5000F763F /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E2230A1D5150C5000F763F /* Macros.swift */; };
-		4A6C6BB21EE5A5C400B447DC /* 楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB11EE5A4F300B447DC /* 楞嚴咒.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴咒", ); }; };
-		4A6C6BB31EE5A5CA00B447DC /* 普光老和尚誦楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB01EE5A4C700B447DC /* 普光老和尚誦楞嚴咒.m4a */; settings = {ASSET_TAGS = ("普光老和尚誦楞嚴咒", ); }; };
+		4A6C6BB21EE5A5C400B447DC /* 楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB11EE5A4F300B447DC /* 楞嚴咒.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严咒", "楞嚴咒", ); }; };
+		4A6C6BB31EE5A5CA00B447DC /* 普光老和尚誦楞嚴咒.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB01EE5A4C700B447DC /* 普光老和尚誦楞嚴咒.m4a */; settings = {ASSET_TAGS = ("普光老和尚誦楞嚴咒", "普光老和尚诵楞严咒", ); }; };
 		4A6C89131EC24BC700C0F43A /* SVModalWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6C88FD1EC24BC700C0F43A /* SVModalWebViewController.m */; };
 		4A6C89141EC24BC700C0F43A /* SVWebViewController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C88FE1EC24BC700C0F43A /* SVWebViewController.bundle */; };
 		4A6C89151EC24BC700C0F43A /* SVWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6C89001EC24BC700C0F43A /* SVWebViewController.m */; };
@@ -67,16 +67,16 @@
 		4A6C891C1EC24BC700C0F43A /* SVWebViewControllerActivitySafari.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6C890C1EC24BC700C0F43A /* SVWebViewControllerActivitySafari.m */; };
 		4A6C891D1EC24BC700C0F43A /* SVWebViewControllerActivitySafari@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C890D1EC24BC700C0F43A /* SVWebViewControllerActivitySafari@2x.png */; };
 		4A6C891E1EC24BC700C0F43A /* SVWebViewControllerActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6C890F1EC24BC700C0F43A /* SVWebViewControllerActivity.m */; };
-		4AD0637A1EA3801400751922 /* 楞嚴經 卷一.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063651EA244AC00751922 /* 楞嚴經 卷一.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷一", ); }; };
-		4AD0637B1EA3801900751922 /* 楞嚴經 卷七.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063661EA244AC00751922 /* 楞嚴經 卷七.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷七", ); }; };
-		4AD0637C1EA3801D00751922 /* 楞嚴經 卷三.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063671EA244AC00751922 /* 楞嚴經 卷三.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷三", ); }; };
-		4AD0637D1EA3802200751922 /* 楞嚴經 卷九.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063681EA244AC00751922 /* 楞嚴經 卷九.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷九", ); }; };
-		4AD0637E1EA3802200751922 /* 楞嚴經 卷二.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063691EA244AC00751922 /* 楞嚴經 卷二.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷二", ); }; };
-		4AD0637F1EA3802200751922 /* 楞嚴經 卷五.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636A1EA244AC00751922 /* 楞嚴經 卷五.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷五", ); }; };
-		4AD063801EA3802200751922 /* 楞嚴經 卷八.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636B1EA244AC00751922 /* 楞嚴經 卷八.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷八", ); }; };
-		4AD063811EA3802200751922 /* 楞嚴經 卷六.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636C1EA244AC00751922 /* 楞嚴經 卷六.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷六", ); }; };
-		4AD063821EA3802200751922 /* 楞嚴經 卷十.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636D1EA244AC00751922 /* 楞嚴經 卷十.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷十", ); }; };
-		4AD063831EA3802200751922 /* 楞嚴經 卷四.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636E1EA244AC00751922 /* 楞嚴經 卷四.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞嚴經 卷四", ); }; };
+		4AD0637A1EA3801400751922 /* 楞嚴經 卷一.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063651EA244AC00751922 /* 楞嚴經 卷一.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷一", "楞嚴經 卷一", ); }; };
+		4AD0637B1EA3801900751922 /* 楞嚴經 卷七.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063661EA244AC00751922 /* 楞嚴經 卷七.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷七", "楞嚴經 卷七", ); }; };
+		4AD0637C1EA3801D00751922 /* 楞嚴經 卷三.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063671EA244AC00751922 /* 楞嚴經 卷三.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷三", "楞嚴經 卷三", ); }; };
+		4AD0637D1EA3802200751922 /* 楞嚴經 卷九.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063681EA244AC00751922 /* 楞嚴經 卷九.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷九", "楞嚴經 卷九", ); }; };
+		4AD0637E1EA3802200751922 /* 楞嚴經 卷二.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063691EA244AC00751922 /* 楞嚴經 卷二.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷二", "楞嚴經 卷二", ); }; };
+		4AD0637F1EA3802200751922 /* 楞嚴經 卷五.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636A1EA244AC00751922 /* 楞嚴經 卷五.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷五", "楞嚴經 卷五", ); }; };
+		4AD063801EA3802200751922 /* 楞嚴經 卷八.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636B1EA244AC00751922 /* 楞嚴經 卷八.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷八", "楞嚴經 卷八", ); }; };
+		4AD063811EA3802200751922 /* 楞嚴經 卷六.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636C1EA244AC00751922 /* 楞嚴經 卷六.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷六", "楞嚴經 卷六", ); }; };
+		4AD063821EA3802200751922 /* 楞嚴經 卷十.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636D1EA244AC00751922 /* 楞嚴經 卷十.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷十", "楞嚴經 卷十", ); }; };
+		4AD063831EA3802200751922 /* 楞嚴經 卷四.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636E1EA244AC00751922 /* 楞嚴經 卷四.m4a */; settings = {ASSET_TAGS = ("屏東能淨協會讀誦", "楞严经 卷四", "楞嚴經 卷四", ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -515,6 +515,18 @@
 					"屏東能淨協會讀誦",
 					"普光老和尚念誦楞嚴咒",
 					"普光老和尚誦楞嚴咒",
+					"普光老和尚诵楞严咒",
+					"楞严咒",
+					"楞严经 卷一",
+					"楞严经 卷七",
+					"楞严经 卷三",
+					"楞严经 卷九",
+					"楞严经 卷二",
+					"楞严经 卷五",
+					"楞严经 卷八",
+					"楞严经 卷六",
+					"楞严经 卷十",
+					"楞严经 卷四",
 					"楞嚴咒",
 					"楞嚴經 卷一",
 					"楞嚴經 卷七",
