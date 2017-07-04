@@ -112,7 +112,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     
     func setTitleBar() {
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"選擇", style: .plain, target: self, action: nil)
-        self.title = "聽經"
+        self.title = "聽經"//todo
     }
     
     // MARK: - Table view data source
@@ -146,16 +146,19 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let group = self.media[indexPath.section];
         let files = group["files"] as! [String]
-        var name = files[indexPath.row]
+        let tag = files[indexPath.row]
         
-        let isDownloaded = tagStatus[name] == 2;
+        let names = group["names"] as! [String]
+        var name = names[indexPath.row]
+        
+        let isDownloaded = tagStatus[tag] == 2;
         let identifier =  isDownloaded ? "Media-Cell":"Media-Cell-Download"
         let cell = tableView.dequeueReusableCell(withIdentifier: identifier, for: indexPath) as! MediaTableViewCell
         
-        if(tagStatus[name]==2){
+        if(tagStatus[tag]==2){
             //"Downloaded"
             cell.nameLabel.textColor=UIColor.darkText
-        }else  if(tagStatus[name]==1){
+        }else  if(tagStatus[tag]==1){
             cell.nameLabel.textColor=UIColor.lightGray
             name = name + " -  正在下载..."
         } else {
@@ -214,13 +217,15 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         let group = self.media[indexPath.section];
         let files = group["files"] as! [String]
         let tag = files[indexPath.row]
+        let names = group["names"] as! [String]
+        let name = names[indexPath.row]
         let ext =  group["extension"] as! String
 //        let groupName = group["name"] as! String
         
         let cell = tableView.cellForRow(at: indexPath) as! MediaTableViewCell
         
         if(tagStatus[tag]==2){//available
-            self.play(name: tag, ext:ext);
+            self.play(name: name, file: tag, ext:ext);
             return;
         }
         
@@ -231,7 +236,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         if(tagStatus[tag]==0 || tagStatus[tag]==nil){
             self.tagStatus[tag] = 1
             cell.nameLabel.textColor=UIColor.lightGray
-            cell.nameLabel.text = tag + " -  正在下载..."
+            cell.nameLabel.text = name + " -  正在下载..."
         }
         
         let req = NSBundleResourceRequest(tags: [tag]);
@@ -245,7 +250,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 self.rReq[tag]?.endAccessingResources()
                 self.rReq[tag] = nil
                 OperationQueue.main.addOperation {
-                    cell.nameLabel.text = tag + " -  下载失败" ;
+                    cell.nameLabel.text = name + " -  下载失败" ;
                 }
                 self.handleDownloadingError(error as NSError)
             } else {
@@ -254,7 +259,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     self.tableView.reloadData()
                 }
                 if((self.tableView.indexPathForSelectedRow==nil || self.tableView.indexPathForSelectedRow == indexPath) ){
-                    self.play(name: tag, ext:ext);
+                    self.play(name: name, file:tag, ext:ext);
                 }
             }
         }
@@ -317,15 +322,15 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         }
     }
     
-    func play(name:String, ext:String){
+    func play(name:String, file:String, ext:String){
         DispatchQueue.global().async {
             OperationQueue.main.addOperation {
                 self.footLabel.text = name
                 self.tableView.reloadData();
             }
             
-            let req:NSBundleResourceRequest = self.rReq[name]!
-            let url = req.bundle.url(forResource:name, withExtension: ext)
+            let req:NSBundleResourceRequest = self.rReq[file]!
+            let url = req.bundle.url(forResource:file, withExtension: ext)
             
             let playItem = AVPlayerItem(url:url!);
             if (self.queuePlayer == nil) {
@@ -396,7 +401,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             if(self.queuePlayer?.currentItem != nil) {
                 self.play()
             } else if(lastPlayFile != nil){
-                self.play(name: lastPlayFile![0], ext: lastPlayFile![1])
+                self.play(name: lastPlayFile![0], file:lastPlayFile![1], ext: lastPlayFile![2])
             }
         } else {
             self.footPlayButton.isSelected = false;
@@ -410,10 +415,10 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     
     func getLastPlayItem() -> AVPlayerItem? {
         if self.lastPlayFile != nil {
-            let name = self.lastPlayFile![0], ext = self.lastPlayFile![0]
-            let req:NSBundleResourceRequest? = self.rReq[name]
+            let file = self.lastPlayFile![1], ext = self.lastPlayFile![2]
+            let req:NSBundleResourceRequest? = self.rReq[file];
             if req != nil {
-                let url = req?.bundle.url(forResource:name, withExtension: ext)
+                let url = req?.bundle.url(forResource:file, withExtension: ext)
                 if url != nil {
                     return AVPlayerItem(url:url!);
                 }
@@ -493,8 +498,17 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         if (ext == nil) {
             ext = ""
         }
-        let name = file!.substring(to:(file?.index((file?.endIndex)!, offsetBy: -((ext?.characters.count)! + 1)))!)
-        return [name, ext!]
+        let fileName = file!.substring(to:(file?.index((file?.endIndex)!, offsetBy: -((ext?.characters.count)! + 1)))!)
+        var name="";
+        for group in media {
+            let files = group["files"] as! [String]
+            if files.contains(fileName) {
+                let index:Int = files.index(of: fileName)!
+                name = (group["names"]  as! [String])[index];
+                break;
+            }
+        }
+        return [name, fileName, ext!]
     }
     
     func schedulePlayItems(newItem:AVPlayerItem? = nil) {
@@ -516,7 +530,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             return
         }
         
-        var name = file![0], ext = file![1]
+        var name = file![1], ext = file![2]
         
         if(name != nil) {
             if(self.playMode <= 0){
