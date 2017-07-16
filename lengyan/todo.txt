@@ -1,3 +1,5 @@
+//todo translate in code chinese, check stars, check sutra
+
 1. initial star list
 
 2. text style

@@ -1,0 +1,26 @@
+/* 
+  Localizable.strings
+  lengyan
+
+  Created by Xuan on 2017/7/9.
+  Copyright © 2017年 xuan. All rights reserved.
+*/
+"kai_jing_ji" = " 無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義";
+"footer_txt_1" = "南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！";
+"footer_txt_2" = "經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站";
+"footer_txt_3" = "感恩法界佛教總會！本屏中間所列為部分關鍵科判，可點擊經名打開完整科判。";
+
+"lengyan_book_title" = "《楞嚴經》";
+"media_tab_title" = "聽經";
+"star_tab_title" = "收藏";
+
+"downloading_text" = "正在下載...";
+"download_failed" = "下載失敗";
+"download_error_out_of_space" = "空間不足，下載失敗";
+"download_error_too_big" = "程序錯誤，文件過大";
+"download_error_invalid_tag" = "程序錯誤，文件不存在";
+
+"play_mode_play_one" = "單曲播放";
+"play_mode_repeat_one" = "單曲循環";
+"play_mode_repeat" = "順序循環";
+

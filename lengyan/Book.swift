@@ -90,13 +90,13 @@ class Book: NSObject {
     var index:[[String:String]]? = nil
     var media:[[String:Any]]? = nil
     var loaded = false;
-    var isSimplified = false;
+    var isSimplified = true;
     
     override init() {
         for lan in NSLocale.preferredLanguages {
             if lan.hasPrefix("zh-") {
-                if lan.hasPrefix("zh-Hans"){
-                    isSimplified = true
+                if lan.hasPrefix("zh-Hant"){
+                    isSimplified = false
                 }
                 break;
             }

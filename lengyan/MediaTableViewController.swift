@@ -112,7 +112,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     
     func setTitleBar() {
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"選擇", style: .plain, target: self, action: nil)
-        self.title = "聽經"//todo
+        self.title = NSLocalizedString("media_tab_title", comment: "听经")//todo
     }
     
     // MARK: - Table view data source
@@ -160,7 +160,9 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             cell.nameLabel.textColor=UIColor.darkText
         }else  if(tagStatus[tag]==1){
             cell.nameLabel.textColor=UIColor.lightGray
-            name = name + " -  正在下载..."
+            
+            let downloadingText = NSLocalizedString("downloading_text", comment: "正在下载...")
+                name = name + " -  " + downloadingText;
         } else {
             cell.nameLabel.textColor = UIColor.lightGray
         }
@@ -236,7 +238,10 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         if(tagStatus[tag]==0 || tagStatus[tag]==nil){
             self.tagStatus[tag] = 1
             cell.nameLabel.textColor=UIColor.lightGray
-            cell.nameLabel.text = name + " -  正在下载..."
+            
+            let downloadingText = NSLocalizedString("downloading_text", comment: "正在下载...")
+            
+            cell.nameLabel.text =  name + " -  " + downloadingText;
         }
         
         let req = NSBundleResourceRequest(tags: [tag]);
@@ -249,8 +254,9 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 self.tagStatus[tag]=0
                 self.rReq[tag]?.endAccessingResources()
                 self.rReq[tag] = nil
+                let downloadFailed = NSLocalizedString("download_failed", comment: "下载失败")
                 OperationQueue.main.addOperation {
-                    cell.nameLabel.text = name + " -  下载失败" ;
+                    cell.nameLabel.text = name + " - " + downloadFailed ;
                 }
                 self.handleDownloadingError(error as NSError)
             } else {
@@ -311,12 +317,14 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     func handleDownloadingError(_ error: NSError) {
         switch error.code{
         case NSBundleOnDemandResourceOutOfSpaceError:
-            let message = "空间不足，下载失败"
+            let message = NSLocalizedString("download_error_out_of_space", comment:"空间不足，下载失败")
             self.alert(message: message)
         case NSBundleOnDemandResourceExceededMaximumSizeError:
-            self.alert(message: "程序错误，文件过大" )
+            let message = NSLocalizedString("download_error_too_big", comment:"程序错误，文件过大")
+            self.alert(message: message )
         case NSBundleOnDemandResourceInvalidTagError:
-            self.alert(message: "程序错误，文件不存在" )
+            let message = NSLocalizedString("download_error_invalid_tag", comment:"程序错误，文件不存在")
+            self.alert(message: message)
         default:
             self.alert(message: error.description)
         }
@@ -623,22 +631,23 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     func showModeOptions (){
         let optionMenu = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        let aRepeat = UIAlertAction(title: "順序循環", style: .default, handler: {
+        let aRepeat = UIAlertAction(title:  NSLocalizedString("play_mode_repeat", comment:"順序循環"), style: .default, handler: {
             (action) in
             self.selectMode(mode: -1);
         })
         aRepeat.setValue(UIImage(named: "ic_repeat"), forKey: "image")
         optionMenu.addAction(aRepeat)
         
-        let aRepeat0 = UIAlertAction(title: "單曲循環", style: .default, handler: {
+        let aRepeat0 = UIAlertAction(title: NSLocalizedString("play_mode_repeat_one", comment:"單曲循環"), style: .default, handler: {
             (action) in
             self.selectMode(mode: Int.max);
         })
         aRepeat0.setValue(UIImage(named: "ic_repeat_one"), forKey: "image")
         optionMenu.addAction(aRepeat0)
         
+        let singlePlay = NSLocalizedString("play_mode_play_one", comment:"單曲播放")
         for i in 1...6 {
-            let a = UIAlertAction(title: "单曲播放\(i)次", style: .default, handler: {
+            let a = UIAlertAction(title: "\(singlePlay)\(i)次", style: .default, handler: {
                 (action) in
                 self.selectMode(mode: i);
             })

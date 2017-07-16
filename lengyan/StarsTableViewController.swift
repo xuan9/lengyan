@@ -53,7 +53,9 @@ class StarsTableViewController: UITableViewController{
     
     func setTitleBar() {
         //self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))
-        self.title = "收藏"
+        
+        self.title = NSLocalizedString("star_tab_title", comment: "收藏")//todo
+
     }
     
     override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -87,6 +89,7 @@ class StarsTableViewController: UITableViewController{
             v.layer.borderColor = UIColor.lightGray.cgColor
             v.layer.borderWidth = 1
         }
+//        cell?.detailTextLabel?.text=path;
         cell?.textLabel?.numberOfLines = 20;
         cell?.textLabel?.attributedText =  Book.data.getSutraAttributeString(item, maxLength: 100);
 //        cell?.textLabel?.attributedText = Book.data.getTitleLine(item);

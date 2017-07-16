@@ -238,26 +238,29 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     func share() {
         //todo attribute string
         var shareContents = [String]()
+        let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
         if meta["children"] == nil {
             var hasTitlePrefix:Bool = false;
             var hasCommentaryPrefix:Bool = false;
             for c in contents {
                 if c["type"] == "sutra" {
                     if !hasTitlePrefix {
-                        shareContents.append("《楞嚴經》")
+                        shareContents.append(bookTitle)
                         hasTitlePrefix = true;
                     }
                     shareContents.append(c["content"]!)
-                } else  if c["type"] == "commentary" {
-                    if !hasCommentaryPrefix {
-                        shareContents.append("\n「宣化上人講解」")
-                        hasCommentaryPrefix = true;
-                    }
-                    shareContents.append(c["content"]!)
                 }
+//                else  if c["type"] == "commentary" {
+//                    if !hasCommentaryPrefix {
+//                        shareContents.append("\n「宣化上人講解」")
+//                        hasCommentaryPrefix = true;
+//                    }
+//                    shareContents.append(c["content"]!)
+//                }
             }
         } else {
-            shareContents.append("《楞嚴經》之「" + (meta["name"] as! String) + "」")
+            
+            shareContents.append(bookTitle + "之「" + (meta["name"] as! String) + "」")
             shareContents.append(Book.data.getSutra(meta))
         }
         let activityViewController = UIActivityViewController(activityItems:[shareContents.joined(separator: "\n")], applicationActivities: nil)

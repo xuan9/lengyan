@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */; };
 		1313C43E1D53E99800395429 /* MediaTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1313C43D1D53E99800395429 /* MediaTableViewController.swift */; };
+		132014751F12B9850081FDDB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 132014771F12B9850081FDDB /* Localizable.strings */; };
 		133192DF1D14901300F4984F /* HidingNavigationBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133192DD1D14901300F4984F /* HidingNavigationBarManager.swift */; };
 		133192E01D14901300F4984F /* HidingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133192DE1D14901300F4984F /* HidingViewController.swift */; };
 		1344EA5D1D21CAA5001E215B /* String+Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1344EA5C1D21CAA5001E215B /* String+Common.swift */; };
@@ -99,6 +100,8 @@
 /* Begin PBXFileReference section */
 		130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraIndexViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		1313C43D1D53E99800395429 /* MediaTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = MediaTableViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
+		132014761F12B9850081FDDB /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		132014781F12B9870081FDDB /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		1321D0681EEF141B005DC278 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
 		1321D0691EEF142A005DC278 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Main.strings"; sourceTree = "<group>"; };
 		133192DD1D14901300F4984F /* HidingNavigationBarManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HidingNavigationBarManager.swift; sourceTree = "<group>"; };
@@ -169,6 +172,7 @@
 		139073831D109B3F003A3333 /* RATreeView+TableViewDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RATreeView+TableViewDelegate.m"; sourceTree = "<group>"; };
 		13978CCC1D2028E5005031EE /* Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		13CA80F01EAB3BF600589E8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		13DF26861F1BC410007DEF71 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
 		13E2230A1D5150C5000F763F /* Macros.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macros.swift; sourceTree = "<group>"; };
 		4A6C6BB01EE5A4C700B447DC /* lyzpg1.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = lyzpg1.m4a; sourceTree = "<group>"; };
@@ -300,6 +304,7 @@
 				1344FB791D3254A600E926F4 /* Utils.swift */,
 				13E2230A1D5150C5000F763F /* Macros.swift */,
 				1382E5311EAB341900EBE749 /* todo.txt */,
+				132014771F12B9850081FDDB /* Localizable.strings */,
 			);
 			path = lengyan;
 			sourceTree = "<group>";
@@ -588,6 +593,8 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
+				"zh-Hans",
+				"zh-Hant",
 			);
 			mainGroup = 139073001D109193003A3333;
 			productRefGroup = 1390730A1D109193003A3333 /* Products */;
@@ -615,6 +622,7 @@
 				4A6C89141EC24BC700C0F43A /* SVWebViewController.bundle in Resources */,
 				13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */,
 				4A6C89171EC24BC700C0F43A /* SVWebViewControllerActivityChrome-iPad@2x.png in Resources */,
+				132014751F12B9850081FDDB /* Localizable.strings in Resources */,
 				4AD0637A1EA3801400751922 /* ly01.m4a in Resources */,
 				139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */,
 				4AD0637B1EA3801900751922 /* ly07.m4a in Resources */,
@@ -733,6 +741,16 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		132014771F12B9850081FDDB /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				132014761F12B9850081FDDB /* zh-Hant */,
+				132014781F12B9870081FDDB /* zh-Hans */,
+				13DF26861F1BC410007DEF71 /* Base */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
 		139073121D109193003A3333 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
