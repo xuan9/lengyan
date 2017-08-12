@@ -18,6 +18,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationController?.hidesBarsOnSwipe = true;
+        self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.edgesForExtendedLayout = [];
         self.extendedLayoutIncludesOpaqueBars = false;
         self.automaticallyAdjustsScrollViewInsets = false;
@@ -38,10 +40,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         
         self.setTitle()
     }
-//    
-//    override var prefersStatusBarHidden : Bool {
-//        return true
-//    }
+    
+    override var prefersStatusBarHidden: Bool {
+        return navigationController?.isNavigationBarHidden ?? false
+    }
     
     func like() {
         Data.shared.like(self.path!)
@@ -59,7 +61,9 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     func setTitle() {
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬ ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
+
         
         if(Data.shared.likes.contains(path!)){
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))

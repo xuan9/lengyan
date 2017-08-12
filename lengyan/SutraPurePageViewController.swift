@@ -18,6 +18,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationController?.hidesBarsOnSwipe = true;
+        self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.edgesForExtendedLayout = UIRectEdge();
         self.extendedLayoutIncludesOpaqueBars = false;
         self.automaticallyAdjustsScrollViewInsets = false;
@@ -39,8 +41,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.setTitle()
     }
     
-    override var prefersStatusBarHidden : Bool {
-        return true
+    override var prefersStatusBarHidden: Bool {
+        return navigationController?.isNavigationBarHidden ?? false
     }
     
     func like() {
@@ -61,7 +63,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     }
     
     func setTitle() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬ ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
         
         if(Data.shared.likes.contains(path!)){
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
@@ -108,6 +111,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     {
         let pageContent: SutraPurePageContentViewController = viewController as! SutraPurePageContentViewController
         var index = pageContent.getNextPageIndex()
+//        var index = pageContent.getNextPageIndex(navigationController?.isNavigationBarHidden ?? true)
+
         if (index == NSNotFound || index  == Book.data.index?.count)
         {
             self.close();

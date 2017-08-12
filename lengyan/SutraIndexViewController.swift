@@ -150,7 +150,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
         self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬ ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))//✕
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))//✕
         
         //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: likeTitle, style: .Plain, target: self, action: #selector(SutraIndexViewController.toggleLike))

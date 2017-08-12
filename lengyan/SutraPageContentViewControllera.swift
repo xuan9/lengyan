@@ -152,6 +152,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
     
     func actionRow() -> UITableViewCell{
+        if (navigationController?.isNavigationBarHidden ?? true){
+            return UITableViewCell()
+        }
         //action group
         //        let actions = SutraActionGroupView();
         //        actions.path = meta["path"] as? String

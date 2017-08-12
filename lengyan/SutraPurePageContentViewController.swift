@@ -18,21 +18,15 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     var path:String? = nil;
     var nextPageIndex = -1;
     var beforePageIndex = -1;
-
-    var sutraTextView: UITextView = UITextView.init();
+    
+    //    var sutraView: UITextView? = nil;
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationController?.hidesBarsOnSwipe = true;
+        self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         view.backgroundColor = UIColor.white
-        let size = view.frame.size;
-        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: UIDevice.current.orientation.isLandscape ? size.height - 80 : size.height - 110 );
-        view.addSubview(sutraTextView)
-        sutraTextView.isSelectable = true;
-        sutraTextView.isScrollEnabled = true;
-        sutraTextView.isEditable = false;
-        sutraTextView.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
-        sutraTextView.backgroundColor = UIColor.white
-        sutraTextView.textColor = UIColor.darkText
+        
         if item == nil {
             let meta = (Book.data.index?[pageIndex])!;
             path = (meta["path"]! as String);
@@ -41,7 +35,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
             path = (item!["path"]! as! String);
         }
         
-        addSutra(item!);
+        self.addSutra(self.item!);
         updateHeader(item!)
     }
     
@@ -49,76 +43,90 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         self.navigationController?.setNavigationBarHidden(false, animated: true)
     }
     
-//    override func viewDidAppear(_ animated: Bool) {
-//        Data.shared.logItemOpened(path)
-//    }
-//    override func viewDidDisappear(_ animated: Bool) {
-//        Data.shared.logItemClosed(path)
-//    }
+    override var prefersStatusBarHidden: Bool {
+        return navigationController?.isNavigationBarHidden ?? false
+    }
+    
+    //    override func viewDidAppear(_ animated: Bool) {
+    //        Data.shared.logItemOpened(path)
+    //    }
+    //    override func viewDidDisappear(_ animated: Bool) {
+    //        Data.shared.logItemClosed(path)
+    //    }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        var height = size.height - 30;
-        if UIDevice.current.orientation.isLandscape {
-            height = height + 65
-        }
-        
-        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: height );
+        //        var height = size.height - 30;
+        //        if UIDevice.current.orientation.isLandscape {
+        //            height = height + 65
+        //        }
+        //
+        //        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: height );
     }
     
     func addSutra(_ meta:[String:Any]){
-        
-//        if (meta["children"] == nil) {
-//            item = meta;
-//            let meta = Book.data.parentOfItem(meta)!;
-//            path = (meta["path"]! as! String);
-//            addSutra(meta);
-//            return;
-//        } else {
-//            beforePageIndex = pageIndex - 1;
-//        }
-//        
-        beforePageIndex = pageIndex - 1;
+        let sutraTextView = UITextView();
+        sutraTextView.isSelectable = true;
+        sutraTextView.isScrollEnabled = true;
+        sutraTextView.isEditable = false;
+        sutraTextView.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
+        sutraTextView.backgroundColor = UIColor.white
+        sutraTextView.textColor = UIColor.darkText
+        //        if (meta["children"] == nil) {
+        //            item = meta;
+        //            let meta = Book.data.parentOfItem(meta)!;
+        //            path = (meta["path"]! as! String);
+        //            addSutra(meta);
+        //            return;
+        //        } else {
+        //            beforePageIndex = pageIndex - 1;
+        //        }
+        //        
 
+        //        scrollToItem(item != nil ? item! : meta, text: text);
+        let text = Book.data.getSutraAttributeString(meta);
+        sutraTextView.attributedText = text;
+        view.addSubview(sutraTextView);
+        sutraTextView.bindFrameToSuperviewBounds();
+    }
+    
+    /*
+     func scrollToItem(_ item:[String:Any], text:String){
+     if (item["children"] == nil) {
+     let content = Book.data.contents?[item["path"] as! String];
+     if content != nil {
+     for c in content! {
+     if c["type"] == "sutra" {
+     let sutra = c["content"]!
+     let range = NSString(string:text).range(of: sutra);
+     sutraTextView.selectedRange = range;
+     //                        let rect = sutraTextView.firstRectForRange( sutraTextView.selectedTextRange!);
+     sutraTextView.scrollRangeToVisible(range);
+     }
+     }
+     }
+     } else {
+     sutraTextView.scrollsToTop = true;
+     //            sutraTextView.scrollRangeToVisible(NSRange.init(location: 1, length: 1));
+     }
+     
+     }
+     */
+    
+    
+    func getNextPageIndex()->Int{
+        //todo...
         if(nextPageIndex == -1){
-            if(meta["path"]! as! String == item!["path"]! as! String){
+//            if(meta["path"]! as! String == item!["path"]! as! String){
                 nextPageIndex = pageIndex + 1 ;
-            }
+//            }
         } else {
             nextPageIndex = nextPageIndex + 1;
         }
         
-        sutraTextView.attributedText = Book.data.getSutraAttributeString(meta);
-        //        scrollToItem(item != nil ? item! : meta, text: text);
-    }
-    
-    
-    func scrollToItem(_ item:[String:Any], text:String){
-        if (item["children"] == nil) {
-            let content = Book.data.contents?[item["path"] as! String];
-            if content != nil {
-                for c in content! {
-                    if c["type"] == "sutra" {
-                        let sutra = c["content"]!
-                        let range = NSString(string:text).range(of: sutra);
-                        sutraTextView.selectedRange = range;
-                        //                        let rect = sutraTextView.firstRectForRange( sutraTextView.selectedTextRange!);
-                        sutraTextView.scrollRangeToVisible(range);
-                    }
-                }
-            }
-        } else {
-            sutraTextView.scrollsToTop = true;
-            //            sutraTextView.scrollRangeToVisible(NSRange.init(location: 1, length: 1));
-        }
-        
-    }
-    
-    
-    func getNextPageIndex()->Int{
         return nextPageIndex;
     }
     func getBeforePageIndex()->Int{
-        return beforePageIndex;
+        return pageIndex - 1;
     }
     
     func updateHeader(_ item:[String:Any]){
@@ -127,7 +135,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         
         self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬ ", style: .plain, target: self, action: #selector(SutraPurePageContentViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "  ❬   ", style: .plain, target: self, action: #selector(SutraPurePageContentViewController.close))
         
         self.updateStarButton()
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
@@ -136,14 +144,14 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     func updateStarButton(){
         var likeButton:UIBarButtonItem;
         if Data.shared.likes.contains(path!) {
-          likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
+            likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
         } else {
-           likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
+            likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
         }
         
         if self.isShowIndexButton && self.item?["children"] != nil {
             let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(SutraPurePageContentViewController.openIndex))
-            
+             
             self.navigationItem.setRightBarButtonItems([indexButton,likeButton], animated: false)
         } else {
             self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
@@ -151,7 +159,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
         likeButton.tintColor = UIColor.darkText
-
+        
     }
     
     func openIndex(){
@@ -161,7 +169,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         indexVC.isShowSutraButton = false;
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
-
+    
     
     func like() {
         Data.shared.like(self.path!)

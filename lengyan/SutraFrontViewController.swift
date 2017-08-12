@@ -20,7 +20,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         super.viewDidLoad()
         let bounds:CGRect = self.view.bounds;
         self.navigationController?.isNavigationBarHidden = true
-
+        
         let topBarView = UIView(frame: CGRect(
             origin: CGPoint(x:0 ,y:0 ),
             size:   CGSize(width: bounds.size.width , height:20 )));

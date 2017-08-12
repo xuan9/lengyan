@@ -37,11 +37,6 @@ class SutraBookViewController: UITableViewController{
         self.setTitleBar()
     }
     
-    
-    override var prefersStatusBarHidden : Bool {
-        return true
-    }
-    
     func titleWasTapped (){
         print("titleWasTapped");
     }
@@ -69,6 +64,10 @@ class SutraBookViewController: UITableViewController{
         // Dispose of any resources that can be recreated.
     }
     
+    override var prefersStatusBarHidden: Bool {
+        return navigationController?.isNavigationBarHidden ?? false
+    }
+    
     func close() {
         self.navigationController?.dismiss(animated: true, completion: {
             
@@ -76,7 +75,10 @@ class SutraBookViewController: UITableViewController{
     }
     
     func setTitleBar() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬ ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
+
+        
         self.title = "楞嚴經"
         self.navigationController?.navigationBar.isTranslucent = false;
     }

@@ -23,6 +23,7 @@
 		13643B291D2B1B8A00EB4372 /* SutraActionGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */; };
 		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
 		1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */; };
+		138A8AE91F3FBAC7006E5AB2 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138A8AE81F3FBAC7006E5AB2 /* Extensions.swift */; };
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
 		139073111D109193003A3333 /* StarsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073101D109193003A3333 /* StarsTableViewController.swift */; };
 		139073141D109193003A3333 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073121D109193003A3333 /* Main.storyboard */; };
@@ -118,6 +119,7 @@
 		1372181B1D402B720037332A /* SutraPurePageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageContentViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		1382E5311EAB341900EBE749 /* todo.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; };
+		138A8AE81F3FBAC7006E5AB2 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390730C1D109193003A3333 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		139073101D109193003A3333 /* StarsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarsTableViewController.swift; sourceTree = "<group>"; };
@@ -305,6 +307,7 @@
 				13E2230A1D5150C5000F763F /* Macros.swift */,
 				1382E5311EAB341900EBE749 /* todo.txt */,
 				132014771F12B9850081FDDB /* Localizable.strings */,
+				138A8AE81F3FBAC7006E5AB2 /* Extensions.swift */,
 			);
 			path = lengyan;
 			sourceTree = "<group>";
@@ -672,6 +675,7 @@
 				4A6C891E1EC24BC700C0F43A /* SVWebViewControllerActivity.m in Sources */,
 				1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */,
 				4A6C89131EC24BC700C0F43A /* SVModalWebViewController.m in Sources */,
+				138A8AE91F3FBAC7006E5AB2 /* Extensions.swift in Sources */,
 				135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */,
 				4A6C891C1EC24BC700C0F43A /* SVWebViewControllerActivitySafari.m in Sources */,
 				1390738A1D109B3F003A3333 /* RATreeNodeItem.m in Sources */,

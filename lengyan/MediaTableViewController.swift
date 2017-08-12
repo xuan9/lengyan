@@ -48,7 +48,8 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         super.viewDidLoad()
         //self.navigationController?.hidesBarsOnSwipe = true;
         //self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        
+        self.navigationController?.hidesBarsOnSwipe = true;
+        self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         tableView.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0, 0)
         automaticallyAdjustsScrollViewInsets = true
         tableView.dataSource = self
@@ -70,14 +71,13 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 let list = group["files"] as! [String];
                 list.forEach({( file) in
                     self.getTagStatus(tag: file){available in
+                        if(available){
+                            DispatchQueue.main.async{
+                                self.tableView.reloadData()
+                            }
+                        }
                     }
                 })
-            })
-            DispatchQueue.main.async{
-                self.tableView.reloadData()
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-                self.tableView.reloadData()
             })
             //reload last play status
 //            DispatchQueue.global().asyncAfter(deadline: .now() + 1, execute: {
