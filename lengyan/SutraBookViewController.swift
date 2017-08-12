@@ -76,7 +76,7 @@ class SutraBookViewController: UITableViewController{
     }
     
     func setTitleBar() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬ ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
         self.title = "楞嚴經"
         self.navigationController?.navigationBar.isTranslucent = false;
     }

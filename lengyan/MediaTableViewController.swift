@@ -46,7 +46,10 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.contentInset = UIEdgeInsetsMake(40.0, 0.0, 0, 0)
+        //self.navigationController?.hidesBarsOnSwipe = true;
+        //self.navigationController?.hidesBarsWhenVerticallyCompact = true;
+        
+        tableView.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0, 0)
         automaticallyAdjustsScrollViewInsets = true
         tableView.dataSource = self
         tableView.delegate = self
@@ -94,7 +97,43 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             footerHightConstraint.constant = 0
             footer.layoutIfNeeded()
         }
+        self.initAudio();
+    }
+    func initAudio(){
+        let session = AVAudioSession.sharedInstance()
+        do{
+            try session.setCategory(AVAudioSessionCategoryPlayback)
+            try session.setActive(true, with: .notifyOthersOnDeactivation)
+        } catch{
+            print("\(error)")
+        }
         
+        NotificationCenter.default.addObserver(self,
+                                               selector:#selector(audioSessionInterrupted(notification:)),
+                                               
+                                                       name:.AVAudioSessionInterruption,
+                                                       object: AVAudioSession.sharedInstance())
+        
+        UIApplication.shared.beginReceivingRemoteControlEvents();
+    }
+    
+    func audioSessionInterrupted(notification: NSNotification) {
+        
+        if notification.name == .AVAudioSessionInterruption
+            && notification.userInfo != nil {
+            
+            var info = notification.userInfo!
+            var intValue: UInt = 0
+            (info[AVAudioSessionInterruptionTypeKey] as! NSValue).getValue(&intValue)
+            if let type = AVAudioSessionInterruptionType(rawValue: intValue) {
+                switch type {
+                case .began:
+                    self.pause()
+                case .ended:
+                    let timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: "play", userInfo: nil, repeats: false)
+                }
+            }
+        }
     }
     //
     //    override func viewWillAppear(animated: Bool) {
@@ -263,10 +302,11 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 self.tagStatus[tag]=2
                 OperationQueue.main.addOperation {
                     self.tableView.reloadData()
-                }
                 if((self.tableView.indexPathForSelectedRow==nil || self.tableView.indexPathForSelectedRow == indexPath) ){
-                    self.play(name: name, file:tag, ext:ext);
+                        self.play(name: name, file:tag, ext:ext);
+                    }
                 }
+
             }
         }
         
@@ -436,7 +476,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     func progressBarChanged(slider: UISlider, event: UIEvent) {
-        print("progress changed: \(slider.value) by event: \(event)")
+//        print("progress changed: \(slider.value) by event: \(event)")
         var playItem = self.queuePlayer?.currentItem
         if (playItem == nil ) {
             self.schedulePlayItems()

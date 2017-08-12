@@ -91,7 +91,7 @@ class Data: NSObject, DataProtocal {
             if likesCache?.count == 0 {
                 
             }
-            print("likes: \(likesCache)")
+//            print("likes: \(likesCache)")
         }
     }
     

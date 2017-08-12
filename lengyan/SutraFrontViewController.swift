@@ -66,14 +66,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             let header:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 110))
             //            header.backgroundColor = UIColor.init(red: 247.0/255.0, green: 247.0/255, blue: 247.0/255, alpha: 1)
             
-            let title = self.makeSutraIndexButton("", frame: CGRect(x: 0, y: 10, width: width, height: 21));
+            let title = self.makeSutraIndexButton("", frame: CGRect(x: 3, y: 10, width: width-3, height: 30));
             let subTitle = UIButton.init(type: .custom);
-            subTitle.frame = CGRect(x: 0, y: 40, width: width, height: 17);
+            subTitle.frame = CGRect(x: 0, y: 35, width: width, height: 30);
             
-            let indexes = UIView(frame: CGRect(x: 0, y: 70, width: width, height: 21));
-            let i1 = self.makeSutraIndexButton("/A1",frame: CGRect(x: (width - 51)/2 - 40 - 36, y: 0, width: 36, height: 21));
-            let i2 =  self.makeSutraIndexButton("/A2",frame: CGRect(x: (width - 51)/2 , y: 0, width: 51, height: 21));
-            let i3 =  self.makeSutraIndexButton("/A3",frame: CGRect(x: (width + 51)/2 + 40,y: 0, width: 51, height: 21));
+            let indexes = UIView(frame: CGRect(x: 0, y: 70, width: width, height: 40));
+            let i1 = self.makeSutraIndexButton("/A1",frame: CGRect(x: (width - 51)/2 - 40 - 36, y: 0, width: 36, height: 30));
+            let i2 =  self.makeSutraIndexButton("/A2",frame: CGRect(x: (width - 51)/2 , y: 0, width: 51, height: 30));
+            let i3 =  self.makeSutraIndexButton("/A3",frame: CGRect(x: (width + 51)/2 + 40,y: 0, width: 51, height: 30));
             //            let underlineAttriString = NSAttributedString(string:(i2.titleLabel?.text)!, attributes: [NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleSingle.rawValue])
             //            i2.titleLabel?.attributedText = underlineAttriString
             

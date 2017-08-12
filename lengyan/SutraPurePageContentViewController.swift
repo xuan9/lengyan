@@ -127,7 +127,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         
         self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraPurePageContentViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬ ", style: .plain, target: self, action: #selector(SutraPurePageContentViewController.close))
         
         self.updateStarButton()
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText

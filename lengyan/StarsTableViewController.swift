@@ -4,28 +4,21 @@ class StarsTableViewController: UITableViewController{
     
     internal var initialRow = 0;
     
-    override var prefersStatusBarHidden: Bool {
-        return false
-    }
     override var preferredStatusBarStyle: UIStatusBarStyle{
         return .default
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        self.navigationController?.hidesBarsOnSwipe = true;
+        self.navigationController?.hidesBarsWhenVerticallyCompact = true;
 //        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
         tableView.separatorInset = UIEdgeInsetsMake(5, 0.0, 0, 0)
         tableView.separatorStyle = .singleLine
         tableView.separatorColor = UIColor.white
         tableView.separatorInset = UIEdgeInsetsMake(10, 0.0, 10, 0)
+        tableView.rowHeight = UITableViewAutomaticDimension
 
         self.setTitleBar()
-    }
-    
-    
-    
-    func titleWasTapped (){
-        print("titleWasTapped");
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -40,6 +33,9 @@ class StarsTableViewController: UITableViewController{
             initialRow = -1;
         }
         
+    }
+    override var prefersStatusBarHidden: Bool {
+        return navigationController?.isNavigationBarHidden ?? false
     }
     
     override func viewWillDisappear(_ animated: Bool) {

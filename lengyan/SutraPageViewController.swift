@@ -59,7 +59,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     func setTitle() {
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬ ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
         
         if(Data.shared.likes.contains(path!)){
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
