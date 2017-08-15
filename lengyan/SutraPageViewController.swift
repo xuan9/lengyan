@@ -59,8 +59,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         onDismiss?()
         self.navigationController?.popViewController(animated: true)
     }
+    
     func setTitle() {
-        
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
         self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
 
@@ -77,7 +77,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationController?.navigationBar.isTranslucent = false;
     }
         
-        public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
+    public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
     {
         let pageContent:  SutraPage = viewController as!  SutraPage
         var index = pageContent.pageIndex
@@ -86,7 +86,14 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             self.close();
             return nil;
         }
-        index -= 1;
+        if (self.navigationController?.isNavigationBarHidden ?? false){
+            //skip the index pages if nav hiden
+            repeat{
+                index -= 1;
+            } while (!(Book.data.isItemLeaf(index) ?? true))
+        } else {
+            index -= 1;
+        }
         return getViewControllerAtIndex(index: index)
     }
     
@@ -106,9 +113,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         
         return pageContent
     }
-        public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
-
-{
+    
+    public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
+        
+    {
         let pageContent: SutraPage = viewController as! SutraPage
         var index = pageContent.pageIndex
         if (index == NSNotFound || index + 1 == Book.data.index?.count)
@@ -116,17 +124,25 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             self.close();
             return nil;
         }
-        index += 1;
         
+        if (self.navigationController?.isNavigationBarHidden ?? false){
+            //skip the index pages if nav hiden
+            repeat{
+                index += 1;
+            } while (!(Book.data.isItemLeaf(index) ?? true))
+        } else {
+            index += 1;
+        }
         return getViewControllerAtIndex(index: index)
     }
+    
     // MARK - UIPageViewControllerDelegate
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
         
         let pageContent = pageViewController.viewControllers![0] as! SutraPage
         self.page = pageContent.pageIndex;
         self.item = Book.data.index![page];
-        self.path = item!["path"]        
+        self.path = item!["path"]
         self.setPageTitle()
         self.setTitle()
     }

@@ -128,7 +128,16 @@ class Book: NSObject {
         }
         return self.itemOfPath(path)
     }
-    
+  
+    func isItemLeaf(_ index:Int) ->Bool?{
+        let meta = Book.data.index?[index];
+        let path = meta?["path"] as String?;
+        if (path == nil){
+            return nil
+        } else {
+            return Book.data.contents?[path!] != nil;
+        }
+    }
     func loadDataWithCompletionHandler(_ handler:@escaping (Void)->Void) {
         DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default).async{
             if self.loaded {
