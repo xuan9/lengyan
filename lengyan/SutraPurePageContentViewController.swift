@@ -19,7 +19,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     var nextPageIndex = -1;
     var beforePageIndex = -1;
     
-    //    var sutraView: UITextView? = nil;
+        var sutraView: UITextView? = nil;
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -87,8 +87,11 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         sutraTextView.attributedText = text;
         view.addSubview(sutraTextView);
         sutraTextView.bindFrameToSuperviewBounds();
+        self.sutraView = sutraTextView;
     }
-    
+    override func viewDidLayoutSubviews() {
+        self.sutraView?.setContentOffset(.zero, animated:false);
+    }
     /*
      func scrollToItem(_ item:[String:Any], text:String){
      if (item["children"] == nil) {

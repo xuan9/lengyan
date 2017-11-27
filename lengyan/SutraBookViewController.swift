@@ -106,7 +106,7 @@ class SutraBookViewController: UITableViewController{
         let contents:[[String:String]]? =  (Book.data.contents?[path!]);
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "SutraBookTableViewCell", for: indexPath) as! SutraBookTableViewCell
-        cell.textView.textContainerInset = UIEdgeInsetsMake(5, 0, 5, 0);
+        cell.textView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);
 
         
         if(contents == nil){

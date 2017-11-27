@@ -18,18 +18,17 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
         let bounds:CGRect = self.view.bounds;
-        self.navigationController?.isNavigationBarHidden = true
-        
-        let topBarView = UIView(frame: CGRect(
-            origin: CGPoint(x:0 ,y:0 ),
-            size:   CGSize(width: bounds.size.width , height:20 )));
-        topBarView.backgroundColor = UIColor.white
-        view.addSubview(topBarView)
+
+        let title = self.makeSutraIndexButton("", frame: CGRect(x: 3, y: 0, width: self.view.bounds.width - 3, height: 40));
+        self.navigationItem.titleView = title;
         
         treeView = RATreeView(frame: CGRect(
-            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 20 ),
-            size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height - 20 )));
+            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 0),
+            size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height - 0 )));
+
+
         treeView.delegate = self
         treeView.dataSource = self
         treeView.rowHeight = 30;
@@ -41,6 +40,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.treeView.addGestureRecognizer(longPressRecognizer)
         
         Book.data.loadDataWithCompletionHandler { (Void) in
+            print("Data loaded, show list")
             self.setupHeaderView()
             self.showList()
         }
@@ -52,7 +52,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        self.navigationController?.setNavigationBarHidden(true, animated: true)
+    self.navigationController?.setNavigationBarHidden(false, animated: true)
+    self.navigationController?.hidesBarsOnSwipe = false;
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -63,14 +64,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         DispatchQueue.main.async{
             let width = self.view.bounds.width
             
-            let header:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 110))
+            let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 48))
             //            header.backgroundColor = UIColor.init(red: 247.0/255.0, green: 247.0/255, blue: 247.0/255, alpha: 1)
             
-            let title = self.makeSutraIndexButton("", frame: CGRect(x: 3, y: 10, width: width-3, height: 30));
             let subTitle = UIButton.init(type: .custom);
-            subTitle.frame = CGRect(x: 0, y: 35, width: width, height: 30);
+            subTitle.frame = CGRect(x: 0, y: 3, width: width, height: 15);
             
-            let indexes = UIView(frame: CGRect(x: 0, y: 70, width: width, height: 40));
+            let indexes = UIView(frame: CGRect(x: 0, y: 18, width: width, height: 30));
             let i1 = self.makeSutraIndexButton("/A1",frame: CGRect(x: (width - 51)/2 - 40 - 36, y: 0, width: 36, height: 30));
             let i2 =  self.makeSutraIndexButton("/A2",frame: CGRect(x: (width - 51)/2 , y: 0, width: 51, height: 30));
             let i3 =  self.makeSutraIndexButton("/A3",frame: CGRect(x: (width + 51)/2 + 40,y: 0, width: 51, height: 30));
@@ -92,17 +92,17 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             indexes.addSubview(i1);
             indexes.addSubview(i2);
             indexes.addSubview(i3);
-            header.addSubview(title)
+//            header.addSubview(title)
             header.addSubview(subTitle)
             header.addSubview(indexes)
             
             
             let px = 1 / UIScreen.main.scale
-            let frame = CGRect(x: 0, y: 110 - px, width: self.treeView.frame.size.width, height: px)
+            let frame = CGRect(x: 0, y: 48 - px, width: self.treeView.frame.size.width, height: px)
             let line: UIView = UIView(frame: frame)
             line.backgroundColor = self.treeView.separatorColor
             header.addSubview(line)
-            //            self.treeView.scrollView.contentInset = UIEdgeInsetsMake(110, 0, 0, 0);
+//            self.treeView.scrollView.contentInset = UIEdgeInsetsMake(64, 0, 0, 0);
             //            self.treeView.scrollView.addSubview(header)
             
             self.treeView.treeHeaderView = header

@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11761" systemVersion="16F73" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="49e-Tb-3d3">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="49e-Tb-3d3">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13527"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
+    <customFonts key="customFonts">
+        <array key="CourierNew.ttf">
+            <string>CourierNewPSMT</string>
+        </array>
+    </customFonts>
     <scenes>
         <!--Stars Table View Controller-->
         <scene sceneID="eyh-wq-Aq2">
@@ -54,7 +60,7 @@
                 <navigationController id="wz3-c0-Cfx" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="楞嚴經" image="book" id="c3u-oy-4g5"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="uqb-nt-jhF">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <connections>
@@ -71,7 +77,7 @@
                 <navigationController id="p2b-Um-PK1" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="收藏" image="ic_star_18pt" id="97f-xT-WBw"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="ICd-ga-VBw">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <connections>
@@ -82,7 +88,7 @@
             </objects>
             <point key="canvasLocation" x="-329" y="842"/>
         </scene>
-        <!--Sutra Front View Controller-->
+        <!--大佛頂如來密因修證了義諸菩薩萬行首楞嚴經-->
         <scene sceneID="RYM-kW-vwe">
             <objects>
                 <viewController id="E2C-VD-JHn" customClass="SutraFrontViewController" customModule="lengyan" customModuleProvider="target" sceneMemberID="viewController">
@@ -96,7 +102,9 @@
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <color key="tintColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </view>
-                    <navigationItem key="navigationItem" id="lou-1m-0aF"/>
+                    <navigationItem key="navigationItem" title="大佛頂如來密因修證了義諸菩薩萬行首楞嚴經" id="lou-1m-0aF">
+                        <barButtonItem key="backBarButtonItem" title="back" id="84G-uY-Z8M"/>
+                    </navigationItem>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qSz-Sz-6Tj" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -108,7 +116,7 @@
                 <navigationController id="52i-TC-vUc" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="聽經" image="ic_library_music" id="GYt-WO-jRv"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="BJ8-KG-FcK">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <connections>
@@ -144,14 +152,14 @@
                                 <inset key="scrollIndicatorInsets" minX="10" minY="20" maxX="10" maxY="10"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Header" id="M3y-uy-WhP" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="56" width="375" height="40"/>
+                                        <rect key="frame" x="0.0" y="55.5" width="375" height="40"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="M3y-uy-WhP" id="p51-pI-OJA">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="屏東能淨協會朗讀" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WXo-gc-4vA" userLabel="title">
-                                                    <rect key="frame" x="18" y="8" width="250" height="24"/>
+                                                    <rect key="frame" x="25" y="8" width="250" height="24"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="250" id="2Lg-Rf-9dL"/>
                                                     </constraints>
@@ -171,14 +179,14 @@
                                         </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell-Download" id="9dA-Th-gqc" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="96" width="375" height="40"/>
+                                        <rect key="frame" x="0.0" y="95.5" width="375" height="40"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="9dA-Th-gqc" id="Kdc-5Q-h9h">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UZ2-wr-MwL">
-                                                    <rect key="frame" x="28" y="8" width="319" height="24"/>
+                                                    <rect key="frame" x="35" y="11" width="305" height="18"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                                     <nil key="highlightedColor"/>
@@ -196,14 +204,14 @@
                                         </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Media-Cell" id="2Nx-Tk-Nor" customClass="MediaTableViewCell" customModule="lengyan" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="136" width="375" height="40"/>
+                                        <rect key="frame" x="0.0" y="135.5" width="375" height="40"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="2Nx-Tk-Nor" id="VSn-5D-HPd">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="39.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="卷一" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ieb-Ig-470">
-                                                    <rect key="frame" x="28" y="8" width="319" height="23"/>
+                                                    <rect key="frame" x="35" y="11" width="305" height="18"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                                     <nil key="highlightedColor"/>

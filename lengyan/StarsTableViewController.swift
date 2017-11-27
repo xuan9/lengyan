@@ -9,7 +9,6 @@ class StarsTableViewController: UITableViewController{
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
 //        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
         tableView.separatorInset = UIEdgeInsetsMake(5, 0.0, 0, 0)
@@ -23,6 +22,8 @@ class StarsTableViewController: UITableViewController{
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.navigationController?.hidesBarsOnSwipe = false;
+
         let rows = tableView.numberOfRows(inSection: 0)
         if rows != Data.shared.likes.count {
                 tableView.reloadData()

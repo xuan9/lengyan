@@ -15,8 +15,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     internal var lastScheduledNotificationFireDay: Int?;
+    internal static let MAX_SCHEDULED_NOTIFICATIONS:Int = 7;
     
+    func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        Book.data.loadDataWithCompletionHandler { (Void) in
+            print("Book data loaded on start")
+        }
+        return true
+    }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        UINavigationBar.appearance().tintColor = UIColor.white
+        
         let notification = launchOptions?[UIApplicationLaunchOptionsKey.localNotification] as? UILocalNotification
         
         if notification != nil {
@@ -46,7 +55,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                             }
                             var numScheduled = scheduled.count ;
                             
-                            if numScheduled < 30 {
+                            if numScheduled < AppDelegate.MAX_SCHEDULED_NOTIFICATIONS {
                                 var foundLast = false;
                                 for path in KEY_PATHS {
                                     if lastPath == path {
@@ -54,7 +63,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                         continue;
                                     }
                                     if foundLast {
-                                        if numScheduled < 30 {
+                                        if numScheduled < AppDelegate.MAX_SCHEDULED_NOTIFICATIONS {
                                             if self.scheduleItem(path: path) {
                                                 numScheduled += 1
                                             }
@@ -65,7 +74,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                 }
                                 
                                 for path in KEY_PATHS {
-                                    if numScheduled < 30 {
+                                    if numScheduled < AppDelegate.MAX_SCHEDULED_NOTIFICATIONS {
                                         if self.scheduleItem(path: path) {
                                             numScheduled += 1
                                         }
@@ -110,7 +119,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 let today = NSCalendar.current.component(.day, from: Date());
                 lastScheduledNotificationFireDay =  today
             }
-            if lastScheduledNotificationFireDay! >= 30  {
+            if lastScheduledNotificationFireDay! >= AppDelegate.MAX_SCHEDULED_NOTIFICATIONS  {
                 dateInfo.day = 1
             } else {
                 dateInfo.day = lastScheduledNotificationFireDay! + 1

@@ -20,6 +20,7 @@
 		135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60601D16FB7400029090 /* SutraBookViewController.swift */; };
 		135D60631D173B1B00029090 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60621D173B1B00029090 /* Book.swift */; };
 		135D60651D174CC300029090 /* SutraTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60641D174CC300029090 /* SutraTableViewCell.swift */; };
+		1361D0811F647C6A00426DB6 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1361D0831F647C6A00426DB6 /* InfoPlist.strings */; };
 		13643B291D2B1B8A00EB4372 /* SutraActionGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */; };
 		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
 		1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */; };
@@ -115,6 +116,8 @@
 		135D60601D16FB7400029090 /* SutraBookViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraBookViewController.swift; sourceTree = "<group>"; };
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		135D60641D174CC300029090 /* SutraTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraTableViewCell.swift; sourceTree = "<group>"; };
+		1361D0821F647C6A00426DB6 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		1361D0841F647C7400426DB6 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraActionGroupView.swift; sourceTree = "<group>"; };
 		1372181B1D402B720037332A /* SutraPurePageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPurePageContentViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
@@ -308,6 +311,7 @@
 				1382E5311EAB341900EBE749 /* todo.txt */,
 				132014771F12B9850081FDDB /* Localizable.strings */,
 				138A8AE81F3FBAC7006E5AB2 /* Extensions.swift */,
+				1361D0831F647C6A00426DB6 /* InfoPlist.strings */,
 			);
 			path = lengyan;
 			sourceTree = "<group>";
@@ -619,6 +623,7 @@
 				4AD0637E1EA3802200751922 /* ly02.m4a in Resources */,
 				4AD063801EA3802200751922 /* ly08.m4a in Resources */,
 				4AD0637F1EA3802200751922 /* ly05.m4a in Resources */,
+				1361D0811F647C6A00426DB6 /* InfoPlist.strings in Resources */,
 				4A6C6BB21EE5A5C400B447DC /* lyz1.m4a in Resources */,
 				4A6C89161EC24BC700C0F43A /* SVWebViewControllerActivityChrome-iPad.png in Resources */,
 				4AD0637D1EA3802200751922 /* ly09.m4a in Resources */,
@@ -753,6 +758,15 @@
 				13DF26861F1BC410007DEF71 /* Base */,
 			);
 			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		1361D0831F647C6A00426DB6 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1361D0821F647C6A00426DB6 /* zh-Hans */,
+				1361D0841F647C7400426DB6 /* zh-Hant */,
+			);
+			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 		139073121D109193003A3333 /* Main.storyboard */ = {

@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 import AVFoundation
+import MediaPlayer
 
 class MediaTableViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
@@ -46,12 +47,11 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.automaticallyAdjustsScrollViewInsets = true;
         //self.navigationController?.hidesBarsOnSwipe = true;
-        //self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        self.navigationController?.hidesBarsOnSwipe = true;
+//    self.navigationController?.hidesBarsWhenVerticallyCompact = true;
+//        self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        tableView.contentInset = UIEdgeInsetsMake(0.0, 0.0, 0, 0)
-        automaticallyAdjustsScrollViewInsets = true
         tableView.dataSource = self
         tableView.delegate = self
         self.setTitleBar()
@@ -105,7 +105,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             try session.setCategory(AVAudioSessionCategoryPlayback)
             try session.setActive(true, with: .notifyOthersOnDeactivation)
         } catch{
-            print("\(error)")
+            NSLog("\(error)")
         }
         
         NotificationCenter.default.addObserver(self,
@@ -114,7 +114,8 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                                                        name:.AVAudioSessionInterruption,
                                                        object: AVAudioSession.sharedInstance())
         
-        UIApplication.shared.beginReceivingRemoteControlEvents();
+    self.setupNowPlayingInfoCenter()
+        
     }
     
     func audioSessionInterrupted(notification: NSNotification) {
@@ -130,7 +131,8 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 case .began:
                     self.pause()
                 case .ended:
-                    let timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: "play", userInfo: nil, repeats: false)
+                    NSLog("audio interruption ended")
+//                    let timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: "play", userInfo: nil, repeats: false)
                 }
             }
         }
@@ -274,21 +276,26 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             return;
         }
         
-        if(tagStatus[tag]==0 || tagStatus[tag]==nil){
-            self.tagStatus[tag] = 1
-            cell.nameLabel.textColor=UIColor.lightGray
-            
-            let downloadingText = NSLocalizedString("downloading_text", comment: "正在下载...")
-            
-            cell.nameLabel.text =  name + " -  " + downloadingText;
-        }
-        
         let req = NSBundleResourceRequest(tags: [tag]);
         self.rReq[tag] = req
         req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
-        print("beginAccessingResources: \(tag)")
+        NSLog("beginAccessingResources: \(tag)")
+        var progressView:UIProgressView?;
+        if(tagStatus[tag]==0 || tagStatus[tag]==nil){
+            self.tagStatus[tag] = 1
+            cell.nameLabel.textColor=UIColor.lightGray
+            let downloadingText = NSLocalizedString("downloading_text", comment: "正在下载...")
+            cell.nameLabel.text =  name + " -  " + downloadingText;
+            
+            progressView = UIProgressView(frame: CGRect(x:  0, y: cell.height - 2,width: cell.width, height: 2))
+            progressView?.trackTintColor = UIColor.darkGray
+            progressView?.progressTintColor = UIColor.green;
+            progressView?.observedProgress = req.progress
+            cell.addSubview(progressView!);
+        }
+        
         req.beginAccessingResources{ error in
-            print("beginAccessingResources done: \(tag), \(error)")
+            NSLog("beginAccessingResources done: \(tag), \(error)")
             if let error = error {
                 self.tagStatus[tag]=0
                 self.rReq[tag]?.endAccessingResources()
@@ -307,6 +314,9 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     }
                 }
 
+            }
+            OperationQueue.main.addOperation {
+                progressView?.removeFromSuperview();
             }
         }
         
@@ -404,12 +414,12 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         if (keyPath == "currentItem") {
             let item = self.queuePlayer?.currentItem;
             /*
-            print( "play item: \(item)");
+            NSLog( "play item: \(item)");
             
             if( item != nil) {
                 let meta = item?.asset.metadata;
                 meta?.forEach({ (m) in
-                    print( "\(m.commonKey): \(m.stringValue)");
+                    NSLog( "\(m.commonKey): \(m.stringValue)");
                 })
             }
                 */
@@ -476,13 +486,13 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     func progressBarChanged(slider: UISlider, event: UIEvent) {
-//        print("progress changed: \(slider.value) by event: \(event)")
+//        NSLog("progress changed: \(slider.value) by event: \(event)")
         var playItem = self.queuePlayer?.currentItem
         if (playItem == nil ) {
             self.schedulePlayItems()
             playItem = self.queuePlayer?.currentItem
             if playItem == nil {
-                print("no currentItem")
+                NSLog("no currentItem")
                 return
             }
         }
@@ -508,21 +518,21 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 }
             }
         } else {
-            print("invalid duration")
+            NSLog("invalid duration")
         }
     }
     
     func runTimedCode() {
         if (self.queuePlayer?.currentItem) != nil {
-            let duration = self.queuePlayer!.currentItem!.duration
+            let duration = self.queuePlayer?.currentItem?.duration;
             var durationText = "", progressText = ""
             var progress:Float = 0;
             
-            if(duration.isNumeric){
-                let d = Int(duration.seconds);
+            if(duration?.isNumeric)!{
+                let d = Int(duration!.seconds);
                 durationText = self.getMediaDisplayTime(seconds: d)
                 if(self.queuePlayer!.currentTime().isNumeric){
-                    progress = Float(self.queuePlayer!.currentTime().seconds.divided(by: duration.seconds))
+                    progress = Float(self.queuePlayer!.currentTime().seconds.divided(by: duration!.seconds))
                     let progressSeconds = Int((self.queuePlayer?.currentTime().seconds)!)
                     progressText = self.getMediaDisplayTime(seconds: progressSeconds)
                 }
@@ -560,6 +570,8 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     func schedulePlayItems(newItem:AVPlayerItem? = nil) {
+        DispatchQueue.global().async {
+            
         var currentItem = self.queuePlayer?.currentItem
         var file:[String]?;
         var startAt:CMTime? = currentItem != nil ? self.queuePlayer?.currentTime(): nil
@@ -567,14 +579,14 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
 
         if (newItem != nil ) {
             currentItem = newItem;
-            file = getFileNameAndExtension(item: newItem)
+            file = self.getFileNameAndExtension(item: newItem)
             startAt = nil
         } else {
-           file = lastPlayFile
+            file = self.lastPlayFile
         }
         
         if file == nil {
-            print("no playing file found")
+            NSLog("no playing file found")
             return
         }
         
@@ -584,7 +596,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             if(self.playMode <= 0){
                 var downloaded = NSMutableArray();
                 var assets = NSMutableArray();
-                tagStatus.forEach({ (k,v) in
+                self.tagStatus.forEach({ (k,v) in
                     if(v == 2) {
                         downloaded.add(k);
                     }
@@ -596,7 +608,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 
                 var fullList:[String]?;
                 var sorted = NSMutableArray();
-                for group in media {
+                for group in self.media {
                     let files = group["files"] as! [String]
                     if files.contains(name) {
                         let index:Int = files.index(of: name)!
@@ -623,11 +635,14 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                         let url = req?.bundle.url(forResource:tag as? String, withExtension: ext)
                         let item = AVURLAsset(url: url!)
                         assets.add(item)
-                        print("add item \(tag)")
                     }
                 }
-                for _ in 1...30 {
+                
+                let times = assets.count > 3 ? 10 : 30;
+
+                 for _ in 1...times {
                     for asset in assets {
+                        NSLog("creat AVPlayerItem")
                         let item = AVPlayerItem(asset: (asset as! AVURLAsset));
                         self.queuePlayer?.insert(item, after:nil);
                     }
@@ -635,11 +650,12 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             }else if(self.playMode == Int.max || self.playMode <= 6){
                 let times = self.playMode == Int.max ? 30 : self.playMode
                 for _ in 1...times {
+                    NSLog("creat AVPlayerItem")
                     let item = AVPlayerItem(asset: (currentItem?.asset)!);
                     self.queuePlayer?.insert(item, after:nil);
                 }
             } else {
-                print("invalid play mode \(playMode)")
+                NSLog("invalid play mode \(self.playMode)")
             }
         }
         
@@ -650,7 +666,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         if !self.isPlaying() && newItem != nil {
             self.play()
         }
-        
+        }
     }
     
     func updatePlayModeIcon(){
@@ -659,9 +675,12 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             }else if(self.playMode == Int.max){self.footPlayMode.setImage( UIImage(named:"ic_repeat_one")?.withRenderingMode(.alwaysTemplate), for: .normal)
             }else if(self.playMode <= 6){
                 self.footPlayMode.setImage(UIImage(named:"ic_looks_\(self.playMode)")?.withRenderingMode(.alwaysTemplate), for: .normal)
-            }}
+            }
+            
+        }
     }
     func selectMode(mode:Int) {
+        NSLog("selected mode: \(mode)");
         self.playMode = mode;
         self.updatePlayModeIcon();
         self.schedulePlayItems()
@@ -700,7 +719,63 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         
         present(optionMenu, animated: true, completion: nil)
     }
+//
+//    override func remoteControlReceived(with event: UIEvent?) {
+//        NSLog(event!.type)
+//        NSLog(event!.subtype)
+//        if event!.type == UIEventType.remoteControl {
+//            if event?.subtype == UIEventSubtype.remoteControlPlay {
+//                self.play()
+//            } else if event?.subtype == UIEventSubtype.remoteControlPause {
+//                self.pause();
+//            } else if event?.subtype == UIEventSubtype.remoteControlNextTrack {
+//                self.queuePlayer?.advanceToNextItem()
+//                self.play()
+//            } else if event?.subtype == UIEventSubtype.remoteControlPreviousTrack {
+//                self.queuePlayer?.seek(to: CMTimeMake(0,10));
+//                self.play()
+//            }
+//        }
+//    }
     
+    private func setupNowPlayingInfoCenter() {
+        UIApplication.shared.beginReceivingRemoteControlEvents();
+        MPRemoteCommandCenter.shared().playCommand.addTarget(handler: { (event) -> MPRemoteCommandHandlerStatus in
+            self.play()
+            self.updateNowPlayingInfoCenter()
+            return .success
+        })
+        MPRemoteCommandCenter.shared().pauseCommand.addTarget(handler: { (event) -> MPRemoteCommandHandlerStatus in
+            self.pause()
+            self.updateNowPlayingInfoCenter()
+            return .success
+        })
+        MPRemoteCommandCenter.shared().nextTrackCommand.addTarget(handler: { (event) -> MPRemoteCommandHandlerStatus in
+            self.queuePlayer?.advanceToNextItem()
+            self.play()
+            self.updateNowPlayingInfoCenter()
+            return .success
+        })
+        MPRemoteCommandCenter.shared().previousTrackCommand.addTarget(handler: { (event) -> MPRemoteCommandHandlerStatus in
+            self.queuePlayer?.seek(to: CMTimeMake(0,10))
+            self.play()
+            self.updateNowPlayingInfoCenter()
+            return .success
+        })
+    }
+    
+    private func updateNowPlayingInfoCenter(artwork: UIImage? = nil) {
+        guard let file = self.queuePlayer?.currentItem else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = [String: AnyObject]()
+            return
+        }
+        let name = getFileNameAndExtension(item: file)?[0];
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = [
+            MPMediaItemPropertyTitle: name ?? "",
+            MPMediaItemPropertyPlaybackDuration:  self.queuePlayer?.currentItem?.duration.seconds ?? 0,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime:  self.queuePlayer?.currentTime().seconds ?? 0
+        ]
+    }
 }
 
 class MediaTableViewCell: UITableViewCell {

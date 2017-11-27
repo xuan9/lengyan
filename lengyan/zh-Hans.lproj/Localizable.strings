@@ -16,7 +16,7 @@
 "star_tab_title" = "收藏";
 
 "downloading_text" = "正在下载...";
-"download_failed" = "下载失败";
+"download_failed" = "下载失败，稍后重试";
 "download_error_out_of_space" = "空间不足，下载失败";
 "download_error_too_big" = "程序错误，文件过大";
 "download_error_invalid_tag" = "程序错误，文件不存在";
