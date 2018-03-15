@@ -66,6 +66,11 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
 
         Book.data.loadDataWithCompletionHandler { (Void) in
             self.media = Book.data.media!
+            
+            DispatchQueue.main.async{
+                self.tableView.reloadData()
+            }
+            
             self.media.forEach({ (
                 group) in
                 let list = group["files"] as! [String];
@@ -99,7 +104,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         }
         self.initAudio();
     }
-    func initAudio(){
+    func startAudioSession(){
         let session = AVAudioSession.sharedInstance()
         do{
             try session.setCategory(AVAudioSessionCategoryPlayback)
@@ -108,13 +113,16 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             NSLog("\(error)")
         }
         
+    }
+    func initAudio(){
+        
         NotificationCenter.default.addObserver(self,
                                                selector:#selector(audioSessionInterrupted(notification:)),
                                                
-                                                       name:.AVAudioSessionInterruption,
-                                                       object: AVAudioSession.sharedInstance())
+                                               name:.AVAudioSessionInterruption,
+                                               object: AVAudioSession.sharedInstance())
         
-    self.setupNowPlayingInfoCenter()
+        self.setupNowPlayingInfoCenter()
         
     }
     
@@ -309,10 +317,10 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 self.tagStatus[tag]=2
                 OperationQueue.main.addOperation {
                     self.tableView.reloadData()
-                if((self.tableView.indexPathForSelectedRow==nil || self.tableView.indexPathForSelectedRow == indexPath) ){
-                        self.play(name: name, file:tag, ext:ext);
+                    if(!self.isPlaying()){
+                            self.play(name: name, file:tag, ext:ext);
+                        }
                     }
-                }
 
             }
             OperationQueue.main.addOperation {
@@ -334,9 +342,10 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         }
     }
     func isPlaying() -> Bool {
-        return self.queuePlayer?.rate != 0
+        return self.queuePlayer != nil && self.queuePlayer!.rate != 0
     }
     func play(){
+        self.startAudioSession();
         self.queuePlayer?.play()
         self.startPlayerTimer()
         
@@ -465,10 +474,6 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             self.footPlayButton.isSelected = false;
             self.pause()
         }
-    }
-    
-    func pressModeButton(button: UIButton) {
-        self.showModeOptions()
     }
     
     func getLastPlayItem() -> AVPlayerItem? {
@@ -687,9 +692,13 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         Data.shared.lastPlayMode = mode;
     }
     
-    func showModeOptions (){
+    func pressModeButton(button: UIButton) {
         let optionMenu = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
+        if let presenter = optionMenu.popoverPresentationController {
+            presenter.sourceView = button;
+            presenter.sourceRect = button.bounds;
+        }
         let aRepeat = UIAlertAction(title:  NSLocalizedString("play_mode_repeat", comment:"順序循環"), style: .default, handler: {
             (action) in
             self.selectMode(mode: -1);

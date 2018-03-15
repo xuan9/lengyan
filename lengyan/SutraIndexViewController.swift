@@ -55,12 +55,14 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         } else {
             path = tree!["path"] as? String;
             self.treeView.reloadData()
-            self.updateHeader()
-            
         }
+        self.updateHeader()
+
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.black
+
         treeView.visibleCells()?.forEach({ (cell) in
             let item = treeView.item(for: cell as! UITableViewCell)
             treeView.expandRow(forItem: item, expandChildren: false, with: RATreeViewRowAnimationNone)
@@ -148,10 +150,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(tree != nil) {
             self.title = tree?["name"] as? String ?? ""
         }
-        self.navigationController?.navigationBar.isTranslucent = false;
+    self.navigationController?.navigationBar.isTranslucent = false;
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))//✕
-        
         //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: likeTitle, style: .Plain, target: self, action: #selector(SutraIndexViewController.toggleLike))
         

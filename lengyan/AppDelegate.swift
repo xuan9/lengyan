@@ -42,56 +42,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         
-        if #available(iOS 10.0, *) {
-//            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-            DispatchQueue.global().asyncAfter(deadline: .now() + 2, execute: {
-                UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { (scheduled:[UNNotificationRequest]) in
-                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { (granted, error) in
-                        if granted {
-                            var lastPath:String =  KEY_PATHS[0];
-                            if scheduled.count > 0 {
-                                lastPath =  scheduled.last?.content.userInfo["path"] as! String;
-                                self.lastScheduledNotificationFireDay = (scheduled.last?.trigger as! UNCalendarNotificationTrigger).dateComponents.day
-                            }
-                            var numScheduled = scheduled.count ;
-                            
-                            if numScheduled < AppDelegate.MAX_SCHEDULED_NOTIFICATIONS {
-                                var foundLast = false;
-                                for path in KEY_PATHS {
-                                    if lastPath == path {
-                                        foundLast = true
-                                        continue;
-                                    }
-                                    if foundLast {
-                                        if numScheduled < AppDelegate.MAX_SCHEDULED_NOTIFICATIONS {
-                                            if self.scheduleItem(path: path) {
-                                                numScheduled += 1
-                                            }
-                                        } else {
-                                            break
-                                        }
-                                    }
-                                }
-                                
-                                for path in KEY_PATHS {
-                                    if numScheduled < AppDelegate.MAX_SCHEDULED_NOTIFICATIONS {
-                                        if self.scheduleItem(path: path) {
-                                            numScheduled += 1
-                                        }
-                                    } else {
-                                        break
-                                    }
-                                }
-                                
-                            } else {
-                                print(error?.localizedDescription ?? "")
-                            }
-                        }
-                    }
-                    
-                })
-            })
-        }
         return true
     }
 
@@ -181,7 +131,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let root = window?.rootViewController as! UITabBarController
         print("seleted tabbar view: \(root.selectedViewController)")
         
-        root.selectedIndex = 0
+        root.selectedIndex = 1
         
         print("seleted tabbar view: \(root.selectedViewController)")
         
