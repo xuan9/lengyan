@@ -365,8 +365,9 @@ class Book: NSObject {
         paragraphStyle2.alignment = .center
         
         let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
+        let titleText = parentTitle.count > 15 ? " " + title : "\n" + title;
         let attrString1 = NSMutableAttributedString(
-            string: "\n" + title as String,
+            string: titleText,
             attributes: [NSAttributedStringKey.font: font1!,     NSAttributedStringKey.paragraphStyle : paragraphStyle2])
         
         attrString.append(attrString2)
@@ -400,6 +401,8 @@ class Book: NSObject {
         label.numberOfLines = 2
         label.textAlignment = NSTextAlignment.left
         label.attributedText = getTitle(item)
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.3;
         label.isUserInteractionEnabled = true
         return label
     }

@@ -317,9 +317,9 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 self.tagStatus[tag]=2
                 OperationQueue.main.addOperation {
                     self.tableView.reloadData()
-                    if(!self.isPlaying()){
+//                    if(!self.isPlaying()){
                             self.play(name: name, file:tag, ext:ext);
-                        }
+//                        }
                     }
 
             }
@@ -390,16 +390,25 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     func play(name:String, file:String, ext:String){
-        DispatchQueue.global().async {
-            OperationQueue.main.addOperation {
-                self.footLabel.text = name
-                self.tableView.reloadData();
+        
+        OperationQueue.main.addOperation {
+            self.footLabel.text = name
+            self.tableView.reloadData();
+            if UIApplication.shared.applicationState != .active {
+                return;
             }
+        DispatchQueue.global().async {
             
             let req:NSBundleResourceRequest = self.rReq[file]!
             let url = req.bundle.url(forResource:file, withExtension: ext)
-            
+            if url == nil {
+                NSLog("could not get URL for resource:\(file).\(ext)")
+                return;
+            } else {
+                NSLog("get URL for resource:\(file).\(ext): \(url!)")
+            }
             let playItem = AVPlayerItem(url:url!);
+            
             if (self.queuePlayer == nil) {
                 self.queuePlayer = AVQueuePlayer()
                 self.queuePlayer!.addObserver(
@@ -407,6 +416,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             }
             
             self.schedulePlayItems(newItem: playItem)
+        }
         }
     }
     
@@ -577,46 +587,45 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     func schedulePlayItems(newItem:AVPlayerItem? = nil) {
         DispatchQueue.global().async {
             
-        var currentItem = self.queuePlayer?.currentItem
-        var file:[String]?;
-        var startAt:CMTime? = currentItem != nil ? self.queuePlayer?.currentTime(): nil
-        self.queuePlayer?.removeAllItems()
-
-        if (newItem != nil ) {
-            currentItem = newItem;
-            file = self.getFileNameAndExtension(item: newItem)
-            startAt = nil
-        } else {
-            file = self.lastPlayFile
-        }
-        
-        if file == nil {
-            NSLog("no playing file found")
-            return
-        }
-        
-        var name = file![1], ext = file![2]
-        
-        if(name != nil) {
+            var currentItem = self.queuePlayer?.currentItem
+            var file:[String]?;
+            var startAt:CMTime? = currentItem != nil ? self.queuePlayer?.currentTime(): nil
+            self.queuePlayer?.removeAllItems()
+            
+            if (newItem != nil ) {
+                currentItem = newItem;
+                file = self.getFileNameAndExtension(item: newItem)
+                startAt = nil
+            } else {
+                file = self.lastPlayFile
+            }
+            
+            if file == nil {
+                NSLog("no playing file found")
+                return
+            }
+            
+            var name = file![1], ext = file![2]
+            
             if(self.playMode <= 0){
-                var downloaded = NSMutableArray();
-                var assets = NSMutableArray();
+                let downloaded = NSMutableArray();
+                let assets = NSMutableArray();
                 self.tagStatus.forEach({ (k,v) in
                     if(v == 2) {
                         downloaded.add(k);
                     }
                 })
                 
-                if downloaded.count>0 {
-                    name = downloaded.object(at: 0) as! String
-                }
+                //                if downloaded.count>0 {
+                //                    name = downloaded.object(at: 0) as! String
+                //                }
                 
-                var fullList:[String]?;
-                var sorted = NSMutableArray();
+                //                let fullList:[String]?;
+                let sorted = NSMutableArray();
                 for group in self.media {
                     let files = group["files"] as! [String]
                     if files.contains(name) {
-                        let index:Int = files.index(of: name)!
+                        let index:Int = files.index(of: name) ?? 0;
                         for i in index...(files.count-1) {
                             if downloaded.contains(files[i]) {
                                 sorted.add(files[i])
@@ -638,14 +647,16 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     let req = self.rReq["\(tag)"]
                     if( req != nil){
                         let url = req?.bundle.url(forResource:tag as? String, withExtension: ext)
-                        let item = AVURLAsset(url: url!)
-                        assets.add(item)
+                        if url != nil {
+                            let item = AVURLAsset(url: url!)
+                            assets.add(item)
+                        }
                     }
                 }
                 
-                let times = assets.count > 3 ? 10 : 30;
-
-                 for _ in 1...times {
+                let times = Int( 30 / assets.count)
+                
+                for _ in 1...times {
                     for asset in assets {
                         NSLog("creat AVPlayerItem")
                         let item = AVPlayerItem(asset: (asset as! AVURLAsset));
@@ -662,15 +673,14 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             } else {
                 NSLog("invalid play mode \(self.playMode)")
             }
-        }
-        
-        if startAt != nil  {
-            self.queuePlayer?.seek(to: startAt!, toleranceBefore: kCMTimePositiveInfinity, toleranceAfter: kCMTimePositiveInfinity)
-        }
-        
-        if !self.isPlaying() && newItem != nil {
-            self.play()
-        }
+            
+            if startAt != nil  {
+                self.queuePlayer?.seek(to: startAt!, toleranceBefore: kCMTimePositiveInfinity, toleranceAfter: kCMTimePositiveInfinity)
+            }
+            
+            if !self.isPlaying() && newItem != nil {
+                self.play()
+            }
         }
     }
     
