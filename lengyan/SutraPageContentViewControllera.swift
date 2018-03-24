@@ -56,12 +56,12 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     func initFonts(){
         comentFont =  UIFont.preferredFont(forTextStyle: UIFontTextStyle.body);
         if comentFont!.pointSize < 15 {
-            comentFont = UIFont.systemFont(ofSize: 15, weight: UIFontWeightRegular)
+            comentFont = UIFont.systemFont(ofSize: 15, weight: UIFont.Weight.regular)
         }
         
-        indexFont = UIFont.systemFont(ofSize: comentFont!.pointSize    , weight: UIFontWeightLight);
+        indexFont = UIFont.systemFont(ofSize: comentFont!.pointSize    , weight: UIFont.Weight.light);
         
-        sutraFont = UIFont.systemFont(ofSize:  comentFont!.pointSize + 2, weight:UIFontWeightSemibold)
+        sutraFont = UIFont.systemFont(ofSize:  comentFont!.pointSize + 2, weight:UIFont.Weight.semibold)
         
     }
     
@@ -111,8 +111,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     paragraphStyle.maximumLineHeight = 40.0
     paragraphStyle.minimumLineHeight = 10.0
     
-    let attributes = font == nil ? [NSParagraphStyleAttributeName: paragraphStyle]
-        :  [NSFontAttributeName: font!, NSParagraphStyleAttributeName: paragraphStyle]
+    let attributes = font == nil ? [NSAttributedStringKey.paragraphStyle: paragraphStyle]
+        :  [NSAttributedStringKey.font: font!, NSAttributedStringKey.paragraphStyle: paragraphStyle]
         
    return NSAttributedString(string:text, attributes: attributes)
     
@@ -226,7 +226,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         }
     }
     
-    func pureSutra(){
+    @objc func pureSutra(){
         
         //        let sutraVC = SutraPurePageViewController.init( transitionStyle:.PageCurl, navigationOrientation:.Horizontal, options: .None)
         let sutraVC = SutraPurePageContentViewController.init();
@@ -238,13 +238,13 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         self.navigationController?.pushViewController(sutraVC, animated: true)
     }
     
-    func share() {
+    @objc func share() {
         //todo attribute string
         var shareContents = [String]()
         let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
         if meta["children"] == nil {
             var hasTitlePrefix:Bool = false;
-            var hasCommentaryPrefix:Bool = false;
+//            var hasCommentaryPrefix:Bool = false;
             for c in contents {
                 if c["type"] == "sutra" {
                     if !hasTitlePrefix {

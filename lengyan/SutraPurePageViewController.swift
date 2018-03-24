@@ -10,7 +10,7 @@ import UIKit
 
 class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
     var sutraStoryBoard:UIStoryboard?;
-    var onDismiss: ((Void) -> Void)?
+    var onDismiss: (() -> Void)?
     var page:Int = 0
     
     var path:String?
@@ -45,31 +45,30 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         return navigationController?.isNavigationBarHidden ?? false
     }
     
-    func like() {
+    @objc func like() {
         Data.shared.like(self.path!)
         self.setTitle()
     }
     
-    func unlike() {
+    @objc func unlike() {
         Data.shared.unlike(self.path!)
         self.setTitle()
     }
     
-    func close() {
+    @objc func close() {
         onDismiss?();
         self.navigationController?.dismiss(animated: true, completion: {
-            
         })
     }
     
     func setTitle() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(close))
         self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
         
         if(Data.shared.likes.contains(path!)){
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
         } else {
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
         }
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
@@ -145,7 +144,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let font:UIFont? = UIFont(name: "Arial", size: 12.0)
         let attrString = NSMutableAttributedString(
             string: parentTitle as String,
-            attributes: [NSFontAttributeName: font!])
+            attributes: [NSAttributedStringKey.font: font!])
         
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center;
@@ -153,12 +152,12 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
         let attrString2 = NSMutableAttributedString(
             string: parent == nil ? "" : " 之",
-            attributes: [NSFontAttributeName: font2!]);
+            attributes: [NSAttributedStringKey.font: font2!]);
         
         let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
         let attrString1 = NSMutableAttributedString(
             string: "\n" + title as String,
-            attributes: [NSFontAttributeName: font1!,     NSParagraphStyleAttributeName : paragraphStyle]);
+            attributes: [NSAttributedStringKey.font: font1!,     NSAttributedStringKey.paragraphStyle : paragraphStyle]);
         
         attrString.append(attrString2)
         attrString.append(attrString1)

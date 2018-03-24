@@ -9,7 +9,7 @@
 "kai_jing_ji" = "   无上甚深微妙法 百千万劫难遭遇 我今见闻得受持 愿解如来真实义";
 "footer_txt_1" = "南无楞严会上佛菩萨！\n南无楞严会上佛菩萨！\n南无楞严会上佛菩萨！";
 "footer_txt_2" = "经文和科判均选自法界佛教总会《大佛顶首楞严经》浅释网站";
-"footer_txt_3" = "感恩法界佛教总会！本屏中间所列为部分关键科判，可点击经名打开完整科判。";
+"footer_txt_3" = "感恩法界佛教总会！\n\n本屏中所列为部分关键科判以方便检索，可点击经名打开完整科判。";
 
 "lengyan_book_title" = "《楞严经》";
 "media_tab_title" = "听经";
@@ -25,5 +25,15 @@
 "play_mode_repeat_one" = "单曲循环";
 "play_mode_repeat" = "顺序循环";
 
-
-
+"chapter_1" = "卷一";
+"chapter_2" = "卷二";
+"chapter_3" = "卷三";
+"chapter_4" = "卷四";
+"chapter_5" = "卷五";
+"chapter_6" = "卷六";
+"chapter_7" = "卷七";
+"chapter_8" = "卷八";
+"chapter_9" = "卷九";
+"chapter_10" = "卷十";
+"end" = "终";
+"start_qi" = "起";

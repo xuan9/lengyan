@@ -31,11 +31,6 @@
 		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* lengyanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* lengyanTests.swift */; };
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
-		139073441D10926A003A3333 /* Neon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390733F1D10926A003A3333 /* Neon.swift */; };
-		139073451D10926A003A3333 /* NeonAlignable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073401D10926A003A3333 /* NeonAlignable.swift */; };
-		139073461D10926A003A3333 /* NeonAnchorable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073411D10926A003A3333 /* NeonAnchorable.swift */; };
-		139073471D10926A003A3333 /* NeonFrameable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073421D10926A003A3333 /* NeonFrameable.swift */; };
-		139073481D10926A003A3333 /* NeonGroupable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073431D10926A003A3333 /* NeonGroupable.swift */; };
 		1390734A1D109274003A3333 /* FirstViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073491D109274003A3333 /* FirstViewController.swift */; };
 		1390734C1D109284003A3333 /* data in Resources */ = {isa = PBXBuildFile; fileRef = 1390734B1D109284003A3333 /* data */; };
 		139073651D109B0B003A3333 /* RATreeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 139073641D109B0B003A3333 /* RATreeView.m */; };
@@ -53,6 +48,7 @@
 		1390738F1D109B3F003A3333 /* RATreeView+TableViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 139073811D109B3F003A3333 /* RATreeView+TableViewDataSource.m */; };
 		139073901D109B3F003A3333 /* RATreeView+TableViewDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 139073831D109B3F003A3333 /* RATreeView+TableViewDelegate.m */; };
 		13978CCD1D2028E5005031EE /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13978CCC1D2028E5005031EE /* Data.swift */; };
+		139E5E0E2061A6B100F18539 /* SutraChapterContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */; };
 		13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13CA80F01EAB3BF600589E8F /* Assets.xcassets */; };
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
 		13E2230B1D5150C5000F763F /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E2230A1D5150C5000F763F /* Macros.swift */; };
@@ -135,12 +131,6 @@
 		1390732A1D109194003A3333 /* lengyanUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390732E1D109194003A3333 /* lengyanUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lengyanUITests.swift; sourceTree = "<group>"; };
 		139073301D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		1390733E1D10926A003A3333 /* Neon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Neon.h; sourceTree = "<group>"; };
-		1390733F1D10926A003A3333 /* Neon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Neon.swift; sourceTree = "<group>"; };
-		139073401D10926A003A3333 /* NeonAlignable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeonAlignable.swift; sourceTree = "<group>"; };
-		139073411D10926A003A3333 /* NeonAnchorable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeonAnchorable.swift; sourceTree = "<group>"; };
-		139073421D10926A003A3333 /* NeonFrameable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeonFrameable.swift; sourceTree = "<group>"; };
-		139073431D10926A003A3333 /* NeonGroupable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeonGroupable.swift; sourceTree = "<group>"; };
 		139073491D109274003A3333 /* FirstViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FirstViewController.swift; sourceTree = "<group>"; };
 		1390734B1D109284003A3333 /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = data; sourceTree = "<group>"; };
 		139073521D1093D8003A3333 /* lengyan-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "lengyan-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -176,6 +166,7 @@
 		139073821D109B3F003A3333 /* RATreeView+TableViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RATreeView+TableViewDelegate.h"; sourceTree = "<group>"; };
 		139073831D109B3F003A3333 /* RATreeView+TableViewDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RATreeView+TableViewDelegate.m"; sourceTree = "<group>"; };
 		13978CCC1D2028E5005031EE /* Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraChapterContentViewController.swift; sourceTree = "<group>"; };
 		13CA80F01EAB3BF600589E8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		13DF26861F1BC410007DEF71 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
@@ -285,7 +276,6 @@
 				1344EA5B1D21CA5F001E215B /* common */,
 				133192E21D14904700F4984F /* HidingNavigationBar */,
 				139073661D109B1A003A3333 /* RATreeView */,
-				1390734D1D10928D003A3333 /* neon */,
 				139073491D109274003A3333 /* FirstViewController.swift */,
 				13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */,
 				130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */,
@@ -293,6 +283,7 @@
 				1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */,
 				1372181B1D402B720037332A /* SutraPurePageViewController.swift */,
 				1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */,
+				139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */,
 				135D60601D16FB7400029090 /* SutraBookViewController.swift */,
 				135D60641D174CC300029090 /* SutraTableViewCell.swift */,
 				13643B281D2B1B8A00EB4372 /* SutraActionGroupView.swift */,
@@ -332,19 +323,6 @@
 				139073301D109194003A3333 /* Info.plist */,
 			);
 			path = lengyanUITests;
-			sourceTree = "<group>";
-		};
-		1390734D1D10928D003A3333 /* neon */ = {
-			isa = PBXGroup;
-			children = (
-				1390733E1D10926A003A3333 /* Neon.h */,
-				1390733F1D10926A003A3333 /* Neon.swift */,
-				139073401D10926A003A3333 /* NeonAlignable.swift */,
-				139073411D10926A003A3333 /* NeonAnchorable.swift */,
-				139073421D10926A003A3333 /* NeonFrameable.swift */,
-				139073431D10926A003A3333 /* NeonGroupable.swift */,
-			);
-			name = neon;
 			sourceTree = "<group>";
 		};
 		139073661D109B1A003A3333 /* RATreeView */ = {
@@ -536,32 +514,6 @@
 					ly10,
 					lyz1,
 					lyzpg1,
-					"屏東能淨協會讀誦",
-					"普光老和尚念誦楞嚴咒",
-					"普光老和尚誦楞嚴咒",
-					"普光老和尚诵楞严咒",
-					"楞严咒",
-					"楞严经 卷一",
-					"楞严经 卷七",
-					"楞严经 卷三",
-					"楞严经 卷九",
-					"楞严经 卷二",
-					"楞严经 卷五",
-					"楞严经 卷八",
-					"楞严经 卷六",
-					"楞严经 卷十",
-					"楞严经 卷四",
-					"楞嚴咒",
-					"楞嚴經 卷一",
-					"楞嚴經 卷七",
-					"楞嚴經 卷三",
-					"楞嚴經 卷九",
-					"楞嚴經 卷二",
-					"楞嚴經 卷五",
-					"楞嚴經 卷八",
-					"楞嚴經 卷六",
-					"楞嚴經 卷十",
-					"楞嚴經 卷四",
 				);
 				LastSwiftUpdateCheck = 0730;
 				LastUpgradeCheck = 0900;
@@ -570,7 +522,7 @@
 					139073081D109193003A3333 = {
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = A37UYHPM4V;
-						LastSwiftMigration = 0800;
+						LastSwiftMigration = 0920;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -581,14 +533,14 @@
 					1390731E1D109194003A3333 = {
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = A37UYHPM4V;
-						LastSwiftMigration = 0800;
+						LastSwiftMigration = 0920;
 						ProvisioningStyle = Automatic;
 						TestTargetID = 139073081D109193003A3333;
 					};
 					139073291D109194003A3333 = {
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = A37UYHPM4V;
-						LastSwiftMigration = 0800;
+						LastSwiftMigration = 0920;
 						ProvisioningStyle = Automatic;
 						TestTargetID = 139073081D109193003A3333;
 					};
@@ -674,7 +626,6 @@
 				133192DF1D14901300F4984F /* HidingNavigationBarManager.swift in Sources */,
 				1390738C1D109B3F003A3333 /* RATreeView+Enums.m in Sources */,
 				139073841D109B3F003A3333 /* RABatchChangeEntity.m in Sources */,
-				139073481D10926A003A3333 /* NeonGroupable.swift in Sources */,
 				13643B291D2B1B8A00EB4372 /* SutraActionGroupView.swift in Sources */,
 				139073111D109193003A3333 /* StarsTableViewController.swift in Sources */,
 				4A6C891E1EC24BC700C0F43A /* SVWebViewControllerActivity.m in Sources */,
@@ -692,20 +643,17 @@
 				13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */,
 				139073651D109B0B003A3333 /* RATreeView.m in Sources */,
 				1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */,
-				139073471D10926A003A3333 /* NeonFrameable.swift in Sources */,
 				139073891D109B3F003A3333 /* RATreeNodeController.m in Sources */,
 				1390734A1D109274003A3333 /* FirstViewController.swift in Sources */,
 				13978CCD1D2028E5005031EE /* Data.swift in Sources */,
 				1390738B1D109B3F003A3333 /* RATreeNodeItem+Private.m in Sources */,
 				139073881D109B3F003A3333 /* RATreeNodeCollectionController.m in Sources */,
 				139073861D109B3F003A3333 /* RATableView.m in Sources */,
-				139073451D10926A003A3333 /* NeonAlignable.swift in Sources */,
 				135D60651D174CC300029090 /* SutraTableViewCell.swift in Sources */,
 				139073901D109B3F003A3333 /* RATreeView+TableViewDelegate.m in Sources */,
-				139073441D10926A003A3333 /* Neon.swift in Sources */,
+				139E5E0E2061A6B100F18539 /* SutraChapterContentViewController.swift in Sources */,
 				1390738F1D109B3F003A3333 /* RATreeView+TableViewDataSource.m in Sources */,
 				139073871D109B3F003A3333 /* RATreeNode.m in Sources */,
-				139073461D10926A003A3333 /* NeonAnchorable.swift in Sources */,
 				1344EA5D1D21CAA5001E215B /* String+Common.swift in Sources */,
 				1390738D1D109B3F003A3333 /* RATreeView+Private.m in Sources */,
 				135D60631D173B1B00029090 /* Book.swift in Sources */,
@@ -907,14 +855,16 @@
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "楞嚴經\\ 卷一";
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "ly01 ly02 lyzpg1";
+				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "lyz1 ly10 ly09 ly08 ly07 ly06 ly05 ly04 ly03";
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "lengyan/lengyan-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -929,12 +879,14 @@
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "楞嚴經\\ 卷一";
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = "ly01 ly02 lyzpg1";
+				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "lyz1 ly10 ly09 ly08 ly07 ly06 ly05 ly04 ly03";
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "lengyan/lengyan-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};
@@ -949,7 +901,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.gongfx..lengyanTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/lengyan.app/lengyan";
 			};
 			name = Debug;
@@ -964,7 +917,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.gongfx..lengyanTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/lengyan.app/lengyan";
 			};
 			name = Release;
@@ -980,7 +934,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_TARGET_NAME = lengyan;
 			};
 			name = Debug;
@@ -994,7 +949,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.gongfx..lengyanUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_TARGET_NAME = lengyan;
 			};
 			name = Release;

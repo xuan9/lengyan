@@ -10,7 +10,7 @@ import UIKit
 
 class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
     var sutraStoryBoard:UIStoryboard?;
-    var onDismiss: ((Void) -> Void)?
+    var onDismiss: (() -> Void)?
     var page:Int = 0
     
     var path:String?
@@ -45,30 +45,30 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         return navigationController?.isNavigationBarHidden ?? false
     }
     
-    func like() {
+    @objc func like() {
         Data.shared.like(self.path!)
         self.setTitle()
     }
     
-    func unlike() {
+    @objc func unlike() {
         Data.shared.unlike(self.path!)
         self.setTitle()
     }
     
-    func close() {
+    @objc func close() {
         onDismiss?()
         self.navigationController?.popViewController(animated: true)
     }
     
     func setTitle() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(close))
         self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
 
         
         if(Data.shared.likes.contains(path!)){
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
         } else {
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
         }
         
         

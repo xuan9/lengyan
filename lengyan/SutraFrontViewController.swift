@@ -13,7 +13,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     
     fileprivate var treeView: RATreeView!
-    internal var tree:[[String:Any]]?;
+    internal var tree:[[String]]?;
     fileprivate var sutraIndexButtons = [String]();
     
     override func viewDidLoad() {
@@ -25,8 +25,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationItem.titleView = title;
         
         treeView = RATreeView(frame: CGRect(
-            origin: CGPoint(x:bounds.origin.x - 2 ,y:bounds.origin.y + 0),
-            size:   CGSize(width: bounds.size.width + 4 , height:bounds.size.height - 0 )));
+            origin: CGPoint(x:bounds.origin.x - 5 ,y:bounds.origin.y + 0),
+            size:   CGSize(width: bounds.size.width + 8 , height:bounds.size.height - 0 )));
 
 
         treeView.delegate = self
@@ -36,19 +36,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         view.backgroundColor = UIColor.white
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(treeView)
-        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(SutraFrontViewController.longPress(_:)))
+        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
         self.treeView.addGestureRecognizer(longPressRecognizer)
         
-        Book.data.loadDataWithCompletionHandler { (Void) in
+        Book.data.loadDataWithCompletionHandler { () in
             print("Data loaded, show list")
             self.setupHeaderView()
             self.showList()
         }
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(SutraIndexViewController.onApplicationWillTerminate),
-            name: NSNotification.Name.UIApplicationWillTerminate,
-            object: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -64,16 +59,23 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         DispatchQueue.main.async{
             let width = self.view.bounds.width
             
-            let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 48))
+            let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 18 + 90 + 10))
             //            header.backgroundColor = UIColor.init(red: 247.0/255.0, green: 247.0/255, blue: 247.0/255, alpha: 1)
             
             let subTitle = UIButton.init(type: .custom);
             subTitle.frame = CGRect(x: 0, y: 3, width: width, height: 15);
-            
-            let indexes = UIView(frame: CGRect(x: 0, y: 18, width: width, height: 30));
-            let i1 = self.makeSutraIndexButton("/A1",frame: CGRect(x: (width - 51)/2 - 40 - 36, y: 0, width: 36, height: 30));
-            let i2 =  self.makeSutraIndexButton("/A2",frame: CGRect(x: (width - 51)/2 , y: 0, width: 51, height: 30));
-            let i3 =  self.makeSutraIndexButton("/A3",frame: CGRect(x: (width + 51)/2 + 40,y: 0, width: 51, height: 30));
+
+            let indexes = UIView(frame: CGRect(x: 0, y: 20, width: width, height: 88));
+            let chapterButtonWidth=(width - 20)/5;
+            for i in 1...10 {
+                let btn = self.makeSutraChapterButton(i - 1, frame: CGRect(x: Int(10 + Float(chapterButtonWidth) * Float((i>5 ? i - 5 : i) - 1)), y: i<6 ? 0 : 44, width: Int(chapterButtonWidth), height: 44));
+                indexes.addSubview(btn);
+            }
+//            let i1 = self.makeSutraIndexButton("/A1",frame: CGRect(x: (width - 51)/2 - 40 - 36, y: 0, width: 36, height: 30));
+
+//            let i1 = self.makeSutraIndexButton("/A1",frame: CGRect(x: (width - 51)/2 - 40 - 36, y: 0, width: 36, height: 30));
+//            let i2 =  self.makeSutraIndexButton("/A2",frame: CGRect(x: (width - 51)/2 , y: 0, width: 51, height: 30));
+//            let i3 =  self.makeSutraIndexButton("/A3",frame: CGRect(x: (width + 51)/2 + 40,y: 0, width: 51, height: 30));
             //            let underlineAttriString = NSAttributedString(string:(i2.titleLabel?.text)!, attributes: [NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleSingle.rawValue])
             //            i2.titleLabel?.attributedText = underlineAttriString
             
@@ -87,18 +89,18 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             subTitle.titleLabel!.adjustsFontSizeToFitWidth = true;
             subTitle.setTitleColor(UIColor.darkGray, for: UIControlState())
 //            subTitle.addTarget(self, action: #selector(SutraFrontViewController.openDrbaLink(_:)), for: .touchUpInside)
-            subTitle.addTarget(self, action: #selector(SutraFrontViewController.openRootIndex), for: .touchUpInside)
+            subTitle.addTarget(self, action: #selector(self.openRootIndex), for: .touchUpInside)
 
-            indexes.addSubview(i1);
-            indexes.addSubview(i2);
-            indexes.addSubview(i3);
+//            indexes.addSubview(i1);
+//            indexes.addSubview(i2);
+//            indexes.addSubview(i3);
 //            header.addSubview(title)
             header.addSubview(subTitle)
             header.addSubview(indexes)
             
             
             let px = 1 / UIScreen.main.scale
-            let frame = CGRect(x: 0, y: 48 - px, width: self.treeView.frame.size.width, height: px)
+            let frame = CGRect(x: 0, y: header.frame.height - px, width: self.treeView.frame.size.width, height: px)
             let line: UIView = UIView(frame: frame)
             line.backgroundColor = self.treeView.separatorColor
             header.addSubview(line)
@@ -111,9 +113,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             footerSeperator.backgroundColor = UIColor.lightGray
 
             
-            let footerText1 = NSLocalizedString("footer_txt_1", comment: "南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！")
+            let footerText1 = NSLocalizedString("footer_txt_1", comment: "南無楞嚴會上佛菩薩\n南無楞嚴會上佛菩薩\n南無楞嚴會上佛菩薩")
             let footerText2 = NSLocalizedString("footer_txt_2", comment: "經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站")
-            let footerText3 = NSLocalizedString("footer_txt_3", comment: "感恩法界佛教總會！本屏中間所列為部分關鍵科判，可點擊經名打開完整科判。")
+            let footerText3 = NSLocalizedString("footer_txt_3", comment: "感恩法界佛教總會！本屏中列出部分關鍵科判以方便檢索，可點擊經名打開完整科判。")
             let footerLabel = UILabel(frame: CGRect(x: 20, y: 10, width: width - 20, height: 60))
             footerLabel.text = footerText1
             footerLabel.numberOfLines = 3
@@ -125,7 +127,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             linkButton.setTitle(footerText2, for: .normal)
             linkButton.contentHorizontalAlignment = .center
             linkButton.setImage(UIImage.init(named: "ic_link")?.withRenderingMode(.alwaysTemplate), for: .normal)
-            linkButton.addTarget(self, action: #selector(SutraFrontViewController.openDrbaLink(_:)), for: .touchUpInside)
+            linkButton.addTarget(self, action: #selector(self.openDrbaLink(_:)), for: .touchUpInside)
             linkButton.semanticContentAttribute = .forceRightToLeft
             linkButton.titleLabel?.font = UIFont.systemFont(ofSize: 10)
             linkButton.titleLabel?.adjustsFontSizeToFitWidth = true;
@@ -133,14 +135,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             linkButton.backgroundColor = UIColor.white
             linkButton.tintColor = UIColor.darkText
             
-            let footerLabel2 = UILabel(frame: CGRect(x: 10, y: 90, width: width - 20, height: 20))
+            let footerLabel2 = UILabel(frame: CGRect(x: 10, y: 85, width: width - 20, height: 40))
             footerLabel2.text = footerText3
             footerLabel2.textAlignment = .center
-            footerLabel2.numberOfLines = 1
+            footerLabel2.numberOfLines = 3
             footerLabel2.font = UIFont.systemFont(ofSize: 10)
             footerLabel2.adjustsFontSizeToFitWidth = true;
 
-            let footer:UIView = UIView(frame: CGRect(x: 5, y: 2, width: width - 20, height: 130))
+            let footer:UIView = UIView(frame: CGRect(x: 5, y: 2, width: width - 20, height: 140))
             footer.backgroundColor = UIColor.white
             footer.addSubview(footerSeperator)
             footer.addSubview(footerLabel)
@@ -150,32 +152,52 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.treeView.treeFooterView = footer
         }
     }
+    func makeSutraChapterButton(_ chapter:Int, frame:CGRect?) ->UIButton {
+        let btn = UIButton.init(type: .custom);
+        if(frame != nil) {
+            btn.frame = frame!
+        }
+        btn.setTitle(NSLocalizedString("chapter_\(chapter+1)", comment: "chapter_name"), for: UIControlState())
+        btn.addTarget(self, action: #selector(onSutraChapterButtonTouchUp(_:)), for: .touchUpInside)
+        btn.tag = chapter
+        btn.titleLabel?.adjustsFontSizeToFitWidth = true;
+        btn.setTitleColor(UIColor.black, for: UIControlState())
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 16)
+        return btn;
+    }
+    
     func makeSutraIndexButton(_ path:String, frame:CGRect?) ->UIButton {
         let btn = UIButton.init(type: .custom);
         if(frame != nil) {
             btn.frame = frame!
         }
         btn.setTitle(Book.data.itemOfPath(path)["name"] as! String?, for: UIControlState())
-        btn.addTarget(self, action: #selector(SutraFrontViewController.onSutraIndexButtonTouchUp(_:)), for: .touchUpInside)
+        btn.addTarget(self, action: #selector(onSutraIndexButtonTouchUp(_:)), for: .touchUpInside)
         let count = sutraIndexButtons.count;
         btn.tag = count
         btn.titleLabel?.adjustsFontSizeToFitWidth = true;
         btn.setTitleColor(UIColor.black, for: UIControlState())
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 16)
+        btn.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title3)
         sutraIndexButtons.append(path)
         return btn;
     }
     
-    func onSutraIndexButtonTouchUp(_ sender:UIButton){
+    @objc func onSutraIndexButtonTouchUp(_ sender:UIButton){
         let path = sutraIndexButtons[sender.tag]
         self.openIndex(Book.data.itemOfPath(path))
     }
     
-    func openRootIndex() {
+    @objc func onSutraChapterButtonTouchUp(_ sender:UIButton){
+        let chapter = sender.tag
+        self.openChapter(chapter: chapter);
+    }
+    
+    
+    @objc func openRootIndex() {
         self.openIndex(Book.data.itemOfPath(""))
     }
     
-    func openDrbaLink(_ sender:UIButton) {
+    @objc func openDrbaLink(_ sender:UIButton) {
 //        let webView = UIWebView.init()
 //        let webVC = UIViewController.init()
 //        webVC.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraFrontViewController.close))//✕
@@ -194,17 +216,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func showList(){
-        var firstLevelItems=[[String:Any]]();
+//        var firstLevelItems=[[String]]();
         //            firstLevelItems.append(["name":"大佛頂如來密因修證了義諸菩薩萬行首楞嚴經","header":true]);
         //            for item in (Book.data.tree!["children"] as! NSArray) {
         //                firstLevelItems.append(item as! [String : Any]);
         //            }
         //            firstLevelItems.append(["name":"★精选","header":true]);
-        let sortedLikes = KEY_PATHS;//Data.shared.likes.sort({$0 < $1})
-        for like in sortedLikes {
-            firstLevelItems.append(Book.data.itemOfPath(like))
-        }
-        self.tree = firstLevelItems;
+        self.tree = Book.data.getKeyItems();
         DispatchQueue.main.async{
             self.treeView.reloadData()
         }
@@ -212,7 +230,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     
     //Called, when long press occurred
-    func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
+    @objc func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
         if longPressGestureRecognizer.state == UIGestureRecognizerState.began {
             let touchPoint = longPressGestureRecognizer.location(in: self.treeView.scrollView)
             if let item = treeView.itemForRow(at: touchPoint) as? [String : Any] {
@@ -266,13 +284,19 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         indexVC.defaultExpandLevel = 2;
         indexVC.onDismiss = {
 //            self.showList()
-        }
+        } as (() -> Void)
         
 //        let navVC = UINavigationController.init(rootViewController: indexVC);
 //        self.present(navVC, animated: true, completion: nil)
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
+    func openChapter(chapter:Int){
+        let pageVC = SutraChapterContentViewController.init()
+        pageVC.pageIndex = chapter;
+        
+        self.navigationController?.pushViewController(pageVC, animated: true)
+    }
     // MARK - RATreeView
     
     func treeView(_ treeView: RATreeView, numberOfChildrenOfItem item: Any?) -> Int {
@@ -290,22 +314,26 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             newCell = UITableViewCell.init(style:.value1,reuseIdentifier:"indexCell");
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
             let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
-            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize + 2, weight: UIFontWeightRegular);
+            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize + 2, weight: UIFont.Weight.regular);
         }
         let cell = newCell!;
-        let item = item as! NSDictionary;
-        let name = item["name"]! as? String
-        
-        cell.textLabel?.text =  name!;
-        if(item["header"] != nil){
-            cell.accessoryType = .none
-            cell.backgroundColor =  UIColor.groupTableViewBackground
-            //            cell.textLabel?.textColor = UIColor.darkTextColor()
-        }else{
+        let item = item as! [String];
+        let name = item[1];
+        let chapterStartIndex = CHAPTER_START_PATHS.index(of: item[0]);
+        if chapterStartIndex != nil {
+           cell.textLabel?.attributedText = Book.data.getItemName(name, withChapter: chapterStartIndex!);
+        }else {
+            cell.textLabel?.text =  name
+        }
+//        if(item["header"] != nil){
+//            cell.accessoryType = .none
+//            cell.backgroundColor =  UIColor.groupTableViewBackground
+//            //            cell.textLabel?.textColor = UIColor.darkTextColor()
+//        }else{
             //            cell.textLabel?.textColor = UIColor.init(red: 0, green: 0, blue:76/255, alpha: 0.8)//very darkblue
             cell.backgroundColor=UIColor.clear;
             cell.accessoryType = .disclosureIndicator
-        }
+//        }
         
         return cell
     }
@@ -321,9 +349,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     
     func treeView(_ treeView:RATreeView, indentationLevelForRowForItem item:Any) -> Int{
-        let path = (item as! [String:Any])["path"] as! String
+        let path = (item as! [String])[0]
         let level = path.components(separatedBy: "/").count
-        return (level - 3)
+        return (level - 2)
     }
     
     func treeView(_ treeView:RATreeView,  didSelectRowForItem item:Any){
@@ -331,23 +359,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(_ treeView:RATreeView,  accessoryButtonTappedForRowForItem item:Any){
-        let item = item as! [String:Any];
-        if(item["header"] == nil ){
-            self.openSutra(item);
-        }
+        let item = item as! [String];
+        self.openSutraOfPath(path: item[0])
     }
     
     func treeView(_ treeView:RATreeView,  commit editingStyle:UITableViewCellEditingStyle, forRowForItem item:Any){
-        if (editingStyle == .delete) {
-            let item = item as! NSDictionary as! [String:Any];
-            Data.shared.unlike(item["path"] as! String)
-            if let i = tree!.index(where: {$0["path"] as? String == item["path"] as? String }) {
-                tree?.remove(at: i)
-            }
-            
-            treeView.reloadData()
-        }
     }
+    
     func treeView(_ treeView: RATreeView, editActionsForItem item: Any) -> [Any] {
         return [Any]()
     }

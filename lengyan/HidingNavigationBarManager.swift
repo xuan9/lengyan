@@ -79,8 +79,7 @@ open class HidingNavigationBarManager: NSObject, UIScrollViewDelegate, UIGesture
 		navBarController = HidingViewController(view: navBar)
 		navBarController.child = extensionController
 		navBarController.alphaFadeEnabled = true
-		
-		viewController.tabBarController?.tabBar
+
 		
 		super.init()
 		
@@ -206,7 +205,7 @@ open class HidingNavigationBarManager: NSObject, UIScrollViewDelegate, UIGesture
 	
 	//MARK: NSNotification
 	
-	func applicationWillEnterForeground() {
+	@objc func applicationWillEnterForeground() {
 		switch onForegroundAction {
 		case .show:
 			navBarController.expand()
@@ -382,7 +381,7 @@ open class HidingNavigationBarManager: NSObject, UIScrollViewDelegate, UIGesture
 	
 	//MARK: Scroll handling
 	
-	func handlePanGesture(_ gesture: UIPanGestureRecognizer){
+	@objc func handlePanGesture(_ gesture: UIPanGestureRecognizer){
 		switch gesture.state {
 		case .began:
 			topInset = navBarController.view.frame.size.height + extensionController.view.bounds.size.height + statusBarHeight()

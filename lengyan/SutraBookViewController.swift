@@ -136,15 +136,15 @@ class SutraBookViewController: UITableViewController{
         pStyle.paragraphSpacing = 0;
         pStyle.firstLineHeadIndent = 34
         
-        let pAttributes = [NSParagraphStyleAttributeName : pStyle,
-                           NSFontAttributeName: UIFont.systemFont(ofSize: 17)]
+        let pAttributes = [NSAttributedStringKey.paragraphStyle : pStyle,
+                           NSAttributedStringKey.font: UIFont.systemFont(ofSize: 17)]
         
         print(text);
         return NSAttributedString(string: text, attributes:pAttributes)
     }
     
     func getIndexAttributeText(_ name:String)->NSAttributedString{
-        let attributes = [NSForegroundColorAttributeName : UIColor.gray,NSFontAttributeName: UIFont.systemFont(ofSize: 14)]
+        let attributes = [NSAttributedStringKey.foregroundColor : UIColor.gray,NSAttributedStringKey.font: UIFont.systemFont(ofSize: 14)]
         return NSAttributedString(string: name, attributes:attributes)
     }
     

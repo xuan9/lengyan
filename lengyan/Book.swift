@@ -35,6 +35,16 @@ let KEY_PATHS = [
     "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2",
     "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1",
     "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M1",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M2",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M3",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M4",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M5",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M6",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M7",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M8",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M9",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M10",
     "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L2",
     "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2",
     "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L1",
@@ -66,6 +76,8 @@ let KEY_PATHS = [
     "/A2/B1/C2/D1/E3/F1/G2/H1/I2/J2/K1",
     "/A2/B1/C2/D1/E3/F1/G2/H1/I2/J2/K2",
     "/A2/B1/C2/D1/E3/F1/G2/H2",
+    "/A2/B1/C2/D1/E3/F1/G2/H2/I1",
+    "/A2/B1/C2/D1/E3/F1/G2/H2/I2",
     "/A2/B1/C2/D1/E3/F1/G2/H3",
     "/A2/B1/C2/D1/E3/F1/G2/H4",
     "/A2/B1/C2/D1/E3/F1/G2/H4/I1",
@@ -96,6 +108,7 @@ let KEY_PATHS = [
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M2",
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M3",
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M4",
+    "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L3",
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K2",
     "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J2",
     "/A2/B1/C2/D1/E3/F2/G2",
@@ -122,6 +135,10 @@ let KEY_PATHS = [
     "/A2/B2/C1/D2/E2/F2/G4",
     "/A2/B2/C1/D2/E2/F2/G5",
     "/A2/B2/C1/D2/E2/F2/G6",
+    "/A2/B2/C1/D2/E2/F2/G6/H1",
+    "/A2/B2/C1/D2/E2/F2/G6/H1/I1",
+    "/A2/B2/C1/D2/E2/F2/G6/H1/I2",
+    "/A2/B2/C1/D2/E2/F2/G6/H2",
     "/A2/B2/C1/D2/E2/F2/G7",
     "/A2/B2/C1/D2/E3",
     "/A2/B2/C2",
@@ -140,6 +157,31 @@ let KEY_PATHS = [
     "/A2/B2/C2/D2",
     "/A3"
 ];
+let CHAPTER_START_PATHS =
+[
+"/A1",
+"/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M3",
+"/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M2",
+"/A2/B1/C2/D1/E2/F2",
+"/A2/B1/C2/D1/E3/F1/G2/H2/I2",
+"/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K2",
+"/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L3",
+"/A2/B1/C2/D1/E4/F2/G4",
+"/A2/B2/C1/D2/E2/F2/G6/H1/I2",
+"/A2/B2/C2/D1/E3/F2/G4"
+]
+let CHAPTER_END_PATHS=[
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M2",
+    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M1",
+    "/A2/B1/C2/D1/E2/F1/G2",
+    "/A2/B1/C2/D1/E3/F1/G2/H2/I1",
+    "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K1/L4",
+    "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M4",
+    "/A2/B1/C2/D1/E4/F2/G3",
+    "/A2/B2/C1/D2/E2/F2/G6/H1/I1",
+    "/A2/B2/C2/D1/E3/F2/G3",
+    "/A3"]
+
 class Book: NSObject {
     static let data:Book = Book()
     
@@ -161,8 +203,13 @@ class Book: NSObject {
         }
     }
     
-    
-    func itemOfPath(_ path:String) -> [String:Any] {
+    func getKeyItems() ->[[String]]{
+        return KEY_PATHS.map { (path) -> [String] in
+            let name = self.itemOfPath(path)["name"];
+            return [path,name as! String];
+        }
+    }
+    func itemOfPath(_ path:String ) -> [String:Any] {
         if path == "" || path == "/" || path == (self.tree!["path"] as! String){
             return self.tree!
         }
@@ -186,7 +233,7 @@ class Book: NSObject {
         }
         return self.itemOfPath(path)
     }
-  
+    
     func isItemLeaf(_ index:Int) ->Bool?{
         let meta = Book.data.index?[index];
         let path = meta?["path"] as String?;
@@ -196,8 +243,11 @@ class Book: NSObject {
             return Book.data.contents?[path!] != nil;
         }
     }
-    func loadDataWithCompletionHandler(_ handler:@escaping (Void)->Void) {
-        DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default).async{
+    func loadDataWithCompletionHandler(_ handler:@escaping ()->Void) {
+        if self.loaded {
+            handler()
+            return
+        }; DispatchQueue.global(qos:DispatchQoS.QoSClass.userInteractive).async{
             if self.loaded {
                 handler()
                 return
@@ -257,7 +307,7 @@ class Book: NSObject {
             self.loaded = true;
             handler()
         }
-        
+//        listChapterStarts();
     }
     
     func getTitleLine(_ item:[String:Any])->NSAttributedString{
@@ -272,17 +322,17 @@ class Book: NSObject {
         
         let attrString = NSMutableAttributedString(
             string: prefix + parentTitle as String,
-            attributes: [NSFontAttributeName: font!])
+            attributes: [NSAttributedStringKey.font: font!])
         
         let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
         let attrString2 = NSMutableAttributedString(
             string: (parent == nil ? "" : " 之 "),
-            attributes: [NSFontAttributeName: font2!])
+            attributes: [NSAttributedStringKey.font: font2!])
         
         let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
         let attrString1 = NSMutableAttributedString(
             string: title as String,
-            attributes: [NSFontAttributeName: font1!])
+            attributes: [NSAttributedStringKey.font: font1!])
         
         attrString.append(attrString2)
         attrString.append(attrString1)
@@ -303,13 +353,13 @@ class Book: NSObject {
         
         let attrString = NSMutableAttributedString(
             string: parentTitle as String,
-            attributes: [NSFontAttributeName: font!,
-                NSParagraphStyleAttributeName : paragraphStyle])
+            attributes: [NSAttributedStringKey.font: font!,
+                         NSAttributedStringKey.paragraphStyle : paragraphStyle])
         
         let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
         let attrString2 = NSMutableAttributedString(
             string: parent == nil ? "" : " 之",
-            attributes: [NSFontAttributeName: font2!,     NSParagraphStyleAttributeName : paragraphStyle])
+            attributes: [NSAttributedStringKey.font: font2!,     NSAttributedStringKey.paragraphStyle : paragraphStyle])
         
         let paragraphStyle2 = NSMutableParagraphStyle()
         paragraphStyle2.alignment = .center
@@ -317,10 +367,30 @@ class Book: NSObject {
         let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
         let attrString1 = NSMutableAttributedString(
             string: "\n" + title as String,
-            attributes: [NSFontAttributeName: font1!,     NSParagraphStyleAttributeName : paragraphStyle2])
+            attributes: [NSAttributedStringKey.font: font1!,     NSAttributedStringKey.paragraphStyle : paragraphStyle2])
         
         attrString.append(attrString2)
         attrString.append(attrString1)
+        return attrString
+    }
+    
+    func getItemName(_ name:String, withChapter:Int)->NSAttributedString{
+        let chapterLabel = "  " + NSLocalizedString("chapter_\(withChapter  + 1)", comment: "chapter_name") + NSLocalizedString("start_qi", comment: "起");
+        
+        let noteFont = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
+        let labelFont = UIFont.systemFont(ofSize: noteFont.pointSize - 4, weight:  UIFont.Weight.light) ;
+        let itemFont = UIFont.systemFont(ofSize: noteFont.pointSize + 2, weight: UIFont.Weight.regular);
+        
+        let attrString = NSMutableAttributedString(
+            string: name,
+            attributes: [NSAttributedStringKey.font: itemFont]);
+        
+        let attrString2 = NSMutableAttributedString(
+            string: chapterLabel,
+            attributes: [NSAttributedStringKey.font: noteFont,
+                         NSAttributedStringKey.foregroundColor: UIColor.gray]);
+        
+        attrString.append(attrString2)
         return attrString
     }
     
@@ -336,24 +406,27 @@ class Book: NSObject {
     
     func getSutraAttributeString(_ item:[String:Any], maxLength:Int = Int.max)->NSAttributedString{
         let text = getSutra(item, maxLength: maxLength)
-        
+        return self.getSutraAttributeString(text: text);
+    }
+    
+    
+    func getSutraAttributeString(text:String)->NSAttributedString{
         let pStyle = NSMutableParagraphStyle()
         pStyle.lineHeightMultiple = 1.3
         pStyle.maximumLineHeight = 40.0
         pStyle.minimumLineHeight = 10.0
         
-//        pStyle.lineSpacing = 20
+        //        pStyle.lineSpacing = 20
         pStyle.paragraphSpacing = 1
         pStyle.firstLineHeadIndent = 30
         
-       let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
+        let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
         
-        let pAttributes = [NSParagraphStyleAttributeName : pStyle,
-                           NSFontAttributeName: font]
+        let pAttributes = [NSAttributedStringKey.paragraphStyle : pStyle,
+                           NSAttributedStringKey.font: font]
         
         return NSAttributedString(string: text, attributes:pAttributes)
     }
-    
     func getSutra(_ item:[String:Any])->String{
         return getSutra(item,maxLength: Int.max)
     }
@@ -368,9 +441,9 @@ class Book: NSObject {
                 for c in content! {
                     if c["type"] == "sutra" {
                         let sutra = c["content"]!
-                        if length + sutra.characters.count <= maxLength {
+                        if length + sutra.count + 3 <= maxLength {
                             sutraContents.append(sutra)
-                            length = length + sutra.characters.count
+                            length = length + sutra.count
                         } else {
                             if maxLength <= 3 {
                                 sutraContents.append("...")
@@ -387,11 +460,52 @@ class Book: NSObject {
             for i in children as! NSArray {
                 let sutra = getSutra(i as! [String:Any], maxLength:maxLength - length )
                 sutraContents.append(sutra)
-                length = length + sutra.characters.count
+                length = length + sutra.count
                 if length >= maxLength {
                     break;
                 }
             }
+        }
+        return sutraContents.joined(separator: "\n")
+    }
+    func listChapterStarts(){
+        var starts:[String] = []
+        for chapter in 0...9 {
+        let endPath = CHAPTER_END_PATHS[chapter];
+        let endIndex = KEY_PATHS.index(of: endPath);
+        var startIndex:Int?;
+        if(chapter==0){
+            startIndex = 0;
+        }else{
+            let lastEndPath=CHAPTER_END_PATHS[chapter-1];
+            let lastEndIndex=KEY_PATHS.index(of: lastEndPath);
+            for i in lastEndIndex!...endIndex! {
+                if !KEY_PATHS[i].starts(with:lastEndPath) {
+                    startIndex = i;
+                    break;
+                }
+            }
+            }
+            starts.append(KEY_PATHS[startIndex!])
+        }
+        let data = try! JSONSerialization.data(withJSONObject: starts, options: .prettyPrinted)
+        let string = NSString(data: data, encoding: String.Encoding.utf8.rawValue)
+        print (string! as String)
+    }
+    func getChapterSutra(chapter:Int)->String{
+        let startPath = CHAPTER_START_PATHS[chapter];
+        let endPath = CHAPTER_END_PATHS[chapter];
+        let startIndex=KEY_PATHS.index(of: startPath);
+        let endIndex=KEY_PATHS.index(of: endPath);
+
+        var sutraContents = [String]()
+        
+        for j in startIndex!...endIndex! {
+            let path = KEY_PATHS[j];
+            if j < KEY_PATHS.count - 1 && KEY_PATHS[j+1].starts(with: path) {
+                continue;//skip hight level items
+            }
+            sutraContents.append(self.getSutra(self.itemOfPath(path)));
         }
         return sutraContents.joined(separator: "\n")
     }

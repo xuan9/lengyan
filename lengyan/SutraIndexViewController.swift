@@ -10,7 +10,7 @@ import UIKit
 
 class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
-    var onDismiss: ((Void) -> Void)?
+    var onDismiss: (() -> Void)?
     var isShowSutraButton = true;
     
     fileprivate var treeView: RATreeView!
@@ -40,7 +40,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         //        treeView.reg§§isterClass(UITableViewCell.self, forCellReuseIdentifier: "indexCell")
         
         
-        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(SutraIndexViewController.longPress(_:)))
+        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
         self.treeView.addGestureRecognizer(longPressRecognizer)
         
         if tree == nil {
@@ -93,16 +93,16 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 break;
             }
             rows = self.treeView.numberOfRows()
-        } while rows < Int(view.height * 1.5 / 34)
+        } while rows < Int(view.frame.height * 1.5 / 34)
         
-        if rows > Int(view.height / 34) {
-            let height = self.treeView.rowHeight * view.height / CGFloat(Float(34 * rows))
+        if rows > Int(view.frame.height / 34) {
+            let height = self.treeView.rowHeight * view.frame.height / CGFloat(Float(34 * rows))
             self.treeView.rowHeight = height > 28 ? height : 28
         }
         
     }
     func loadRootTree(){
-        Book.data.loadDataWithCompletionHandler { (Void) in
+        Book.data.loadDataWithCompletionHandler { () in
             self.tree = Book.data.tree
             self.path = self.tree!["path"] as? String;
             DispatchQueue.main.async{
@@ -111,7 +111,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
     
-    func onApplicationWillTerminate(){
+    @objc func onApplicationWillTerminate(){
         Data.shared.lastExpanded = self.expandedItemPaths;
     }
     
@@ -152,7 +152,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))//✕
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(close))//✕
         //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: likeTitle, style: .Plain, target: self, action: #selector(SutraIndexViewController.toggleLike))
         
@@ -164,11 +164,11 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         //               let buttonEdges = UIEdgeInsetsMake(0, 10, 0, -10);
         //        detailBtn.imageEdgeInsets = buttonEdges;
         
-        let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .plain, target: self, action: #selector(SutraIndexViewController.openAsPage))
+        let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .plain, target: self, action: #selector(openAsPage))
         
         
         if self.isShowSutraButton {
-            let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(SutraIndexViewController.openSutra))
+            let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(openSutra))
             
             self.navigationItem.setRightBarButtonItems([listButton,sutraButton], animated: false)
         } else {
@@ -178,7 +178,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     
-    func close(){
+    @objc func close(){
         onDismiss?();
         self.navigationController?.isNavigationBarHidden = false
         self.navigationController?.popViewController(animated: true)
@@ -213,7 +213,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
     }
     //Called, when long press occurred
-    func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
+    @objc func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
         
         if longPressGestureRecognizer.state == UIGestureRecognizerState.began {
             
@@ -228,17 +228,17 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
     
-    func openSutra(){
+    @objc func openSutra(){
         let sutraVC = SutraPurePageContentViewController.init();
         sutraVC.item = tree
         self.navigationController?.pushViewController(sutraVC, animated: true)
     }
     
-    func openAsPage(){
+    @objc func openAsPage(){
         openItem(self.tree!)
     }
     
-    func openAsPageFromCellButton(_ sender:UIButton){
+    @objc func openAsPageFromCellButton(_ sender:UIButton){
         let cell:UITableViewCell = sender.superview as! UITableViewCell
         let item = self.treeView.item(for: cell)
         openItem((item as! NSDictionary) as! [String : Any])
@@ -259,7 +259,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         pageVC.onDismiss = {
             self.openPath((Book.data.index?[pageVC.page] as NSDictionary?)?["path"] as! String);
-        }
+        } as (() -> Void)
         self.navigationController?.pushViewController(pageVC, animated: true)
         
     }
@@ -268,11 +268,11 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let indexVC = SutraIndexViewController();
         indexVC.tree = item
         indexVC.defaultExpandLevel = 2;
-        let navVC = UINavigationController.init(rootViewController: indexVC);
+//        let navVC = UINavigationController.init(rootViewController: indexVC);
         
         indexVC.onDismiss = {
             self.openPath(indexVC.tree!["path"] as! String);
-        }
+        } as (() -> Void)
         
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
@@ -282,10 +282,10 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             return;
         }
         let rootPath = tree!["path"] as!String;
-        if rootPath.characters.count > path.characters.count {
+        if rootPath.count > path.count {
             return
         }
-        let subPath = path.substring(from: rootPath.endIndex);
+        let subPath = path[rootPath.endIndex...]
         var node = tree, isExpanded = false;
         for id in subPath.components(separatedBy: "/") {
             if(id==""){continue}
@@ -332,7 +332,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             //            newCell!.detailTextLabel?.adjustsFontSizeToFitWidth = true;
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
             let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
-            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize + 2, weight: UIFontWeightRegular);
+            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize + 2, weight: UIFont.Weight.regular);
             
             if (!isLeaf) {
                 let bookBtn = UIButton.init(type: .custom)
@@ -343,7 +343,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 bookBtn.setTitleColor(UIColor.lightGray, for: .normal)
                 //                let bookImage = UIImage.init(named: "book_18pt")
                 //                bookBtn.setImage(bookImage, forState: .Normal)
-                bookBtn.addTarget(self, action: #selector(SutraIndexViewController.openAsPageFromCellButton(_:)) , for: .touchUpInside)
+                bookBtn.addTarget(self, action: #selector(openAsPageFromCellButton(_:)) , for: .touchUpInside)
                 newCell!.accessoryView = bookBtn;
             }
             

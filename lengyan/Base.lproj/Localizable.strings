@@ -1,14 +1,14 @@
-/* 
-  Localizable.strings
-  lengyan
-
-  Created by Xuan on 2017/7/9.
-  Copyright © 2017年 xuan. All rights reserved.
-*/
+/*
+ Localizable.strings
+ lengyan
+ 
+ Created by Xuan on 2017/7/9.
+ Copyright © 2017年 xuan. All rights reserved.
+ */
 "kai_jing_ji" = " 無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義";
 "footer_txt_1" = "南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！";
 "footer_txt_2" = "經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站";
-"footer_txt_3" = "感恩法界佛教總會！本屏中間所列為部分關鍵科判，可點擊經名打開完整科判。";
+"footer_txt_3" = "感恩法界佛教總會！\n本屏所列為部分關鍵科判以方便檢索，可點擊經名打開完整科判。";
 
 "lengyan_book_title" = "《楞嚴經》";
 "media_tab_title" = "聽經";
@@ -24,3 +24,15 @@
 "play_mode_repeat_one" = "單曲循環";
 "play_mode_repeat" = "順序循環";
 
+"chapter_1" = "卷一";
+"chapter_2" = "卷二";
+"chapter_3" = "卷三";
+"chapter_4" = "卷四";
+"chapter_5" = "卷五";
+"chapter_6" = "卷六";
+"chapter_7" = "卷七";
+"chapter_8" = "卷八";
+"chapter_9" = "卷九";
+"chapter_10" = "卷十";
+"end" = "終";
+"start_qi" = "起";

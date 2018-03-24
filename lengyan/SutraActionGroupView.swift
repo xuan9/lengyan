@@ -46,7 +46,7 @@ class SutraActionGroupView: UIView {
     }
 
     
-    func toggleLike() {
+    @objc func toggleLike() {
         if Data.shared.likes.contains(self.path!) {
             Data.shared.unlike(self.path!)
             star?.setTitle("★" , for: UIControlState())

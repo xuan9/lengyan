@@ -16,7 +16,7 @@ class FirstViewController: UIViewController {
         super.viewDidLoad()
         self.automaticallyAdjustsScrollViewInsets = true
         let fullIndexVC = SutraIndexViewController();
-        Book.data.loadDataWithCompletionHandler { (Void) in
+        Book.data.loadDataWithCompletionHandler { () in
             self.tree = Book.data.tree
             fullIndexVC.tree =  Book.data.tree
             DispatchQueue.main.async{

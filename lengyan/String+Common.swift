@@ -13,7 +13,7 @@ extension String
     
     func lastIndexOf(_ s: String) -> Int? {
         if let r: Range<Index> = self.range(of: s, options: .backwards) {
-            return self.characters.distance(from: self.startIndex, to: r.lowerBound)
+            return self.distance(from: self.startIndex, to: r.lowerBound)
         }
         
         return nil;

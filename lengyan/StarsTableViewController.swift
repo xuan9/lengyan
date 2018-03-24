@@ -109,7 +109,7 @@ class StarsTableViewController: UITableViewController{
     }
     
     func getIndexAttributeText(_ name:String)->NSAttributedString{
-        let attributes = [NSForegroundColorAttributeName : UIColor.gray,NSFontAttributeName: UIFont.systemFont(ofSize: 14)]
+        let attributes = [NSAttributedStringKey.foregroundColor : UIColor.gray,NSAttributedStringKey.font: UIFont.systemFont(ofSize: 14)]
         return NSAttributedString(string: name, attributes:attributes)
     }
     

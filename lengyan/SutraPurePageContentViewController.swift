@@ -10,7 +10,7 @@ import UIKit
 
 class SutraPurePageContentViewController: UIViewController,SutraPage {
     
-    var onDismiss: ((Void) -> Void)?
+    var onDismiss: (() -> Void)?
     var pageIndex = 0;
     var isShowIndexButton = false;
     
@@ -19,7 +19,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     var nextPageIndex = -1;
     var beforePageIndex = -1;
     
-        var sutraView: UITextView? = nil;
+    var sutraView: UITextView? = nil;
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -147,13 +147,13 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     func updateStarButton(){
         var likeButton:UIBarButtonItem;
         if Data.shared.likes.contains(path!) {
-            likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(SutraPageViewController.unlike))
+            likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
         } else {
-            likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(SutraPageViewController.like))
+            likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
         }
         
         if self.isShowIndexButton && self.item?["children"] != nil {
-            let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(SutraPurePageContentViewController.openIndex))
+            let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(openIndex))
              
             self.navigationItem.setRightBarButtonItems([indexButton,likeButton], animated: false)
         } else {
@@ -165,7 +165,7 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         
     }
     
-    func openIndex(){
+    @objc func openIndex(){
         let indexVC = SutraIndexViewController();
         indexVC.tree = item;
         indexVC.defaultExpandLevel = 2;
@@ -174,18 +174,18 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     }
     
     
-    func like() {
+    @objc func like() {
         Data.shared.like(self.path!)
         self.updateStarButton()
     }
     
-    func unlike() {
+    @objc func unlike() {
         Data.shared.unlike(self.path!)
         self.updateStarButton()
     }
     
     
-    func close(){
+    @objc func close(){
         let topBarView = UIView(frame: CGRect(
             origin: CGPoint(x:0 ,y:0 ),
             size:   CGSize(width: view.bounds.size.width , height:60 )));

@@ -18,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     internal static let MAX_SCHEDULED_NOTIFICATIONS:Int = 7;
     
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        Book.data.loadDataWithCompletionHandler { (Void) in
+        Book.data.loadDataWithCompletionHandler { () in
             print("Book data loaded on start")
         }
         return true
@@ -48,7 +48,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @available(iOS 10.0, *)
     func scheduleItem(path:String) ->Bool{
         var isLeaf = false;
-        let i = KEY_PATHS.index(of: path)
+        let i = KEY_PATHS.index(where:{$0==path})
         if i == KEY_PATHS.count - 1 {
             isLeaf = true;
         } else {
@@ -129,11 +129,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             
         }
         let root = window?.rootViewController as! UITabBarController
-        print("seleted tabbar view: \(root.selectedViewController)")
+//        print("seleted tabbar view: \(root.selectedViewController)")
         
         root.selectedIndex = 1
         
-        print("seleted tabbar view: \(root.selectedViewController)")
+//        print("seleted tabbar view: \(root.selectedViewController)")
         
         
         (root.selectedViewController as!UINavigationController).popToRootViewController(animated: false)

@@ -64,7 +64,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
 
         self.playMode = Data.shared.lastPlayMode ?? -1
 
-        Book.data.loadDataWithCompletionHandler { (Void) in
+        Book.data.loadDataWithCompletionHandler { () in
             self.media = Book.data.media!
             
             DispatchQueue.main.async{
@@ -126,7 +126,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         
     }
     
-    func audioSessionInterrupted(notification: NSNotification) {
+    @objc func audioSessionInterrupted(notification: NSNotification) {
         
         if notification.name == .AVAudioSessionInterruption
             && notification.userInfo != nil {
@@ -295,7 +295,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             let downloadingText = NSLocalizedString("downloading_text", comment: "正在下载...")
             cell.nameLabel.text =  name + " -  " + downloadingText;
             
-            progressView = UIProgressView(frame: CGRect(x:  0, y: cell.height - 2,width: cell.width, height: 2))
+            progressView = UIProgressView(frame: CGRect(x:  0, y: cell.frame.height - 2,width: cell.frame.width, height: 2))
             progressView?.trackTintColor = UIColor.darkGray
             progressView?.progressTintColor = UIColor.green;
             progressView?.observedProgress = req.progress
@@ -303,7 +303,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         }
         
         req.beginAccessingResources{ error in
-            NSLog("beginAccessingResources done: \(tag), \(error)")
+            NSLog("beginAccessingResources done: \(tag), \(String(describing: error))")
             if let error = error {
                 self.tagStatus[tag]=0
                 self.rReq[tag]?.endAccessingResources()
@@ -461,7 +461,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         }
     }
     
-    func pressPlayButton(button: UIButton) {
+    @objc func pressPlayButton(button: UIButton) {
         NSLog("play btn pressed! isSelected:\(button.isSelected)")
         if(!button.isSelected){
             self.footPlayButton.isSelected = true;
@@ -490,7 +490,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         return nil
     }
     
-    func progressBarChanged(slider: UISlider, event: UIEvent) {
+    @objc func progressBarChanged(slider: UISlider, event: UIEvent) {
 //        NSLog("progress changed: \(slider.value) by event: \(event)")
         var playItem = self.queuePlayer?.currentItem
         if (playItem == nil ) {
@@ -505,7 +505,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         let duration = playItem!.duration
         if (duration.isNumeric) {
             let phase = event.allTouches?.first?.phase
-            let seekTime = CMTimeMakeWithSeconds(Float64(slider.value.multiplied(by: Float(duration.seconds))) , duration.timescale );
+            let seekTime = CMTimeMakeWithSeconds(Double(slider.value) * (duration.seconds) , duration.timescale );
             
             self.progressLabel.text = self.getMediaDisplayTime(seconds: Int(seekTime.seconds))
             
@@ -527,7 +527,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         }
     }
     
-    func runTimedCode() {
+    @objc func runTimedCode() {
         if (self.queuePlayer?.currentItem) != nil {
             let duration = self.queuePlayer?.currentItem?.duration;
             var durationText = "", progressText = ""
@@ -537,7 +537,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 let d = Int(duration!.seconds);
                 durationText = self.getMediaDisplayTime(seconds: d)
                 if(self.queuePlayer!.currentTime().isNumeric){
-                    progress = Float(self.queuePlayer!.currentTime().seconds.divided(by: duration!.seconds))
+                    progress = Float(Double(self.queuePlayer!.currentTime().seconds)/duration!.seconds)
                     let progressSeconds = Int((self.queuePlayer?.currentTime().seconds)!)
                     progressText = self.getMediaDisplayTime(seconds: progressSeconds)
                 }
@@ -561,7 +561,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         if (ext == nil) {
             ext = ""
         }
-        let fileName = file!.substring(to:(file?.index((file?.endIndex)!, offsetBy: -((ext?.characters.count)! + 1)))!)
+        let fileName = file!.substring(to:(file?.index((file?.endIndex)!, offsetBy: -((ext?.count)! + 1)))!)
         var name="";
         for group in media {
             let files = group["files"] as! [String]
@@ -607,7 +607,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     }
                 })
                 
-                if name == nil && downloaded.count>0 {
+                if downloaded.count>0 {
                     name = downloaded.object(at: 0) as! String
                 }
                 
@@ -692,7 +692,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         Data.shared.lastPlayMode = mode;
     }
     
-    func pressModeButton(button: UIButton) {
+    @objc func pressModeButton(button: UIButton) {
         let optionMenu = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
         if let presenter = optionMenu.popoverPresentationController {
