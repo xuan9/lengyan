@@ -81,10 +81,12 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     func checkMediaStatus(){
         self.media.forEach({ (
             group) in
-            let list = group["files"] as! [String];
-            list.forEach({( file) in
+            let files = group["files"] as! [String];
+            let ext =  group["extension"] as! String
+
+            files.forEach({( file) in
                 if tagStatus[file] != 2 {
-                    self.getTagStatus(tag: file){available in
+                    self.getFileStatus(file: file, ext:ext){available in
                         if(available){
                             DispatchQueue.main.async{
                                 self.tableView.reloadData()
@@ -266,12 +268,13 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         
         let cell = tableView.cellForRow(at: indexPath) as! MediaTableViewCell
         
-        if(tagStatus[tag]==2){//available
+        if(tagStatus[tag]==2 && self.rReq[tag] != nil){//available
             self.play(name: name, file: tag, ext:ext);
             return;
         }
         
         if( self.rReq[tag] != nil) {
+            NSLog("ignore, as already beginAccessingResources: \(tag)")
             return;
         }
         
@@ -305,7 +308,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 }
                 self.handleDownloadingError(error as NSError)
             } else {
-                self.tagStatus[tag]=2
+                self.tagStatus[tag] = 2
                 OperationQueue.main.addOperation {
                     self.tableView.reloadData()
 //                    if(!self.isPlaying()){
@@ -349,19 +352,48 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             self.footPlayButton.isSelected = false
         }
     }
-    func getTagStatus(tag:String, completionHandler: @escaping (Bool) -> Swift.Void){
-        let req = NSBundleResourceRequest(tags: [tag]);
+    func getFileStatus(file:String, ext:String, completionHandler: @escaping (Bool) -> Swift.Void){
+        let req = NSBundleResourceRequest(tags: [file]);
         req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
         req.conditionallyBeginAccessingResources(){available in
             if(available){
-                self.tagStatus[tag] = 2
-                self.rReq[tag] = req
+                let url = req.bundle.url(forResource:file, withExtension: ext)
+                if url == nil {
+                    NSLog("could not get URL for resource:\(file).\(ext), will try download it silently")
+                    self.downloadTagSilently(file)
+                    return;
+                } else {
+                    self.tagStatus[file] = 2
+                    self.rReq[file] = req
+                    NSLog("URL for resource is available:\(file).\(ext): \(url)")
+                }
             } else {
+                NSLog("\(file).\(ext) is not available")
             }
             completionHandler(available)
         }
     }
-    
+    func downloadTagSilently(_ tag:String){
+        let req = NSBundleResourceRequest(tags: [tag]);
+        self.rReq[tag] = req
+        req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+        NSLog("beginAccessingResources: \(tag)")
+        
+        req.beginAccessingResources{ error in
+            NSLog("beginAccessingResources done: \(tag), \(String(describing: error))")
+            if let error = error {
+                self.tagStatus[tag] = 0
+                self.rReq[tag]?.endAccessingResources()
+                self.rReq[tag] = nil
+                self.handleDownloadingError(error as NSError)
+            } else {
+                self.tagStatus[tag] = 2
+                OperationQueue.main.addOperation {
+                    self.tableView.reloadData()
+                }
+            }
+        }
+    }
     func handleDownloadingError(_ error: NSError) {
         switch error.code{
         case NSBundleOnDemandResourceOutOfSpaceError:
@@ -386,12 +418,17 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             if UIApplication.shared.applicationState != .active {
                 return;
             }
-        DispatchQueue.global().async {
             
+        DispatchQueue.global().async {
             let req:NSBundleResourceRequest = self.rReq[file]!
             let url = req.bundle.url(forResource:file, withExtension: ext)
             if url == nil {
-                NSLog("could not get URL for resource:\(file).\(ext)")
+                NSLog("cancel playing, could not get URL for resource:\(file).\(ext)")
+                self.tagStatus[file] = 0
+                self.rReq[file] = nil
+                OperationQueue.main.addOperation {
+                    self.tableView.reloadData();
+                }
                 return;
             } else {
                 NSLog("get URL for resource:\(file).\(ext): \(url!)")
@@ -647,7 +684,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 
                 for _ in 1...times {
                     for asset in assets {
-                        NSLog("creat AVPlayerItem")
+//                        NSLog("creat AVPlayerItem")
                         let item = AVPlayerItem(asset: (asset as! AVURLAsset));
                         self.queuePlayer?.insert(item, after:nil);
                     }
@@ -655,7 +692,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             }else if(self.playMode == Int.max || self.playMode <= 6){
                 let times = self.playMode == Int.max ? 30 : self.playMode
                 for _ in 1...times {
-                    NSLog("creat AVPlayerItem")
+//                    NSLog("creat AVPlayerItem")
                     let item = AVPlayerItem(asset: (currentItem?.asset)!);
                     self.queuePlayer?.insert(item, after:nil);
                 }
