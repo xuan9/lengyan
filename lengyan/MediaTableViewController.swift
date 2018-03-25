@@ -308,13 +308,24 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 }
                 self.handleDownloadingError(error as NSError)
             } else {
-                self.tagStatus[tag] = 2
-                OperationQueue.main.addOperation {
-                    self.tableView.reloadData()
-//                    if(!self.isPlaying()){
-                            self.play(name: name, file:tag, ext:ext);
-//                        }
+                let url = req.bundle.url(forResource:tag, withExtension: ext)
+                if url == nil {
+                    NSLog("could not get URL for resource after :\(tag).\(ext)");
+                    let downloadFailed = NSLocalizedString("download_failed", comment: "下载失败")
+                    OperationQueue.main.addOperation {
+                        cell.nameLabel.text = name + " -- " + downloadFailed ;
                     }
+                    return;
+                } else{
+                    self.tagStatus[tag] = 2
+                    OperationQueue.main.addOperation {
+                        self.tableView.reloadData()
+                        //                    if(!self.isPlaying()){
+                        self.play(name: name, file:tag, ext:ext);
+                        //                        }
+                    }
+                    
+                }
             }
             OperationQueue.main.addOperation {
                 progressView?.removeFromSuperview();
@@ -360,20 +371,21 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 let url = req.bundle.url(forResource:file, withExtension: ext)
                 if url == nil {
                     NSLog("could not get URL for resource:\(file).\(ext), will try download it silently")
-                    self.downloadTagSilently(file)
-                    return;
+                    self.downloadTagSilently(file, ext:ext);
+                    completionHandler(false)
                 } else {
                     self.tagStatus[file] = 2
                     self.rReq[file] = req
                     NSLog("URL for resource is available:\(file).\(ext): \(url)")
+                    completionHandler(true)
                 }
             } else {
                 NSLog("\(file).\(ext) is not available")
+                completionHandler(false)
             }
-            completionHandler(available)
         }
     }
-    func downloadTagSilently(_ tag:String){
+    func downloadTagSilently(_ tag:String, ext: String){
         let req = NSBundleResourceRequest(tags: [tag]);
         self.rReq[tag] = req
         req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
@@ -387,9 +399,18 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 self.rReq[tag] = nil
                 self.handleDownloadingError(error as NSError)
             } else {
-                self.tagStatus[tag] = 2
-                OperationQueue.main.addOperation {
-                    self.tableView.reloadData()
+                let url = req.bundle.url(forResource:tag, withExtension: ext)
+                if url == nil {
+                    NSLog("still could not get URL for resource after download:\(tag).\(ext)");
+                    self.tagStatus[tag] = 0
+                    self.rReq[tag]?.endAccessingResources()
+                    self.rReq[tag] = nil
+                    return;
+                } else {
+                    self.tagStatus[tag] = 2
+                    OperationQueue.main.addOperation {
+                        self.tableView.reloadData()
+                    }
                 }
             }
         }
