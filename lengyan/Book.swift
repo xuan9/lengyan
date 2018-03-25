@@ -243,71 +243,77 @@ class Book: NSObject {
             return Book.data.contents?[path!] != nil;
         }
     }
+    
+    func loadDataSyncWithCompletionHandler(_ handler:@escaping ()->Void) {
+      var path = "data/"
+        if self.isSimplified {
+            path = "data/simplified/"
+        }
+        let treeFileURL = Bundle.main.url(forResource: path + "lengyanjing-index-tree", withExtension: "json")
+        
+        let data = try? Foundation.Data(contentsOf: treeFileURL!)
+        do {
+            self.tree = try (JSONSerialization.jsonObject(with: data!, options: .allowFragments)) as? NSDictionary as? [String: Any]
+        } catch _ {
+            self.tree = [:]
+        }
+        
+        let contentFile = Bundle.main.url(forResource:  path + "lengyanjing-content", withExtension: "json")
+        
+        let contentData = try? Foundation.Data(contentsOf: contentFile!)
+        do {
+            self.contents = try (JSONSerialization.jsonObject(with: contentData!, options: .allowFragments)) as? NSDictionary
+                as? [String:[[String:String]]]
+        } catch _ {
+            self.contents  = [:]
+        }
+        
+        let indexFile = Bundle.main.url(forResource:  path + "lengyanjing-index", withExtension: "json")
+        
+        let indexData = try? Foundation.Data(contentsOf: indexFile!)
+        do {
+            let indexArray = try (JSONSerialization.jsonObject(with: indexData!, options: .allowFragments)) as? NSArray
+            //--check if any wront type item
+            //                print( indexArray?.filter({ (a) -> Bool in
+            //                    let d = a as? [String:String]
+            //                    if d == nil {
+            //                        print(( a as? NSDictionary)!["path"])
+            //                        return false
+            //                    }
+            //                    return true
+            //                }).count)
+            self.index = indexArray as? [[String:String]]
+        } catch _ {
+            self.index = []
+        }
+        
+        let mediaFile = Bundle.main.url(forResource:  path + "lengyanjing-media", withExtension: "json")
+        
+        let mediaData = try? Foundation.Data(contentsOf: mediaFile!)
+        do {
+            self.media = try (JSONSerialization.jsonObject(with: mediaData!, options: .allowFragments)) as? NSArray
+                as? [[String:Any]]
+        } catch _ {
+            self.media  = []
+        }
+        
+        self.loaded = true;
+        //        listChapterStarts();
+    }
+    
     func loadDataWithCompletionHandler(_ handler:@escaping ()->Void) {
         if self.loaded {
             handler()
             return
-        }; DispatchQueue.global(qos:DispatchQoS.QoSClass.userInteractive).async{
+        };
+        
+        DispatchQueue.global(qos:DispatchQoS.QoSClass.userInteractive).async{
             if self.loaded {
                 handler()
                 return
             }
-            var path = "data/"
-            if self.isSimplified {
-                path = "data/simplified/"
-            }
-            let treeFileURL = Bundle.main.url(forResource: path + "lengyanjing-index-tree", withExtension: "json")
-            
-            let data = try? Foundation.Data(contentsOf: treeFileURL!)
-            do {
-                self.tree = try (JSONSerialization.jsonObject(with: data!, options: .allowFragments)) as? NSDictionary as? [String: Any]
-            } catch _ {
-                self.tree = [:]
-            }
-            
-            let contentFile = Bundle.main.url(forResource:  path + "lengyanjing-content", withExtension: "json")
-            
-            let contentData = try? Foundation.Data(contentsOf: contentFile!)
-            do {
-                self.contents = try (JSONSerialization.jsonObject(with: contentData!, options: .allowFragments)) as? NSDictionary
-                    as? [String:[[String:String]]]
-            } catch _ {
-                self.contents  = [:]
-            }
-            
-            let indexFile = Bundle.main.url(forResource:  path + "lengyanjing-index", withExtension: "json")
-            
-            let indexData = try? Foundation.Data(contentsOf: indexFile!)
-            do {
-                let indexArray = try (JSONSerialization.jsonObject(with: indexData!, options: .allowFragments)) as? NSArray
-                //--check if any wront type item
-                //                print( indexArray?.filter({ (a) -> Bool in
-                //                    let d = a as? [String:String]
-                //                    if d == nil {
-                //                        print(( a as? NSDictionary)!["path"])
-                //                        return false
-                //                    }
-                //                    return true
-                //                }).count)
-                self.index = indexArray as? [[String:String]]
-            } catch _ {
-                self.index = []
-            }
-            
-            let mediaFile = Bundle.main.url(forResource:  path + "lengyanjing-media", withExtension: "json")
-            
-            let mediaData = try? Foundation.Data(contentsOf: mediaFile!)
-            do {
-                self.media = try (JSONSerialization.jsonObject(with: mediaData!, options: .allowFragments)) as? NSArray
-                    as? [[String:Any]]
-            } catch _ {
-                self.media  = []
-            }
-            
-            self.loaded = true;
-            handler()
+            self.loadDataSyncWithCompletionHandler(handler)
         }
-//        listChapterStarts();
     }
     
     func getTitleLine(_ item:[String:Any])->NSAttributedString{

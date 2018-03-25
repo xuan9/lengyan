@@ -18,7 +18,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     internal static let MAX_SCHEDULED_NOTIFICATIONS:Int = 7;
     
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        Book.data.loadDataWithCompletionHandler { () in
+        
+        Book.data.loadDataSyncWithCompletionHandler { () in
             print("Book data loaded on start")
         }
         return true

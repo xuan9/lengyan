@@ -45,12 +45,13 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     private var lastPlayFile:[String]?
     private var isPlayingOnSlideBegan = false
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.automaticallyAdjustsScrollViewInsets = true;
         //self.navigationController?.hidesBarsOnSwipe = true;
-//    self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-//        self.navigationController?.hidesBarsOnSwipe = true;
+        //    self.navigationController?.hidesBarsWhenVerticallyCompact = true;
+        //        self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         tableView.dataSource = self
         tableView.delegate = self
@@ -60,21 +61,29 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         
         footPlayMode.addTarget(self, action: #selector(pressModeButton(button:)), for: .touchUpInside)
         
-        progressBar.addTarget(self,action:#selector(progressBarChanged(slider:event:)),for:.valueChanged);
-
+    progressBar.addTarget(self,action:#selector(progressBarChanged(slider:event:)),for:.valueChanged);
+        
         self.playMode = Data.shared.lastPlayMode ?? -1
-
-        Book.data.loadDataWithCompletionHandler { () in
-            self.media = Book.data.media!
-            
-            DispatchQueue.main.async{
-                self.tableView.reloadData()
-            }
-            
-            self.media.forEach({ (
-                group) in
-                let list = group["files"] as! [String];
-                list.forEach({( file) in
+    
+        self.media = Book.data.media!
+        self.tableView.reloadData()
+        self.checkMediaStatus();
+        if lastPlayFile == nil  {
+            footerHightConstraint.constant = 0
+            footer.layoutIfNeeded()
+        }
+        self.initAudio();
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        self.checkMediaStatus();
+    }
+    
+    func checkMediaStatus(){
+        self.media.forEach({ (
+            group) in
+            let list = group["files"] as! [String];
+            list.forEach({( file) in
+                if tagStatus[file] != 2 {
                     self.getTagStatus(tag: file){available in
                         if(available){
                             DispatchQueue.main.async{
@@ -82,27 +91,9 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                             }
                         }
                     }
-                })
+                }
             })
-            //reload last play status
-//            DispatchQueue.global().asyncAfter(deadline: .now() + 1, execute: {
-//                if self.lastPlayFile == nil {
-//                    self.lastPlayFile = Data.shared.lastPlayFile;
-//                    if self.lastPlayFile != nil {
-//                        self.schedulePlayItems()
-//                    }
-//                    self.playMode = Data.shared.lastPlayMode ?? -1
-//                    if self.playMode != -1 {
-//                        self.schedulePlayItems()
-//                    }
-//                }
-//            })
-        }
-        if lastPlayFile == nil  {
-            footerHightConstraint.constant = 0
-            footer.layoutIfNeeded()
-        }
-        self.initAudio();
+        })
     }
     func startAudioSession(){
         let session = AVAudioSession.sharedInstance()
@@ -305,7 +296,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         req.beginAccessingResources{ error in
             NSLog("beginAccessingResources done: \(tag), \(String(describing: error))")
             if let error = error {
-                self.tagStatus[tag]=0
+                self.tagStatus[tag] = 0
                 self.rReq[tag]?.endAccessingResources()
                 self.rReq[tag] = nil
                 let downloadFailed = NSLocalizedString("download_failed", comment: "下载失败")
@@ -321,13 +312,11 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                             self.play(name: name, file:tag, ext:ext);
 //                        }
                     }
-
             }
             OperationQueue.main.addOperation {
                 progressView?.removeFromSuperview();
             }
         }
-        
     }
     
     func stopPlayerTimer() {
