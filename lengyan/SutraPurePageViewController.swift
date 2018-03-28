@@ -11,10 +11,9 @@ import UIKit
 class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
     var sutraStoryBoard:UIStoryboard?;
     var onDismiss: (() -> Void)?
-    var page:Int = 0
-    
+//    var page:Int = 0
     var path:String?
-    var item:[String:String]?
+//    var item:[String:String]?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,19 +23,13 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.extendedLayoutIncludesOpaqueBars = false;
         self.automaticallyAdjustsScrollViewInsets = false;
         
-        if page < 0 {
-            self.close()
-        }
-        
-        item = Book.data.index![page]
-        self.path = item!["path"];
-        
+
         self.setPageTitle()
         self.dataSource = self;
         self.delegate = self;
         sutraStoryBoard = UIStoryboard(name: "SutraStoryboard", bundle: nil)
         
-        self.setViewControllers([getViewControllerAtIndex(page)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
+        self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
         
         self.setTitle()
     }
@@ -45,31 +38,18 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         return navigationController?.isNavigationBarHidden ?? false
     }
     
-    @objc func like() {
-        Data.shared.like(self.path!)
-        self.setTitle()
-    }
-    
-    @objc func unlike() {
-        Data.shared.unlike(self.path!)
-        self.setTitle()
-    }
     
     @objc func close() {
         onDismiss?();
-        self.navigationController?.dismiss(animated: true, completion: {
-        })
+        self.navigationController?.popViewController(animated: true);
+
+//        self.navigationController?.dismiss(animated: true, completion: {})
     }
     
     func setTitle() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(close))
-        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬  ", style: .plain, target: self, action: #selector(close))
+    self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
         
-        if(Data.shared.likes.contains(path!)){
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
-        } else {
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
-        }
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
         self.navigationController?.navigationBar.isTranslucent = false;
@@ -77,24 +57,34 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
     {
-        let pageContent:SutraPurePageContentViewController = self.sutraStoryBoard!.instantiateViewController(withIdentifier: "SutraPurePageContentViewController") as! SutraPurePageContentViewController
-        
-        var index = pageContent.getBeforePageIndex()
-        if ((index == 0) || (index == NSNotFound))
+        let pageContent: SutraPurePageContentViewController = viewController as! SutraPurePageContentViewController
+        let path = pageContent.getPreviousPagePath()
+        if (path == nil)
         {
-            self.close();
             return nil;
         }
-        index -= 1;
-        return getViewControllerAtIndex(index)
+        return getViewControllerAtPath(path!)
     }
     
-    func getViewControllerAtIndex(_ index: Int) -> UIViewController
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
+    {
+        let pageContent: SutraPurePageContentViewController = viewController as! SutraPurePageContentViewController
+        
+        let path = pageContent.getNextPagePath()
+        if (path == nil)
+        {
+            return nil;
+        }
+        return getViewControllerAtPath(path!)
+    }
+    
+    func getViewControllerAtPath(_ path: String) -> UIViewController
     {
         
-        let pageContent:SutraPurePageContentViewController = self.sutraStoryBoard!.instantiateViewController(withIdentifier: "SutraPurePageContentViewController") as! SutraPurePageContentViewController
+        let pageContent:SutraPurePageContentViewController = SutraPurePageContentViewController();
+//        self.sutraStoryBoard!.instantiateViewController(withIdentifier: "SutraPurePageContentViewController") as! SutraPurePageContentViewController
         
-        pageContent.pageIndex = index
+        pageContent.path = path
         
         let frame = self.view.frame;
         let navigationBarHeight = (self.navigationController?.navigationBar.frame.size.height)!;
@@ -106,73 +96,23 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         return pageContent
     }
     
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
-    {
-        let pageContent: SutraPurePageContentViewController = viewController as! SutraPurePageContentViewController
-        var index = pageContent.getNextPageIndex()
-//        var index = pageContent.getNextPageIndex(navigationController?.isNavigationBarHidden ?? true)
-
-        if (index == NSNotFound || index  == Book.data.index?.count)
-        {
-            self.close();
-            return nil;
-        }
-        index += 1;
-        
-        return getViewControllerAtIndex(index)
-    }
     // MARK - UIPageViewControllerDelegate
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
         
-        let pageContent = pageViewController.viewControllers![0] as! SutraPage
-        self.page = pageContent.pageIndex;
-        self.item = Book.data.index![page];
-        self.path = item!["path"] ;
-        
+        let pageContent = pageViewController.viewControllers![0] as! SutraPurePageContentViewController
+        self.path = pageContent.path;
         self.setPageTitle()
     }
     
     func setPageTitle() {
-        //        let children = Book.data.itemOfPath(item["path"] as! String)["children"] as? NSArray
-        let title:String = (item!["name"] ?? "")
-        
-        // (item["id"] as! String) + " " +
-        let parent = Book.data.parentOfItem(item! as [String : AnyObject]);
-        let parentTitle = parent?["name"] as? String ?? ""
-        //        let titleAttributes = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline), NSForegroundColorAttributeName: UIColor.purpleColor()]
-        
-        let font:UIFont? = UIFont(name: "Arial", size: 12.0)
-        let attrString = NSMutableAttributedString(
-            string: parentTitle as String,
-            attributes: [NSAttributedStringKey.font: font!])
-        
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center;
-        
-        let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
-        let attrString2 = NSMutableAttributedString(
-            string: parent == nil ? "" : " 之",
-            attributes: [NSAttributedStringKey.font: font2!]);
-        
-        let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
-        let attrString1 = NSMutableAttributedString(
-            string: "\n" + title as String,
-            attributes: [NSAttributedStringKey.font: font1!,     NSAttributedStringKey.paragraphStyle : paragraphStyle]);
-        
-        attrString.append(attrString2)
-        attrString.append(attrString1)
-        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 400, height: 44))
-        label.backgroundColor = UIColor.clear
-        label.numberOfLines = 2
-        label.textAlignment = NSTextAlignment.left
-        label.attributedText = attrString;
-        label.isUserInteractionEnabled = true
-        self.navigationItem.titleView = label
-        
-        //        let recognizer = UITapGestureRecognizer(target: self, action: Selector("titleWasTapped"))
-        //        self.navigationItem.titleView!.addGestureRecognizer(recognizer)
+        if path == nil { return }
+        let item = Book.data.itemOfPath(path!);
+        if self.navigationItem.titleView is UILabel {
+            (self.navigationItem.titleView as! UILabel).attributedText = Book.data.getTitle(item)
+        } else {
+            self.navigationItem.titleView = Book.data.getTitleView(item);
+        }
     }
-    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.

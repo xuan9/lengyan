@@ -191,6 +191,7 @@ class Book: NSObject {
     var media:[[String:Any]]? = nil
     var loaded = false;
     var isSimplified = true;
+    var allPaths:[String]? = nil;
     
     override init() {
         for lan in NSLocale.preferredLanguages {
@@ -203,9 +204,33 @@ class Book: NSObject {
         }
     }
     
+//    func getKeyPages()->[String]{
+//        if self.keyPages != nil { return keyPages!;}
+//        var pages:[String] = [];
+//        for(i,path) in KEY_PATHS.enumerated() {
+//            if(i < KEY_PATHS.count - 1){
+//                if KEY_PATHS[i+1].starts(with: path) {
+//                    continue;
+//                }
+//            }
+//            pages.append(path)
+//        }
+//        self.keyPages = pages;
+//        return pages;
+//    }
+    
+    func getAllPaths()->[String]{
+        if self.allPaths == nil {
+            self.allPaths = self.index?.map({ (item) -> String in
+              return item["path"]!
+            });
+        }
+        return self.allPaths!;
+    }
+    
     func getKeyItems() ->[[String]]{
         return KEY_PATHS.map { (path) -> [String] in
-            let name = self.itemOfPath(path)["name"];
+            let name = Book.data.itemOfPath(path)["name"];
             return [path,name as! String];
         }
     }

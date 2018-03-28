@@ -8,16 +8,13 @@
 
 import UIKit
 
-class SutraPurePageContentViewController: UIViewController,SutraPage {
+class SutraPurePageContentViewController: UIViewController {
     
     var onDismiss: (() -> Void)?
-    var pageIndex = 0;
     var isShowIndexButton = false;
     
     var item:[String:Any]? = nil;
     var path:String? = nil;
-    var nextPageIndex = -1;
-    var beforePageIndex = -1;
     
     var sutraView: UITextView? = nil;
     
@@ -26,10 +23,8 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         view.backgroundColor = UIColor.white
-        
+
         if item == nil {
-            let meta = (Book.data.index?[pageIndex])!;
-            path = (meta["path"]! as String);
             item = Book.data.itemOfPath(path!)
         } else {
             path = (item!["path"]! as! String);
@@ -45,22 +40,6 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
     
     override var prefersStatusBarHidden: Bool {
         return navigationController?.isNavigationBarHidden ?? false
-    }
-    
-    //    override func viewDidAppear(_ animated: Bool) {
-    //        Data.shared.logItemOpened(path)
-    //    }
-    //    override func viewDidDisappear(_ animated: Bool) {
-    //        Data.shared.logItemClosed(path)
-    //    }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        //        var height = size.height - 30;
-        //        if UIDevice.current.orientation.isLandscape {
-        //            height = height + 65
-        //        }
-        //
-        //        sutraTextView.frame = CGRect(x: 0, y: 0, width: size.width, height: height );
     }
     
     func addSutra(_ meta:[String:Any]){
@@ -116,32 +95,81 @@ class SutraPurePageContentViewController: UIViewController,SutraPage {
      */
     
     
-    func getNextPageIndex()->Int{
-        //todo...
-        if(nextPageIndex == -1){
-//            if(meta["path"]! as! String == item!["path"]! as! String){
-                nextPageIndex = pageIndex + 1 ;
-//            }
-        } else {
-            nextPageIndex = nextPageIndex + 1;
+    func getNextPagePath()->String?{
+        let indexInKeyPages = KEY_PATHS.index(of: path!)
+        if indexInKeyPages != nil {//paging by key pages
+            for i in indexInKeyPages! ... KEY_PATHS.count-1 {
+                let p = KEY_PATHS[i];
+                if !p.starts(with: path!) {//skip least page children
+                    //skip non-leaf directory
+                    if i + 1 < KEY_PATHS.count - 1 && KEY_PATHS[i+1].starts(with:p) {
+                        continue;
+                    }
+                    return p;
+                }
+            }
+            return nil;
+        } else { // paging by full index
+            let paths = Book.data.getAllPaths();
+            let indexInKeyPages = paths.index(of: path!)
+            if indexInKeyPages != nil {//paging by key pages
+                for i in indexInKeyPages! ... paths.count-1 {
+                    let p = paths[i];
+                    if !p.starts(with: path!) {//skip least page children
+                        //skip non-leaf directory
+                        if i + 1 < paths.count - 1 && paths[i+1].starts(with:p) {
+                            continue;
+                        }
+                        return p;
+                    }
+                }
+                return nil;
+            } else {
+                return nil;
+            }
+            
         }
-        
-        return nextPageIndex;
     }
-    func getBeforePageIndex()->Int{
-        return pageIndex - 1;
+    func getPreviousPagePath()->String?{
+        if path == nil { return nil }
+        let indexInKeyPages = KEY_PATHS.index(of: path!)
+        if indexInKeyPages != nil {//paging by key pages
+            for i in 0 ... indexInKeyPages! {
+                let p = KEY_PATHS[indexInKeyPages! - i];
+                if !p.starts(with: path!) {
+                    return p;
+                }
+            }
+            return nil;
+        } else { // paging by full index
+            let paths = Book.data.getAllPaths();
+            let indexInKeyPages = paths.index(of: path!)
+            if indexInKeyPages != nil {//paging by key pages
+                for i in 0 ... indexInKeyPages! {
+                    let p = paths[indexInKeyPages! - i];
+                    if !p.starts(with: path!) {
+                        return p;
+                    }
+                }
+                return nil;
+            } else {
+                return nil;
+            }
+            
+        }
     }
+    
     
     func updateHeader(_ item:[String:Any]){
         //        self.title = item["name"] as? String ?? ""
         self.navigationItem.titleView = Book.data.getTitleView(item);
         
-        self.navigationController?.navigationBar.isTranslucent = false;
+//        self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "  ❬   ", style: .plain, target: self, action: #selector(SutraPurePageContentViewController.close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "  ❬   ", style: .plain, target: self, action: #selector(close))
         
         self.updateStarButton()
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
+//        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
     }
     
     func updateStarButton(){

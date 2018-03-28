@@ -221,13 +221,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func openSutraOfPath(path:String){
-        openSutra(Book.data.itemOfPath(path))
-    }
-    
-    func openSutra(_ item: [String : Any]){
-        let sutraVC = SutraPurePageContentViewController.init();
-        sutraVC.item = item
-        sutraVC.isShowIndexButton = true
+        let sutraVC = SutraPurePageViewController.init();
+        sutraVC.path = path
+//        sutraVC.isShowIndexButton = true
         sutraVC.onDismiss = {
             self.navigationController?.setNavigationBarHidden(false, animated: false)
         }
