@@ -26,7 +26,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.automaticallyAdjustsScrollViewInsets = false;
         
 
-        self.setPageTitle()
         self.dataSource = self;
         self.delegate = self;
         sutraStoryBoard = UIStoryboard(name: "SutraStoryboard", bundle: nil)
@@ -55,6 +54,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
         self.navigationController?.navigationBar.isTranslucent = false;
+        self.setPageTitle()
         self.updateStarButton();
     }
     
@@ -172,7 +172,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         
         let pageContent = pageViewController.viewControllers![0] as! SutraPurePageContentViewController
         self.path = pageContent.path;
-        self.setPageTitle()
+        self.setTitle()
     }
     
     func setPageTitle() {
