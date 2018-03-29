@@ -65,7 +65,11 @@ class SutraPurePageContentViewController: UIViewController {
         let text = Book.data.getSutraAttributeString(meta);
         sutraTextView.attributedText = text;
         view.addSubview(sutraTextView);
-        sutraTextView.bindFrameToSuperviewBounds();
+        if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
+            sutraTextView.bindFrameToSuperviewBounds(paddingHorizontal:44, paddingVertical: 10)
+        } else {
+            sutraTextView.bindFrameToSuperviewBounds(paddingHorizontal:2, paddingVertical: 0)
+        }
         self.sutraView = sutraTextView;
     }
     override func viewDidLayoutSubviews() {
@@ -95,69 +99,7 @@ class SutraPurePageContentViewController: UIViewController {
      */
     
     
-    func getNextPagePath()->String?{
-        let indexInKeyPages = KEY_PATHS.index(of: path!)
-        if indexInKeyPages != nil {//paging by key pages
-            for i in indexInKeyPages! ... KEY_PATHS.count-1 {
-                let p = KEY_PATHS[i];
-                if !p.starts(with: path!) {//skip least page children
-                    //skip non-leaf directory
-                    if i + 1 < KEY_PATHS.count - 1 && KEY_PATHS[i+1].starts(with:p) {
-                        continue;
-                    }
-                    return p;
-                }
-            }
-            return nil;
-        } else { // paging by full index
-            let paths = Book.data.getAllPaths();
-            let indexInKeyPages = paths.index(of: path!)
-            if indexInKeyPages != nil {//paging by key pages
-                for i in indexInKeyPages! ... paths.count-1 {
-                    let p = paths[i];
-                    if !p.starts(with: path!) {//skip least page children
-                        //skip non-leaf directory
-                        if i + 1 < paths.count - 1 && paths[i+1].starts(with:p) {
-                            continue;
-                        }
-                        return p;
-                    }
-                }
-                return nil;
-            } else {
-                return nil;
-            }
-            
-        }
-    }
-    func getPreviousPagePath()->String?{
-        if path == nil { return nil }
-        let indexInKeyPages = KEY_PATHS.index(of: path!)
-        if indexInKeyPages != nil {//paging by key pages
-            for i in 0 ... indexInKeyPages! {
-                let p = KEY_PATHS[indexInKeyPages! - i];
-                if !p.starts(with: path!) {
-                    return p;
-                }
-            }
-            return nil;
-        } else { // paging by full index
-            let paths = Book.data.getAllPaths();
-            let indexInKeyPages = paths.index(of: path!)
-            if indexInKeyPages != nil {//paging by key pages
-                for i in 0 ... indexInKeyPages! {
-                    let p = paths[indexInKeyPages! - i];
-                    if !p.starts(with: path!) {
-                        return p;
-                    }
-                }
-                return nil;
-            } else {
-                return nil;
-            }
-            
-        }
-    }
+
     
     
     func updateHeader(_ item:[String:Any]){
@@ -166,51 +108,13 @@ class SutraPurePageContentViewController: UIViewController {
         
 //        self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "  ❬   ", style: .plain, target: self, action: #selector(close))
+//        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "  ❬   ", style: .plain, target: self, action: #selector(close))
         
-        self.updateStarButton()
+//        self.updateStarButton()
 //        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
     }
     
-    func updateStarButton(){
-        var likeButton:UIBarButtonItem;
-        if Data.shared.likes.contains(path!) {
-            likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
-        } else {
-            likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
-        }
-        
-        if self.isShowIndexButton && self.item?["children"] != nil {
-            let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(openIndex))
-             
-            self.navigationItem.setRightBarButtonItems([indexButton,likeButton], animated: false)
-        } else {
-            self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
-        }
-        
-        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
-        likeButton.tintColor = UIColor.darkText
-        
-    }
-    
-    @objc func openIndex(){
-        let indexVC = SutraIndexViewController();
-        indexVC.tree = item;
-        indexVC.defaultExpandLevel = 2;
-        indexVC.isShowSutraButton = false;
-        self.navigationController?.pushViewController(indexVC, animated: true)
-    }
-    
-    
-    @objc func like() {
-        Data.shared.like(self.path!)
-        self.updateStarButton()
-    }
-    
-    @objc func unlike() {
-        Data.shared.unlike(self.path!)
-        self.updateStarButton()
-    }
+
     
     
     @objc func close(){

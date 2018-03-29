@@ -36,9 +36,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.treeView.addGestureRecognizer(longPressRecognizer)
         view.addSubview(treeView)
         
-        self.setupHeaderView()
+        self.setupHeaderView(self.view.bounds.size)
         self.showList()
-        self.setupFooterView()
+        self.setupFooterView(self.view.bounds.size)
         
         let title = self.makeSutraIndexButton("", frame: CGRect(x: 3, y: 0, width: self.view.bounds.width - 3, height: 40));
         self.navigationItem.titleView = title;
@@ -50,12 +50,12 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        setupHeaderView()
-        setupFooterView()
+        setupHeaderView(size)
+        setupFooterView(size)
     }
     
-    func setupHeaderView() {
-        let width = self.view.bounds.width
+    func setupHeaderView(_ size:CGSize) {
+        let width = size.width
         
         let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 18 + 90 + 10))
         let indexes = UIView(frame: CGRect(x: 0, y: 20, width: width, height: 88));
@@ -83,8 +83,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         header.addSubview(line)
         self.treeView.treeHeaderView = header
     }
-    func setupFooterView() {
-        let width = self.view.bounds.width
+    func setupFooterView(_ size:CGSize) {
+        let width = size.width
 
         let footerSeperator = UIView(frame: CGRect(x: 0, y: 2, width: width - 10, height: 1))
         footerSeperator.backgroundColor = UIColor.lightGray
@@ -221,7 +221,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func openSutraOfPath(path:String){
-        let sutraVC = SutraPurePageViewController.init();
+        let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
         sutraVC.path = path
 //        sutraVC.isShowIndexButton = true
         sutraVC.onDismiss = {
@@ -260,7 +260,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func openChapter(chapter:Int){
-        let pageVC = SutraChapterContentViewController.init()
+        let pageVC = SutraChapterPageViewController.init( transitionStyle:.pageCurl,
+                                                   navigationOrientation:.horizontal,
+                                                   options: .none)
         pageVC.pageIndex = chapter;
         
         self.navigationController?.pushViewController(pageVC, animated: true)

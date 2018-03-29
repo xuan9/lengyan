@@ -25,7 +25,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        UINavigationBar.appearance().tintColor = UIColor.white
+        UINavigationBar.appearance().tintColor = UIColor.darkText
         
         let notification = launchOptions?[UIApplicationLaunchOptionsKey.localNotification] as? UILocalNotification
         

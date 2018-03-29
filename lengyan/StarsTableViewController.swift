@@ -12,7 +12,7 @@ class StarsTableViewController: UITableViewController{
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
 //        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
         tableView.separatorInset = UIEdgeInsetsMake(5, 0.0, 0, 0)
-        tableView.separatorStyle = .singleLine
+        tableView.separatorStyle = .none
         tableView.separatorColor = UIColor.white
         tableView.separatorInset = UIEdgeInsetsMake(10, 0.0, 10, 0)
         tableView.rowHeight = UITableViewAutomaticDimension
@@ -82,9 +82,9 @@ class StarsTableViewController: UITableViewController{
         if (cell == nil) {
             cell = UITableViewCell.init(style:.subtitle,reuseIdentifier:identifier);
             let v =  cell!.contentView
-            v.layer.cornerRadius = 10
+//            v.layer.cornerRadius = 10
             v.layer.borderColor = UIColor.lightGray.cgColor
-            v.layer.borderWidth = 1
+            v.layer.borderWidth = 1/UIScreen.main.scale
         }
 //        cell?.detailTextLabel?.text=path;
         cell?.textLabel?.numberOfLines = 20;
@@ -98,7 +98,7 @@ class StarsTableViewController: UITableViewController{
         let path:String = Data.shared.likes[(indexPath as NSIndexPath).row];
         let item = Book.data.itemOfPath(path);
         if item["children"] != nil {
-            self.openSutra(item)
+            self.openSutra(path)
         } else {
             pageVC.page = Book.data.index!.index(where: { (
                 item) -> Bool in
@@ -114,9 +114,9 @@ class StarsTableViewController: UITableViewController{
     }
     
     
-    func openSutra(_ item: [String : Any]){
-        let sutraVC = SutraPurePageContentViewController.init();
-        sutraVC.item = item
+    func openSutra(_ path:String){
+        let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
+        sutraVC.path = path
         sutraVC.isShowIndexButton = true
         sutraVC.onDismiss = {
             self.navigationController?.setNavigationBarHidden(false, animated: false)

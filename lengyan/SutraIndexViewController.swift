@@ -57,12 +57,13 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.treeView.reloadData()
         }
         self.updateHeader()
-
     }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.black
-
+        self.navigationController?.setNavigationBarHidden(false, animated: true)
+        self.navigationController?.hidesBarsOnSwipe = false;
+        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
         treeView.visibleCells()?.forEach({ (cell) in
             let item = treeView.item(for: cell as! UITableViewCell)
             treeView.expandRow(forItem: item, expandChildren: false, with: RATreeViewRowAnimationNone)
@@ -150,10 +151,11 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(tree != nil) {
             self.title = tree?["name"] as? String ?? ""
         }
-    self.navigationController?.navigationBar.isTranslucent = false;
+        self.navigationController?.navigationBar.isTranslucent = false;
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(close))//✕
-        //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
+        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
+ //        let likeTitle = Data.shared.isLike(path!) ? "★" : "☆"
         //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: likeTitle, style: .Plain, target: self, action: #selector(SutraIndexViewController.toggleLike))
         
         
@@ -165,11 +167,12 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         //        detailBtn.imageEdgeInsets = buttonEdges;
         
         let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .plain, target: self, action: #selector(openAsPage))
-        
+        listButton.tintColor = UIColor.darkText;
         
         if self.isShowSutraButton {
             let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(openSutra))
-            
+            sutraButton.tintColor = UIColor.darkText;
+
             self.navigationItem.setRightBarButtonItems([listButton,sutraButton], animated: false)
         } else {
             self.navigationItem.setRightBarButtonItems([listButton], animated: false)
@@ -229,8 +232,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     @objc func openSutra(){
-        let sutraVC = SutraPurePageContentViewController.init();
-        sutraVC.item = tree
+        let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
+        sutraVC.path = self.tree!["path"] as? String
         self.navigationController?.pushViewController(sutraVC, animated: true)
     }
     
@@ -339,7 +342,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 bookBtn.frame = CGRect(x: 0, y: 0.0, width: 38, height: treeView.rowHeight)
                 //                bookBtn.backgroundColor = UIColor.redColor()
                 bookBtn.setTitle("❭", for: UIControlState())
-                bookBtn.tintColor = UIColor.black
+                bookBtn.tintColor = UIColor.darkText
                 bookBtn.setTitleColor(UIColor.lightGray, for: .normal)
                 //                let bookImage = UIImage.init(named: "book_18pt")
                 //                bookBtn.setImage(bookImage, forState: .Normal)

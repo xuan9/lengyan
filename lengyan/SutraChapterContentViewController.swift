@@ -12,18 +12,11 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
     
     var onDismiss: (() -> Void)?
     var pageIndex = 0;
-    var isShowIndexButton = false;
-    var nextPageIndex = -1;
-    var beforePageIndex = -1;
-    
     var sutraView: UITextView? = nil;
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationController?.hidesBarsOnSwipe = true;
-        self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         view.backgroundColor = UIColor.white
-        
         self.addSutra(sutra: Book.data.getChapterSutra(chapter: self.pageIndex));
         updateHeader()
     }
@@ -34,16 +27,6 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
     
     override var prefersStatusBarHidden: Bool {
         return navigationController?.isNavigationBarHidden ?? false
-    }
-    
-    //    override func viewDidAppear(_ animated: Bool) {
-    //        Data.shared.logItemOpened(path)
-    //    }
-    //    override func viewDidDisappear(_ animated: Bool) {
-    //        Data.shared.logItemClosed(path)
-    //    }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
     }
     
     func addSutra(sutra:String){
@@ -57,26 +40,15 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
         let text = Book.data.getSutraAttributeString(text: sutra);
         sutraTextView.attributedText = text;
         view.addSubview(sutraTextView);
-        sutraTextView.bindFrameToSuperviewBounds();
+        if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
+            sutraTextView.bindFrameToSuperviewBounds(paddingHorizontal:20, paddingVertical: 10)
+        } else {
+            sutraTextView.bindFrameToSuperviewBounds(paddingHorizontal:2, paddingVertical: 0)
+        }
         self.sutraView = sutraTextView;
     }
     override func viewDidLayoutSubviews() {
         self.sutraView?.setContentOffset(.zero, animated:false);
-    }
-    
-    func getNextPageIndex()->Int{
-        if(nextPageIndex == -1){
-            nextPageIndex = pageIndex + 1 ;
-        } else if(nextPageIndex<9){
-            nextPageIndex = nextPageIndex + 1;
-        } else {
-            nextPageIndex = 0
-        }
-        
-        return nextPageIndex;
-    }
-    func getBeforePageIndex()->Int{
-        return pageIndex - 1;
     }
     
     func updateHeader(){

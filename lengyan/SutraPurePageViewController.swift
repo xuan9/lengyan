@@ -13,6 +13,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     var onDismiss: (() -> Void)?
 //    var page:Int = 0
     var path:String?
+    var _paths:[String] = [];
+    var isShowIndexButton = true;
 //    var item:[String:String]?
     
     override func viewDidLoad() {
@@ -53,29 +55,98 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
         self.navigationController?.navigationBar.isTranslucent = false;
+        self.updateStarButton();
+    }
+    
+    func updateStarButton(){
+        var likeButton:UIBarButtonItem;
+        if Data.shared.likes.contains(path!) {
+            likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
+        } else {
+            likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
+        }
+        
+        if self.isShowIndexButton  {
+            let item = Book.data.itemOfPath(self.path!);
+            if(item["children"] != nil ){
+                let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(openIndex))
+                 self.navigationItem.setRightBarButtonItems([indexButton,likeButton], animated: false)
+            } else {
+                self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
+            }
+        } else {
+            self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
+        }
+
+        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
+        likeButton.tintColor = UIColor.darkText
+    }
+    @objc func openIndex(){
+        let indexVC = SutraIndexViewController();
+        indexVC.tree = Book.data.itemOfPath(path!);
+        indexVC.defaultExpandLevel = 2;
+        indexVC.isShowSutraButton = false;
+        self.navigationController?.pushViewController(indexVC, animated: true)
+    }
+    
+    
+    @objc func like() {
+        Data.shared.like(self.path!)
+        self.updateStarButton()
+    }
+    
+    @objc func unlike() {
+        Data.shared.unlike(self.path!)
+        self.updateStarButton()
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
     {
         let pageContent: SutraPurePageContentViewController = viewController as! SutraPurePageContentViewController
-        let path = pageContent.getPreviousPagePath()
-        if (path == nil)
+        
+        if pageContent.path == nil { return nil}
+        var previousPath:String?
+        let index = _paths.index(of: pageContent.path!)
+        if index != nil && index! > 0 {
+            previousPath = _paths[index! - 1]//found from cache
+        } else {
+            previousPath = Book.data.getPreviousPagePath(pageContent.path)
+            if index == nil {
+                _paths.append(pageContent.path!)
+            }
+            if previousPath != nil {//cache it
+                _paths.insert(previousPath!, at: 0);
+            }
+        }
+        if (previousPath == nil)
         {
             return nil;
         }
-        return getViewControllerAtPath(path!)
+        return getViewControllerAtPath(previousPath!)
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
     {
         let pageContent: SutraPurePageContentViewController = viewController as! SutraPurePageContentViewController
-        
-        let path = pageContent.getNextPagePath()
-        if (path == nil)
+        if pageContent.path == nil { return nil}
+        let index = _paths.index(of: pageContent.path!)
+        var nextPath:String?;
+        if index != nil && index! < _paths.count - 1 {
+            nextPath = _paths[index! + 1]//found from cache
+        } else {
+            nextPath = Book.data.getNextPagePath(pageContent.path)
+            if index == nil {
+                _paths.append(pageContent.path!)
+            }
+            if nextPath != nil {//cache it
+                _paths.append(nextPath!)
+            }
+        }
+        if (nextPath == nil)
         {
             return nil;
         }
-        return getViewControllerAtPath(path!)
+        return getViewControllerAtPath(nextPath!)
     }
     
     func getViewControllerAtPath(_ path: String) -> UIViewController

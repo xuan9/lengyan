@@ -258,7 +258,14 @@ class Book: NSObject {
         }
         return self.itemOfPath(path)
     }
-    
+    func getYoungBrotherPath(_ path: String) -> String?{
+        if let seq = Int(NSString(string:path).lastPathComponent.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()) {
+            if seq > 1 {
+                return String(path.prefix(path.count - String(seq).count)) +  String(seq - 1)
+            }
+        }
+        return nil;
+    }
     func isItemLeaf(_ index:Int) ->Bool?{
         let meta = Book.data.index?[index];
         let path = meta?["path"] as String?;
@@ -452,7 +459,7 @@ class Book: NSObject {
         
         //        pStyle.lineSpacing = 20
         pStyle.paragraphSpacing = 1
-        pStyle.firstLineHeadIndent = 30
+        pStyle.firstLineHeadIndent = 40
         
         let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
         
@@ -464,6 +471,7 @@ class Book: NSObject {
     func getSutra(_ item:[String:Any])->String{
         return getSutra(item,maxLength: Int.max)
     }
+    
     
     func getSutra(_ item:[String:Any], maxLength:Int)->String{
         var sutraContents = [String]()
@@ -543,4 +551,135 @@ class Book: NSObject {
         }
         return sutraContents.joined(separator: "\n")
     }
+    
+    func getPreviousPagePath(_ path:String?)->String?{
+        if path == nil { return nil }
+        let indexInKeyPages = KEY_PATHS.index(of: path!)
+        if indexInKeyPages != nil {//paging by key pages
+            for j in 0 ... indexInKeyPages! {
+                let i = indexInKeyPages! - j
+                let p = KEY_PATHS[i];
+                if !path!.starts(with: p) {
+                    return p;
+                }
+            }
+            return nil;
+        } else { // paging by full index
+            let paths = getAllPaths();
+            let index = paths.index(of: path!)
+            let belongingKeyPath = getBelongingKeyPagePath(path!)
+            if belongingKeyPath == nil { return nil}
+            
+            if index != nil && index! > 0 {//paging by all items and key pages if found
+                let youngBrotherPath = getYoungBrotherPath(path!)
+                if youngBrotherPath != nil && youngBrotherPath!.hasPrefix(belongingKeyPath!) {
+                    return youngBrotherPath;
+                }
+                for j in 0 ... index! - 1 {
+                    let i = index! - 1 - j
+                    let p = paths[i];
+                    
+                    if p.starts(with: belongingKeyPath!) {//still under the same key path
+                        //skip parents levels
+                        if i + 1 <= paths.count - 1 && paths[i+1].starts(with:p) {
+                            continue;
+                        }
+                        
+                        //skip lower levels if it's parent in scope
+                        var parent:String = p, lastParent:String?
+                        repeat{
+                            parent = NSString(string:parent).deletingLastPathComponent
+                            if parent.hasPrefix(belongingKeyPath!) && !path!.hasPrefix(parent){
+                                lastParent = parent;
+                            } else {
+                                if lastParent == nil {
+                                    break;
+                                } else {
+                                    return lastParent!;
+                                }
+                            }
+                        } while (true)
+                        
+                        return p;
+                    } else {//previous key page!
+                        return getPreviousPagePath(belongingKeyPath!);
+                    }
+                    
+                }
+                return nil;
+            } else {
+                return nil;
+            }
+            
+        }
+    }
+    func getBelongingKeyPagePath(_ path:String)->String?{
+        var p = path;
+        repeat {
+            let indexInKeyPages = KEY_PATHS.index(of: p)
+            if indexInKeyPages != nil {
+                return p;
+            } else{
+                let parent = NSString(string:p).deletingLastPathComponent
+                if (parent == p) {
+                    break;
+                } else {
+                    p = parent;
+                }
+            }
+        }while(true);
+            
+        NSLog("Error: Could not getBelongingKeyPagePath for path \(path)");
+        return nil;
+    }
+    
+    func getNextPagePath(_ path:String?)->String?{
+        if path == nil { return nil }
+
+        let indexInKeyPages = KEY_PATHS.index(of: path!)
+        if indexInKeyPages != nil {//paging by key pages
+            for i in indexInKeyPages! ... KEY_PATHS.count-1 {
+                let p = KEY_PATHS[i];
+                if !p.starts(with: path!) {//skip last page children
+                    //skip non-leaf directory
+                    if i + 1 < KEY_PATHS.count - 1 && KEY_PATHS[i+1].starts(with:p) {
+                        continue;
+                    }
+                    return p;
+                }
+            }
+            return nil;
+        } else { // paging by full index and key pages
+            let paths = Book.data.getAllPaths();
+            let index = paths.index(of: path!)
+            let belongingKeyPath = getBelongingKeyPagePath(path!)
+            if belongingKeyPath == nil { return nil}
+            
+            if index != nil && index! < paths.count - 1 {
+                for i in index!+1 ... paths.count-1 {
+                    let p = paths[i];
+                    if p.starts(with: belongingKeyPath!) {//still under the same key path
+                        if p.starts(with: path!) {//skip last page children
+                            continue;
+                        } else {
+//                            //skip non-leaf directory
+//                            if i + 1 < paths.count - 1 && paths[i+1].starts(with:p) {
+//                                continue;
+//                            }
+                            return p;
+                        }
+                    } else {//next key page!
+                        return getNextPagePath(belongingKeyPath!);
+                    }
+                   
+                }
+                return nil;
+            } else {
+                return nil;
+            }
+            
+        }
+    }
+    
+
 }

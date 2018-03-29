@@ -167,7 +167,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         
         //        let composeBtn = UIBarButtonItem.init(image: UIImage.init(named: "comment_outline_18pt"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.comment))
         
-        let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .plain, target: self, action: #selector(SutraPageContentViewController.share))
+        let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .plain, target: self, action: #selector(share(sender:)))
         
 //        let likeBtn = UIBarButtonItem.init(image: UIImage.init(named: "ic_star_border_18pt"), style: .plain, target: self, action: #selector(SutraPageContentViewController.toggleLike))
 //        
@@ -228,9 +228,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     
     @objc func pureSutra(){
         
-        //        let sutraVC = SutraPurePageViewController.init( transitionStyle:.PageCurl, navigationOrientation:.Horizontal, options: .None)
-        let sutraVC = SutraPurePageContentViewController.init();
-        sutraVC.item = meta;
+        let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
+        sutraVC.path = path;
         
         //        let sutraVC:SutraBookViewController = self.storyboard!.instantiateViewControllerWithIdentifier("SutraBookViewController") as! SutraBookViewController
         //        sutraVC.initialRow = self.pageIndex
@@ -238,7 +237,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         self.navigationController?.pushViewController(sutraVC, animated: true)
     }
     
-    @objc func share() {
+    @objc func share(sender:UIBarButtonItem) {
         //todo attribute string
         var shareContents = [String]()
         let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
@@ -266,7 +265,11 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             shareContents.append(bookTitle + "之「" + (meta["name"] as! String) + "」")
             shareContents.append(Book.data.getSutra(meta))
         }
+        
         let activityViewController = UIActivityViewController(activityItems:[shareContents.joined(separator: "\n")], applicationActivities: nil)
+        if let presenter = activityViewController.popoverPresentationController {
+            presenter.barButtonItem = sender;
+        }
         present(activityViewController, animated: true, completion: {})
     }
     

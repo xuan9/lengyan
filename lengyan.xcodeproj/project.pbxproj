@@ -52,6 +52,7 @@
 		13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13CA80F01EAB3BF600589E8F /* Assets.xcassets */; };
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
 		13E2230B1D5150C5000F763F /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E2230A1D5150C5000F763F /* Macros.swift */; };
+		4A3D33CA206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */; };
 		4A6C6BB21EE5A5C400B447DC /* lyz1.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB11EE5A4F300B447DC /* lyz1.m4a */; settings = {ASSET_TAGS = (lyz1, ); }; };
 		4A6C6BB31EE5A5CA00B447DC /* lyzpg1.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB01EE5A4C700B447DC /* lyzpg1.m4a */; settings = {ASSET_TAGS = (lyzpg1, ); }; };
 		4A6C89131EC24BC700C0F43A /* SVModalWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6C88FD1EC24BC700C0F43A /* SVModalWebViewController.m */; };
@@ -171,6 +172,7 @@
 		13DF26861F1BC410007DEF71 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
 		13E2230A1D5150C5000F763F /* Macros.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macros.swift; sourceTree = "<group>"; };
+		4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraChapterPageControllerViewController.swift; sourceTree = "<group>"; };
 		4A6C6BB01EE5A4C700B447DC /* lyzpg1.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = lyzpg1.m4a; sourceTree = "<group>"; };
 		4A6C6BB11EE5A4F300B447DC /* lyz1.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = lyz1.m4a; sourceTree = "<group>"; };
 		4A6C88FC1EC24BC700C0F43A /* SVModalWebViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVModalWebViewController.h; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 				1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */,
 				1372181B1D402B720037332A /* SutraPurePageViewController.swift */,
 				1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */,
+				4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */,
 				139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */,
 				135D60601D16FB7400029090 /* SutraBookViewController.swift */,
 				135D60641D174CC300029090 /* SutraTableViewCell.swift */,
@@ -649,6 +652,7 @@
 				1390738B1D109B3F003A3333 /* RATreeNodeItem+Private.m in Sources */,
 				139073881D109B3F003A3333 /* RATreeNodeCollectionController.m in Sources */,
 				139073861D109B3F003A3333 /* RATableView.m in Sources */,
+				4A3D33CA206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift in Sources */,
 				135D60651D174CC300029090 /* SutraTableViewCell.swift in Sources */,
 				139073901D109B3F003A3333 /* RATreeView+TableViewDelegate.m in Sources */,
 				139E5E0E2061A6B100F18539 /* SutraChapterContentViewController.swift in Sources */,
