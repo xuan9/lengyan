@@ -434,11 +434,12 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     func play(name:String, file:String, ext:String){
         
         OperationQueue.main.addOperation {
-            self.footLabel.text = name
-            self.tableView.reloadData();
             if UIApplication.shared.applicationState != .active {
                 return;
             }
+            
+            self.footLabel.text = name
+            self.tableView.reloadData();
             
         DispatchQueue.global().async {
             let req:NSBundleResourceRequest = self.rReq[file]!
