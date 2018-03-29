@@ -459,7 +459,7 @@ class Book: NSObject {
         
         //        pStyle.lineSpacing = 20
         pStyle.paragraphSpacing = 1
-        pStyle.firstLineHeadIndent = 40
+        pStyle.firstLineHeadIndent = 35
         
         let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
         
