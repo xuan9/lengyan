@@ -11,7 +11,6 @@ import UIKit
 
 class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
-    
     fileprivate var treeView: RATreeView!
     internal var tree:[[String]]?;
     fileprivate var sutraIndexButtons = [String]();
@@ -172,16 +171,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     @objc func openDrbaLink(_ sender:UIButton) {
-        //        let webView = UIWebView.init()
-        //        let webVC = UIViewController.init()
-        //        webVC.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "❬", style: .plain, target: self, action: #selector(SutraFrontViewController.close))//✕
-        //
-        //        webVC.view.addSubview(webView);
-        //        self.navigationController?.pushViewController(webVC, animated: true)
-        
-        //        let webViewController = SVWebViewController(address: )
-        
-        //        self.navigationController?.pushViewController(webViewController!, animated: true)
         UIApplication.shared.openURL(URL.init(string: "http://www.drbachinese.org/online_reading/sutra_explanation/Shu/contents.htm")!)
     }
     
@@ -190,12 +179,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func showList(){
-        //        var firstLevelItems=[[String]]();
-        //            firstLevelItems.append(["name":"大佛頂如來密因修證了義諸菩薩萬行首楞嚴經","header":true]);
-        //            for item in (Book.data.tree!["children"] as! NSArray) {
-        //                firstLevelItems.append(item as! [String : Any]);
-        //            }
-        //            firstLevelItems.append(["name":"★精选","header":true]);
         self.tree = Book.data.getKeyItems();
         self.treeView.reloadData()
     }
@@ -223,7 +206,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func openSutraOfPath(path:String){
         let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
         sutraVC.path = path
-//        sutraVC.isShowIndexButton = true
         sutraVC.onDismiss = {
             self.navigationController?.setNavigationBarHidden(false, animated: false)
         }
@@ -235,12 +217,12 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                                                    navigationOrientation:.horizontal,
                                                    options: .none)
         let path:String = item["path"] as! String
-        TICK()
+        // TICK()
         pageVC.page=Book.data.index!.index(where: { (
             item) -> Bool in
             return item["path"] == path
         })!;
-        TOCK()
+        // TOCK()
         
         
         self.navigationController?.pushViewController(pageVC, animated: true)
@@ -251,11 +233,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         indexVC.tree = item;
         indexVC.defaultExpandLevel = 2;
         indexVC.onDismiss = {
-            //            self.showList()
             } as (() -> Void)
         
-        //        let navVC = UINavigationController.init(rootViewController: indexVC);
-        //        self.present(navVC, animated: true, completion: nil)
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
@@ -264,9 +243,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                                                    navigationOrientation:.horizontal,
                                                    options: .none)
         pageVC.pageIndex = chapter;
-        
         self.navigationController?.pushViewController(pageVC, animated: true)
     }
+
     // MARK - RATreeView
     
     func treeView(_ treeView: RATreeView, numberOfChildrenOfItem item: Any?) -> Int {
@@ -295,15 +274,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }else {
             cell.textLabel?.text =  name
         }
-        //        if(item["header"] != nil){
-        //            cell.accessoryType = .none
-        //            cell.backgroundColor =  UIColor.groupTableViewBackground
-        //            //            cell.textLabel?.textColor = UIColor.darkTextColor()
-        //        }else{
-        //            cell.textLabel?.textColor = UIColor.init(red: 0, green: 0, blue:76/255, alpha: 0.8)//very darkblue
         cell.backgroundColor=UIColor.clear;
         cell.accessoryType = .disclosureIndicator
-        //        }
         
         return cell
     }

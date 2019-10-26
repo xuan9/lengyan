@@ -139,7 +139,6 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             cell.textView.textColor = UIColor.black
             cell.backgroundColor = UIColor.clear
             
-            //            cell.backgroundColor = UIColor.groupTableViewBackgroundColor()
         }  else {
             font = comentFont;
             cell.textView.textColor = UIColor(red: 33/255, green: 33/255, blue: 33/255, alpha: 1)
@@ -155,25 +154,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         if (navigationController?.isNavigationBarHidden ?? true){
             return UITableViewCell()
         }
-        //action group
-        //        let actions = SutraActionGroupView();
-        //        actions.path = meta["path"] as? String
-        //        actions.frame = CGRectMake(0, 0, tableView.frame.size.width, 50);
-        //        actions.backgroundColor = UIColor.whiteColor()
-        
-        //        let actionBtn = UIBarButtonItem.init(barButtonSystemItem: .Action, target: self, action: nil);
-        
-        //        let composeBtn = UIBarButtonItem.init(barButtonSystemItem: .Compose, target: self, action: nil);
-        
-        //        let composeBtn = UIBarButtonItem.init(image: UIImage.init(named: "comment_outline_18pt"), style: .Plain, target: self, action: #selector(SutraPageContentViewController.comment))
-        
         let actionBtn = UIBarButtonItem.init(image: UIImage.init(named: "share_18pt"), style: .plain, target: self, action: #selector(share(sender:)))
-        
-//        let likeBtn = UIBarButtonItem.init(image: UIImage.init(named: "ic_star_border_18pt"), style: .plain, target: self, action: #selector(SutraPageContentViewController.toggleLike))
-//        
-//        if Data.shared.isLike(path) {
-//            likeBtn.tintColor = view.tintColor
-//        }
         
         let pureSutraBtn = UIBarButtonItem.init(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(SutraPageContentViewController.pureSutra))
         
@@ -186,21 +167,10 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         let space44 = UIBarButtonItem.init(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
         space44.width = 44;
         let spaceFlexible = UIBarButtonItem.init(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        //        space.width = 44;
-        //        starBtn.setTitleTextAttributes([NSFontAttributeName : UIFont.systemFontOfSize(22)], forState: .Normal)
-        
-        //        let btnInsets = UIEdgeInsetsMake(-20, 0.0, 0, 0.0)
-        //        likeBtn.imageInsets = btnInsets
-        //        actionBtn.imageInsets = btnInsets
-        //        pureSutraBtn.imageInsets = btnInsets
-        //        leftBtn.imageInsets = btnInsets
-        //        rightBtn.imageInsets = btnInsets
-        //        composeBtn.imageInsets = btnInsets
         
         toolbar.tintColor = UIColor.lightGray
         toolbar.frame = CGRect(x: 0, y: 20, width: tableView.frame.size.width, height: 24);
         toolbar.isHidden = false;
-        //        toolbar.backgroundColor = UIColor.groupTableViewBackgroundColor()
         if meta["children"] != nil {
             toolbar.setItems([leftBtn, spaceFlexible, pureSutraBtn, spaceFlexible, actionBtn, spaceFlexible, rightBtn], animated: false)
         } else {
@@ -231,19 +201,14 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
         sutraVC.path = path;
         
-        //        let sutraVC:SutraBookViewController = self.storyboard!.instantiateViewControllerWithIdentifier("SutraBookViewController") as! SutraBookViewController
-        //        sutraVC.initialRow = self.pageIndex
-        
         self.navigationController?.pushViewController(sutraVC, animated: true)
     }
     
     @objc func share(sender:UIBarButtonItem) {
-        //todo attribute string
         var shareContents = [String]()
         let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
         if meta["children"] == nil {
             var hasTitlePrefix:Bool = false;
-//            var hasCommentaryPrefix:Bool = false;
             for c in contents {
                 if c["type"] == "sutra" {
                     if !hasTitlePrefix {
@@ -252,13 +217,6 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
                     }
                     shareContents.append(c["content"]!)
                 }
-//                else  if c["type"] == "commentary" {
-//                    if !hasCommentaryPrefix {
-//                        shareContents.append("\n「宣化上人講解」")
-//                        hasCommentaryPrefix = true;
-//                    }
-//                    shareContents.append(c["content"]!)
-//                }
             }
         } else {
             
@@ -272,56 +230,4 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         }
         present(activityViewController, animated: true, completion: {})
     }
-    
-    //
-    //    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-    //        return showHeader ? 50.0 : 0;
-    //    }
-    
-    
-    /*
-     // Override to support conditional editing of the table view.
-     override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-     // Return false if you do not want the specified item to be editable.
-     return true
-     }
-     */
-    
-    /*
-     // Override to support editing the table view.
-     override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-     if editingStyle == .Delete {
-     // Delete the row from the data source
-     tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-     } else if editingStyle == .Insert {
-     // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-     }
-     }
-     */
-    
-    /*
-     // Override to support rearranging the table view.
-     override func tableView(tableView: UITableView, moveRowAtIndexPath fromIndexPath: NSIndexPath, toIndexPath: NSIndexPath) {
-     
-     }
-     */
-    
-    /*
-     // Override to support conditional rearranging of the table view.
-     override func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-     // Return false if you do not want the item to be re-orderable.
-     return true
-     }
-     */
-    
-    /*
-     // MARK: - Navigation
-     
-     // In a storyboard-based application, you will often want to do a little preparation before navigation
-     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-     // Get the new view controller using segue.destinationViewController.
-     // Pass the selected object to the new view controller.
-     }
-     */
-    
 }

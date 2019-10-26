@@ -10,7 +10,6 @@ class StarsTableViewController: UITableViewController{
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-//        tableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 44, 0)
         tableView.separatorInset = UIEdgeInsetsMake(5, 0.0, 0, 0)
         tableView.separatorStyle = .none
         tableView.separatorColor = UIColor.white
@@ -76,20 +75,16 @@ class StarsTableViewController: UITableViewController{
         let path = Data.shared.likes[(indexPath as NSIndexPath).row];
         let item =  Book.data.itemOfPath(path);
         
-        //        let cell = tableView.dequeueReusableCellWithIdentifier("StarsTableViewCell", forIndexPath: indexPath) as UITableViewCell
         let identifier = "StarsTableViewCell";
         var cell = tableView.dequeueReusableCell(withIdentifier: identifier);
         if (cell == nil) {
             cell = UITableViewCell.init(style:.subtitle,reuseIdentifier:identifier);
             let v =  cell!.contentView
-//            v.layer.cornerRadius = 10
             v.layer.borderColor = UIColor.lightGray.cgColor
             v.layer.borderWidth = 1/UIScreen.main.scale
         }
-//        cell?.detailTextLabel?.text=path;
         cell?.textLabel?.numberOfLines = 20;
         cell?.textLabel?.attributedText =  Book.data.getSutraAttributeString(item, maxLength: 100);
-//        cell?.textLabel?.attributedText = Book.data.getTitleLine(item);
         return cell!
     }
     
@@ -124,32 +119,6 @@ class StarsTableViewController: UITableViewController{
         self.navigationController?.isNavigationBarHidden = false
         self.navigationController?.pushViewController(sutraVC, animated: true)
     }
-    
-    //
-    //    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-    //        return showHeader ? 50.0 : 0;
-    //    }
-    
-    
-    /*
-     // Override to support conditional editing of the table view.
-     override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-     // Return false if you do not want the specified item to be editable.
-     return true
-     }
-     */
-    
-    /*
-     // Override to support editing the table view.
-     override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-     if editingStyle == .Delete {
-     // Delete the row from the data source
-     tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-     } else if editingStyle == .Insert {
-     // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-     }
-     }
-     */
     
     
 }

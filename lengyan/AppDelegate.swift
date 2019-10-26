@@ -76,11 +76,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 dateInfo.day = lastScheduledNotificationFireDay! + 1
             }
             
-            //test code to trigger notification soon
-//            dateInfo.day = NSCalendar.current.component(.day, from: Date())
-//            dateInfo.hour = NSCalendar.current.component(.hour, from: Date())
-//            let min:Int = NSCalendar.current.component(.minute, from: Date())
-//            dateInfo.minute = min + Int(arc4random_uniform(UInt32(5)))
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateInfo, repeats: false)
             let request = UNNotificationRequest(identifier: "SutraReminder\(dateInfo.day!)", content: content, trigger: trigger)
@@ -130,13 +125,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             
         }
         let root = window?.rootViewController as! UITabBarController
-//        print("seleted tabbar view: \(root.selectedViewController)")
-        
         root.selectedIndex = 1
-        
-//        print("seleted tabbar view: \(root.selectedViewController)")
-        
-        
         (root.selectedViewController as!UINavigationController).popToRootViewController(animated: false)
         
         ((root.selectedViewController as! UINavigationController).topViewController as! SutraFrontViewController).openSutraOfPath(path: path)

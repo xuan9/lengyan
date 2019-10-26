@@ -8,6 +8,15 @@
 
 import Foundation
 
+var startTime = Date()
+
+func TICK(){ startTime =  Date() }
+
+func TOCK(_ function: String = #function, file: String = #file, line: Int = #line){
+    print("\(function) Time: \(-startTime.timeIntervalSinceNow)\nLine:\(line) File: \(file)")
+}
+
+
 func imageScaledToFillSize(_ size: CGSize, image: UIImage) -> UIImage
 {
     let aspect = image.size.width / image.size.height;

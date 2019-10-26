@@ -17,12 +17,7 @@ class SutraChapterPageViewController: UIPageViewController, UIPageViewController
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        
-//        self.edgesForExtendedLayout = UIRectEdge();
-//        self.extendedLayoutIncludesOpaqueBars = false;
-//        self.automaticallyAdjustsScrollViewInsets = true;
-        
-        
+                
         self.setPageTitle()
         self.dataSource = self;
         self.delegate = self;
@@ -40,8 +35,6 @@ class SutraChapterPageViewController: UIPageViewController, UIPageViewController
     @objc func close() {
         onDismiss?();
         self.navigationController?.popViewController(animated: true);
-        
-        //        self.navigationController?.dismiss(animated: true, completion: {})
     }
     
     func setTitle() {

@@ -79,9 +79,6 @@ class Data: NSObject, DataProtocal {
     static let playModeKey = "playMode"
     internal var likesCache:[String]?;
     
-//    internal var itemOpened:String?;
-//    internal var itemOpenedAt:Date;
-    
     override init(){
         
         self.defaults = UserDefaults.standard
@@ -147,15 +144,8 @@ class Data: NSObject, DataProtocal {
         }
         set(mode) {
             defaults.set(mode, forKey: Data.playModeKey)
-        }
-        
+        }   
     }
-    
-//    func logItemOpened(path:String){
-//    }
-//    
-//    func logItemClosed(path:String){
-//    }
     
     func persist(){
         defaults.synchronize()

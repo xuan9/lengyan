@@ -153,18 +153,5 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         } else {
                 self.navigationItem.titleView = Book.data.getTitleView(item!);
         }
-//        let recognizer = UITapGestureRecognizer(target: self, action: Selector("titleWasTapped"))
-//        self.navigationItem.titleView!.addGestureRecognizer(recognizer)
-   
     }
-    
-    // MARK: - view controller functions overwrites
-//    override func prefersStatusBarHidden() -> Bool {
-//        return true
-//    }
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
 }

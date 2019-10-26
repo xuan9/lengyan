@@ -11,11 +11,9 @@ import UIKit
 class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
     var sutraStoryBoard:UIStoryboard?;
     var onDismiss: (() -> Void)?
-//    var page:Int = 0
     var path:String?
     var _paths:[String] = [];
     var isShowIndexButton = true;
-//    var item:[String:String]?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,13 +41,11 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     @objc func close() {
         onDismiss?();
         self.navigationController?.popViewController(animated: true);
-
-//        self.navigationController?.dismiss(animated: true, completion: {})
     }
     
     func setTitle() {
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬  ", style: .plain, target: self, action: #selector(close))
-    self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
+        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
         
         self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
@@ -81,6 +77,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
         likeButton.tintColor = UIColor.darkText
     }
+
     @objc func openIndex(){
         let indexVC = SutraIndexViewController();
         indexVC.tree = Book.data.itemOfPath(path!);
@@ -88,7 +85,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         indexVC.isShowSutraButton = false;
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
-    
     
     @objc func like() {
         Data.shared.like(self.path!)
@@ -153,7 +149,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     {
         
         let pageContent:SutraPurePageContentViewController = SutraPurePageContentViewController();
-//        self.sutraStoryBoard!.instantiateViewController(withIdentifier: "SutraPurePageContentViewController") as! SutraPurePageContentViewController
         
         pageContent.path = path
         
@@ -183,10 +178,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         } else {
             self.navigationItem.titleView = Book.data.getTitleView(item);
         }
-    }
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
     
 }

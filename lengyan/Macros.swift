@@ -7,11 +7,3 @@
 //
 
 import Foundation
-
-var startTime = Date()
-
-func TICK(){ startTime =  Date() }
-
-func TOCK(_ function: String = #function, file: String = #file, line: Int = #line){
-    print("\(function) Time: \(-startTime.timeIntervalSinceNow)\nLine:\(line) File: \(file)")
-}

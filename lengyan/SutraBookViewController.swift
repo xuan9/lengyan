@@ -46,8 +46,7 @@ class SutraBookViewController: UITableViewController{
         tableView.scrollsToTop = true
         
         if (initialRow > 0) {
-            print("viewWillAppear, scroll to row: \(initialRow)");
-//            self.tableView.reloadData()
+            // print("viewWillAppear, scroll to row: \(initialRow)");
             self.tableView.selectRow(at: IndexPath.init(row: initialRow, section: 0), animated: false, scrollPosition: .top)
             initialRow = -1;
         }
@@ -111,7 +110,6 @@ class SutraBookViewController: UITableViewController{
         
         if(contents == nil){
             cell.textView.attributedText = nil;
-//            cell.textView.attributedText =  getIndexAttributeText(meta["name"] as! String);
         } else {
             cell.textView.attributedText =  getSutraAttributeText(contents!);
         }
@@ -147,35 +145,5 @@ class SutraBookViewController: UITableViewController{
         let attributes = [NSAttributedStringKey.foregroundColor : UIColor.gray,NSAttributedStringKey.font: UIFont.systemFont(ofSize: 14)]
         return NSAttributedString(string: name, attributes:attributes)
     }
-    
-    
-    
-    
-    //
-    //    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-    //        return showHeader ? 50.0 : 0;
-    //    }
-    
-    
-    /*
-     // Override to support conditional editing of the table view.
-     override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-     // Return false if you do not want the specified item to be editable.
-     return true
-     }
-     */
-    
-    /*
-     // Override to support editing the table view.
-     override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-     if editingStyle == .Delete {
-     // Delete the row from the data source
-     tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-     } else if editingStyle == .Insert {
-     // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-     }
-     }
-     */
-    
     
 }

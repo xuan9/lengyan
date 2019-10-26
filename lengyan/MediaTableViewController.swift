@@ -49,9 +49,6 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
     override func viewDidLoad() {
         super.viewDidLoad()
         self.automaticallyAdjustsScrollViewInsets = true;
-        //self.navigationController?.hidesBarsOnSwipe = true;
-        //    self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        //        self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         tableView.dataSource = self
         tableView.delegate = self
@@ -138,22 +135,8 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             }
         }
     }
-    //
-    //    override func viewWillAppear(animated: Bool) {
-    //        super.viewWillAppear(animated)
-    //    }
-    //
-    //    override func viewWillDisappear(animated: Bool) {
-    //        super.viewWillDisappear(animated)
-    //    }
-    //
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
+
     func setTitleBar() {
-        //        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"選擇", style: .plain, target: self, action: nil)
         self.title = NSLocalizedString("media_tab_title", comment: "听经")//todo
     }
     
@@ -664,11 +647,6 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                     }
                 })
                 
-                //                if downloaded.count>0 {
-                //                    name = downloaded.object(at: 0) as! String
-                //                }
-                
-                //                let fullList:[String]?;
                 let sorted = NSMutableArray();
                 for group in self.media {
                     let files = group["files"] as! [String]
@@ -706,7 +684,6 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 
                 for _ in 1...times {
                     for asset in assets {
-//                        NSLog("creat AVPlayerItem")
                         let item = AVPlayerItem(asset: (asset as! AVURLAsset));
                         self.queuePlayer?.insert(item, after:nil);
                     }
@@ -714,7 +691,6 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             }else if(self.playMode == Int.max || self.playMode <= 6){
                 let times = self.playMode == Int.max ? 30 : self.playMode
                 for _ in 1...times {
-//                    NSLog("creat AVPlayerItem")
                     let item = AVPlayerItem(asset: (currentItem?.asset)!);
                     self.queuePlayer?.insert(item, after:nil);
                 }
