@@ -82,6 +82,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         header.addSubview(line)
         self.treeView.treeHeaderView = header
     }
+    
     func setupFooterView(_ size:CGSize) {
         let width = size.width
 
@@ -144,7 +145,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(frame != nil) {
             btn.frame = frame!
         }
-        btn.setTitle(Book.data.itemOfPath(path)["name"] as! String?, for: UIControlState())
+        btn.setTitle(Book.shared.itemOfPath(path)["name"] as! String?, for: UIControlState())
         btn.addTarget(self, action: #selector(onSutraIndexButtonTouchUp(_:)), for: .touchUpInside)
         let count = sutraIndexButtons.count;
         btn.tag = count
@@ -157,7 +158,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     @objc func onSutraIndexButtonTouchUp(_ sender:UIButton){
         let path = sutraIndexButtons[sender.tag]
-        self.openIndex(Book.data.itemOfPath(path))
+        self.openIndex(Book.shared.itemOfPath(path))
     }
     
     @objc func onSutraChapterButtonTouchUp(_ sender:UIButton){
@@ -167,7 +168,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     
     @objc func openRootIndex() {
-        self.openIndex(Book.data.itemOfPath(""))
+        self.openIndex(Book.shared.itemOfPath(""))
     }
     
     @objc func openDrbaLink(_ sender:UIButton) {
@@ -179,7 +180,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func showList(){
-        self.tree = Book.data.getKeyItems();
+        self.tree = Book.shared.getKeyItems();
         self.treeView.reloadData()
     }
     
@@ -218,7 +219,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                                                    options: .none)
         let path:String = item["path"] as! String
         // TICK()
-        pageVC.page=Book.data.index!.index(where: { (
+        pageVC.page=Book.shared.index!.index(where: { (
             item) -> Bool in
             return item["path"] == path
         })!;
@@ -270,7 +271,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let name = item[1];
         let chapterStartIndex = CHAPTER_START_PATHS.index(of: item[0]);
         if chapterStartIndex != nil {
-            cell.textLabel?.attributedText = Book.data.getItemName(name, withChapter: chapterStartIndex!);
+            cell.textLabel?.attributedText = Book.shared.getItemName(name, withChapter: chapterStartIndex!);
         }else {
             cell.textLabel?.text =  name
         }

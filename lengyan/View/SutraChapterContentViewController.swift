@@ -17,7 +17,7 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.white
-        self.addSutra(sutra: Book.data.getChapterSutra(chapter: self.pageIndex));
+        self.addSutra(sutra: Book.shared.getChapterSutra(chapter: self.pageIndex));
         updateHeader()
     }
     
@@ -37,7 +37,7 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
         sutraTextView.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
         sutraTextView.backgroundColor = UIColor.white
         sutraTextView.textColor = UIColor.darkText
-        let text = Book.data.getSutraAttributeString(text: sutra);
+        let text = Book.shared.getSutraAttributeString(text: sutra);
         sutraTextView.attributedText = text;
         view.addSubview(sutraTextView);
         if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {

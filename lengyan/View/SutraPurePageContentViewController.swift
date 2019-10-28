@@ -25,7 +25,7 @@ class SutraPurePageContentViewController: UIViewController {
         view.backgroundColor = UIColor.white
 
         if item == nil {
-            item = Book.data.itemOfPath(path!)
+            item = Book.shared.itemOfPath(path!)
         } else {
             path = (item!["path"]! as! String);
         }
@@ -50,7 +50,7 @@ class SutraPurePageContentViewController: UIViewController {
         sutraTextView.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
         sutraTextView.backgroundColor = UIColor.white
         sutraTextView.textColor = UIColor.darkText
-        let text = Book.data.getSutraAttributeString(meta);
+        let text = Book.shared.getSutraAttributeString(meta);
         sutraTextView.attributedText = text;
         view.addSubview(sutraTextView);
         if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
@@ -65,7 +65,7 @@ class SutraPurePageContentViewController: UIViewController {
     }
     
     func updateHeader(_ item:[String:Any]){
-        self.navigationItem.titleView = Book.data.getTitleView(item);
+        self.navigationItem.titleView = Book.shared.getTitleView(item);
     }
     
     @objc func close(){

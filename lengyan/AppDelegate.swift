@@ -19,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
-        Book.data.loadDataSyncWithCompletionHandler { () in
+        Book.shared.loadDataSyncWithCompletionHandler { () in
             print("Book data loaded on start")
         }
         return true
@@ -32,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if notification != nil {
             DispatchQueue.global().async {
                 for _ in (0..<100) {
-                    if Book.data.loaded {
+                    if Book.shared.loaded {
                         break;
                     }
                     Thread.sleep(forTimeInterval: 0.1)
@@ -58,9 +58,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         if isLeaf {
             let content = UNMutableNotificationContent()
-            let item = Book.data.itemOfPath(path)
+            let item = Book.shared.itemOfPath(path)
 //            content.title =  (item["name"] as? String ?? "楞严经")
-            content.body = Book.data.getSutra(item);
+            content.body = Book.shared.getSutra(item);
             content.userInfo = ["path":path];
             // Configure the trigger at 8pm
             var dateInfo = DateComponents()
@@ -111,7 +111,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-        Data.shared.persist()
+        Prefers.shared.persist()
     }
     
     func application(_ application: UIApplication, didReceive notification: UILocalNotification) {
@@ -121,7 +121,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     func openNotificationItem(path:String){
-        while !Book.data.loaded {
+        while !Book.shared.loaded {
             
         }
         let root = window?.rootViewController as! UITabBarController

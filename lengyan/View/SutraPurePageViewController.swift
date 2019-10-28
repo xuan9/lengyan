@@ -56,14 +56,14 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     
     func updateStarButton(){
         var likeButton:UIBarButtonItem;
-        if Data.shared.likes.contains(path!) {
+        if Prefers.shared.likes.contains(path!) {
             likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
         } else {
             likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
         }
         
         if self.isShowIndexButton  {
-            let item = Book.data.itemOfPath(self.path!);
+            let item = Book.shared.itemOfPath(self.path!);
             if(item["children"] != nil ){
                 let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(openIndex))
                  self.navigationItem.setRightBarButtonItems([indexButton,likeButton], animated: false)
@@ -80,19 +80,19 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
     @objc func openIndex(){
         let indexVC = SutraIndexViewController();
-        indexVC.tree = Book.data.itemOfPath(path!);
+        indexVC.tree = Book.shared.itemOfPath(path!);
         indexVC.defaultExpandLevel = 2;
         indexVC.isShowSutraButton = false;
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
     @objc func like() {
-        Data.shared.like(self.path!)
+        Prefers.shared.like(self.path!)
         self.updateStarButton()
     }
     
     @objc func unlike() {
-        Data.shared.unlike(self.path!)
+        Prefers.shared.unlike(self.path!)
         self.updateStarButton()
     }
     
@@ -106,7 +106,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         if index != nil && index! > 0 {
             previousPath = _paths[index! - 1]//found from cache
         } else {
-            previousPath = Book.data.getPreviousPagePath(pageContent.path)
+            previousPath = Book.shared.getPreviousPagePath(pageContent.path)
             if index == nil {
                 _paths.append(pageContent.path!)
             }
@@ -130,7 +130,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         if index != nil && index! < _paths.count - 1 {
             nextPath = _paths[index! + 1]//found from cache
         } else {
-            nextPath = Book.data.getNextPagePath(pageContent.path)
+            nextPath = Book.shared.getNextPagePath(pageContent.path)
             if index == nil {
                 _paths.append(pageContent.path!)
             }
@@ -172,11 +172,11 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     
     func setPageTitle() {
         if path == nil { return }
-        let item = Book.data.itemOfPath(path!);
+        let item = Book.shared.itemOfPath(path!);
         if self.navigationItem.titleView is UILabel {
-            (self.navigationItem.titleView as! UILabel).attributedText = Book.data.getTitle(item)
+            (self.navigationItem.titleView as! UILabel).attributedText = Book.shared.getTitle(item)
         } else {
-            self.navigationItem.titleView = Book.data.getTitleView(item);
+            self.navigationItem.titleView = Book.shared.getTitleView(item);
         }
     }
     

@@ -60,9 +60,9 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         
     progressBar.addTarget(self,action:#selector(progressBarChanged(slider:event:)),for:.valueChanged);
         
-        self.playMode = Data.shared.lastPlayMode ?? -1
+        self.playMode = Prefers.shared.lastPlayMode ?? -1
     
-        self.media = Book.data.media!
+        self.media = Book.shared.media!
         self.tableView.reloadData()
         self.checkMediaStatus();
         if lastPlayFile == nil  {
@@ -477,7 +477,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             
             if file != nil {
                 self.lastPlayFile = file
-                Data.shared.lastPlayFile = file
+                Prefers.shared.lastPlayFile = file
             }
             
             OperationQueue.main.addOperation {
@@ -636,7 +636,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
                 return
             }
             
-            var name = file![1], ext = file![2]
+            let name = file![1], ext = file![2]
             
             if(self.playMode <= 0){
                 let downloaded = NSMutableArray();
@@ -723,7 +723,7 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         self.playMode = mode;
         self.updatePlayModeIcon();
         self.schedulePlayItems()
-        Data.shared.lastPlayMode = mode;
+        Prefers.shared.lastPlayMode = mode;
     }
     
     @objc func pressModeButton(button: UIButton) {

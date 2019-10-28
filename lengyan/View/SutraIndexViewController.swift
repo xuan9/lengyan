@@ -18,7 +18,6 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     internal var tree:[String:Any]?, path:String?
     
     var defaultExpandLevel:Int = 2
-    var expandedItemPaths:[String] = []
     var isRootIndex = false;
     
     override func viewDidLoad() {
@@ -98,8 +97,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
     }
     func loadRootTree(){
-        Book.data.loadDataWithCompletionHandler { () in
-            self.tree = Book.data.tree
+        Book.shared.loadDataWithCompletionHandler { () in
+            self.tree = Book.shared.tree
             self.path = self.tree!["path"] as? String;
             DispatchQueue.main.async{
                 self.treeView.reloadData()
@@ -108,7 +107,6 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     @objc func onApplicationWillTerminate(){
-        Data.shared.lastExpanded = self.expandedItemPaths;
     }
    
     func autoExpandNode(_ node:[String:Any]){
@@ -164,20 +162,20 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let alert = UIAlertController(title: "菜單", message: nil, preferredStyle: .actionSheet)
         
         let firstAction:UIAlertAction
-        if(!Data.shared.isLike(path!)){
+        if(!Prefers.shared.isLike(path!)){
             firstAction = UIAlertAction(title: "★加入精選", style: .default) { (alert: UIAlertAction!) -> Void in
-                Data.shared.like(self.path!)
+                Prefers.shared.like(self.path!)
                 self.updateHeader();
             }
         } else {
             firstAction = UIAlertAction(title: "☆移除精選", style: .destructive) { (alert: UIAlertAction!) -> Void in
-                Data.shared.unlike(self.path!)
+                Prefers.shared.unlike(self.path!)
                 self.updateHeader();
             }
         }
         
         let secondAction = UIAlertAction(title: "👍讚", style: .default) { (alert: UIAlertAction!) -> Void in
-            Data.shared.like(self.path!)
+            Prefers.shared.like(self.path!)
         }
         
         let cancelAction = UIAlertAction(title: "取消", style: .cancel) { (alert: UIAlertAction!) -> Void in
@@ -226,14 +224,14 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                                                    options: .none)
         let path:String = item["path"] as! String
         TICK()
-        pageVC.page = Book.data.index!.index(where: { (
+        pageVC.page = Book.shared.index!.index(where: { (
             item) -> Bool in
             return item["path"] == path
         })!;
         TOCK()
         
         pageVC.onDismiss = {
-            self.openPath((Book.data.index?[pageVC.page] as NSDictionary?)?["path"] as! String);
+            self.openPath((Book.shared.index?[pageVC.page] as NSDictionary?)?["path"] as! String);
         } as (() -> Void)
         self.navigationController?.pushViewController(pageVC, animated: true)
         
@@ -340,14 +338,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(_ treeView:RATreeView, didExpandRowForItem item:Any){
-        self.expandedItemPaths.append((item as! NSDictionary)["path"] as! String)
     }
     
     func treeView(_ treeView:RATreeView, didCollapseRowForItem item:Any){
-        let index = expandedItemPaths.index(of: (item as! NSDictionary)["path"] as! String)
-        if index != nil {
-            self.expandedItemPaths.remove(at: index!)
-        }
     }
     
     func treeView(_ treeView:RATreeView,  didSelectRowForItem item:Any){

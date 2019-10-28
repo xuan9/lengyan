@@ -95,14 +95,14 @@ class SutraBookViewController: UITableViewController{
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return (Book.data.index?.count)!;
+        return (Book.shared.index?.count)!;
     }
     
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        var meta:[String:String] = (Book.data.index![(indexPath as NSIndexPath).row]);
+        var meta:[String:String] = (Book.shared.index![(indexPath as NSIndexPath).row]);
         let path = meta["path"] ;
-        let contents:[[String:String]]? =  (Book.data.contents?[path!]);
+        let contents:[[String:String]]? =  (Book.shared.contents?[path!]);
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "SutraBookTableViewCell", for: indexPath) as! SutraBookTableViewCell
         cell.textView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);

@@ -50,14 +50,14 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     var sutraFont:UIFont? = nil, comentFont:UIFont? = nil, indexFont:UIFont? = nil;
     override func viewDidLoad() {
         super.viewDidLoad()
-        meta = (Book.data.index?[pageIndex])!;
+        meta = (Book.shared.index?[pageIndex])!;
         path = meta["path"] as! String;
-        let content = Book.data.contents?[path];
+        let content = Book.shared.contents?[path];
         if(content != nil){
             contents = content ?? []
             self.tableView.rowHeight = UITableViewAutomaticDimension
         } else {
-            meta = Book.data.itemOfPath(path)
+            meta = Book.shared.itemOfPath(path)
             for child in (meta["children"] as! NSArray as! [[String:Any]]) {
                 let name:String = child["name"] as! String
                 contents.append(["type":"index", "content": "• " + name])
@@ -204,11 +204,11 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
     
     func toggleLike() {
-        if Data.shared.isLike(path) {
-            Data.shared.unlike(path)
+        if Prefers.shared.isLike(path) {
+            Prefers.shared.unlike(path)
             toolbar.items![2].tintColor = UIColor.lightGray
         } else {
-            Data.shared.like(path)
+            Prefers.shared.like(path)
             toolbar.items![2].tintColor = view.tintColor
         }
     }
@@ -238,7 +238,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         } else {
             
             shareContents.append(bookTitle + "之「" + (meta["name"] as! String) + "」")
-            shareContents.append(Book.data.getSutra(meta))
+            shareContents.append(Book.shared.getSutra(meta))
         }
         
         let activityViewController = UIActivityViewController(activityItems:[shareContents.joined(separator: "\n")], applicationActivities: nil)

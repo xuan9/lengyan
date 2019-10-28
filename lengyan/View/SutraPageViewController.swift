@@ -28,7 +28,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             self.close()
         }
         
-        item = Book.data.index![page]
+        item = Book.shared.index![page]
         self.path = item!["path"]
         
         self.setPageTitle()
@@ -46,17 +46,17 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     @objc func like() {
-        Data.shared.like(self.path!)
+        Prefers.shared.like(self.path!)
         self.setTitle()
     }
     
     @objc func unlike() {
-        Data.shared.unlike(self.path!)
+        Prefers.shared.unlike(self.path!)
         self.setTitle()
     }
     
     @objc func close() {
-        onDismiss?()
+        self.onDismiss?()
         self.navigationController?.popViewController(animated: true)
     }
     
@@ -65,7 +65,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
 
         
-        if(Data.shared.likes.contains(path!)){
+        if(Prefers.shared.likes.contains(path!)){
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
         } else {
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
@@ -90,7 +90,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             //skip the index pages if nav hiden
             repeat{
                 index -= 1;
-            } while (!(Book.data.isItemLeaf(index) ?? true))
+            } while (!(Book.shared.isItemLeaf(index) ?? true))
         } else {
             index -= 1;
         }
@@ -119,7 +119,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     {
         let pageContent: SutraPage = viewController as! SutraPage
         var index = pageContent.pageIndex
-        if (index == NSNotFound || index + 1 == Book.data.index?.count)
+        if (index == NSNotFound || index + 1 == Book.shared.index?.count)
         {
             self.close();
             return nil;
@@ -129,7 +129,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             //skip the index pages if nav hiden
             repeat{
                 index += 1;
-            } while (!(Book.data.isItemLeaf(index) ?? true))
+            } while (!(Book.shared.isItemLeaf(index) ?? true))
         } else {
             index += 1;
         }
@@ -141,7 +141,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         
         let pageContent = pageViewController.viewControllers![0] as! SutraPage
         self.page = pageContent.pageIndex;
-        self.item = Book.data.index![page];
+        self.item = Book.shared.index![page];
         self.path = item!["path"]
         self.setPageTitle()
         self.setTitle()
@@ -149,9 +149,9 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     func setPageTitle() {
         if  self.navigationItem.titleView is UILabel {
-                (self.navigationItem.titleView as! UILabel).attributedText = Book.data.getTitle(item!)
+                (self.navigationItem.titleView as! UILabel).attributedText = Book.shared.getTitle(item!)
         } else {
-                self.navigationItem.titleView = Book.data.getTitleView(item!);
+                self.navigationItem.titleView = Book.shared.getTitleView(item!);
         }
     }
 }

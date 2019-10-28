@@ -24,7 +24,7 @@ class StarsTableViewController: UITableViewController{
         self.navigationController?.hidesBarsOnSwipe = false;
 
         let rows = tableView.numberOfRows(inSection: 0)
-        if rows != Data.shared.likes.count {
+        if rows != Prefers.shared.likes.count {
                 tableView.reloadData()
         }
         if (initialRow > 0) {
@@ -38,20 +38,8 @@ class StarsTableViewController: UITableViewController{
         return navigationController?.isNavigationBarHidden ?? false
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
     func setTitleBar() {
-        //self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:"❬", style: .Plain, target: self, action: #selector(SutraIndexViewController.close))
-        
         self.title = NSLocalizedString("star_tab_title", comment: "收藏")//todo
-
     }
     
     override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -67,13 +55,13 @@ class StarsTableViewController: UITableViewController{
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return Data.shared.likes.count;
+        return Prefers.shared.likes.count;
     }
     
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let path = Data.shared.likes[(indexPath as NSIndexPath).row];
-        let item =  Book.data.itemOfPath(path);
+        let path = Prefers.shared.likes[(indexPath as NSIndexPath).row];
+        let item =  Book.shared.itemOfPath(path);
         
         let identifier = "StarsTableViewCell";
         var cell = tableView.dequeueReusableCell(withIdentifier: identifier);
@@ -84,18 +72,18 @@ class StarsTableViewController: UITableViewController{
             v.layer.borderWidth = 1/UIScreen.main.scale
         }
         cell?.textLabel?.numberOfLines = 20;
-        cell?.textLabel?.attributedText =  Book.data.getSutraAttributeString(item, maxLength: 100);
+        cell?.textLabel?.attributedText =  Book.shared.getSutraAttributeString(item, maxLength: 100);
         return cell!
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
-        let path:String = Data.shared.likes[(indexPath as NSIndexPath).row];
-        let item = Book.data.itemOfPath(path);
+        let path:String = Prefers.shared.likes[(indexPath as NSIndexPath).row];
+        let item = Book.shared.itemOfPath(path);
         if item["children"] != nil {
             self.openSutra(path)
         } else {
-            pageVC.page = Book.data.index!.index(where: { (
+            pageVC.page = Book.shared.index!.index(where: { (
                 item) -> Bool in
                 return item["path"] == path
             })!;
