@@ -1,35 +1,28 @@
-//todo translate in code chinese, check stars, check sutra
 
-1. initial star list
+1. change initial star list to recommanding list
 
 2. text style
-
-3. index navigation
-
-4. initial fetch
-
-5. release on delete
 
 ---
 
 5. remember times opened of each item, and duration
 
-4. intial start list
-
 10. local notification... reminders
 
 -
 
-3. add lengyan zou media
+3. add lengyan zou media：楞严咒 音频 万佛城，莲音寺
+*********************
 
-6. add 1-10 sutra per volume
 
 7. button to show sutra page in player bar
 
-2. options to colorize: slide item or long-tape star
+2. options to colorize:
 
 1. save last play status
 
 8. delete media
 
 9. show confirm downloading and how much MB download size. show download progress.
+
+
