@@ -269,7 +269,7 @@ class Book: NSObject {
     
     func getSutraAttributeString(text:String)->NSAttributedString{
         let pStyle = NSMutableParagraphStyle()
-        pStyle.lineHeightMultiple = 1.3
+        pStyle.lineHeightMultiple = 1.618
         pStyle.maximumLineHeight = 40.0
         pStyle.minimumLineHeight = 10.0
         

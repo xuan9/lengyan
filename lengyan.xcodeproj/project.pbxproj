@@ -76,6 +76,7 @@
 		4AD063811EA3802200751922 /* ly06.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636C1EA244AC00751922 /* ly06.m4a */; settings = {ASSET_TAGS = (ly06, ); }; };
 		4AD063821EA3802200751922 /* ly10.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636D1EA244AC00751922 /* ly10.m4a */; settings = {ASSET_TAGS = (ly10, ); }; };
 		4AD063831EA3802200751922 /* ly04.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636E1EA244AC00751922 /* ly04.m4a */; settings = {ASSET_TAGS = (ly04, ); }; };
+		CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -178,6 +179,7 @@
 		4AD0636C1EA244AC00751922 /* ly06.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly06.m4a; sourceTree = "<group>"; };
 		4AD0636D1EA244AC00751922 /* ly10.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly10.m4a; sourceTree = "<group>"; };
 		4AD0636E1EA244AC00751922 /* ly04.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly04.m4a; sourceTree = "<group>"; };
+		CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,6 +242,7 @@
 				133CAB792364D96900B61AC0 /* UIView+Common.swift */,
 				133CAB9A2364D96900B61AC0 /* String+Common.swift */,
 				133CAB9B2364D96900B61AC0 /* Utils.swift */,
+				CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -483,6 +486,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				Base,
 				"zh-Hans",
 				"zh-Hant",
@@ -561,6 +565,7 @@
 				133CABA92364DDB700B61AC0 /* RATreeNodeController.m in Sources */,
 				133CABAA2364DDB700B61AC0 /* RATreeNodeItem+ClassExtension.h in Sources */,
 				133CABAB2364DDB700B61AC0 /* RATreeNodeItem+Private.h in Sources */,
+				CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */,
 				133CABAC2364DDB700B61AC0 /* RATreeNodeItem+Private.m in Sources */,
 				133CABAD2364DDB700B61AC0 /* RATreeNodeItem.h in Sources */,
 				133CABAE2364DDB700B61AC0 /* RATreeNodeItem.m in Sources */,

@@ -240,10 +240,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func openChapter(chapter:Int){
-        let pageVC = SutraChapterPageViewController.init( transitionStyle:.pageCurl,
-                                                   navigationOrientation:.horizontal,
-                                                   options: .none)
-        pageVC.pageIndex = chapter;
+        let content = Book.shared.getSutraAttributeString(text: Book.shared.getChapterSutra(chapter: chapter))
+        let title = NSLocalizedString("chapter_\(chapter + 1)", comment: "chapter_name");
+        let pageVC = ReaderViewController.init(title: title, content: content)
+        
+//        let pageVC = SutraChapterPageViewController.init( transitionStyle:.pageCurl,
+//                                                   navigationOrientation:.horizontal,
+//                                                   options: .none)
+//        pageVC.pageIndex = chapter;
         self.navigationController?.pushViewController(pageVC, animated: true)
     }
 

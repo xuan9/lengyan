@@ -10,7 +10,10 @@
 10. local notification... reminders
 
 -
-
+1. add read mode
+2. add task management:
+    https://github.com/puvvadaharsha/DailyLog
+    https://github.com/ArtemPorozov/TaskManager
 3. add lengyan zou media：楞严咒 音频 万佛城，莲音寺
 *********************
 
