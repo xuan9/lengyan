@@ -1,31 +1,23 @@
-
+high prio：
 1. change initial star list to recommanding list
+2. merge 3 tabs into one single main view
+3. move 关键课判treeview 到单独页面
+4. 从主页链接完整课判，关键课判
+5. text style， color， use design system
+6. auto download
 
-2. text style
+middle prio：
+add lengyan zou media：楞严咒 音频 万佛城，莲音寺
+button to show sutra page in player bar
+save last play status
+继续阅读
 
----
+low：
+add daily study task management
+local notification... reminders on demand
+add read mode
+options to colorize:
+remember times opened of each item, and duration，提供进度，等方便全面学习 casual学习
 
-5. remember times opened of each item, and duration
-
-10. local notification... reminders
-
--
-1. add read mode
-2. add task management:
-    https://github.com/puvvadaharsha/DailyLog
-    https://github.com/ArtemPorozov/TaskManager
-3. add lengyan zou media：楞严咒 音频 万佛城，莲音寺
-*********************
-
-
-7. button to show sutra page in player bar
-
-2. options to colorize:
-
-1. save last play status
-
-8. delete media
-
-9. show confirm downloading and how much MB download size. show download progress.
 
 
