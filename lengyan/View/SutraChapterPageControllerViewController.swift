@@ -9,7 +9,7 @@
 import UIKit
 
 class SutraChapterPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
-    var sutraStoryBoard:UIStoryboard?;
+    // STORYBOARD REMOVED: Using programmatic UI now
     var onDismiss: (() -> Void)?
     var pageIndex:Int = 0
     

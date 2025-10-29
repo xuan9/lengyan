@@ -9,7 +9,7 @@
 import UIKit
 
 class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
-    var sutraStoryBoard:UIStoryboard?;
+    // STORYBOARD REMOVED: Using programmatic UI now
     var onDismiss: (() -> Void)?
     var path:String?
     var _paths:[String] = [];
@@ -26,7 +26,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
         self.dataSource = self;
         self.delegate = self;
-        sutraStoryBoard = UIStoryboard(name: "SutraStoryboard", bundle: nil)
+        // STORYBOARD REMOVED: Using programmatic UI now
         
         self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
         

@@ -219,78 +219,149 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func openItem(_ item: [String:Any]){
+        // SAFE: Check if path exists and is a string
+        guard let path = item["path"] as? String else {
+            print("⚠️ ERROR: Failed to get path from item in openItem")
+            return
+        }
+
+        // SAFE: Check if Book.shared.index exists
+        guard let bookIndex = Book.shared.index else {
+            print("⚠️ ERROR: Book.shared.index is nil in openItem")
+            return
+        }
+
         let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl,
                                                    navigationOrientation:.horizontal,
                                                    options: .none)
-        let path:String = item["path"] as! String
+
         TICK()
-        pageVC.page = Book.shared.index!.index(where: { (
-            item) -> Bool in
-            return item["path"] == path
-        })!;
+
+        // SAFE: Find the page index safely
+        var pageIndex: Any?
+        if let foundIndex = bookIndex.index(where: { ($0 as? [String:Any])?["path"] as? String == path }) {
+            pageIndex = foundIndex
+            pageVC.page = foundIndex
+        } else {
+            print("⚠️ ERROR: Failed to find page for path: \(path)")
+            return
+        }
+
         TOCK()
-        
-        pageVC.onDismiss = {
-            self.openPath((Book.shared.index?[pageVC.page] as NSDictionary?)?["path"] as! String);
-        } as (() -> Void)
+
+        // SAFE: Create weak reference to prevent retain cycle crashes
+        pageVC.onDismiss = { [weak self] in
+            guard let strongSelf = self else { return }
+
+            // SAFE: Check if page index exists in book index
+            if let indexValue = pageIndex as? Int,
+               indexValue < bookIndex.count,
+               let pageItem = bookIndex[indexValue] as? NSDictionary,
+               let itemPath = pageItem["path"] as? String {
+                strongSelf.openPath(itemPath)
+            } else {
+                print("⚠️ ERROR: Failed to get path from page in onDismiss closure")
+            }
+        }
+
         self.navigationController?.pushViewController(pageVC, animated: true)
-        
     }
     
     func openIndex(_ item:  [String : Any]){
         let indexVC = SutraIndexViewController();
         indexVC.tree = item
         indexVC.defaultExpandLevel = 2;
-        
-        indexVC.onDismiss = {
-            self.openPath(indexVC.tree!["path"] as! String);
-        } as (() -> Void)
-        
+
+        // SAFE: Create weak reference to prevent retain cycle crashes
+        indexVC.onDismiss = { [weak self] in
+            guard let strongSelf = self else { return }
+
+            // SAFE: Check if tree and path exist
+            if let tree = indexVC.tree,
+               let path = tree["path"] as? String {
+                strongSelf.openPath(path)
+            } else {
+                print("⚠️ ERROR: Failed to get path from tree in openIndex onDismiss")
+            }
+        }
+
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
     func openPath(_ path:String) {
-        if path == "" || path == "/" {
-            return;
-        }
-        let rootPath = tree!["path"] as!String;
-        if rootPath.count > path.count {
+        // SAFE: Check if path is valid
+        guard !path.isEmpty && path != "/" else {
             return
         }
+
+        // SAFE: Check if tree exists and has path
+        guard let tree = self.tree,
+              let rootPath = tree["path"] as? String else {
+            print("⚠️ ERROR: Failed to get root path from tree in openPath")
+            return
+        }
+
+        // SAFE: Check if rootPath is valid
+        guard rootPath.count <= path.count else {
+            return
+        }
+
         let subPath = path[rootPath.endIndex...]
-        var node = tree, isExpanded = false;
+        var currentNode = tree
+        var isExpanded = false
+
         for id in subPath.components(separatedBy: "/") {
-            if(id==""){continue}
-            if(node!["children"] != nil) {
-                let chidrens = node?["children"]
-                node = (chidrens as! NSArray).filter({
-                    (($0 as! [String:Any])["id"]) as! String == id
-                }).first as? [String:Any]
-            } else {
-                return;
+            guard !id.isEmpty else { continue }
+
+            // SAFE: Check if current node has children
+            guard let children = currentNode["children"] as? NSArray else {
+                return
             }
-            if(node == nil) {return}
-            if !treeView.isCell(forItemExpanded: node!) {
-                treeView.expandRow(forItem: node, with: RATreeViewRowAnimationNone);
-                isExpanded = true;
+
+            // SAFE: Filter children safely
+            if let foundNode = children.filter({ child in
+                if let childDict = child as? [String:Any],
+                   let childId = childDict["id"] as? String {
+                    return childId == id
+                }
+                return false
+            }).first as? [String:Any] {
+                currentNode = foundNode
+            } else {
+                print("⚠️ WARNING: Failed to find child with id: \(id)")
+                return
+            }
+
+            // SAFE: Expand node if needed
+            if !treeView.isCell(forItemExpanded: currentNode) {
+                treeView.expandRow(forItem: currentNode, with: RATreeViewRowAnimationNone)
+                isExpanded = true
             }
         }
+
         if isExpanded {
-            treeView.selectRow(forItem: node, animated: true, scrollPosition: RATreeViewScrollPositionMiddle)
+            treeView.selectRow(forItem: currentNode, animated: true, scrollPosition: RATreeViewScrollPositionMiddle)
         }
     }
     
     // MARK - RATreeView
     func treeView(_ treeView: RATreeView, numberOfChildrenOfItem item: Any?) -> Int {
-        if(item == nil){
+        if item == nil {
             return (self.tree?["children"] as? NSArray)?.count ?? 0
+        } else if let itemDict = item as? [String:Any] {
+            return (itemDict["children"] as? NSArray)?.count ?? 0
         } else {
-            return ((item as! [String:Any])["children"] as? NSArray)?.count ?? 0
+            print("⚠️ ERROR: Failed to cast item to [String:Any] in numberOfChildrenOfItem")
+            return 0
         }
     }
     
     func treeView(_ treeView: RATreeView, cellForItem item: Any?) -> UITableViewCell {
-        let item = item as! NSDictionary;
+        // SAFE: Check if item can be cast to NSDictionary
+        guard let item = item as? NSDictionary else {
+            print("⚠️ ERROR: Failed to cast item to NSDictionary in cellForItem")
+            return UITableViewCell()
+        }
         let isLeaf = item["children"] == nil
         let identifier = isLeaf ? "leafCell" : "indexCell"
         var newCell = treeView.dequeueReusableCell(withIdentifier: identifier) as? UITableViewCell;
@@ -307,6 +378,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 bookBtn.setTitle("❭", for: UIControlState())
                 bookBtn.tintColor = UIColor.darkText
                 bookBtn.setTitleColor(UIColor.lightGray, for: .normal)
+                // FIX: Add proper accessibility label for UI testing
+                bookBtn.accessibilityLabel = "chevron"
+                bookBtn.isAccessibilityElement = true
                 bookBtn.addTarget(self, action: #selector(openAsPageFromCellButton(_:)) , for: .touchUpInside)
                 newCell!.accessoryView = bookBtn;
             }
@@ -344,15 +418,25 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(_ treeView:RATreeView,  didSelectRowForItem item:Any){
-        let item = item   as! [String:Any];
-        if(item["children"] == nil){
-            self.openItem(item)
+        // SAFE: Check if item can be cast to dictionary
+        guard let itemDict = item as? [String:Any] else {
+            print("⚠️ ERROR: Failed to cast item to [String:Any] in didSelectRowForItem")
+            return
+        }
+
+        // SAFE: Check if item has children (leaf nodes have no children)
+        if itemDict["children"] == nil {
+            self.openItem(itemDict)
         }
     }
     
     func treeView(_ treeView:RATreeView,  accessoryButtonTappedForRowForItem item:Any){
-        let item = item  as! [String:Any];
-        self.openItem(item);
+        // SAFE: Check if item can be cast to dictionary
+        guard let itemDict = item as? [String:Any] else {
+            print("⚠️ ERROR: Failed to cast item to [String:Any] in accessoryButtonTappedForRowForItem")
+            return
+        }
+        self.openItem(itemDict);
     }
     
     func treeView(_ treeView: RATreeView, editActionsForItem item: Any) -> [Any] {

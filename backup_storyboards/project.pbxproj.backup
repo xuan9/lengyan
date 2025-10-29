@@ -46,14 +46,16 @@
 		133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB9B2364D96900B61AC0 /* Utils.swift */; };
 		1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */; };
 		135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D605C1D16FA4A00029090 /* SutraPageViewController.swift */; };
-				135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60601D16FB7400029090 /* SutraBookViewController.swift */; };
+		135D605F1D16FABE00029090 /* SutraStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */; };
+		135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60601D16FB7400029090 /* SutraBookViewController.swift */; };
 		135D60631D173B1B00029090 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60621D173B1B00029090 /* Book.swift */; };
 		1361D0811F647C6A00426DB6 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1361D0831F647C6A00426DB6 /* InfoPlist.strings */; };
 		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
 		1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */; };
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
 		139073111D109193003A3333 /* StarsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073101D109193003A3333 /* StarsTableViewController.swift */; };
-				139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
+		139073141D109193003A3333 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073121D109193003A3333 /* Main.storyboard */; };
+		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* BookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* BookTests.swift */; };
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
 		1390734C1D109284003A3333 /* data in Resources */ = {isa = PBXBuildFile; fileRef = 1390734B1D109284003A3333 /* data */; };
@@ -137,7 +139,8 @@
 		133CAB9B2364D96900B61AC0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewControllera.swift; sourceTree = "<group>"; tabWidth = 4; };
 		135D605C1D16FA4A00029090 /* SutraPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageViewController.swift; sourceTree = "<group>"; };
-				135D60601D16FB7400029090 /* SutraBookViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraBookViewController.swift; sourceTree = "<group>"; };
+		135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = SutraStoryboard.storyboard; sourceTree = "<group>"; };
+		135D60601D16FB7400029090 /* SutraBookViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraBookViewController.swift; sourceTree = "<group>"; };
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		1361D0821F647C6A00426DB6 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		1361D0841F647C7400426DB6 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -147,7 +150,8 @@
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390730C1D109193003A3333 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		139073101D109193003A3333 /* StarsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarsTableViewController.swift; sourceTree = "<group>"; };
-				139073181D109194003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		139073131D109193003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		139073181D109194003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1390731A1D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390731F1D109194003A3333 /* lengyanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		139073231D109194003A3333 /* BookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTests.swift; sourceTree = "<group>"; };
@@ -319,7 +323,8 @@
 				133CAB732364D10E00B61AC0 /* Domain */,
 				133CAB772364D1FF00B61AC0 /* View */,
 				133CAB782364D96900B61AC0 /* Util */,
-								135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */,
+				139073121D109193003A3333 /* Main.storyboard */,
+				135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */,
 				139073171D109194003A3333 /* LaunchScreen.storyboard */,
 				13CA80F01EAB3BF600589E8F /* Assets.xcassets */,
 				1390731A1D109194003A3333 /* Info.plist */,

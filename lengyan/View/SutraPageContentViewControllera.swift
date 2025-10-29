@@ -22,20 +22,44 @@ func UIColorFromRGB(_ rgbValue: UInt) -> UIColor {
 }
 
 class SutraTableViewCell: UITableViewCell {
-    
-    @IBOutlet weak var textView: UITextView!
-    
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        // Initialization code
+
+    var textView: UITextView!
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupCell()
     }
-    
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupCell()
+    }
+
+    func setupCell() {
+        // STORYBOARD REMOVAL: Create textView programmatically
+        textView = UITextView()
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.backgroundColor = UIColor.clear
+        textView.isEditable = false
+        textView.isScrollEnabled = false
+        textView.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+
+        contentView.addSubview(textView)
+
+        NSLayoutConstraint.activate([
+            textView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            textView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            textView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            textView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+        ])
+    }
+
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        
+
         // Configure the view for the selected state
     }
-    
+
 }
 
 class SutraPageContentViewController: UITableViewController, SutraPage{
@@ -50,17 +74,35 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     var sutraFont:UIFont? = nil, comentFont:UIFont? = nil, indexFont:UIFont? = nil;
     override func viewDidLoad() {
         super.viewDidLoad()
-        meta = (Book.shared.index?[pageIndex])!;
-        path = meta["path"] as! String;
+
+        // STORYBOARD REMOVAL: Register cell class programmatically
+        self.tableView.register(SutraTableViewCell.self, forCellReuseIdentifier: "SutraTableViewCell")
+
+        // SAFE: Check if Book.shared.index exists and pageIndex is valid
+        guard let bookIndex = Book.shared.index,
+              pageIndex >= 0 && pageIndex < bookIndex.count,
+              let pageMeta = bookIndex[pageIndex] as? [String:Any],
+              let pagePath = pageMeta["path"] as? String else {
+            print("⚠️ ERROR: Failed to get valid page data in viewDidLoad")
+            return
+        }
+
+        meta = pageMeta
+        path = pagePath
         let content = Book.shared.contents?[path];
         if(content != nil){
             contents = content ?? []
             self.tableView.rowHeight = UITableViewAutomaticDimension
         } else {
             meta = Book.shared.itemOfPath(path)
-            for child in (meta["children"] as! NSArray as! [[String:Any]]) {
-                let name:String = child["name"] as! String
-                contents.append(["type":"index", "content": "• " + name])
+            // SAFE: Check if meta has children and cast safely
+            if let children = meta["children"] as? NSArray {
+                for child in children {
+                    if let childDict = child as? [String:Any],
+                       let name = childDict["name"] as? String {
+                        contents.append(["type":"index", "content": "• " + name])
+                    }
+                }
             }
             self.tableView.rowHeight = 44;
         }
@@ -139,11 +181,20 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         if (indexPath as NSIndexPath).row == contents.count {
             return self.actionRow();
         }
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: "SutraTableViewCell", for: indexPath) as! SutraTableViewCell
+
+        // SAFE: Use optional binding instead of forced cast
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "SutraTableViewCell", for: indexPath) as? SutraTableViewCell else {
+            print("⚠️ ERROR: Failed to dequeue SutraTableViewCell")
+            return UITableViewCell()
+        }
         cell.textView.backgroundColor = UIColor.clear
-        
-        let p = contents[(indexPath as NSIndexPath).row] as NSDictionary as! [String:String];
+
+        let row = (indexPath as NSIndexPath).row
+        guard row < contents.count,
+              let p = contents[row] as? [String:String] else {
+            print("⚠️ ERROR: Failed to get content at row \(row)")
+            return cell
+        }
         
         var font:UIFont?
         if p["type"] == "sutra" {
@@ -236,9 +287,11 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
                 }
             }
         } else {
-            
-            shareContents.append(bookTitle + "之「" + (meta["name"] as! String) + "」")
-            shareContents.append(Book.shared.getSutra(meta))
+            // SAFE: Check if meta has name
+            if let metaName = meta["name"] as? String {
+                shareContents.append(bookTitle + "之「" + metaName + "」")
+                shareContents.append(Book.shared.getSutra(meta))
+            }
         }
         
         let activityViewController = UIActivityViewController(activityItems:[shareContents.joined(separator: "\n")], applicationActivities: nil)

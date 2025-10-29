@@ -9,7 +9,7 @@
 import UIKit
 
 class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
-    var sutraStoryBoard:UIStoryboard?;
+    // STORYBOARD REMOVED: Using programmatic UI now
     var onDismiss: (() -> Void)?
     var page:Int = 0
     
@@ -34,8 +34,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.setPageTitle()
         self.dataSource = self;
         self.delegate = self;
-        sutraStoryBoard = UIStoryboard(name: "SutraStoryboard", bundle: nil)
-        
+
+        // STORYBOARD REMOVED: Using programmatic UI now
         self.setViewControllers([getViewControllerAtIndex(index: page)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
         
         self.setTitle()
@@ -99,18 +99,18 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     func getViewControllerAtIndex(index: Int) -> UIViewController
     {
-        
-        let pageContent:SutraPageContentViewController = self.sutraStoryBoard!.instantiateViewController(withIdentifier: "SutraPageContentViewController") as! SutraPageContentViewController
-        
+        // STORYBOARD REMOVED: Creating view controller programmatically now
+        let pageContent = SutraPageContentViewController()
+
         pageContent.pageIndex = index
-        
+
         let frame = self.view.frame;
         let navigationBarHeight = (self.navigationController?.navigationBar.frame.size.height)!;
-        
+
         pageContent.view.frame = CGRect(
             origin: CGPoint(x:frame.origin.x,y:frame.origin.y + navigationBarHeight),
             size:   CGSize(width: frame.size.width, height:frame.size.height - navigationBarHeight))
-        
+
         return pageContent
     }
     
