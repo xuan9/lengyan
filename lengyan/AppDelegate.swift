@@ -26,9 +26,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         UINavigationBar.appearance().tintColor = UIColor.darkText
-        
+
+        // Create programmatic UI
+        setupProgrammaticUI()
+
         let notification = launchOptions?[UIApplicationLaunchOptionsKey.localNotification] as? UILocalNotification
-        
+
         if notification != nil {
             DispatchQueue.global().async {
                 for _ in (0..<100) {
@@ -42,8 +45,59 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
         }
-        
+
         return true
+    }
+
+    private func setupProgrammaticUI() {
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        self.window = window
+
+        // Create Tab Bar Controller
+        let tabBarController = UITabBarController()
+
+        // Setup Reading Tab
+        let sutraFrontVC = SutraFrontViewController()
+        let readingNavController = UINavigationController(rootViewController: sutraFrontVC)
+        readingNavController.tabBarItem = UITabBarItem(
+            title: "閱讀",
+            image: UIImage(named: "book"),
+            selectedImage: UIImage(named: "book")
+        )
+
+        // Setup Listening Tab
+        let mediaTableVC = MediaTableViewController()
+        let listeningNavController = UINavigationController(rootViewController: mediaTableVC)
+        listeningNavController.tabBarItem = UITabBarItem(
+            title: "聽經",
+            image: UIImage(named: "ic_library_music"),
+            selectedImage: UIImage(named: "ic_library_music")
+        )
+
+        // Setup Favorites Tab
+        let starsTableVC = StarsTableViewController(style: .plain)
+        let favoritesNavController = UINavigationController(rootViewController: starsTableVC)
+        favoritesNavController.tabBarItem = UITabBarItem(
+            title: "收藏",
+            image: UIImage(named: "baseline_star_black_24pt"),
+            selectedImage: UIImage(named: "baseline_star_black_24pt")
+        )
+
+        // Configure Tab Bar Appearance
+        tabBarController.tabBar.isTranslucent = false
+
+        // Set View Controllers
+        tabBarController.viewControllers = [
+            readingNavController,
+            listeningNavController,
+            favoritesNavController
+        ]
+
+        // Setup enhanced design will be called in viewDidLoad
+
+        // Set Root View Controller
+        window.rootViewController = tabBarController
+        window.makeKeyAndVisible()
     }
 
     @available(iOS 10.0, *)

@@ -50,18 +50,20 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
         super.viewDidLoad()
         self.automaticallyAdjustsScrollViewInsets = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        tableView.dataSource = self
-        tableView.delegate = self
+
+        // Setup programmatic UI
+        setupProgrammaticUI()
+
         self.setTitleBar()
-        
+
         footPlayButton.addTarget(self, action: #selector(pressPlayButton(button:)), for: .touchUpInside)
-        
+
         footPlayMode.addTarget(self, action: #selector(pressModeButton(button:)), for: .touchUpInside)
-        
+
     progressBar.addTarget(self,action:#selector(progressBarChanged(slider:event:)),for:.valueChanged);
-        
+
         self.playMode = Prefers.shared.lastPlayMode ?? -1
-    
+
         self.media = Book.shared.media!
         self.tableView.reloadData()
         self.checkMediaStatus();
@@ -70,6 +72,182 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
             footer.layoutIfNeeded()
         }
         self.initAudio();
+    }
+
+    private func setupProgrammaticUI() {
+        view.backgroundColor = UIColor.white
+
+        // Create status background
+        let statusBackground = UIView()
+        statusBackground.backgroundColor = UIColor(red: 0.9843, green: 0.9843, blue: 0.9843, alpha: 1.0)
+        view.addSubview(statusBackground)
+
+        // Create table view
+        tableView = UITableView(frame: .zero, style: .grouped)
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(MediaTableViewCell.self, forCellReuseIdentifier: "Media-Cell")
+        tableView.register(MediaTableViewCell.self, forCellReuseIdentifier: "Media-Cell-Download")
+        tableView.register(MediaTableViewCell.self, forCellReuseIdentifier: "Media-Cell-Header")
+        view.addSubview(tableView)
+
+        // Create footer view
+        footer = UIView()
+        footer.backgroundColor = UIColor(red: 0.851, green: 0.749, blue: 0.549, alpha: 1.0)
+        view.addSubview(footer)
+
+        // Create footer subviews
+        setupFooterSubviews()
+
+        // Setup constraints
+        setupConstraints()
+    }
+
+    private func setupFooterSubviews() {
+        // Padding view
+        let paddingView = UIView()
+        paddingView.backgroundColor = UIColor.white
+        footer.addSubview(paddingView)
+
+        // Progress slider
+        progressBar = UISlider()
+        progressBar.minimumValue = 0
+        progressBar.maximumValue = 1
+        progressBar.thumbTintColor = UIColor(red: 0.941, green: 0.918, blue: 0.839, alpha: 1.0)
+        footer.addSubview(progressBar)
+
+        // Title label
+        footLabel = UILabel()
+        footLabel.numberOfLines = 2
+        footLabel.font = UIFont.systemFont(ofSize: 17)
+        footLabel.backgroundColor = UIColor.clear
+        footer.addSubview(footLabel)
+
+        // Progress label
+        progressLabel = UILabel()
+        progressLabel.font = UIFont(name: "Courier New", size: 10)
+        progressLabel.backgroundColor = UIColor.clear
+        footer.addSubview(progressLabel)
+
+        // Duration label
+        durationLabel = UILabel()
+        durationLabel.font = UIFont(name: "Courier New", size: 10)
+        durationLabel.textColor = UIColor.black
+        durationLabel.textAlignment = .right
+        durationLabel.backgroundColor = UIColor.clear
+        footer.addSubview(durationLabel)
+
+        // Play mode button
+        footPlayMode = UIButton(type: .custom)
+        footPlayMode.setImage(UIImage(named: "ic_repeat")?.withRenderingMode(.alwaysTemplate), for: .normal)
+        footPlayMode.tintColor = UIColor.black
+        footer.addSubview(footPlayMode)
+
+        // Play button
+        footPlayButton = UIButton(type: .custom)
+        footPlayButton.setImage(UIImage(named: "ic_play_circle_outline_48pt"), for: .normal)
+        footPlayButton.setImage(UIImage(named: "ic_pause_circle_outline_48pt"), for: .selected)
+        footPlayButton.tintColor = UIColor.black
+        footer.addSubview(footPlayButton)
+    }
+
+    private func setupConstraints() {
+        guard let statusBackground = view.subviews.first else { return }
+
+        // Status background
+        statusBackground.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            statusBackground.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            statusBackground.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            statusBackground.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            statusBackground.heightAnchor.constraint(equalToConstant: 20)
+        ])
+
+        // Table view
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: statusBackground.bottomAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+
+        // Footer
+        footer.translatesAutoresizingMaskIntoConstraints = false
+        footerHightConstraint = footer.heightAnchor.constraint(equalToConstant: 0)
+        NSLayoutConstraint.activate([
+            footer.topAnchor.constraint(equalTo: tableView.bottomAnchor),
+            footer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            footer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            footer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            footerHightConstraint
+        ])
+
+        // Footer subviews
+        let paddingView = footer.subviews[0]
+        let progressBar = self.progressBar!
+        let footLabel = self.footLabel!
+        let progressLabel = self.progressLabel!
+        let durationLabel = self.durationLabel!
+        let footPlayMode = self.footPlayMode!
+        let footPlayButton = self.footPlayButton!
+
+        // Padding view
+        paddingView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            paddingView.topAnchor.constraint(equalTo: footer.topAnchor),
+            paddingView.leadingAnchor.constraint(equalTo: footer.leadingAnchor),
+            paddingView.trailingAnchor.constraint(equalTo: footer.trailingAnchor),
+            paddingView.heightAnchor.constraint(equalToConstant: 16)
+        ])
+
+        // Progress slider
+        progressBar.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            progressBar.topAnchor.constraint(equalTo: paddingView.bottomAnchor, constant: 5),
+            progressBar.leadingAnchor.constraint(equalTo: footer.leadingAnchor),
+            progressBar.trailingAnchor.constraint(equalTo: footer.trailingAnchor),
+            progressBar.heightAnchor.constraint(equalToConstant: 25)
+        ])
+
+        // Title label
+        footLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            footLabel.topAnchor.constraint(equalTo: footer.topAnchor),
+            footLabel.leadingAnchor.constraint(equalTo: footer.leadingAnchor, constant: 30),
+            footLabel.widthAnchor.constraint(equalToConstant: 161)
+        ])
+
+        // Progress label
+        progressLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            progressLabel.topAnchor.constraint(equalTo: footer.topAnchor, constant: 30),
+            progressLabel.leadingAnchor.constraint(equalTo: footer.leadingAnchor, constant: 5)
+        ])
+
+        // Duration label
+        durationLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            durationLabel.topAnchor.constraint(equalTo: footer.topAnchor, constant: 30),
+            durationLabel.trailingAnchor.constraint(equalTo: footer.trailingAnchor, constant: -5)
+        ])
+
+        // Play mode button
+        footPlayMode.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            footPlayMode.widthAnchor.constraint(equalToConstant: 24),
+            footPlayMode.heightAnchor.constraint(equalToConstant: 24),
+            footPlayMode.centerYAnchor.constraint(equalTo: footer.centerYAnchor, constant: 18),
+            footPlayMode.trailingAnchor.constraint(equalTo: footPlayButton.leadingAnchor, constant: -30)
+        ])
+
+        // Play button
+        footPlayButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            footPlayButton.widthAnchor.constraint(equalToConstant: 40),
+            footPlayButton.heightAnchor.constraint(equalToConstant: 40),
+            footPlayButton.centerYAnchor.constraint(equalTo: footLabel.centerYAnchor),
+            footPlayButton.trailingAnchor.constraint(equalTo: footer.trailingAnchor, constant: -30)
+        ])
     }
     override func viewWillAppear(_ animated: Bool) {
         self.checkMediaStatus();
@@ -822,9 +1000,32 @@ class MediaTableViewController: UIViewController, UITableViewDelegate, UITableVi
 }
 
 class MediaTableViewCell: UITableViewCell {
-    
-    @IBOutlet weak var nameLabel: UILabel!
-    
+
+    var nameLabel: UILabel!
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupCell()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupCell() {
+        nameLabel = UILabel()
+        nameLabel.font = UIFont.systemFont(ofSize: 17)
+        nameLabel.textColor = UIColor.darkText
+        contentView.addSubview(nameLabel)
+
+        nameLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 36),
+            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            nameLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
+        ])
+    }
+
     override func setSelected(_ selected: Bool, animated: Bool){
         super.setSelected(selected, animated: animated)
     }
