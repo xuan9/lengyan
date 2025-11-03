@@ -159,32 +159,6 @@ let KEY_PATHS = [
     "/A3"
 ];
 
-let CHAPTER_START_PATHS =
-    [
-        "/A1",
-        "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M3",
-        "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M2",
-        "/A2/B1/C2/D1/E2/F2",
-        "/A2/B1/C2/D1/E3/F1/G2/H2/I2",
-        "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K2",
-        "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L3",
-        "/A2/B1/C2/D1/E4/F2/G4",
-        "/A2/B2/C1/D2/E2/F2/G6/H1/I2",
-        "/A2/B2/C2/D1/E3/F2/G4"
-]
-
-let CHAPTER_END_PATHS=[
-    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K1/L1/M2",
-    "/A2/B1/C2/D1/E2/F1/G1/H2/I2/J2/K2/L2/M1",
-    "/A2/B1/C2/D1/E2/F1/G2",
-    "/A2/B1/C2/D1/E3/F1/G2/H2/I1",
-    "/A2/B1/C2/D1/E3/F1/G2/H4/I3/J2/K1/L4",
-    "/A2/B1/C2/D1/E3/F2/G1/H2/I3/J1/K1/L2/M4",
-    "/A2/B1/C2/D1/E4/F2/G3",
-    "/A2/B2/C1/D2/E2/F2/G6/H1/I1",
-    "/A2/B2/C2/D1/E3/F2/G3",
-    "/A3"]
-
 
 let DEFAULT_STARTS =
     [

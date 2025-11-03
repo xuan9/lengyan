@@ -8,8 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */; };
-		1313C43E1D53E99800395429 /* MediaTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1313C43D1D53E99800395429 /* MediaTableViewController.swift */; };
-		132014751F12B9850081FDDB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 132014771F12B9850081FDDB /* Localizable.strings */; };
+				132014751F12B9850081FDDB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 132014771F12B9850081FDDB /* Localizable.strings */; };
 		133CAB9D2364DDB700B61AC0 /* RABatchChangeEntity.h in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB7A2364D96900B61AC0 /* RABatchChangeEntity.h */; };
 		133CAB9E2364DDB700B61AC0 /* RABatchChangeEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB7B2364D96900B61AC0 /* RABatchChangeEntity.m */; };
 		133CAB9F2364DDB700B61AC0 /* RABatchChanges.h in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB7C2364D96900B61AC0 /* RABatchChanges.h */; };
@@ -52,8 +51,7 @@
 		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
 		1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */; };
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
-		139073111D109193003A3333 /* StarsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073101D109193003A3333 /* StarsTableViewController.swift */; };
-				139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
+						139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* BookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* BookTests.swift */; };
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
 		1390734C1D109284003A3333 /* data in Resources */ = {isa = PBXBuildFile; fileRef = 1390734B1D109284003A3333 /* data */; };
@@ -75,7 +73,10 @@
 		4AD063821EA3802200751922 /* ly10.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636D1EA244AC00751922 /* ly10.m4a */; settings = {ASSET_TAGS = (ly10, ); }; };
 		4AD063831EA3802200751922 /* ly04.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636E1EA244AC00751922 /* ly04.m4a */; settings = {ASSET_TAGS = (ly04, ); }; };
 		CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */; };
-/* End PBXBuildFile section */
+		CB8A4D50265EE90000D1E7B9 /* LengyanDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */; };
+				CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */; };
+				CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */; };
+	/* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		139073201D109194003A3333 /* PBXContainerItemProxy */ = {
@@ -96,8 +97,7 @@
 
 /* Begin PBXFileReference section */
 		130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraIndexViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
-		1313C43D1D53E99800395429 /* MediaTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = MediaTableViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
-		132014761F12B9850081FDDB /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+				132014761F12B9850081FDDB /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		132014781F12B9870081FDDB /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		1321D0681EEF141B005DC278 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
 		1321D0691EEF142A005DC278 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Main.strings"; sourceTree = "<group>"; };
@@ -146,8 +146,7 @@
 		1382E5311EAB341900EBE749 /* todo.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; };
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390730C1D109193003A3333 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		139073101D109193003A3333 /* StarsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarsTableViewController.swift; sourceTree = "<group>"; };
-				139073181D109194003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+						139073181D109194003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1390731A1D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390731F1D109194003A3333 /* lengyanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		139073231D109194003A3333 /* BookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTests.swift; sourceTree = "<group>"; };
@@ -176,7 +175,10 @@
 		4AD0636D1EA244AC00751922 /* ly10.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly10.m4a; sourceTree = "<group>"; };
 		4AD0636E1EA244AC00751922 /* ly04.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly04.m4a; sourceTree = "<group>"; };
 		CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
-/* End PBXFileReference section */
+		CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LengyanDesignSystem.swift; sourceTree = "<group>"; };
+				CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernAudioPlayerView.swift; sourceTree = "<group>"; };
+				CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernFavoritesView.swift; sourceTree = "<group>"; };
+	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		139073061D109193003A3333 /* Frameworks */ = {
@@ -225,8 +227,6 @@
 				4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */,
 				139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */,
 				135D60601D16FB7400029090 /* SutraBookViewController.swift */,
-				139073101D109193003A3333 /* StarsTableViewController.swift */,
-				1313C43D1D53E99800395429 /* MediaTableViewController.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -318,6 +318,7 @@
 				1390734B1D109284003A3333 /* data */,
 				133CAB732364D10E00B61AC0 /* Domain */,
 				133CAB772364D1FF00B61AC0 /* View */,
+				CB8A4D60265EE95000D1E7B9 /* SwiftUI */,
 				133CAB782364D96900B61AC0 /* Util */,
 								135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */,
 				139073171D109194003A3333 /* LaunchScreen.storyboard */,
@@ -348,6 +349,16 @@
 				139073301D109194003A3333 /* Info.plist */,
 			);
 			path = lengyanUITests;
+			sourceTree = "<group>";
+		};
+		CB8A4D60265EE95000D1E7B9 /* SwiftUI */ = {
+			isa = PBXGroup;
+			children = (
+				CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */,
+								CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */,
+								CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */,
+				);
+			path = SwiftUI;
 			sourceTree = "<group>";
 		};
 		4AD063641EA244AC00751922 /* media */ = {
@@ -562,7 +573,10 @@
 				133CABAA2364DDB700B61AC0 /* RATreeNodeItem+ClassExtension.h in Sources */,
 				133CABAB2364DDB700B61AC0 /* RATreeNodeItem+Private.h in Sources */,
 				CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */,
-				133CABAC2364DDB700B61AC0 /* RATreeNodeItem+Private.m in Sources */,
+				CB8A4D50265EE90000D1E7B9 /* LengyanDesignSystem.swift in Sources */,
+								CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */,
+								CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */,
+						133CABAC2364DDB700B61AC0 /* RATreeNodeItem+Private.m in Sources */,
 				133CABAD2364DDB700B61AC0 /* RATreeNodeItem.h in Sources */,
 				133CABAE2364DDB700B61AC0 /* RATreeNodeItem.m in Sources */,
 				133CABAF2364DDB700B61AC0 /* RATreeView+Enums.h in Sources */,
@@ -581,9 +595,7 @@
 				133CABBC2364DDB700B61AC0 /* UIView+Common.swift in Sources */,
 				133CABBD2364DDB700B61AC0 /* String+Common.swift in Sources */,
 				133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */,
-				1313C43E1D53E99800395429 /* MediaTableViewController.swift in Sources */,
-				139073111D109193003A3333 /* StarsTableViewController.swift in Sources */,
-				1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */,
+								1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */,
 				135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */,
 				1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */,
 				135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */,
@@ -723,7 +735,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PROVISIONING_PROFILE = "a997049f-513c-43e9-ab9e-932c0ee144b2";
@@ -778,7 +790,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -796,7 +808,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyan/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -821,7 +833,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyan/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

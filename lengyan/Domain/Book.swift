@@ -16,6 +16,7 @@ class Book: NSObject {
     var index:[[String:String]]? = nil
     var contents:[String:[[String:String]]]? = nil
     var media:[[String:Any]]? = nil
+    var chapterMap: [String: [String]]? = nil
     private var allPaths:[String]? = nil
 
     //loading state
@@ -87,6 +88,14 @@ class Book: NSObject {
                 as? [[String:Any]]
         } catch _ {
             self.media  = []
+        }
+        
+        let chapterMapFile = Bundle.main.url(forResource: "data/lengyanjing-chapter-map", withExtension: "json")
+        let chapterMapData = try? Foundation.Data(contentsOf: chapterMapFile!)
+        do {
+            self.chapterMap = try (JSONSerialization.jsonObject(with: chapterMapData!, options: .allowFragments)) as? [String: [String]]
+        } catch _ {
+            self.chapterMap = [:]
         }
         
         self.loaded = true
@@ -326,45 +335,13 @@ class Book: NSObject {
         return sutraContents.joined(separator: "\n")
     }
     
-    //MARK: Build chapters
-    func listChapterStarts(){//debug only
-        var starts:[String] = []
-        for chapter in 0...9 {
-        let endPath = CHAPTER_END_PATHS[chapter]
-        let endIndex = KEY_PATHS.index(of: endPath)
-        var startIndex:Int?
-        if(chapter==0){
-            startIndex = 0
-        }else{
-            let lastEndPath=CHAPTER_END_PATHS[chapter-1]
-            let lastEndIndex=KEY_PATHS.index(of: lastEndPath)
-            for i in lastEndIndex!...endIndex! {
-                if !KEY_PATHS[i].starts(with:lastEndPath) {
-                    startIndex = i
-                    break
-                }
-            }
-            }
-            starts.append(KEY_PATHS[startIndex!])
-        }
-        let data = try! JSONSerialization.data(withJSONObject: starts, options: .prettyPrinted)
-        let string = NSString(data: data, encoding: String.Encoding.utf8.rawValue)
-        print (string! as String)
-    }
-    
     func getChapterSutra(chapter:Int)->String{
-        let startPath = CHAPTER_START_PATHS[chapter]
-        let endPath = CHAPTER_END_PATHS[chapter]
-        let startIndex = KEY_PATHS.index(of: startPath)
-        let endIndex = KEY_PATHS.index(of: endPath)
-
-        var sutraContents = [String]()
+        guard let chapterPaths = chapterMap?[String(chapter + 1)] else {
+            return ""
+        }
         
-        for j in startIndex!...endIndex! {
-            let path = KEY_PATHS[j]
-            if j < KEY_PATHS.count - 1 && KEY_PATHS[j+1].starts(with: path) {
-                continue//skip hight level items
-            }
+        var sutraContents = [String]()
+        for path in chapterPaths {
             sutraContents.append(self.getSutra(self.itemOfPath(path)))
         }
         return sutraContents.joined(separator: "\n")

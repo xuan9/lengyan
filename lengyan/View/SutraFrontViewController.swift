@@ -48,90 +48,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     private func applyWorkingEnhancedDesign() {
         print("🎨 APPLYING WORKING ENHANCED DESIGN SYSTEM")
 
-        // Make background colors VERY obvious
-        let colors = getWorkingThemeColors()
+        // Apply background colors
+        let colors = getCurrentColors()
         view.backgroundColor = colors.background
         treeView.backgroundColor = colors.background
-
-        // Add a visible status bar
-        let statusLabel = UILabel()
-        statusLabel.text = "🎨 Enhanced Design Active - Tap to Change Theme 🎨"
-        statusLabel.textAlignment = .center
-        statusLabel.font = UIFont.boldSystemFont(ofSize: 16)
-        statusLabel.backgroundColor = colors.accent
-        statusLabel.textColor = .white
-        statusLabel.layer.cornerRadius = 8
-        statusLabel.layer.masksToBounds = true
-        statusLabel.numberOfLines = 0
-
-        // Add tap gesture to status label
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapToChangeTheme(_:)))
-        statusLabel.addGestureRecognizer(tapGesture)
-        statusLabel.isUserInteractionEnabled = true
-
-        // Position the label
-        statusLabel.frame = CGRect(x: 20, y: 100, width: view.bounds.width - 40, height: 60)
-        view.addSubview(statusLabel)
-        self.enhancedStatusLabel = statusLabel
 
         // Enhanced chapter buttons
         enhanceChapterButtons()
 
-        // Add theme toggle to navigation
-        let themeButton = UIBarButtonItem(
-            title: "🎨",
-            style: .plain,
-            target: self,
-            action: #selector(tapToChangeTheme(_:))
-        )
-        navigationItem.rightBarButtonItem = themeButton
-
         print("✅ WORKING ENHANCED DESIGN APPLIED SUCCESSFULLY")
-    }
-
-    private var enhancedStatusLabel: UILabel?
-    private var currentWorkingTheme: WorkingTheme = .light
-
-    enum WorkingTheme {
-        case light, sepia, dark
-    }
-
-    private func getWorkingThemeColors() -> (background: UIColor, accent: UIColor, primaryText: UIColor) {
-        switch currentWorkingTheme {
-        case .light:
-            return (
-                background: UIColor(red: 1.0, green: 0.98, blue: 0.95, alpha: 1.0),
-                accent: UIColor(red: 0.2, green: 0.6, blue: 1.0, alpha: 1.0),
-                primaryText: UIColor.black
-            )
-        case .sepia:
-            return (
-                background: UIColor(red: 0.95, green: 0.85, blue: 0.70, alpha: 1.0),
-                accent: UIColor(red: 0.8, green: 0.4, blue: 0.2, alpha: 1.0),
-                primaryText: UIColor(red: 0.2, green: 0.1, blue: 0.0, alpha: 1.0)
-            )
-        case .dark:
-            return (
-                background: UIColor(red: 0.1, green: 0.1, blue: 0.2, alpha: 1.0),
-                accent: UIColor(red: 0.3, green: 0.7, blue: 1.0, alpha: 1.0),
-                primaryText: UIColor.white
-            )
-        }
-    }
-
-    @objc private func tapToChangeTheme(_ sender: Any) {
-        print("🎨 THEME CHANGE REQUESTED")
-
-        switch currentWorkingTheme {
-        case .light:
-            currentWorkingTheme = .sepia
-        case .sepia:
-            currentWorkingTheme = .dark
-        case .dark:
-            currentWorkingTheme = .light
-        }
-
-        applyWorkingEnhancedDesign()
     }
 
     private func enhanceChapterButtons() {
@@ -152,7 +77,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             if let button = subview as? UIButton,
                button.titleLabel?.text?.contains("卷") == true {
                 // Enhance chapter button
-                let colors = getWorkingThemeColors()
+                let colors = getCurrentColors()
                 button.backgroundColor = colors.accent
                 button.setTitleColor(.white, for: .normal)
                 button.layer.cornerRadius = 8
@@ -165,6 +90,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
             enhanceButtonsInView(subview)
         }
+    }
+
+    private func getCurrentColors() -> (background: UIColor, accent: UIColor, primaryText: UIColor) {
+        // Use a fixed theme (light) instead of user-selectable themes
+        return (
+            background: UIColor(red: 1.0, green: 0.98, blue: 0.95, alpha: 1.0),
+            accent: UIColor(red: 0.2, green: 0.6, blue: 1.0, alpha: 1.0),
+            primaryText: UIColor.black
+        )
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -419,12 +353,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let cell = newCell!;
         let item = item as! [String];
         let name = item[1];
-        let chapterStartIndex = CHAPTER_START_PATHS.index(of: item[0]);
-        if chapterStartIndex != nil {
-            cell.textLabel?.attributedText = Book.shared.getItemName(name, withChapter: chapterStartIndex!);
-        }else {
-            cell.textLabel?.text =  name
-        }
+        cell.textLabel?.text =  name
 
         // Apply enhanced design system styling
         let colors = currentColors
@@ -488,7 +417,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     private func setupEnhancedDesign() {
-        print("🎨 Applying enhanced design with theme: \(currentTheme)")
+        print("🎨 Applying enhanced design")
 
         // Apply enhanced colors immediately
         let colors = currentColors
@@ -507,45 +436,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             titleButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         }
 
-        // Add theme toggle button - ensure it's visible
-        let themeButton = UIBarButtonItem(
-            title: "🎨",
-            style: .plain,
-            target: self,
-            action: #selector(toggleTheme)
-        )
-        themeButton.tintColor = colors.accent
-        themeButton.accessibilityLabel = "Toggle Theme"
-        themeButton.accessibilityHint = "Double tap to change theme"
-
-        // Force set as right bar button (replace existing)
-        navigationItem.rightBarButtonItem = themeButton
-
-        print("🎨 Theme toggle button added to navigation bar")
-
         print("✅ Enhanced design applied successfully")
-    }
-
-    @objc private func toggleTheme() {
-        // Cycle through themes: Light -> Sepia -> Dark -> Light
-        switch currentTheme {
-        case .light:
-            currentTheme = .sepia
-        case .sepia:
-            currentTheme = .dark
-        case .dark:
-            currentTheme = .light
-        }
-
-        // Re-apply design with new theme
-        setupEnhancedDesign()
-
-        // Refresh UI components
-        setupHeaderView(view.bounds.size)
-        setupFooterView(view.bounds.size)
-        if tree != nil {
-            treeView.reloadData()
-        }
     }
 
     private var currentColors: (background: UIColor, primaryText: UIColor, secondaryText: UIColor, accent: UIColor, chapterButton: UIColor, navigationBar: UIColor, separator: UIColor) {

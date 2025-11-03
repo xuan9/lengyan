@@ -9,6 +9,7 @@
 import UIKit
 import UserNotifications
 import AVFoundation
+import SwiftUI
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -65,18 +66,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             selectedImage: UIImage(named: "book")
         )
 
-        // Setup Listening Tab
-        let mediaTableVC = MediaTableViewController()
-        let listeningNavController = UINavigationController(rootViewController: mediaTableVC)
+        // Setup Listening Tab with SwiftUI
+        let modernAudioPlayer = ModernAudioPlayerView()
+        let audioHostingController = UIHostingController(rootView: modernAudioPlayer)
+        let listeningNavController = UINavigationController(rootViewController: audioHostingController)
         listeningNavController.tabBarItem = UITabBarItem(
             title: "聽經",
             image: UIImage(named: "ic_library_music"),
             selectedImage: UIImage(named: "ic_library_music")
         )
 
-        // Setup Favorites Tab
-        let starsTableVC = StarsTableViewController(style: .plain)
-        let favoritesNavController = UINavigationController(rootViewController: starsTableVC)
+        // Setup Favorites Tab with SwiftUI
+        let modernFavorites = ModernFavoritesView()
+        let favoritesHostingController = UIHostingController(rootView: modernFavorites)
+        let favoritesNavController = UINavigationController(rootViewController: favoritesHostingController)
         favoritesNavController.tabBarItem = UITabBarItem(
             title: "收藏",
             image: UIImage(named: "baseline_star_black_24pt"),

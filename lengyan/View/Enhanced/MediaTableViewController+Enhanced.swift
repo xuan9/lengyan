@@ -683,6 +683,16 @@ class EnhancedMediaTableViewController: UIViewController, UITableViewDelegate, U
         }
     }
 
+    private func startAudioSession() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playback)
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            NSLog("Audio session error: \(error)")
+        }
+    }
+
     private func isPlaying() -> Bool {
         return queuePlayer != nil && queuePlayer!.rate != 0
     }
