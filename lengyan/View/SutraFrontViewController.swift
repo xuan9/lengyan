@@ -44,19 +44,63 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         applyWorkingEnhancedDesign()
     }
 
-    // MARK: - Working Enhanced Design System
+    // MARK: - Comprehensive Zen Temple Serenity Design System
     private func applyWorkingEnhancedDesign() {
-        print("🎨 APPLYING WORKING ENHANCED DESIGN SYSTEM")
+        print("🏛️ APPLYING COMPREHENSIVE ZEN TEMPLE SERENITY DESIGN SYSTEM")
+
+        // Apply zen background gradient
+        setupZenBackgroundGradient()
 
         // Apply background colors
         let colors = getCurrentColors()
         view.backgroundColor = colors.background
-        treeView.backgroundColor = colors.background
+        treeView.backgroundColor = .clear
 
-        // Enhanced chapter buttons
+        // Enhanced tree view styling
+        setupZenTreeViewStyling()
+
+        // Enhanced chapter buttons with comprehensive zen design
         enhanceChapterButtons()
 
-        print("✅ WORKING ENHANCED DESIGN APPLIED SUCCESSFULLY")
+        print("✅ COMPREHENSIVE ZEN TEMPLE SERENITY DESIGN APPLIED SUCCESSFULLY")
+    }
+
+    private func setupZenBackgroundGradient() {
+        // Remove any existing background views
+        for subview in view.subviews {
+            if subview.tag == 999 {
+                subview.removeFromSuperview()
+            }
+        }
+
+        // Create zen gradient background
+        let backgroundView = UIView(frame: view.bounds)
+        backgroundView.tag = 999
+        backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = backgroundView.bounds
+        gradientLayer.colors = [
+            UIColorFromRGB(0xFAF9F6).cgColor, // Zen rice paper
+            UIColorFromRGB(0xFFFEFB).cgColor,  // Pure meditation surface
+            UIColorFromRGB(0xF8F7F4).cgColor   // Subtle zen texture
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.2, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0.8, y: 1)
+        gradientLayer.locations = [0.0, 0.6, 1.0]
+
+        backgroundView.layer.addSublayer(gradientLayer)
+        view.insertSubview(backgroundView, at: 0)
+    }
+
+    private func setupZenTreeViewStyling() {
+        treeView.backgroundColor = .clear
+
+        // Simple approach - only use what we know works
+        // The crash is caused by KVC on properties that don't exist or expect different types
+        // So we'll keep it minimal and safe
+
+        treeView.rowHeight = 50 // Increased for zen styling
     }
 
     private func enhanceChapterButtons() {
@@ -74,30 +118,119 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     private func enhanceButtonsInView(_ view: UIView) {
         for subview in view.subviews {
-            if let button = subview as? UIButton,
-               button.titleLabel?.text?.contains("卷") == true {
-                // Enhance chapter button
-                let colors = getCurrentColors()
-                button.backgroundColor = colors.accent
-                button.setTitleColor(.white, for: .normal)
-                button.layer.cornerRadius = 8
-                button.layer.borderWidth = 2
-                button.layer.borderColor = colors.primaryText.cgColor
-                button.layer.shadowColor = UIColor.black.cgColor
-                button.layer.shadowOffset = CGSize(width: 0, height: 2)
-                button.layer.shadowRadius = 4
-                button.layer.shadowOpacity = 0.3
+            if let button = subview as? UIButton {
+                // Comprehensive zen enhancement for all buttons
+                enhanceButtonWithCompleteZenStyling(button)
             }
             enhanceButtonsInView(subview)
         }
     }
 
+    private func enhanceButtonWithCompleteZenStyling(_ button: UIButton) {
+        let buttonText = button.titleLabel?.text ?? ""
+
+        // Enhanced zen styling for chapter buttons
+        if buttonText.contains("卷") || buttonText.contains("品") {
+            // Chapter button - sacred temple styling
+            button.backgroundColor = UIColorFromRGB(0xFFFEFB)
+            button.setTitleColor(UIColorFromRGB(0x8B4513), for: .normal)
+            button.titleLabel?.font = UIFont(name: "PingFangTC-Medium", size: 17) ??
+                                    UIFont.systemFont(ofSize: 17, weight: .medium)
+            button.layer.cornerRadius = 16
+            button.layer.borderWidth = 2
+            button.layer.borderColor = UIColorFromRGB(0xD4AF37).cgColor // Golden sacred border
+            button.layer.shadowColor = UIColorFromRGB(0xD4AF37).cgColor
+            button.layer.shadowOffset = CGSize(width: 0, height: 2)
+            button.layer.shadowRadius = 12
+            button.layer.shadowOpacity = 0.15
+
+            // Add subtle gradient background
+            addZenGradientToButton(button)
+
+        } else if buttonText.contains("楞嚴經") || buttonText.contains("首楞嚴經") {
+            // Main title - enhanced zen styling
+            button.backgroundColor = .clear
+            button.setTitleColor(UIColorFromRGB(0x1C2A39), for: .normal)
+            button.titleLabel?.font = UIFont(name: "PingFangTC-Semibold", size: 22) ??
+                                    UIFont.systemFont(ofSize: 22, weight: .semibold)
+            button.titleLabel?.textAlignment = .center
+
+        } else {
+            // Other buttons - subtle zen styling
+            button.backgroundColor = UIColorFromRGB(0xFAF9F6)
+            button.setTitleColor(UIColorFromRGB(0x5D6D7E), for: .normal)
+            button.titleLabel?.font = UIFont(name: "PingFangTC-Regular", size: 15) ??
+                                    UIFont.systemFont(ofSize: 15, weight: .regular)
+            button.layer.cornerRadius = 12
+            button.layer.borderWidth = 1
+            button.layer.borderColor = UIColorFromRGB(0xE0E0E0).cgColor
+            button.layer.shadowColor = UIColor.black.cgColor
+            button.layer.shadowOffset = CGSize(width: 0, height: 1)
+            button.layer.shadowRadius = 4
+            button.layer.shadowOpacity = 0.05
+        }
+
+        // Enhanced touch feedback for all buttons
+        enhanceButtonTouchFeedback(button)
+    }
+
+    private func addZenGradientToButton(_ button: UIButton) {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = button.bounds
+        gradientLayer.colors = [
+            UIColorFromRGB(0xFFFEFB).cgColor,
+            UIColorFromRGB(0xFAF9F6).cgColor
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0, y: 1)
+        gradientLayer.cornerRadius = button.layer.cornerRadius
+
+        // Replace existing background if present
+        if let sublayers = button.layer.sublayers,
+           let existingLayer = sublayers.first(where: { $0 is CAGradientLayer }) {
+            existingLayer.removeFromSuperlayer()
+        }
+
+        button.layer.insertSublayer(gradientLayer, at: 0)
+        button.clipsToBounds = true
+    }
+
+    private func enhanceButtonTouchFeedback(_ button: UIButton) {
+        // Remove existing touch targets
+        button.removeTarget(self, action: nil, for: .allEvents)
+
+        // Add zen-style touch feedback
+        button.addTarget(self, action: #selector(zenButtonTouchDown(_:)), for: .touchDown)
+        button.addTarget(self, action: #selector(zenButtonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        button.addTarget(self, action: #selector(zenButtonTapped(_:)), for: .touchUpInside)
+    }
+
+    @objc private func zenButtonTouchDown(_ button: UIButton) {
+        UIView.animate(withDuration: 0.1, delay: 0, options: [.curveEaseOut]) {
+            button.transform = CGAffineTransform(scaleX: 0.96, y: 0.96)
+            button.alpha = 0.8
+        }
+    }
+
+    @objc private func zenButtonTouchUp(_ button: UIButton) {
+        UIView.animate(withDuration: 0.1, delay: 0, options: [.curveEaseOut]) {
+            button.transform = .identity
+            button.alpha = 1.0
+        }
+    }
+
+    @objc private func zenButtonTapped(_ button: UIButton) {
+        // Add subtle haptic feedback if available
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+    }
+
     private func getCurrentColors() -> (background: UIColor, accent: UIColor, primaryText: UIColor) {
-        // Use a fixed theme (light) instead of user-selectable themes
+        // Use Zen Temple Serenity colors
         return (
-            background: UIColor(red: 1.0, green: 0.98, blue: 0.95, alpha: 1.0),
-            accent: UIColor(red: 0.2, green: 0.6, blue: 1.0, alpha: 1.0),
-            primaryText: UIColor.black
+            background: UIColorFromRGB(0xFAF9F6),
+            accent: UIColorFromRGB(0x8B4513),
+            primaryText: UIColorFromRGB(0x1C2A39)
         )
     }
     

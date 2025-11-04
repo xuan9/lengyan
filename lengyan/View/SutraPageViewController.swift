@@ -64,16 +64,22 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(close))
         self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
 
-        
+
         if(Prefers.shared.likes.contains(path!)){
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
         } else {
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
         }
-        
-        
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
-        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
+
+        // Apply Zen Temple Serenity colors
+        let zenPrimary = UIColorFromRGB(0x1C2A39)
+        let zenSurface = UIColorFromRGB(0xFFFEFB)
+        let zenBookmark = UIColorFromRGB(0xD4AF37)
+        let zenTextTertiary = UIColorFromRGB(0x7F8C8D)
+
+        self.navigationItem.leftBarButtonItem?.tintColor = zenPrimary
+        self.navigationItem.rightBarButtonItem?.tintColor = Prefers.shared.likes.contains(path!) ? zenBookmark : zenTextTertiary
+        self.navigationController?.navigationBar.backgroundColor = zenSurface
         self.navigationController?.navigationBar.isTranslucent = false;
     }
         
@@ -99,7 +105,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     func getViewControllerAtIndex(index: Int) -> UIViewController
     {
-        // STORYBOARD REMOVED: Creating view controller programmatically now
+        // Create the standard page content controller and enhance it
         let pageContent = SutraPageContentViewController()
 
         pageContent.pageIndex = index
@@ -111,7 +117,23 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             origin: CGPoint(x:frame.origin.x,y:frame.origin.y + navigationBarHeight),
             size:   CGSize(width: frame.size.width, height:frame.size.height - navigationBarHeight))
 
+        // Apply Zen Temple Serenity design enhancement
+        enhancePageViewController(pageContent)
+
         return pageContent
+    }
+
+    // Apply Zen design enhancements to the page content
+    private func enhancePageViewController(_ pageVC: SutraPageContentViewController) {
+        // Apply zen background color
+        let zenBackground = UIColorFromRGB(0xFAF9F6)
+        pageVC.view.backgroundColor = zenBackground
+        pageVC.tableView.backgroundColor = zenBackground
+
+        // Update fonts with zen styling
+        pageVC.sutraFont = UIFont(name: "PingFangTC", size: 18) ?? UIFont.systemFont(ofSize: 18, weight: .medium)
+        pageVC.comentFont = UIFont(name: "PingFangTC", size: 16) ?? UIFont.systemFont(ofSize: 16, weight: .regular)
+        pageVC.indexFont = UIFont(name: "PingFangTC", size: 15) ?? UIFont.systemFont(ofSize: 15, weight: .light)
     }
     
     public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
