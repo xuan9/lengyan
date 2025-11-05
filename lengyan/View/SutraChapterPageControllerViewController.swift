@@ -63,8 +63,9 @@ class SutraChapterPageViewController: UIPageViewController, UIPageViewController
 
         // Apply theme colors
         let theme = SutraThemeManager.shared.currentTheme
-        self.navigationItem.leftBarButtonItem?.tintColor = SutraColors.Semantic.primary(theme: theme)
-        self.navigationItem.rightBarButtonItem?.tintColor = SutraColors.Semantic.primary(theme: theme)
+        let primaryColor: UIColor = theme == .dark ? .white : .black
+        self.navigationItem.leftBarButtonItem?.tintColor = primaryColor
+        self.navigationItem.rightBarButtonItem?.tintColor = primaryColor
 
         // Modern navigation bar styling
         if let navigationBar = self.navigationController?.navigationBar {
