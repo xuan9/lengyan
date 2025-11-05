@@ -18,15 +18,17 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Apply Zen Temple Serenity Design System FIRST
+        applyZenTempleSerenityDesignSystem()
+
         let bounds:CGRect = self.view.bounds;
         treeView = RATreeView(frame: CGRect(
             origin: CGPoint(x:bounds.origin.x - 5 ,y:bounds.origin.y + 0),
             size:   CGSize(width: bounds.size.width + 8 , height:bounds.size.height - 0 )));
 
-
         treeView.delegate = self
         treeView.dataSource = self
-        treeView.rowHeight = 30;
+        treeView.rowHeight = 50; // Enhanced for better zen spacing
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
 
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
@@ -39,30 +41,110 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         let title = self.makeSutraIndexButton("", frame: CGRect(x: 3, y: 0, width: self.view.bounds.width - 3, height: 40));
         self.navigationItem.titleView = title;
-
-        // Apply enhanced design system - make it obvious
-        applyWorkingEnhancedDesign()
     }
 
-    // MARK: - Comprehensive Zen Temple Serenity Design System
-    private func applyWorkingEnhancedDesign() {
-        print("🏛️ APPLYING COMPREHENSIVE ZEN TEMPLE SERENITY DESIGN SYSTEM")
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
 
-        // Apply zen background gradient
-        setupZenBackgroundGradient()
+        // Refresh design system on appearance
+        applyZenTempleSerenityDesignSystem()
 
-        // Apply background colors
-        let colors = getCurrentColors()
-        view.backgroundColor = colors.background
-        treeView.backgroundColor = .clear
+        // Apply design system to navigation bar
+        navigationController?.navigationBar.applySutraDesignSystem()
 
-        // Enhanced tree view styling
-        setupZenTreeViewStyling()
+        // Configure navigation bar behavior
+        self.navigationController?.setNavigationBarHidden(false, animated: true)
+        self.navigationController?.hidesBarsOnSwipe = false
 
-        // Enhanced chapter buttons with comprehensive zen design
+        // Add theme switching button
+        addThemeSwitchingButton()
+    }
+
+    private func addThemeSwitchingButton() {
+        let themeButton = UIButton(type: .system)
+        themeButton.setImage(UIImage(systemName: "paintbrush"), for: .normal)
+        themeButton.tintColor = SutraThemeManager.shared.accentColor()
+        themeButton.backgroundColor = SutraThemeManager.shared.surfaceColor()
+        themeButton.layer.cornerRadius = 20
+        themeButton.layer.borderWidth = 1
+        themeButton.layer.borderColor = SutraThemeManager.shared.primaryColor().withAlphaComponent(0.3).cgColor
+
+        themeButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(themeButton)
+
+        NSLayoutConstraint.activate([
+            themeButton.widthAnchor.constraint(equalToConstant: 40),
+            themeButton.heightAnchor.constraint(equalToConstant: 40),
+            themeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            themeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
+        ])
+
+        themeButton.addTarget(self, action: #selector(themeButtonTapped), for: .touchUpInside)
+    }
+
+    @objc private func themeButtonTapped() {
+        SutraThemeManager.shared.toggleTheme()
+
+        // Provide haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+
+        // Refresh the UI
+        applyZenTempleSerenityDesignSystem()
         enhanceChapterButtons()
+    }
 
-        print("✅ COMPREHENSIVE ZEN TEMPLE SERENITY DESIGN APPLIED SUCCESSFULLY")
+    // MARK: - Zen Temple Serenity Design System Application
+    private func applyZenTempleSerenityDesignSystem() {
+        print("🏛️ APPLYING ZEN TEMPLE SERENITY DESIGN SYSTEM")
+
+        // Apply theme colors and background
+        applyThemeColorsToView()
+        setupThemeObserverForView()
+
+        // Configure tree view with design system
+        configureTreeViewWithDesignSystem()
+
+        print("✅ ZEN TEMPLE SERENITY DESIGN SYSTEM APPLIED")
+    }
+
+    private func applyThemeColorsToView() {
+        let theme = SutraThemeManager.shared.currentTheme
+        view.backgroundColor = SutraColors.Semantic.background(theme: theme)
+    }
+
+    private func setupThemeObserverForView() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(themeDidChangeForFrontViewController),
+            name: .themeDidChange,
+            object: nil
+        )
+    }
+
+    @objc private func themeDidChangeForFrontViewController() {
+        applyThemeColorsToView()
+        configureTreeViewWithDesignSystem()
+        enhanceChapterButtons()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    private func configureTreeViewWithDesignSystem() {
+        let theme = SutraThemeManager.shared.currentTheme
+
+        // Apply design system colors to tree view
+        // Guard against treeView not being initialized yet (can happen during early notification calls)
+        guard let treeView = treeView else { return }
+
+        treeView.backgroundColor = .clear
+        view.backgroundColor = SutraColors.Semantic.background(theme: theme)
+
+        // Enhanced spacing for zen reading experience
+        treeView.rowHeight = 50
+        treeView.separatorStyle = RATreeViewCellSeparatorStyleNone
     }
 
     private func setupZenBackgroundGradient() {
@@ -128,46 +210,40 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     private func enhanceButtonWithCompleteZenStyling(_ button: UIButton) {
         let buttonText = button.titleLabel?.text ?? ""
+        let theme = SutraThemeManager.shared.currentTheme
 
-        // Enhanced zen styling for chapter buttons
+        // Enhanced zen styling using design system
         if buttonText.contains("卷") || buttonText.contains("品") {
-            // Chapter button - sacred temple styling
-            button.backgroundColor = UIColorFromRGB(0xFFFEFB)
-            button.setTitleColor(UIColorFromRGB(0x8B4513), for: .normal)
-            button.titleLabel?.font = UIFont(name: "PingFangTC-Medium", size: 17) ??
-                                    UIFont.systemFont(ofSize: 17, weight: .medium)
+            // Chapter button - sacred temple styling with design system
+            button.backgroundColor = SutraColors.Semantic.surface(theme: theme)
+            button.setTitleColor(SutraColors.Semantic.chapterTitle(theme: theme), for: .normal)
+            button.titleLabel?.font = UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle)
+
+            // Design system corner radius and shadows
             button.layer.cornerRadius = 16
             button.layer.borderWidth = 2
-            button.layer.borderColor = UIColorFromRGB(0xD4AF37).cgColor // Golden sacred border
-            button.layer.shadowColor = UIColorFromRGB(0xD4AF37).cgColor
-            button.layer.shadowOffset = CGSize(width: 0, height: 2)
-            button.layer.shadowRadius = 12
-            button.layer.shadowOpacity = 0.15
+            button.layer.borderColor = SutraColors.Light.bookmark.cgColor // Golden sacred border
+            button.layer.applyToken(shadow: SutraDesignTokens.ShadowTokens.shadowSubtle)
 
             // Add subtle gradient background
             addZenGradientToButton(button)
 
         } else if buttonText.contains("楞嚴經") || buttonText.contains("首楞嚴經") {
-            // Main title - enhanced zen styling
+            // Main title - enhanced zen styling with design system
             button.backgroundColor = .clear
-            button.setTitleColor(UIColorFromRGB(0x1C2A39), for: .normal)
-            button.titleLabel?.font = UIFont(name: "PingFangTC-Semibold", size: 22) ??
-                                    UIFont.systemFont(ofSize: 22, weight: .semibold)
+            button.setTitleColor(SutraColors.Semantic.primary(theme: theme), for: .normal)
+            button.titleLabel?.font = UIFont.sutraFont(style: SutraTypography.TextStyle.chapterTitle)
             button.titleLabel?.textAlignment = .center
 
         } else {
-            // Other buttons - subtle zen styling
-            button.backgroundColor = UIColorFromRGB(0xFAF9F6)
-            button.setTitleColor(UIColorFromRGB(0x5D6D7E), for: .normal)
-            button.titleLabel?.font = UIFont(name: "PingFangTC-Regular", size: 15) ??
-                                    UIFont.systemFont(ofSize: 15, weight: .regular)
+            // Other buttons - subtle zen styling with design system
+            button.backgroundColor = SutraColors.Semantic.background(theme: theme)
+            button.setTitleColor(SutraColors.Semantic.primary(theme: theme), for: .normal)
+            button.titleLabel?.font = UIFont.sutraFont(style: SutraTypography.TextStyle.buttonMedium)
             button.layer.cornerRadius = 12
             button.layer.borderWidth = 1
-            button.layer.borderColor = UIColorFromRGB(0xE0E0E0).cgColor
-            button.layer.shadowColor = UIColor.black.cgColor
-            button.layer.shadowOffset = CGSize(width: 0, height: 1)
-            button.layer.shadowRadius = 4
-            button.layer.shadowOpacity = 0.05
+            button.layer.borderColor = SutraColors.Semantic.divider(theme: theme).cgColor
+            button.layer.applyToken(shadow: SutraDesignTokens.ShadowTokens.shadowSubtle)
         }
 
         // Enhanced touch feedback for all buttons
@@ -233,12 +309,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             primaryText: UIColorFromRGB(0x1C2A39)
         )
     }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        self.navigationController?.setNavigationBarHidden(false, animated: true)
-        self.navigationController?.hidesBarsOnSwipe = false;
-    }
-    
+
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         setupHeaderView(size)
         setupFooterView(size)

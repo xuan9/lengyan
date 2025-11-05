@@ -172,7 +172,7 @@ extension SutraPageContentViewController {
     public func applyNewDesignSystem() {
         // Apply theme
         view.applyThemeColors()
-        self.view.setupThemeObserver()
+        setupThemeObserver()
 
         // Configure table view
         configureTableViewWithDesignSystem()
@@ -188,7 +188,7 @@ extension SutraPageContentViewController {
     }
 
     private func configureTableViewWithDesignSystem() {
-        tableView.backgroundColor = self.view.themeManager.backgroundColor()
+        tableView.backgroundColor = themeManager.backgroundColor()
         tableView.separatorStyle = .none
 
         // Register custom cells with design system
@@ -201,9 +201,9 @@ extension SutraPageContentViewController {
     }
 
     private func initFontsWithDesignSystem() {
-        sutraFont = UIFont.sutraFont(style: SutraTypography.TextStyle.sutraBody)
-        comentFont = UIFont.sutraFont(style: SutraTypography.TextStyle.commentary)
-        indexFont = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
+        sutraFont = UIFont.sutraFont(style: .sutraBody)
+        comentFont = UIFont.sutraFont(style: .commentary)
+        indexFont = UIFont.sutraFont(style: .indexItem)
     }
 
     private func applySpacingSystem() {
@@ -287,17 +287,17 @@ class SutraContentTableViewCell: UITableViewCell {
     private func configureForContentType() {
         switch contentType {
         case "sutra":
-            textView.font = UIFont.sutraFont(style: SutraTypography.TextStyle.sutraBody)
+            textView.font = UIFont.sutraFont(style: .sutraBody)
             textView.textColor = themeManager.sutraTextColor()
             textView.accessibilityLabel = NSLocalizedString("accessibility.sutra.content", comment: "Sutra content")
 
         case "index":
-            textView.font = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
+            textView.font = UIFont.sutraFont(style: .indexItem)
             textView.textColor = themeManager.primaryColor()
             textView.accessibilityLabel = NSLocalizedString("accessibility.index.content", comment: "Index content")
 
         default: // commentary
-            textView.font = UIFont.sutraFont(style: SutraTypography.TextStyle.commentary)
+            textView.font = UIFont.sutraFont(style: .commentary)
             textView.textColor = themeManager.commentaryTextColor()
             textView.accessibilityLabel = NSLocalizedString("accessibility.commentary.content", comment: "Commentary content")
         }
@@ -310,16 +310,16 @@ class SutraContentTableViewCell: UITableViewCell {
         // Apply typography and spacing
         let style: SutraTextStyle = {
             switch type {
-            case "sutra": return SutraTypography.TextStyle.sutraBody
-            case "index": return SutraTypography.TextStyle.indexItem
-            default: return SutraTypography.TextStyle.commentary
+            case "sutra": return .sutraBody
+            case "index": return .indexItem
+            default: return .commentary
             }
         }()
 
         let attributedText = NSAttributedString.sutraAttributedText(
             text: content,
             style: style,
-            color: textView.textColor ?? .label
+            color: textView.textColor
         )
 
         textView.attributedText = attributedText
@@ -352,33 +352,33 @@ extension UINavigationBar {
         case .light:
             appearance.backgroundColor = SutraColors.Light.surface
             appearance.titleTextAttributes = [
-                .font: UIFont.sutraFont(style: SutraTypography.TextStyle.navigationTitle),
+                .font: UIFont.sutraFont(style: .navigationTitle),
                 .foregroundColor: SutraColors.Light.primary
             ]
             appearance.largeTitleTextAttributes = [
-                .font: UIFont.sutraFont(style: SutraTypography.TextStyle.chapterTitle),
+                .font: UIFont.sutraFont(style: .chapterTitle),
                 .foregroundColor: SutraColors.Light.primary
             ]
 
         case .sepia:
             appearance.backgroundColor = SutraColors.Sepia.surface
             appearance.titleTextAttributes = [
-                .font: UIFont.sutraFont(style: SutraTypography.TextStyle.navigationTitle),
+                .font: UIFont.sutraFont(style: .navigationTitle),
                 .foregroundColor: SutraColors.Sepia.primary
             ]
             appearance.largeTitleTextAttributes = [
-                .font: UIFont.sutraFont(style: SutraTypography.TextStyle.chapterTitle),
+                .font: UIFont.sutraFont(style: .chapterTitle),
                 .foregroundColor: SutraColors.Sepia.primary
             ]
 
         case .dark:
             appearance.backgroundColor = SutraColors.Dark.surface
             appearance.titleTextAttributes = [
-                .font: UIFont.sutraFont(style: SutraTypography.TextStyle.navigationTitle),
+                .font: UIFont.sutraFont(style: .navigationTitle),
                 .foregroundColor: SutraColors.Dark.primary
             ]
             appearance.largeTitleTextAttributes = [
-                .font: UIFont.sutraFont(style: SutraTypography.TextStyle.chapterTitle),
+                .font: UIFont.sutraFont(style: .chapterTitle),
                 .foregroundColor: SutraColors.Dark.primary
             ]
         }
@@ -437,9 +437,9 @@ extension UINavigationBar {
      tableView.separatorStyle = .none
 
      // Update fonts
-     sutraFont = UIFont.sutraFont(style: SutraTypography.TextStyle.sutraBody)
-     comentFont = UIFont.sutraFont(style: SutraTypography.TextStyle.commentary)
-     indexFont = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
+     sutraFont = UIFont.sutraFont(style: .sutraBody)
+     comentFont = UIFont.sutraFont(style: .commentary)
+     indexFont = UIFont.sutraFont(style: .indexItem)
 
      // Apply spacing
      tableView.contentInset = UIEdgeInsets(

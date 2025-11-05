@@ -20,7 +20,11 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
         self.addSutra(sutra: Book.shared.getChapterSutra(chapter: self.pageIndex));
         updateHeader()
     }
-    
+
+    func updateTheme(_ theme: SutraTheme) {
+        // Implementation for theme update if needed
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         self.navigationController?.setNavigationBarHidden(false, animated: true)
     }

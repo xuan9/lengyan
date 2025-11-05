@@ -12,11 +12,16 @@ import UIKit
 class SutraNavigationController: UINavigationController {
 
     private var statusBarStyle: UIStatusBarStyle = .default
-    private var isNavigationBarHidden = false
+    private var isNavigationBarHiddenState = false
     private var hideNavigationBarGesture: UITapGestureRecognizer?
 
     public var onThemeChange: ((SutraTheme) -> Void)?
     public var onBookmarkToggle: ((Bool) -> Void)?
+
+    // Closure properties for iOS 13 fallback
+    private var bookmarkAction: (() -> Void)?
+    private var shareAction: (() -> Void)?
+    private var themeToggleAction: (() -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,11 +63,11 @@ class SutraNavigationController: UINavigationController {
     }
 
     @objc private func toggleNavigationBar() {
-        let shouldHide = !isNavigationBarHidden
+        let shouldHide = !isNavigationBarHiddenState
 
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
             self.setNavigationBarHidden(shouldHide, animated: false)
-            self.isNavigationBarHidden = shouldHide
+            self.isNavigationBarHiddenState = shouldHide
         }
 
         SutraHapticManager.shared.haptic(.light)
@@ -83,20 +88,20 @@ class SutraNavigationController: UINavigationController {
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = colors.surface(theme: theme)
         appearance.titleTextAttributes = [
-            .font: UIFont.sutraFont(style: .navigationTitle),
+            .font: UIFont.sutraFont(style: SutraTypography.TextStyle.navigationTitle),
             .foregroundColor: colors.primary(theme: theme)
         ]
 
         // Configure large title appearance if needed
         appearance.largeTitleTextAttributes = [
-            .font: UIFont.sutraFont(style: .largeTitle),
+            .font: UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle),
             .foregroundColor: colors.primary(theme: theme)
         ]
 
         // Configure button appearance
         let buttonAppearance = UIBarButtonItemAppearance()
         buttonAppearance.normal.titleTextAttributes = [
-            .font: UIFont.sutraFont(style: .buttonMedium),
+            .font: UIFont.sutraFont(style: SutraTypography.TextStyle.buttonMedium),
             .foregroundColor: colors.primary(theme: theme)
         ]
 
@@ -115,9 +120,9 @@ class SutraNavigationController: UINavigationController {
     private func updateStatusBarStyle(for theme: SutraTheme) {
         switch theme {
         case .light, .sepia:
-            statusBarStyle = .dark
+            statusBarStyle = .default
         case .dark:
-            statusBarStyle = .light
+            statusBarStyle = .lightContent
         }
         setNeedsStatusBarAppearanceUpdate()
     }
@@ -134,6 +139,11 @@ class SutraNavigationController: UINavigationController {
     ) {
         guard let topViewController = topViewController else { return }
 
+        // Store closures for iOS 13 fallback
+        bookmarkAction = onBookmark
+        shareAction = onShare
+        themeToggleAction = onThemeToggle
+
         // Create bookmark button with sacred interaction
         let bookmarkButton = SutraInteractiveButton(type: .custom)
         bookmarkButton.interactionStyle = .sacred
@@ -145,10 +155,15 @@ class SutraNavigationController: UINavigationController {
         bookmarkButton.tintColor = isBookmarked ? SutraColors.Light.bookmark : SutraColors.Light.primary
         bookmarkButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
 
-        bookmarkButton.addAction(UIAction { _ in
-            onBookmark()
-            self.onBookmarkToggle?(!isBookmarked)
-        }, for: .touchUpInside)
+        if #available(iOS 14.0, *) {
+            bookmarkButton.addAction(UIAction { _ in
+                onBookmark()
+                self.onBookmarkToggle?(!isBookmarked)
+            }, for: .touchUpInside)
+        } else {
+            // Fallback for iOS 13
+            bookmarkButton.addTarget(self, action: #selector(bookmarkTapped), for: .touchUpInside)
+        }
 
         // Create share button
         let shareButton = SutraInteractiveButton(type: .custom)
@@ -156,7 +171,11 @@ class SutraNavigationController: UINavigationController {
         shareButton.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
         shareButton.tintColor = SutraColors.Light.primary
         shareButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
-        shareButton.addAction(UIAction { _ in onShare() }, for: .touchUpInside)
+        if #available(iOS 14.0, *) {
+            shareButton.addAction(UIAction { _ in onShare() }, for: .touchUpInside)
+        } else {
+            shareButton.addTarget(self, action: #selector(shareTapped), for: .touchUpInside)
+        }
 
         // Create theme toggle button
         let themeButton = SutraInteractiveButton(type: .custom)
@@ -164,7 +183,11 @@ class SutraNavigationController: UINavigationController {
         themeButton.setImage(UIImage(systemName: "paintbrush"), for: .normal)
         themeButton.tintColor = SutraColors.Light.primary
         themeButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
-        themeButton.addAction(UIAction { _ in onThemeToggle() }, for: .touchUpInside)
+        if #available(iOS 14.0, *) {
+            themeButton.addAction(UIAction { _ in onThemeToggle() }, for: .touchUpInside)
+        } else {
+            themeButton.addTarget(self, action: #selector(themeTapped), for: .touchUpInside)
+        }
 
         // Configure bar button items
         let bookmarkBarButtonItem = UIBarButtonItem(customView: bookmarkButton)
@@ -230,6 +253,19 @@ class SutraNavigationController: UINavigationController {
 
         return super.popViewController(animated: false)
     }
+
+    // MARK: - iOS 13 Fallback Target Actions
+    @objc private func bookmarkTapped() {
+        bookmarkAction?()
+    }
+
+    @objc private func shareTapped() {
+        shareAction?()
+    }
+
+    @objc private func themeTapped() {
+        themeToggleAction?()
+    }
 }
 
 // MARK: - Sacred Title View
@@ -292,11 +328,11 @@ class SacredTitleView: UIView {
 
         backgroundColor = UIColor.clear
 
-        titleLabel.font = UIFont.sutraFont(style: .navigationTitle)
+        titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.navigationTitle)
         titleLabel.textColor = colors.primary(theme: currentTheme)
         titleLabel.textAlignment = .center
 
-        subtitleLabel.font = UIFont.sutraFont(style: .caption)
+        subtitleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
         subtitleLabel.textColor = colors.textSecondary(theme: currentTheme)
         subtitleLabel.textAlignment = .center
 

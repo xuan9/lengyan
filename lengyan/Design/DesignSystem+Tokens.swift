@@ -256,40 +256,24 @@ public class SutraDesignTokens {
 
         // Sizes
         case TypographyTokens.sizeXXXLarge:
-            var style = SutraTypography.Style.xxxLarge
-            style.font = SutraTypography.FontFamily.appropriateChineseFont()
-            return style
+            return SutraTypography.TextStyle.sutraLarge
         case TypographyTokens.sizeXXLarge:
-            var style = SutraTypography.Style.xxLarge
-            style.font = SutraTypography.FontFamily.appropriateChineseFont()
-            return style
+            return SutraTypography.TextStyle.sutraLarge
         case TypographyTokens.sizeXLarge:
-            var style = SutraTypography.Style.xLarge
-            style.font = SutraTypography.FontFamily.appropriateChineseFont()
-            return style
+            return SutraTypography.TextStyle.sutraLarge
         case TypographyTokens.sizeLarge:
-            var style = SutraTypography.Style.large
-            style.font = SutraTypography.FontFamily.appropriateChineseFont()
-            return style
+            return SutraTypography.TextStyle.sutraLarge
         case TypographyTokens.sizeMedium:
-            var style = SutraTypography.Style.medium
-            style.font = SutraTypography.FontFamily.appropriateChineseFont()
-            return style
+            return SutraTypography.TextStyle.sutraBody
         case TypographyTokens.sizeSmall:
-            var style = SutraTypography.Style.small
-            style.font = SutraTypography.FontFamily.appropriateChineseFont()
-            return style
+            return SutraTypography.TextStyle.sutraSmall
         case TypographyTokens.sizeXSmall:
-            var style = SutraTypography.Style.xSmall
-            style.font = SutraTypography.FontFamily.appropriateChineseFont()
-            return style
+            return SutraTypography.TextStyle.sutraSmall
         case TypographyTokens.sizeXXSmall:
-            var style = SutraTypography.Style.xxSmall
-            style.font = SutraTypography.FontFamily.appropriateChineseFont()
-            return style
+            return SutraTypography.TextStyle.caption
 
         default:
-            return SutraTypography.Style.sutraBody
+            return SutraTypography.TextStyle.sutraBody
         }
     }
 

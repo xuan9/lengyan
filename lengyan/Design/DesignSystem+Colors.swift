@@ -203,6 +203,38 @@ public struct SutraColors {
             case .dark: return Dark.divider
             }
         }
+
+        public static func textSecondary(theme: SutraTheme) -> UIColor {
+            switch theme {
+            case .light: return Light.primary.withAlphaComponent(0.7)
+            case .sepia: return Sepia.primary.withAlphaComponent(0.7)
+            case .dark: return Dark.primary.withAlphaComponent(0.7)
+            }
+        }
+
+        public static func textTertiary(theme: SutraTheme) -> UIColor {
+            switch theme {
+            case .light: return Light.primary.withAlphaComponent(0.5)
+            case .sepia: return Sepia.primary.withAlphaComponent(0.5)
+            case .dark: return Dark.primary.withAlphaComponent(0.5)
+            }
+        }
+
+        public static func textOnAccent(theme: SutraTheme) -> UIColor {
+            switch theme {
+            case .light: return UIColor.white
+            case .sepia: return UIColor.white
+            case .dark: return UIColor.white
+            }
+        }
+
+        public static func border(theme: SutraTheme) -> UIColor {
+            switch theme {
+            case .light: return Light.border
+            case .sepia: return Sepia.border
+            case .dark: return Dark.border
+            }
+        }
     }
 
     // MARK: - Accessibility Colors

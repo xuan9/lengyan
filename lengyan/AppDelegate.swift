@@ -26,9 +26,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        UINavigationBar.appearance().tintColor = UIColor.darkText
 
-        // Create programmatic UI
+        // Initialize Zen Temple Serenity Design System
+        SutraThemeManager.shared.loadSavedTheme()
+
+        // Create programmatic UI with enhanced design system
         setupProgrammaticUI()
 
         let notification = launchOptions?[UIApplicationLaunchOptionsKey.localNotification] as? UILocalNotification
@@ -52,6 +54,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private func setupProgrammaticUI() {
         // Apply comprehensive Zen Temple Serenity design system
+        SutraThemeManager.shared.loadSavedTheme()
         setupZenNavigationAppearance()
         setupZenTabBarAppearance()
 
@@ -195,63 +198,46 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // MARK: - Zen Temple Serenity Design System
     private func setupZenNavigationAppearance() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColorFromRGB(0xFFFEFB)
-        appearance.shadowColor = UIColorFromRGB(0xE0E0E0)
-        appearance.shadowImage = UIImage()
-
-        // Zen title styling
-        appearance.titleTextAttributes = [
-            .font: UIFont(name: "PingFangTC-Medium", size: 17) ?? UIFont.systemFont(ofSize: 17, weight: .medium),
-            .foregroundColor: UIColorFromRGB(0x1C2A39)
-        ]
-
-        // Zen button styling
-        appearance.largeTitleTextAttributes = [
-            .font: UIFont(name: "PingFangTC-Semibold", size: 20) ?? UIFont.systemFont(ofSize: 20, weight: .semibold),
-            .foregroundColor: UIColorFromRGB(0x1C2A39)
-        ]
-
-        // Apply to all navigation bars
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().compactAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
-        UINavigationBar.appearance().tintColor = UIColorFromRGB(0x1C2A39)
-        UINavigationBar.appearance().isTranslucent = true
+        // Apply design system to navigation bars
+        UINavigationBar.appearance().applySutraDesignSystem()
     }
 
     private func setupZenTabBarAppearance() {
+        let theme = SutraThemeManager.shared.currentTheme
+
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColorFromRGB(0xFFFEFB)
-            appearance.shadowColor = UIColorFromRGB(0xE0E0E0)
+            appearance.backgroundColor = SutraColors.Semantic.surface(theme: theme)
+            appearance.shadowColor = SutraColors.Semantic.divider(theme: theme)
             appearance.shadowImage = UIImage()
 
-            // Zen tab item styling
+            // Zen tab item styling with design system typography
+            let normalFont = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
+            let selectedFont = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
+
             appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-                .font: UIFont(name: "PingFangTC-Medium", size: 11) ?? UIFont.systemFont(ofSize: 11, weight: .medium),
-                .foregroundColor: UIColorFromRGB(0x7F8C8D)
+                .font: normalFont,
+                .foregroundColor: SutraColors.Light.textSecondary
             ]
 
             appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-                .font: UIFont(name: "PingFangTC-Semibold", size: 11) ?? UIFont.systemFont(ofSize: 11, weight: .semibold),
-                .foregroundColor: UIColorFromRGB(0x8B4513)
+                .font: selectedFont,
+                .foregroundColor: SutraColors.Semantic.accent(theme: theme)
             ]
 
             // Apply to all tab bars
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         } else {
-            // Fallback for iOS 13-14
-            UITabBar.appearance().barTintColor = UIColorFromRGB(0xFFFEFB)
+            // Fallback for iOS 13-14 using design system colors
+            UITabBar.appearance().barTintColor = SutraColors.Semantic.surface(theme: theme)
             UITabBar.appearance().shadowImage = UIImage()
             UITabBar.appearance().backgroundImage = UIImage()
 
-            // Set tab bar item colors
-            UITabBar.appearance().tintColor = UIColorFromRGB(0x8B4513)
-            UITabBar.appearance().unselectedItemTintColor = UIColorFromRGB(0x7F8C8D)
+            // Set tab bar item colors with design system
+            UITabBar.appearance().tintColor = SutraColors.Semantic.accent(theme: theme)
+            UITabBar.appearance().unselectedItemTintColor = SutraColors.Light.textSecondary
         }
 
         UITabBar.appearance().isTranslucent = true

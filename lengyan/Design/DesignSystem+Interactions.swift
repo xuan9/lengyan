@@ -305,7 +305,7 @@ public class SutraInteractiveButton: UIButton {
 
     private func updateBookmarkState() {
         let animation = CATransition()
-        animation.type = .fade
+        animation.type = "fade"
         animation.duration = 0.3
         layer.add(animation, forKey: "bookmarkChange")
 
@@ -318,7 +318,7 @@ public class SutraInteractiveButton: UIButton {
         }
     }
 
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         updateLayers()
     }
@@ -481,15 +481,15 @@ public class SutraScrollEnhancer: NSObject {
     private func updateScrollBehavior() {
         switch scrollStyle {
         case .standard:
-            scrollView.decelerationRate = .normal
+            scrollView.decelerationRate = 0.998
             scrollView.showsVerticalScrollIndicator = true
 
         case .elastic:
-            scrollView.decelerationRate = .fast
+            scrollView.decelerationRate = 0.99
             scrollView.showsVerticalScrollIndicator = false
 
         case .sacred:
-            scrollView.decelerationRate = .normal
+            scrollView.decelerationRate = 0.998
             scrollView.showsVerticalScrollIndicator = false
         }
     }
@@ -529,13 +529,15 @@ extension SutraScrollEnhancer: UIScrollViewDelegate {
 }
 
 // MARK: - Gesture Configuration
-public struct SutraGestureConfiguration {
+public class SutraGestureConfiguration {
+
+    public init() {}
 
     public static func configureTapGesture(on view: UIView,
                                           hapticType: SutraHapticManager.HapticType = .light,
                                           action: @escaping () -> Void) {
         let gesture = SutraTapGestureRecognizer(hapticType: hapticType, interactionType: .tap, target: nil, action: nil)
-        gesture.addTarget(self, action: #selector(handleGesture(gesture:)))
+        gesture.addTarget(SutraGestureConfiguration.self, action: #selector(handleGesture(gesture:)))
         view.addGestureRecognizer(gesture)
 
         // Store action in associated object
@@ -551,7 +553,7 @@ public struct SutraGestureConfiguration {
     public static func configureLongPressGesture(on view: UIView,
                                                hapticType: SutraHapticManager.HapticType = .medium,
                                                action: @escaping () -> Void) {
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        let longPress = UILongPressGestureRecognizer(target: SutraGestureConfiguration.self, action: #selector(handleLongPress(_:)))
         longPress.minimumPressDuration = 0.5
         view.addGestureRecognizer(longPress)
 

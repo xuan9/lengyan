@@ -61,11 +61,11 @@ public class SutraAccessibilityManager {
         if let label = view as? UILabel {
             label.accessibilityLabel = customLabel ?? label.text
             label.accessibilityHint = NSLocalizedString("accessibility.sutra.hint", comment: "Sutra text content")
-            label.accessibilityTraits = [.staticText]
+            label.accessibilityTraits = 1
         } else if let textView = view as? UITextView {
             textView.accessibilityLabel = customLabel ?? textView.text
             textView.accessibilityHint = NSLocalizedString("accessibility.sutra.hint", comment: "Sutra text content")
-            textView.accessibilityTraits = [.staticText]
+            textView.accessibilityTraits = 1
         }
 
         // Set language for proper pronunciation
@@ -76,7 +76,7 @@ public class SutraAccessibilityManager {
         if let label = view as? UILabel {
             label.accessibilityLabel = customLabel ?? label.text
             label.accessibilityHint = NSLocalizedString("accessibility.commentary.hint", comment: "Commentary text content")
-            label.accessibilityTraits = [.staticText]
+            label.accessibilityTraits = 1
         }
 
         // Add context for commentary
@@ -88,7 +88,7 @@ public class SutraAccessibilityManager {
     private func configureNavigationAccessibility(for view: UIView, customLabel: String?) {
         view.accessibilityLabel = customLabel ?? NSLocalizedString("accessibility.navigation.default", comment: "Navigation")
         view.accessibilityHint = NSLocalizedString("accessibility.navigation.hint", comment: "Navigate to different sections")
-        view.accessibilityTraits = [.button]
+        view.accessibilityTraits = 1 << 9
 
         if let button = view as? UIButton {
             button.accessibilityLabel = customLabel ?? button.currentTitle
@@ -99,7 +99,7 @@ public class SutraAccessibilityManager {
         if let button = view as? UIButton {
             button.accessibilityLabel = customLabel ?? button.currentTitle
             button.accessibilityHint = NSLocalizedString("accessibility.button.hint", comment: "Double tap to activate")
-            button.accessibilityTraits = [.button]
+            button.accessibilityTraits = 1 << 9
         }
     }
 
@@ -107,7 +107,7 @@ public class SutraAccessibilityManager {
         if let button = view as? UIButton {
             button.accessibilityLabel = customLabel ?? button.currentTitle
             button.accessibilityHint = NSLocalizedString("accessibility.link.hint", comment: "Double tap to open link")
-            button.accessibilityTraits = [.link]
+            button.accessibilityTraits = 1 << 5
         }
     }
 
@@ -115,13 +115,13 @@ public class SutraAccessibilityManager {
         if let label = view as? UILabel {
             label.accessibilityLabel = customLabel ?? label.text
             label.accessibilityHint = NSLocalizedString("accessibility.heading.hint", comment: "Section heading")
-            label.accessibilityTraits = [.header]
+            label.accessibilityTraits = 1 << 6
         }
     }
 
     private func configureLandmarkAccessibility(for view: UIView, customLabel: String?) {
         view.accessibilityLabel = customLabel ?? NSLocalizedString("accessibility.landmark.default", comment: "Landmark")
-        view.accessibilityTraits = []
+        view.accessibilityTraits = UIAccessibilityTraits()
         view.accessibilityElementsHidden = false
     }
 
@@ -129,7 +129,7 @@ public class SutraAccessibilityManager {
         if let label = view as? UILabel {
             label.accessibilityLabel = customLabel ?? label.text
             label.accessibilityHint = NSLocalizedString("accessibility.status.hint", comment: "Status information")
-            label.accessibilityTraits = [.staticText, .updatesFrequently]
+            label.accessibilityTraits = 1 | (1 << 10)  // staticText | updatesFrequently
         }
     }
 
@@ -206,15 +206,86 @@ public class SutraAccessibilityManager {
 
     // MARK: - Accessibility Notifications
     public func announceChange(_ message: String) {
-        UIAccessibility.post(notification: .announcement, argument: message)
+        UIAccessibilityPostNotification(UIAccessibilityNotifications(1 << 0), message)
     }
 
     public func announceScreenChanged(to view: UIView) {
-        UIAccessibility.post(notification: .screenChanged, argument: view)
+        UIAccessibilityPostNotification(UIAccessibilityNotifications(1 << 1), view)
     }
 
     public func announceLayoutChanged(to view: UIView) {
-        UIAccessibility.post(notification: .layoutChanged, argument: view)
+        UIAccessibilityPostNotification(UIAccessibilityNotifications(1 << 2), view)
+    }
+
+    public func announceBookmarkChange(_ isBookmarked: Bool) {
+        let message = isBookmarked ? "已添加书签" : "已移除书签"
+        announceChange(message)
+    }
+
+    public func announceThemeChange(_ theme: SutraTheme) {
+        let message = "主题已切换为 \(theme == .light ? "浅色" : theme == .sepia ? "米色" : "深色")"
+        announceChange(message)
+    }
+
+    public func announceChapterChange(_ chapterName: String, chapterNumber: Int) {
+        let message = "第\(chapterNumber)章：\(chapterName)"
+        announceChange(message)
+    }
+
+    public func announceReadingProgress(_ progress: Float, for view: UIView) {
+        let message = "阅读进度 \(Int(progress * 100))%"
+        announceChange(message)
+    }
+}
+
+// MARK: - Accessibility Action Selectors
+extension UIViewController {
+
+    @objc open func accessibilityPreviousPage() {
+        // Implementation for accessibility previous page action
+        // This should be implemented by view controllers that support pagination
+    }
+
+    @objc open func accessibilityNextPage() {
+        // Implementation for accessibility next page action
+        // This should be implemented by view controllers that support pagination
+    }
+
+    @objc open func accessibilityToggleBookmark() {
+        // Implementation for accessibility bookmark toggle action
+        // This should be implemented by view controllers that support bookmarking
+    }
+
+    @objc open func accessibilityShare() {
+        // Implementation for accessibility share action
+        // This should be implemented by view controllers that support sharing
+    }
+
+    @objc open func accessibilityChangeTheme() {
+        // Implementation for accessibility theme change action
+        SutraThemeManager.shared.toggleTheme()
+    }
+
+    @objc open func accessibilityChapterNavigator() {
+        // Implementation for accessibility chapter navigator action
+        // This should be implemented by view controllers that support chapter navigation
+    }
+
+    @objc private func accessibilityBack() {
+        // Implementation for accessibility back action
+        navigationController?.popViewController(animated: true)
+    }
+
+    @objc private func accessibilityNormalMode() {
+        // Implementation for accessibility normal reading mode
+    }
+
+    @objc private func accessibilityFocusMode() {
+        // Implementation for accessibility focus reading mode
+    }
+
+    @objc private func accessibilitySacredMode() {
+        // Implementation for accessibility sacred reading mode
     }
 }
 
@@ -325,10 +396,10 @@ public class SutraAccessibleTextView: UITextView {
     private func setupDynamicType() {
         let baseStyle: SutraTextStyle = {
             switch textType {
-            case .sutra: return .sutraBody
-            case .commentary: return .commentary
-            case .heading: return .chapterTitle
-            case .body: return .sutraBody
+            case .sutra: return SutraTypography.TextStyle.sutraBody
+            case .commentary: return SutraTypography.TextStyle.commentary
+            case .heading: return SutraTypography.TextStyle.sectionTitle
+            case .body: return SutraTypography.TextStyle.sutraBody
             }
         }()
 
@@ -338,7 +409,7 @@ public class SutraAccessibleTextView: UITextView {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(contentSizeCategoryDidChange),
-            name: UIContentSizeCategory.didChangeNotification,
+            name: NSNotification.Name.UIContentSizeCategoryDidChange,
             object: nil
         )
     }
@@ -419,7 +490,7 @@ public struct SutraAccessibilityHelpers {
 
     // MARK: - Focus Management
     public static func setAccessibilityFocus(on view: UIView) {
-        UIAccessibility.post(notification: .layoutChanged, argument: view)
+        UIAccessibilityPostNotification(UIAccessibilityNotifications(1 << 2), view)
     }
 
     public static func setAccessibilityFocusToFirstElement(in containerView: UIView) {
@@ -450,7 +521,7 @@ public struct SutraAccessibilityHelpers {
     // MARK: - Switch Control Support
     public static func configureForSwitchControl(_ view: UIView) {
         view.isAccessibilityElement = true
-        view.accessibilityTraits = [.button]
+        view.accessibilityTraits = UIAccessibilityTraits(1 << 9)
         view.accessibilityHint = NSLocalizedString("accessibility.switch.hint", comment: "Activate with switch control")
     }
 
@@ -535,7 +606,7 @@ public struct SutraAccessibilityHelpers {
 
 // MARK: - Accessibility Configuration Extension
 extension UIViewController {
-    public func configureAccessibility() {
+    @objc open func configureAccessibility() {
         // Set up navigation controller accessibility
         if let navigationController = navigationController {
             navigationController.navigationBar.isAccessibilityElement = false

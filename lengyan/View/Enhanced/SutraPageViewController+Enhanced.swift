@@ -509,4 +509,5 @@ extension EnhancedSutraPageViewController: SutraChapterNavigatorDelegate {
 // MARK: - Enhanced Page Content Support
 protocol SutraPage {
     var pageIndex: Int { get }
+    func updateTheme(_ theme: SutraTheme)
 }

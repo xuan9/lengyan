@@ -231,6 +231,8 @@ public struct SutraTypography {
             letterSpacing: LetterSpacing.chineseNormal,
             tracking: 0
         )
+
+        
     }
 
     // MARK: - Dynamic Type Support
@@ -274,7 +276,9 @@ public struct SutraTypography {
                 adjustedStyle.size *= 2.2
             case .accessibilityExtraExtraExtraLarge:
                 adjustedStyle.size *= 2.4
-            @unknown default:
+            case .unspecified:
+                break
+            default:
                 break
             }
 
@@ -349,7 +353,7 @@ public struct SutraTypography {
 }
 
 // MARK: - Text Style Model
-public struct SutraTextStyle {
+public struct SutraTextStyle: Equatable {
     public let font: String
     public var size: CGFloat
     public let weight: UIFont.Weight

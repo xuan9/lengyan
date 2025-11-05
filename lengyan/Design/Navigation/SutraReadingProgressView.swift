@@ -100,7 +100,7 @@ class SutraReadingProgressView: UIView {
         addSubview(timeLabel)
 
         progressLabel.translatesAutoresizingMaskIntoConstraints = false
-        progressLabel.font = UIFont.sutraFont(style: .caption)
+        progressLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
         progressLabel.textAlignment = .center
 
         bookmarkButton.translatesAutoresizingMaskIntoConstraints = false
@@ -112,7 +112,7 @@ class SutraReadingProgressView: UIView {
         }, for: .touchUpInside)
 
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
-        timeLabel.font = UIFont.sutraFont(style: .caption)
+        timeLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
         timeLabel.textAlignment = .center
     }
 

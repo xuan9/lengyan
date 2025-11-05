@@ -120,7 +120,7 @@ public class SutraButton: UIButton {
     }
 
     private func updateTypography() {
-        let textStyle: SutraTextStyle = frame.height > 44 ? .buttonLarge : .buttonMedium
+        let textStyle = frame.height > 44 ? SutraTypography.TextStyle.buttonLarge : SutraTypography.TextStyle.buttonMedium
         titleLabel?.font = UIFont.sutraFont(style: textStyle)
     }
 
@@ -150,7 +150,7 @@ public class SutraButton: UIButton {
         })
     }
 
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         // Update gradient frame if needed
         if variant == .sacred, let gradient = layer.sublayers?.first as? CAGradientLayer {
@@ -274,33 +274,33 @@ public class SutraCard: UIView {
 
         switch variant {
         case .sutra:
-            titleLabel.font = UIFont.sutraFont(style: .sectionTitle)
+            titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle)
             titleLabel.textColor = colors.sutraText(theme: theme)
-            subtitleLabel.font = UIFont.sutraFont(style: .commentary)
+            subtitleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.commentary)
             subtitleLabel.textColor = colors.commentaryText(theme: theme)
-            detailLabel.font = UIFont.sutraFont(style: .caption)
+            detailLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
             detailLabel.textColor = colors.textSecondary(theme: theme)
 
         case .commentary:
-            titleLabel.font = UIFont.sutraFont(style: .indexItem)
+            titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
             titleLabel.textColor = colors.commentaryText(theme: theme)
-            subtitleLabel.font = UIFont.sutraFont(style: .caption)
+            subtitleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
             subtitleLabel.textColor = colors.textTertiary(theme: theme)
             detailLabel.isHidden = true
 
         case .index:
-            titleLabel.font = UIFont.sutraFont(style: .indexItem)
+            titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
             titleLabel.textColor = colors.primary(theme: theme)
-            subtitleLabel.font = UIFont.sutraFont(style: .caption)
+            subtitleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
             subtitleLabel.textColor = colors.textSecondary(theme: theme)
             detailLabel.isHidden = true
 
         case .chapter:
-            titleLabel.font = UIFont.sutraFont(style: .chapterTitle)
+            titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle)
             titleLabel.textColor = colors.chapterTitle(theme: theme)
-            subtitleLabel.font = UIFont.sutraFont(style: .label)
+            subtitleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.label)
             subtitleLabel.textColor = colors.textSecondary(theme: theme)
-            detailLabel.font = UIFont.sutraFont(style: .caption)
+            detailLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
             detailLabel.textColor = colors.textTertiary(theme: theme)
         }
     }
@@ -479,46 +479,49 @@ public struct SutraCornerRadius {
 
 // MARK: - Shadow System
 public struct SutraShadow {
-    public static let subtle = NSShadow()
-    public static let medium = NSShadow()
-    public static let strong = NSShadow()
+    public static let subtle: NSShadow = {
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(0.08)
+        shadow.shadowOffset = CGSize(width: 0, height: 2)
+        shadow.shadowBlurRadius = 4
+        return shadow
+    }()
 
-    static init() {
-        // Subtle shadow for cards and buttons
-        subtle.shadowColor = UIColor.black.withAlphaComponent(0.08)
-        subtle.shadowOffset = CGSize(width: 0, height: 2)
-        subtle.shadowBlurRadius = 4
+    public static let medium: NSShadow = {
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(0.12)
+        shadow.shadowOffset = CGSize(width: 0, height: 4)
+        shadow.shadowBlurRadius = 8
+        return shadow
+    }()
 
-        // Medium shadow for floating elements
-        medium.shadowColor = UIColor.black.withAlphaComponent(0.12)
-        medium.shadowOffset = CGSize(width: 0, height: 4)
-        medium.shadowBlurRadius = 8
-
-        // Strong shadow for modals and overlays
-        strong.shadowColor = UIColor.black.withAlphaComponent(0.2)
-        strong.shadowOffset = CGSize(width: 0, height: 8)
-        strong.shadowBlurRadius = 16
-    }
+    public static let strong: NSShadow = {
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(0.2)
+        shadow.shadowOffset = CGSize(width: 0, height: 8)
+        shadow.shadowBlurRadius = 16
+        return shadow
+    }()
 }
 
 // MARK: - Component Extensions
 extension UIView {
     public func applyCardShadow() {
-        layer.shadowColor = SutraShadow.subtle.shadowColor?.cgColor
+        layer.shadowColor = (SutraShadow.subtle.shadowColor as? UIColor)?.cgColor
         layer.shadowOffset = SutraShadow.subtle.shadowOffset
         layer.shadowRadius = SutraShadow.subtle.shadowBlurRadius
         layer.shadowOpacity = 0.08
     }
 
     public func applyFloatingShadow() {
-        layer.shadowColor = SutraShadow.medium.shadowColor?.cgColor
+        layer.shadowColor = (SutraShadow.medium.shadowColor as? UIColor)?.cgColor
         layer.shadowOffset = SutraShadow.medium.shadowOffset
         layer.shadowRadius = SutraShadow.medium.shadowBlurRadius
         layer.shadowOpacity = 0.12
     }
 
     public func applyModalShadow() {
-        layer.shadowColor = SutraShadow.strong.shadowColor?.cgColor
+        layer.shadowColor = (SutraShadow.strong.shadowColor as? UIColor)?.cgColor
         layer.shadowOffset = SutraShadow.strong.shadowOffset
         layer.shadowRadius = SutraShadow.strong.shadowBlurRadius
         layer.shadowOpacity = 0.2

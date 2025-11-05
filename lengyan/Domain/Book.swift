@@ -339,14 +339,43 @@ class Book: NSObject {
         guard let chapterPaths = chapterMap?[String(chapter + 1)] else {
             return ""
         }
-        
+
         var sutraContents = [String]()
         for path in chapterPaths {
             sutraContents.append(self.getSutra(self.itemOfPath(path)))
         }
         return sutraContents.joined(separator: "\n")
     }
-    
+
+    func getContent(for pageIndex: Int) -> String {
+        guard let index = index, pageIndex >= 0, pageIndex < index.count else {
+            return ""
+        }
+        let item = index[pageIndex]
+        if let path = item["path"] {
+            if let itemDict = item as? [String: Any] {
+                return getSutra(itemDict)
+            }
+            let itemAtPath = itemOfPath(path)
+            return getSutra(itemAtPath)
+        }
+        return ""
+    }
+
+    func getTitleString(_ item: [String: Any]) -> String {
+        return item["name"] as? String ?? ""
+    }
+
+    func getAllChapterTitles() -> [String] {
+        var titles: [String] = []
+        for i in 0..<10 {
+            let chapterKey = "chapter_\(i)"
+            let title = NSLocalizedString(chapterKey, comment: "chapter_name")
+            titles.append(title)
+        }
+        return titles
+    }
+
     //MARK: Build pages from any path
     func getPreviousPagePath(_ path:String?)->String?{
         if path == nil { return nil }

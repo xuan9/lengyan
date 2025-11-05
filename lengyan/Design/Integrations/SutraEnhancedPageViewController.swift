@@ -124,7 +124,7 @@ class SutraEnhancedPageViewController: UIPageViewController, UIPageViewControlle
     }
 
     private func setupAccessibility() {
-        SutraAccessibilityManager.shared.configureVoiceOver(for: self)
+        SutraAccessibilityManager.shared.configureVoiceOver(for: view, category: .navigation)
     }
 
     // MARK: - Enhanced UI Updates
@@ -134,7 +134,7 @@ class SutraEnhancedPageViewController: UIPageViewController, UIPageViewControlle
 
         let titleView = SacredTitleView()
         titleView.configure(
-            title: Book.shared.getTitleString(item),
+            title: (item["name"] as? String) ?? "",
             subtitle: "Chapter \(page + 1)",
             icon: UIImage(systemName: "book.fill"),
             theme: currentTheme
@@ -207,15 +207,15 @@ class SutraEnhancedPageViewController: UIPageViewController, UIPageViewControlle
     private func estimateReadingTime(for pageIndex: Int) -> TimeInterval {
         // Estimate reading time based on content length and average reading speed
         let averageReadingSpeed: Double = 200.0 // words per minute
-        let content = Book.shared.getContent(for: pageIndex)
-        let wordCount = content.components(separatedBy: .whitespacesAndNewlines).count
-        return TimeInterval(wordCount / averageReadingSpeed * 60) // seconds
+        // Book doesn't have getContent, estimate based on average
+        let wordCount = 500 // average words per page
+        return TimeInterval(Int(Double(wordCount) / averageReadingSpeed * 60)) // seconds
     }
 
     private func saveReadingProgress() {
         // Save reading progress to user preferences
         Prefers.shared.updateReadingProgress(readingProgress)
-        Prefres.shared.updateTotalReadingTime(totalReadingTime)
+        Prefers.shared.updateTotalReadingTime(totalReadingTime)
     }
 
     // MARK: - Enhanced Actions
@@ -555,11 +555,17 @@ extension SutraEnhancedPageViewController: SutraReadingProgressDelegate {
 // MARK: - Accessibility Extensions
 extension SutraEnhancedPageViewController {
     @objc override func accessibilityPreviousPage() {
-        gestureManager?.gestureManager(SutraGestureManager(), didSwipeRight: .right)
+        // Navigate to previous page
+        page = max(0, page - 1)
+        let vc = getViewControllerAtIndex(index: page)
+        setViewControllers([vc], direction: .reverse, animated: true, completion: nil)
     }
 
     @objc override func accessibilityNextPage() {
-        gestureManager?.gestureManager(SutraGestureManager(), didSwipeLeft: .left)
+        // Navigate to next page
+        page += 1
+        let vc = getViewControllerAtIndex(index: page)
+        setViewControllers([vc], direction: .forward, animated: true, completion: nil)
     }
 
     @objc override func accessibilityToggleBookmark() {

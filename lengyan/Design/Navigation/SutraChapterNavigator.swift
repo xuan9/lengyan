@@ -90,14 +90,19 @@ class SutraChapterNavigator: UIView {
         headerView.addSubview(closeButton)
 
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.font = UIFont.sutraFont(style: .sectionTitle)
+        titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle)
         titleLabel.textAlignment = .center
 
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.interactionStyle = .subtle
         closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
         closeButton.frame = CGRect(x: 0, y: 0, width: 32, height: 32)
-        closeButton.addAction(UIAction { _ in self.dismiss() }, for: .touchUpInside)
+        if #available(iOS 14.0, *) {
+            closeButton.addAction(UIAction { _ in self.dismiss() }, for: .touchUpInside)
+        } else {
+            // Fallback for iOS 13
+            closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
+        }
 
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: headerView.topAnchor, constant: SutraSpacing.Base.sm),
@@ -430,10 +435,10 @@ class ChapterCell: UICollectionViewCell {
         containerView.layer.cornerRadius = SutraCornerRadius.medium
         containerView.layer.masksToBounds = true
 
-        chapterNumberLabel.font = UIFont.sutraFont(style: .buttonLarge)
+        chapterNumberLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.buttonLarge)
         chapterNumberLabel.textAlignment = .center
 
-        titleLabel.font = UIFont.sutraFont(style: .indexItem)
+        titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
         titleLabel.numberOfLines = 0
 
         bookmarkIcon.image = UIImage(systemName: "bookmark.fill")
@@ -500,13 +505,13 @@ class ChapterCell: UICollectionViewCell {
             containerView.backgroundColor = colors.accent(theme: currentTheme).withAlphaComponent(0.1)
             chapterNumberLabel.textColor = colors.accent(theme: currentTheme)
             titleLabel.textColor = colors.accent(theme: currentTheme)
-            titleLabel.font = UIFont.sutraFont(style: .sectionTitle)
+            titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle)
             containerView.applyCardShadow()
         } else {
             containerView.backgroundColor = colors.surface(theme: currentTheme)
             chapterNumberLabel.textColor = colors.textSecondary(theme: currentTheme)
             titleLabel.textColor = colors.primary(theme: currentTheme)
-            titleLabel.font = UIFont.sutraFont(style: .indexItem)
+            titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
             containerView.layer.shadowOpacity = 0
         }
     }
@@ -525,5 +530,12 @@ class ChapterCell: UICollectionViewCell {
                 }
             }
         }
+    }
+}
+
+// MARK: - Target-Action Methods
+extension SutraChapterNavigator {
+    @objc private func closeButtonTapped() {
+        dismiss()
     }
 }

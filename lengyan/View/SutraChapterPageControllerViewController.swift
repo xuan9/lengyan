@@ -15,14 +15,23 @@ class SutraChapterPageViewController: UIPageViewController, UIPageViewController
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationController?.hidesBarsOnSwipe = true;
-        self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-                
-        self.setPageTitle()
-        self.dataSource = self;
-        self.delegate = self;
+
+        // Modern navigation bar behavior with design system
+        if let navigationBar = self.navigationController?.navigationBar {
+            // These properties are deprecated in iOS 16+, use scrollEdgeAppearance instead
+            navigationBar.prefersLargeTitles = false
+
+            // Apply design system
+            navigationBar.applySutraDesignSystem()
+        }
+
+        setPageTitle()
+        self.dataSource = self
+        self.delegate = self
         
-        self.setViewControllers(([getViewControllerAtPage(self.pageIndex)] as! [UIViewController]), direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
+        if let initialViewController = getViewControllerAtPage(self.pageIndex) as? UIViewController {
+            self.setViewControllers([initialViewController], direction: .forward, animated: false)
+        }
         
         self.setTitle()
     }
@@ -38,12 +47,30 @@ class SutraChapterPageViewController: UIPageViewController, UIPageViewController
     }
     
     func setTitle() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬  ", style: .plain, target: self, action: #selector(close))
-        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
-        
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
-        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
-        self.navigationController?.navigationBar.isTranslucent = false;
+        // Modern back button with design system
+        let closeButton = UIBarButtonItem(
+            title: " ❬  ",
+            style: .plain,
+            target: self,
+            action: #selector(close)
+        )
+
+        if let backImage = UIImage(named: "ic_chevron_left_18pt") {
+            closeButton.setBackButtonBackgroundImage(backImage, for: .normal, barMetrics: .default)
+        }
+
+        self.navigationItem.leftBarButtonItem = closeButton
+
+        // Apply theme colors
+        let theme = SutraThemeManager.shared.currentTheme
+        self.navigationItem.leftBarButtonItem?.tintColor = SutraColors.Semantic.primary(theme: theme)
+        self.navigationItem.rightBarButtonItem?.tintColor = SutraColors.Semantic.primary(theme: theme)
+
+        // Modern navigation bar styling
+        if let navigationBar = self.navigationController?.navigationBar {
+            navigationBar.isTranslucent = false
+            navigationBar.applySutraDesignSystem()
+        }
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?

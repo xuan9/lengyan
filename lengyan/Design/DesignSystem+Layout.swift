@@ -303,8 +303,8 @@ public class SutraReadingLayoutManager {
 
             // Text content constraints
             textContentView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            textContentView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: SutraSpacing.Margins.readingMargin()),
-            textContentView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -SutraSpacing.Margins.readingMargin()),
+            textContentView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: SutraSpacing.Margins.readingMargin(for: containerView.bounds.width)),
+            textContentView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -SutraSpacing.Margins.readingMargin(for: containerView.bounds.width)),
             textContentView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
 
             // Toolbar constraints
@@ -361,7 +361,7 @@ public class SutraReadingLayoutManager {
     public func configureContent(text: String, theme: SutraTheme) {
         let attributedText = NSAttributedString.sutraAttributedText(
             text: text,
-            style: .sutraBody,
+            style: SutraTypography.TextStyle.sutraBody,
             color: SutraColors.Semantic.sutraText(theme: theme)
         )
         textContentView.attributedText = attributedText
@@ -418,7 +418,7 @@ public struct SutraLayoutUtils {
             return baseHeight * 1.125
         case 812..<896: // iPhone X, XS, 11 Pro
             return baseHeight * 1.15
-        case 896..<...: // iPhone XR, XS Max, 11, 11 Pro Max
+        case 896..<CGFloat.greatestFiniteMagnitude: // iPhone XR, XS Max, 11, 11 Pro Max
             return baseHeight * 1.2
         default:
             return baseHeight

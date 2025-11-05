@@ -32,6 +32,7 @@ public struct SutraSpacing {
 
     // MARK: - Base Spacing (8-24pt)
     public struct Base {
+        public static let sm: CGFloat = Grid.base                    // 8pt
         public static let base: CGFloat = Grid.base                    // 8pt
         public static let md: CGFloat = Grid.base * φ                  // 12.9pt → 12pt
         public static let lg: CGFloat = Grid.base * φ * φ              // 20.9pt → 20pt
@@ -278,50 +279,76 @@ public struct SpacingCalculator {
         self.screenHeight = screenHeight
     }
 
-    public func micro(_ spacing: SutraSpacing.Micro) -> CGFloat {
-        let baseValue: CGFloat
-        switch spacing {
-        case .xxxs: baseValue = SutraSpacing.Micro.xxxs
-        case .xxs: baseValue = SutraSpacing.Micro.xxs
-        case .xs: baseValue = SutraSpacing.Micro.xs
-        case .sm: baseValue = SutraSpacing.Micro.sm
-        }
-        return SutraSpacing.Responsive.spacing(for: baseValue, screenWidth: screenWidth)
+    public func microXxxs() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Micro.xxxs, screenWidth: screenWidth)
     }
 
-    public func base(_ spacing: SutraSpacing.Base) -> CGFloat {
-        let baseValue: CGFloat
-        switch spacing {
-        case .base: baseValue = SutraSpacing.Base.base
-        case .md: baseValue = SutraSpacing.Base.md
-        case .lg: baseValue = SutraSpacing.Base.lg
-        case .xl: baseValue = SutraSpacing.Base.xl
-        }
-        return SutraSpacing.Responsive.spacing(for: baseValue, screenWidth: screenWidth)
+    public func microXxs() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Micro.xxs, screenWidth: screenWidth)
     }
 
-    public func component(_ spacing: SutraSpacing.Component) -> CGFloat {
-        let baseValue: CGFloat
-        switch spacing {
-        case .sm: baseValue = SutraSpacing.Component.sm
-        case .md: baseValue = SutraSpacing.Component.md
-        case .lg: baseValue = SutraSpacing.Component.lg
-        case .xl: baseValue = SutraSpacing.Component.xl
-        case .xxl: baseValue = SutraSpacing.Component.xxl
-        }
-        return SutraSpacing.Responsive.spacing(for: baseValue, screenWidth: screenWidth)
+    public func microXs() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Micro.xs, screenWidth: screenWidth)
     }
 
-    public func section(_ spacing: SutraSpacing.Section) -> CGFloat {
-        let baseValue: CGFloat
-        switch spacing {
-        case .sm: baseValue = SutraSpacing.Section.sm
-        case .md: baseValue = SutraSpacing.Section.md
-        case .lg: baseValue = SutraSpacing.Section.lg
-        case .xl: baseValue = SutraSpacing.Section.xl
-        case .xxl: baseValue = SutraSpacing.Section.xxl
-        }
-        return SutraSpacing.Responsive.spacing(for: baseValue, screenWidth: screenWidth)
+    public func microSm() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Micro.sm, screenWidth: screenWidth)
+    }
+
+    public func baseSm() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Base.sm, screenWidth: screenWidth)
+    }
+
+    public func baseMd() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Base.md, screenWidth: screenWidth)
+    }
+
+    public func baseLg() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Base.lg, screenWidth: screenWidth)
+    }
+
+    public func baseXl() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Base.xl, screenWidth: screenWidth)
+    }
+
+    public func componentSm() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Component.sm, screenWidth: screenWidth)
+    }
+
+    public func componentMd() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Component.md, screenWidth: screenWidth)
+    }
+
+    public func componentLg() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Component.lg, screenWidth: screenWidth)
+    }
+
+    public func componentXl() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Component.xl, screenWidth: screenWidth)
+    }
+
+    public func componentXxl() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Component.xxl, screenWidth: screenWidth)
+    }
+
+    public func sectionSm() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Section.sm, screenWidth: screenWidth)
+    }
+
+    public func sectionMd() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Section.md, screenWidth: screenWidth)
+    }
+
+    public func sectionLg() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Section.lg, screenWidth: screenWidth)
+    }
+
+    public func sectionXl() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Section.xl, screenWidth: screenWidth)
+    }
+
+    public func sectionXxl() -> CGFloat {
+        return SutraSpacing.Responsive.spacing(for: SutraSpacing.Section.xxl, screenWidth: screenWidth)
     }
 
     public func readingMargin() -> CGFloat {

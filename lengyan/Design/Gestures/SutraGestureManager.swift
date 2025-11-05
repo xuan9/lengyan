@@ -232,7 +232,19 @@ class SutraGestureManager: NSObject {
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
         guard isGestureEnabled else { return }
 
-        delegate?.gestureManager(self, didSwipe: gesture.direction)
+        // Call appropriate delegate method based on direction
+        switch gesture.direction {
+        case .left:
+            delegate?.gestureManager(self, didSwipeLeft: gesture.direction)
+        case .right:
+            delegate?.gestureManager(self, didSwipeRight: gesture.direction)
+        case .up:
+            delegate?.gestureManager(self, didSwipeUp: gesture.direction)
+        case .down:
+            delegate?.gestureManager(self, didSwipeDown: gesture.direction)
+        default:
+            break
+        }
 
         // Haptic feedback based on swipe direction
         switch gesture.direction {
@@ -346,7 +358,7 @@ class SutraGestureManager: NSObject {
         scaleAnimation.fromValue = 0
         scaleAnimation.toValue = 3
         scaleAnimation.duration = 0.6
-        scaleAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        scaleAnimation.timingFunction = CAMediaTimingFunction(name: "easeInEaseOut")
 
         let opacityAnimation = CABasicAnimation(keyPath: "opacity")
         opacityAnimation.fromValue = 0.5
@@ -440,7 +452,7 @@ class SutraGestureManager: NSObject {
         }
 
         animation.duration = duration
-        animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        animation.timingFunction = CAMediaTimingFunction(name: "easeInEaseOut")
 
         swipe.add(animation, forKey: "swipe")
 
