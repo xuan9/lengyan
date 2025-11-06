@@ -80,19 +80,21 @@ struct ModernAudioPlayerView: View {
     @State private var downloadStatus: [String: MediaItem.MediaStatus] = [:]
     @State private var resourceRequests: [String: NSBundleResourceRequest] = [:] // Store requests
 
-    private let themeManager = ThemeManager()
-
     var body: some View {
         VStack(spacing: 0) {
             // Main Content
             ScrollView {
-                VStack(spacing: LengyanDesignSystem.Spacing.lg) {
+                VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
                     // Header
-                    LengyanSectionHeader("聽經", subtitle: "The Śūraṅgama Sūtra Audio")
+                    Text("聽經")
+                        .font(SutraTypographyBridge.uiHeading())
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
 
                     if isLoading {
-                        LengyanLoadingView()
-                            .padding(.top, LengyanDesignSystem.Spacing.xxl)
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
                     } else {
                         // Media Groups List
                         ForEach(mediaGroups) { group in
@@ -100,7 +102,7 @@ struct ModernAudioPlayerView: View {
                         }
                     }
                 }
-                .padding(LengyanDesignSystem.Spacing.lg)
+                .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
                 .padding(.bottom, audioObserver.showPlayerBar ? 100 : 20) // Space for player bar
             }
 
@@ -109,7 +111,7 @@ struct ModernAudioPlayerView: View {
                 mediaPlayerBar
             }
         }
-        .background(themeManager.backgroundColor)
+        .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
         .onAppear {
             loadMediaData()
@@ -206,13 +208,13 @@ struct ModernAudioPlayerView: View {
 
     // MARK: - Media Group Section
     private func mediaGroupSection(_ group: MediaGroup) -> some View {
-        VStack(alignment: .leading, spacing: LengyanDesignSystem.Spacing.md) {
+        VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
             // Section Header
             Text(group.name)
-                .font(LengyanDesignSystem.Typography.uiHeading)
-                .foregroundColor(themeManager.primaryTextColor)
-                .padding(.horizontal, LengyanDesignSystem.Spacing.lg)
-                .padding(.vertical, LengyanDesignSystem.Spacing.sm)
+                .font(SutraTypographyBridge.uiHeading())
+                .foregroundColor(SutraDesignSystem.sutraTextColor())
+                .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
+                .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM))
 
             // Media Items
             VStack(spacing: 1) {
@@ -226,7 +228,15 @@ struct ModernAudioPlayerView: View {
                 }
             }
         }
-        .lengyanCard()
+        .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(SutraDesignSystem.backgroundColor().opacity(0.5))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(SutraDesignSystem.color(.border).opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Media Item Row

@@ -90,7 +90,7 @@ class SutraChapterNavigator: UIView {
         headerView.addSubview(closeButton)
 
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle)
+        titleLabel.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .medium)
         titleLabel.textAlignment = .center
 
         closeButton.translatesAutoresizingMaskIntoConstraints = false
@@ -435,10 +435,10 @@ class ChapterCell: UICollectionViewCell {
         containerView.layer.cornerRadius = SutraCornerRadius.medium
         containerView.layer.masksToBounds = true
 
-        chapterNumberLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.buttonLarge)
+        chapterNumberLabel.font = SutraTypographyManager.shared.uiFont(for: .buttonLarge, weight: .medium)
         chapterNumberLabel.textAlignment = .center
 
-        titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
+        titleLabel.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
         titleLabel.numberOfLines = 0
 
         bookmarkIcon.image = UIImage(systemName: "bookmark.fill")
@@ -505,13 +505,13 @@ class ChapterCell: UICollectionViewCell {
             containerView.backgroundColor = colors.accent(theme: currentTheme).withAlphaComponent(0.1)
             chapterNumberLabel.textColor = colors.accent(theme: currentTheme)
             titleLabel.textColor = colors.accent(theme: currentTheme)
-            titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle)
+            titleLabel.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .medium)
             containerView.applyCardShadow()
         } else {
             containerView.backgroundColor = colors.surface(theme: currentTheme)
             chapterNumberLabel.textColor = colors.textSecondary(theme: currentTheme)
             titleLabel.textColor = colors.primary(theme: currentTheme)
-            titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
+            titleLabel.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
             containerView.layer.shadowOpacity = 0
         }
     }

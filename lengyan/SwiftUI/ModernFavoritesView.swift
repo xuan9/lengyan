@@ -120,49 +120,51 @@ struct ModernFavoritesView: View {
     @State private var favorites: [FavoriteItem] = []
     @State private var isLoading = true
 
-    private let themeManager = ThemeManager()
-
     var body: some View {
         ScrollView {
-            VStack(spacing: LengyanDesignSystem.Spacing.lg) {
+            VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
                 // Header
-                LengyanSectionHeader("收藏", subtitle: "我的收藏夹")
+                Text("收藏")
+                    .font(SutraTypographyBridge.uiHeading())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
 
                 if isLoading {
-                    LengyanLoadingView()
-                        .padding(.top, LengyanDesignSystem.Spacing.xxl)
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
                 } else if favorites.isEmpty {
                     // Empty State
-                    VStack(spacing: LengyanDesignSystem.Spacing.lg) {
+                    VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
                         Image(systemName: "heart.text.square")
                             .font(.system(size: 60))
-                            .foregroundColor(LengyanDesignSystem.Colors.accentGold.opacity(0.6))
+                            .foregroundColor(SutraDesignSystem.color(.accent).opacity(0.6))
 
                         Text("暂无收藏")
-                            .font(LengyanDesignSystem.Typography.uiTitle)
-                            .foregroundColor(themeManager.primaryTextColor)
+                            .font(SutraTypographyBridge.uiHeading())
+                            .foregroundColor(SutraDesignSystem.sutraTextColor())
 
                         Text("在阅读时点击收藏按钮，将喜欢的经文添加到这里")
-                            .font(LengyanDesignSystem.Typography.uiBody)
-                            .foregroundColor(themeManager.secondaryTextColor)
+                            .font(SutraTypographyBridge.uiBody())
+                            .foregroundColor(SutraDesignSystem.secondaryTextColor())
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, LengyanDesignSystem.Spacing.xl)
+                            .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL))
                     }
-                    .padding(.top, LengyanDesignSystem.Spacing.xxl)
+                    .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
                 } else {
                     // Favorites List
-                    VStack(spacing: LengyanDesignSystem.Spacing.md) {
+                    VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
                         ForEach(favorites) { favorite in
                             favoriteCard(favorite)
                         }
                     }
                 }
 
-                Spacer(minLength: LengyanDesignSystem.Spacing.xl)
+                Spacer(minLength: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL))
             }
-            .padding(LengyanDesignSystem.Spacing.lg)
+            .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
         }
-        .background(themeManager.backgroundColor)
+        .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
         .onAppear {
             loadFavorites()
@@ -175,34 +177,41 @@ struct ModernFavoritesView: View {
     }
 
     private func favoriteCard(_ favorite: FavoriteItem) -> some View {
-        VStack(alignment: .leading, spacing: LengyanDesignSystem.Spacing.sm) {
+        VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM)) {
             HStack {
                 Text(favorite.title)
-                    .font(LengyanDesignSystem.Typography.uiHeading)
-                    .foregroundColor(themeManager.primaryTextColor)
+                    .font(SutraTypographyBridge.uiHeading())
+                    .foregroundColor(SutraDesignSystem.sutraTextColor())
                     .lineLimit(2)
 
                 Spacer()
 
                 Button(action: { removeFavorite(favorite) }) {
                     Image(systemName: "heart.fill")
-                        .foregroundColor(LengyanDesignSystem.Colors.error)
+                        .foregroundColor(SutraDesignSystem.color(.accent))
                         .font(.system(size: 16))
                 }
             }
 
             Text(favorite.content)
-                .font(LengyanDesignSystem.Typography.sutraCaption)
-                .foregroundColor(themeManager.secondaryTextColor)
+                .font(SutraTypographyBridge.sutraCaption())
+                .foregroundColor(SutraDesignSystem.secondaryTextColor())
                 .lineLimit(4)
                 .multilineTextAlignment(.leading)
 
             Text(formatDate(from: favorite.path))
-                .font(LengyanDesignSystem.Typography.uiSmall)
-                .foregroundColor(themeManager.tertiaryTextColor)
+                .font(SutraTypographyBridge.uiSmall())
+                .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.7))
         }
-        .padding(LengyanDesignSystem.Spacing.md)
-        .lengyanCard()
+        .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(SutraDesignSystem.backgroundColor().opacity(0.5))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(SutraDesignSystem.color(.border).opacity(0.2), lineWidth: 1)
+                )
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             navigateToReading(favorite)

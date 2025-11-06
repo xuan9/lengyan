@@ -236,7 +236,7 @@ class SutraEnhancedPageViewController: UIPageViewController, UIPageViewControlle
 
         // Animate bookmark change
         SutraHapticManager.shared.haptic(isBookmarked ? .success : .selection)
-        SutraAccessibilityManager.shared.announceBookmarkChange(!isBookmarked)
+        SutraAccessibilityManager.shared.announce(isBookmarked ? "Bookmark removed" : "Bookmark added")
 
         onBookmarkChange?(page, !isBookmarked)
     }
@@ -270,7 +270,7 @@ class SutraEnhancedPageViewController: UIPageViewController, UIPageViewControlle
         readingProgressView?.updateTheme(newTheme)
 
         SutraHapticManager.shared.haptic(.light)
-        SutraAccessibilityManager.shared.announceThemeChange(newTheme)
+        SutraAccessibilityManager.shared.announce("Theme changed to \(newTheme.rawValue)")
 
         onThemeChange?(newTheme)
     }
@@ -385,7 +385,7 @@ class SutraEnhancedPageViewController: UIPageViewController, UIPageViewControlle
 
         // Announce chapter change for accessibility
         let chapterName = Book.shared.getTitleString(item ?? [:])
-        SutraAccessibilityManager.shared.announceChapterChange(chapterName, chapterNumber: page + 1)
+        SutraAccessibilityManager.shared.announce("Navigated to chapter \(page + 1): \(chapterName)")
 
         // Animate page turn
         SutraHapticManager.shared.haptic(.medium)
@@ -544,7 +544,7 @@ extension SutraEnhancedPageViewController: SutraReadingProgressDelegate {
         readingProgress[page] = position
 
         // Announce progress for accessibility
-        SutraAccessibilityManager.shared.announceReadingProgress(Float(position / 100), for: view)
+        SutraAccessibilityManager.shared.announce("Reading progress: \(Int(position)) percent")
     }
 
     func readingProgressViewDidRequestBookmark(_ progressView: SutraReadingProgressView) {

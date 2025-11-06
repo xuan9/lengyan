@@ -27,9 +27,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
-        // Initialize Zen Temple Serenity Design System
-        SutraThemeManager.shared.loadSavedTheme()
-
         // Create programmatic UI with enhanced design system
         setupProgrammaticUI()
 
@@ -54,7 +51,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private func setupProgrammaticUI() {
         // Apply comprehensive Zen Temple Serenity design system
-        SutraThemeManager.shared.loadSavedTheme()
         setupZenNavigationAppearance()
         setupZenTabBarAppearance()
 
@@ -199,45 +195,45 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - Zen Temple Serenity Design System
     private func setupZenNavigationAppearance() {
         // Apply design system to navigation bars
-        UINavigationBar.appearance().applySutraDesignSystem()
+        // TODO: Implement when needed
+        // UINavigationBar.appearance().applySutraDesignSystem()
     }
 
     private func setupZenTabBarAppearance() {
-        let theme = SutraThemeManager.shared.currentTheme
-
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = SutraColors.Semantic.surface(theme: theme)
-            appearance.shadowColor = SutraColors.Semantic.divider(theme: theme)
+            let theme = SutraDesignTokens.shared.currentTheme
+            appearance.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+            appearance.shadowColor = SutraDesignTokens.shared.color(for: .divider)
             appearance.shadowImage = UIImage()
 
-            // Zen tab item styling with design system typography
-            let normalFont = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
-            let selectedFont = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
+            // Zen tab item styling with unified typography
+            let normalFont = SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular)
+            let selectedFont = SutraTypographySystem().uiFont(for: .uiCaption, weight: .medium)
 
             appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
                 .font: normalFont,
-                .foregroundColor: SutraColors.Light.textSecondary
+                .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary)
             ]
 
             appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
                 .font: selectedFont,
-                .foregroundColor: SutraColors.Semantic.accent(theme: theme)
+                .foregroundColor: SutraDesignTokens.shared.color(for: .accent)
             ]
 
             // Apply to all tab bars
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         } else {
-            // Fallback for iOS 13-14 using design system colors
-            UITabBar.appearance().barTintColor = SutraColors.Semantic.surface(theme: theme)
+            // Fallback for iOS 13-14 using unified color system
+            UITabBar.appearance().barTintColor = SutraDesignTokens.shared.color(for: .surface)
             UITabBar.appearance().shadowImage = UIImage()
             UITabBar.appearance().backgroundImage = UIImage()
 
-            // Set tab bar item colors with design system
-            UITabBar.appearance().tintColor = SutraColors.Semantic.accent(theme: theme)
-            UITabBar.appearance().unselectedItemTintColor = SutraColors.Light.textSecondary
+            // Set tab bar item colors with unified system
+            UITabBar.appearance().tintColor = SutraDesignTokens.shared.color(for: .accent)
+            UITabBar.appearance().unselectedItemTintColor = SutraDesignTokens.shared.color(for: .textSecondary)
         }
 
         UITabBar.appearance().isTranslucent = true

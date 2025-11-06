@@ -20,9 +20,6 @@ class SutraChapterPageViewController: UIPageViewController, UIPageViewController
         if let navigationBar = self.navigationController?.navigationBar {
             // These properties are deprecated in iOS 16+, use scrollEdgeAppearance instead
             navigationBar.prefersLargeTitles = false
-
-            // Apply design system
-            navigationBar.applySutraDesignSystem()
         }
 
         setPageTitle()
@@ -62,15 +59,13 @@ class SutraChapterPageViewController: UIPageViewController, UIPageViewController
         self.navigationItem.leftBarButtonItem = closeButton
 
         // Apply theme colors
-        let theme = SutraThemeManager.shared.currentTheme
-        let primaryColor: UIColor = theme == .dark ? .white : .black
+        let primaryColor: UIColor = SutraDesignTokens.shared.color(for: .textPrimary)
         self.navigationItem.leftBarButtonItem?.tintColor = primaryColor
         self.navigationItem.rightBarButtonItem?.tintColor = primaryColor
 
         // Modern navigation bar styling
         if let navigationBar = self.navigationController?.navigationBar {
             navigationBar.isTranslucent = false
-            navigationBar.applySutraDesignSystem()
         }
     }
     

@@ -118,32 +118,34 @@ class SutraBookViewController: UITableViewController{
     }
     
     func getSutraAttributeText(_ contents:[[String:String]])->NSAttributedString{
-        
+
         var sutraContents = [String]()
-        
+
         for c in contents {
             if c["type"] == "sutra" {
                 sutraContents.append(c["content"]!)
             }
         }
-        
+
         let text = sutraContents.joined(separator: "\n")
-        
-        let pStyle = NSMutableParagraphStyle()
-        pStyle.lineSpacing = 10
-        pStyle.paragraphSpacing = 0;
-        pStyle.firstLineHeadIndent = 34
-        
-        let pAttributes = [NSAttributedStringKey.paragraphStyle : pStyle,
-                           NSAttributedStringKey.font: UIFont.systemFont(ofSize: 17)]
-        
-        print(text);
-        return NSAttributedString(string: text, attributes:pAttributes)
+
+        // Use SutraTypography design system
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: SutraTypographyManager.shared.uiFont(for: .sutraBody),
+            .foregroundColor: UIColor.label
+        ]
+
+        return NSAttributedString(string: text, attributes: attributes)
     }
-    
+
     func getIndexAttributeText(_ name:String)->NSAttributedString{
-        let attributes = [NSAttributedStringKey.foregroundColor : UIColor.gray,NSAttributedStringKey.font: UIFont.systemFont(ofSize: 14)]
-        return NSAttributedString(string: name, attributes:attributes)
+        // Use SutraTypography design system for index items
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: SutraTypographyManager.shared.uiFont(for: .indexItem),
+            .foregroundColor: UIColor.gray
+        ]
+
+        return NSAttributedString(string: name, attributes: attributes)
     }
     
 }

@@ -38,7 +38,8 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
         sutraTextView.isSelectable = true;
         sutraTextView.isScrollEnabled = true;
         sutraTextView.isEditable = false;
-        sutraTextView.font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
+        // Use unified SutraTypography design system for consistent chapter reading experience
+        sutraTextView.font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
         sutraTextView.backgroundColor = UIColor.white
         sutraTextView.textColor = UIColor.darkText
         let text = Book.shared.getSutraAttributeString(text: sutra);

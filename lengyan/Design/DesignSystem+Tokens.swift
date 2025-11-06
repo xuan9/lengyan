@@ -2,14 +2,209 @@
 //  DesignSystem+Tokens.swift
 //  lengyan
 //
-//  Created by Design System on 2024/10/28.
-//  Copyright © 2024年 xuan. All rights reserved.
+//  Design Token System - Type-Safe, Clean Architecture
+//  Single source of truth for all design tokens
 //
 
 import UIKit
+import SwiftUI
+
+// MARK: - UIColor Hex Extension
+extension UIColor {
+    convenience init?(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int = UInt64()
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            return nil
+        }
+
+        self.init(
+            red: CGFloat(r) / 255,
+            green: CGFloat(g) / 255,
+            blue:  CGFloat(b) / 255,
+            alpha: CGFloat(a) / 255
+        )
+    }
+}
+
+// MARK: - Theme Definition
+public enum SutraTheme: String, CaseIterable {
+    case light = "light"
+    case sepia = "sepia"
+    case dark = "dark"
+}
+
+// MARK: - Color Tokens (Type-Safe Enum)
+public enum ColorToken: String, CaseIterable {
+    // Background
+    case background
+    case surface
+    case card
+    case overlay
+
+    // Text
+    case textPrimary
+    case textSecondary
+    case textTertiary
+    case textOnAccent
+
+    // Sutra-specific
+    case sutraText
+    case commentaryText
+    case chapterTitle
+
+    // UI Elements
+    case primary
+    case accent
+    case divider
+    case border
+    case shadow
+
+    // Status
+    case bookmark
+    case favorite
+}
+
+// MARK: - Theme Protocol
+protocol SutraThemeProtocol {
+    func color(for token: ColorToken) -> UIColor
+}
+
+// MARK: - Light Theme Implementation
+struct LightTheme: SutraThemeProtocol {
+    func color(for token: ColorToken) -> UIColor {
+        switch token {
+        case .background: return UIColor(hex: "#FFFEF7") ?? .black
+        case .surface: return .white
+        case .card: return .white
+        case .overlay: return UIColor.black.withAlphaComponent(0.4)
+
+        case .textPrimary: return UIColor(hex: "#2C3E50") ?? .black
+        case .textSecondary: return UIColor(hex: "#5D6D7E") ?? .black
+        case .textTertiary: return UIColor(hex: "#7F8C8D") ?? .black
+        case .textOnAccent: return .white
+
+        case .sutraText: return UIColor(hex: "#1A252F") ?? .black
+        case .commentaryText: return UIColor(hex: "#34495E") ?? .black
+        case .chapterTitle: return UIColor(hex: "#C0392B") ?? .black
+
+        case .primary: return UIColor(hex: "#2C3E50") ?? .black
+        case .accent: return UIColor(hex: "#C0392B") ?? .black
+        case .divider: return UIColor(hex: "#E8E8E8") ?? .black
+        case .border: return UIColor(hex: "#D5D8DC") ?? .black
+        case .shadow: return UIColor.black.withAlphaComponent(0.08)
+
+        case .bookmark: return UIColor(hex: "#F39C12") ?? .black
+        case .favorite: return UIColor(hex: "#E74C3C") ?? .black
+        }
+    }
+}
+
+// MARK: - Sepia Theme Implementation
+struct SepiaTheme: SutraThemeProtocol {
+    func color(for token: ColorToken) -> UIColor {
+        switch token {
+        case .background: return UIColor(hex: "#F5E6D3") ?? .black
+        case .surface: return UIColor(hex: "#FAF0E6") ?? .black
+        case .card: return .white
+        case .overlay: return UIColor.black.withAlphaComponent(0.5)
+
+        case .textPrimary: return UIColor(hex: "#3E2723") ?? .black
+        case .textSecondary: return UIColor(hex: "#5D4037") ?? .black
+        case .textTertiary: return UIColor(hex: "#795548") ?? .black
+        case .textOnAccent: return .white
+
+        case .sutraText: return UIColor(hex: "#2E1A17") ?? .black
+        case .commentaryText: return UIColor(hex: "#4A3426") ?? .black
+        case .chapterTitle: return UIColor(hex: "#8D6E63") ?? .black
+
+        case .primary: return UIColor(hex: "#4A3426") ?? .black
+        case .accent: return UIColor(hex: "#8D6E63") ?? .black
+        case .divider: return UIColor(hex: "#D7CCC8") ?? .black
+        case .border: return UIColor(hex: "#BCAAA4") ?? .black
+        case .shadow: return UIColor.black.withAlphaComponent(0.12)
+
+        case .bookmark: return UIColor(hex: "#FFB74D") ?? .black
+        case .favorite: return UIColor(hex: "#8D6E63") ?? .black
+        }
+    }
+}
+
+// MARK: - Dark Theme Implementation
+struct DarkTheme: SutraThemeProtocol {
+    func color(for token: ColorToken) -> UIColor {
+        switch token {
+        case .background: return UIColor(hex: "#1C1C1E") ?? .black
+        case .surface: return UIColor(hex: "#2C2C2E") ?? .black
+        case .card: return UIColor(hex: "#3A3A3C") ?? .black
+        case .overlay: return UIColor.black.withAlphaComponent(0.7)
+
+        case .textPrimary: return .white
+        case .textSecondary: return UIColor(hex: "#AEAEB2") ?? .black
+        case .textTertiary: return UIColor(hex: "#8E8E93") ?? .black
+        case .textOnAccent: return .white
+
+        case .sutraText: return UIColor(hex: "#F5F5F5") ?? .black
+        case .commentaryText: return UIColor(hex: "#ECF0F1") ?? .black
+        case .chapterTitle: return UIColor(hex: "#3498DB") ?? .black
+
+        case .primary: return UIColor(hex: "#ECF0F1") ?? .black
+        case .accent: return UIColor(hex: "#3498DB") ?? .black
+        case .divider: return UIColor(hex: "#38383A") ?? .black
+        case .border: return UIColor(hex: "#48484A") ?? .black
+        case .shadow: return UIColor.black.withAlphaComponent(0.3)
+
+        case .bookmark: return UIColor(hex: "#FFA726") ?? .black
+        case .favorite: return UIColor(hex: "#3498DB") ?? .black
+        }
+    }
+}
+
+// MARK: - Shape & Motion Tokens
+public enum ShapeToken: Int, CaseIterable {
+    case cornerRadiusXSmall = 2
+    case cornerRadiusSmall = 4
+    case cornerRadiusMedium = 8
+    case cornerRadiusLarge = 12
+    case cornerRadiusXLarge = 16
+    case cornerRadiusRound = 999
+}
+
+public enum MotionToken: Double, CaseIterable {
+    case durationInstant = 0.0
+    case durationFast = 0.2
+    case durationNormal = 0.3
+    case durationSlow = 0.5
+    case durationSlower = 0.8
+}
 
 // MARK: - Design Tokens Manager
-public class SutraDesignTokens {
+public final class SutraDesignTokens {
+
+    // MARK: - Spacing Tokens
+    public enum SpacingTokens: String, CaseIterable {
+        case spacingXXS = "xxs"
+        case spacingXS = "xs"
+        case spacingSM = "sm"
+        case spacingMD = "md"
+        case spacingLG = "lg"
+        case spacingXL = "xl"
+        case spacingXXL = "xxl"
+        case spacingComponentSM = "component_sm"
+        case spacingComponentMD = "component_md"
+        case spacingComponentLG = "component_lg"
+        case spacingComponentXL = "component_xl"
+        case spacingComponentXXL = "component_xxl"
+    }
 
     // MARK: - Shared Instance
     public static let shared = SutraDesignTokens()
@@ -18,440 +213,178 @@ public class SutraDesignTokens {
     // MARK: - Current Theme
     public var currentTheme: SutraTheme = .light {
         didSet {
+            UserDefaults.standard.set(currentTheme.rawValue, forKey: "selectedTheme")
+            applyTheme(currentTheme)
             NotificationCenter.default.post(name: .themeDidChange, object: currentTheme)
         }
     }
 
-    // MARK: - Token Categories
-    public struct ColorTokens {
-        // Semantic color tokens
-        public static let backgroundPrimary = "background.primary"
-        public static let backgroundSecondary = "background.secondary"
-        public static let backgroundSurface = "background.surface"
-        public static let backgroundOverlay = "background.overlay"
-
-        public static let textPrimary = "text.primary"
-        public static let textSecondary = "text.secondary"
-        public static let textTertiary = "text.tertiary"
-        public static let textOnAccent = "text.on.accent"
-
-        public static let sutraText = "sutra.text.primary"
-        public static let sutraCommentary = "sutra.text.commentary"
-        public static let sutraChapterTitle = "sutra.text.chapter"
-
-        public static let accentPrimary = "accent.primary"
-        public static let accentSecondary = "accent.secondary"
-
-        public static let borderDefault = "border.default"
-        public static let borderSubtle = "border.subtle"
-
-        public static let shadowDefault = "shadow.default"
-
-        public static let bookmarkActive = "bookmark.active"
-        public static let bookmarkInactive = "bookmark.inactive"
-
-        public static let favoriteActive = "favorite.active"
-        public static let favoriteInactive = "favorite.inactive"
-    }
-
-    public struct TypographyTokens {
-        // Font family tokens
-        public static let chinesePrimary = "font.chinese.primary"
-        public static let chineseSecondary = "font.chinese.secondary"
-        public static let latinPrimary = "font.latin.primary"
-        public static let latinSecondary = "font.latin.secondary"
-
-        // Font size tokens
-        public static let sizeXXXLarge = "font.size.xxxlarge"
-        public static let sizeXXLarge = "font.size.xxlarge"
-        public static let sizeXLarge = "font.size.xlarge"
-        public static let sizeLarge = "font.size.large"
-        public static let sizeMedium = "font.size.medium"
-        public static let sizeSmall = "font.size.small"
-        public static let sizeXSmall = "font.size.xsmall"
-        public static let sizeXXSmall = "font.size.xxsmall"
-
-        // Font weight tokens
-        public static let weightUltraLight = "font.weight.ultralight"
-        public static let weightThin = "font.weight.thin"
-        public static let weightLight = "font.weight.light"
-        public static let weightRegular = "font.weight.regular"
-        public static let weightMedium = "font.weight.medium"
-        public static let weightSemibold = "font.weight.semibold"
-        public static let weightBold = "font.weight.bold"
-
-        // Line height tokens
-        public static let lineHeightTight = "lineHeight.tight"
-        public static let lineHeightNormal = "lineHeight.normal"
-        public static let lineHeightRelaxed = "lineHeight.relaxed"
-        public static let lineHeightSpacious = "lineHeight.spacious"
-        public static let lineHeightSacred = "lineHeight.sacred"
-
-        // Letter spacing tokens
-        public static let letterSpacingTight = "letterSpacing.tight"
-        public static let letterSpacingNormal = "letterSpacing.normal"
-        public static let letterSpacingRelaxed = "letterSpacing.relaxed"
-    }
-
-    public struct SpacingTokens {
-        // Micro spacing tokens
-        public static let spacingXXXS = "spacing.xxxs"
-        public static let spacingXXS = "spacing.xxs"
-        public static let spacingXS = "spacing.xs"
-        public static let spacingSM = "spacing.sm"
-
-        // Base spacing tokens
-        public static let spacingBase = "spacing.base"
-        public static let spacingMD = "spacing.md"
-        public static let spacingLG = "spacing.lg"
-        public static let spacingXL = "spacing.xl"
-
-        // Component spacing tokens
-        public static let spacingComponentSM = "spacing.component.sm"
-        public static let spacingComponentMD = "spacing.component.md"
-        public static let spacingComponentLG = "spacing.component.lg"
-        public static let spacingComponentXL = "spacing.component.xl"
-        public static let spacingComponentXXL = "spacing.component.xxl"
-
-        // Section spacing tokens
-        public static let spacingSectionSM = "spacing.section.sm"
-        public static let spacingSectionMD = "spacing.section.md"
-        public static let spacingSectionLG = "spacing.section.lg"
-        public static let spacingSectionXL = "spacing.section.xl"
-        public static let spacingSectionXXL = "spacing.section.xxl"
-
-        // Content spacing tokens
-        public static let spacingSutraLine = "spacing.sutra.line"
-        public static let spacingSutraParagraph = "spacing.sutra.paragraph"
-        public static let spacingSutraChapter = "spacing.sutra.chapter"
-        public static let spacingCommentaryLine = "spacing.commentary.line"
-    }
-
-    public struct ShapeTokens {
-        // Corner radius tokens
-        public static let cornerRadiusXSmall = "cornerRadius.xsmall"
-        public static let cornerRadiusSmall = "cornerRadius.small"
-        public static let cornerRadiusMedium = "cornerRadius.medium"
-        public static let cornerRadiusLarge = "cornerRadius.large"
-        public static let cornerRadiusXLarge = "cornerRadius.xlarge"
-        public static let cornerRadiusRound = "cornerRadius.round"
-
-        // Border width tokens
-        public static let borderWidthThin = "borderWidth.thin"
-        public static let borderWidthMedium = "borderWidth.medium"
-        public static let borderWidthThick = "borderWidth.thick"
-    }
-
-    public struct MotionTokens {
-        // Duration tokens
-        public static let durationInstant = "motion.duration.instant"
-        public static let durationFast = "motion.duration.fast"
-        public static let durationNormal = "motion.duration.normal"
-        public static let durationSlow = "motion.duration.slow"
-        public static let durationSlower = "motion.duration.slower"
-
-        // Easing tokens
-        public static let easingEase = "motion.easing.ease"
-        public static let easingEaseIn = "motion.easing.easeIn"
-        public static let easingEaseOut = "motion.easing.easeOut"
-        public static let easingEaseInOut = "motion.easing.easeInOut"
-        public static let easingSpring = "motion.easing.spring"
-
-        // Delay tokens
-        public static let delayNone = "motion.delay.none"
-        public static let delayShort = "motion.delay.short"
-        public static let delayMedium = "motion.delay.medium"
-        public static let delayLong = "motion.delay.long"
-    }
-
-    public struct ShadowTokens {
-        public static let shadowSubtle = "shadow.subtle"
-        public static let shadowMedium = "shadow.medium"
-        public static let shadowStrong = "shadow.strong"
-        public static let shadowGlow = "shadow.glow"
-    }
-
-    public struct OpacityTokens {
-        public static let opacityTransparent = "opacity.transparent"
-        public static let opacitySubtle = "opacity.subtle"
-        public static let opacityLight = "opacity.light"
-        public static let opacityMedium = "opacity.medium"
-        public static let opacityStrong = "opacity.strong"
-        public static let opacityOpaque = "opacity.opaque"
-    }
-
-    // MARK: - Token Resolution
-    public func color(for token: String, theme: SutraTheme? = nil) -> UIColor {
-        let activeTheme = theme ?? currentTheme
-
-        // Color token resolution logic
-        switch token {
-        // Background colors
-        case ColorTokens.backgroundPrimary:
-            return SutraColors.Semantic.background(theme: activeTheme)
-        case ColorTokens.backgroundSecondary:
-            return SutraColors.Semantic.surface(theme: activeTheme)
-        case ColorTokens.backgroundSurface:
-            return SutraColors.Semantic.card(theme: activeTheme)
-        case ColorTokens.backgroundOverlay:
-            return activeTheme == .dark ? UIColor.black.withAlphaComponent(0.7) : UIColor.black.withAlphaComponent(0.4)
-
-        // Text colors
-        case ColorTokens.textPrimary:
-            return SutraColors.Semantic.primary(theme: activeTheme)
-        case ColorTokens.textSecondary:
-            return activeTheme == .dark ? SutraColors.Dark.textSecondary : SutraColors.Light.textSecondary
-        case ColorTokens.textTertiary:
-            return activeTheme == .dark ? SutraColors.Dark.textTertiary : SutraColors.Light.textTertiary
-        case ColorTokens.textOnAccent:
-            return UIColor.white
-
-        // Sutra-specific colors
-        case ColorTokens.sutraText:
-            return SutraColors.Semantic.sutraText(theme: activeTheme)
-        case ColorTokens.sutraCommentary:
-            return SutraColors.Semantic.commentaryText(theme: activeTheme)
-        case ColorTokens.sutraChapterTitle:
-            return SutraColors.Semantic.chapterTitle(theme: activeTheme)
-
-        // Accent colors
-        case ColorTokens.accentPrimary:
-            return SutraColors.Semantic.accent(theme: activeTheme)
-        case ColorTokens.accentSecondary:
-            return activeTheme == .dark ? SutraColors.Dark.primaryLight : SutraColors.Light.primaryLight
-
-        // Border colors
-        case ColorTokens.borderDefault:
-            return SutraColors.Semantic.divider(theme: activeTheme)
-        case ColorTokens.borderSubtle:
-            return activeTheme == .dark ? SutraColors.Dark.border : SutraColors.Light.border
-
-        // Status colors
-        case ColorTokens.bookmarkActive:
-            return activeTheme == .dark ? SutraColors.Dark.bookmark : SutraColors.Light.bookmark
-        case ColorTokens.bookmarkInactive:
-            return SutraColors.Semantic.primary(theme: activeTheme)
-        case ColorTokens.favoriteActive:
-            return activeTheme == .dark ? SutraColors.Dark.favorite : SutraColors.Light.favorite
-        case ColorTokens.favoriteInactive:
-            return SutraColors.Semantic.primary(theme: activeTheme)
-
-        default:
-            return UIColor.systemGray
-        }
-    }
-
-    public func typography(for token: String) -> SutraTextStyle {
-        switch token {
-        // Font families
-        case TypographyTokens.chinesePrimary:
-            return SutraTextStyle(
-                font: SutraTypography.FontFamily.appropriateChineseFont(),
-                size: SutraTypography.Scale.mediumRounded,
-                weight: .regular,
-                lineHeight: SutraTypography.LineHeight.normal,
-                letterSpacing: 0,
-                tracking: 0
-            )
-
-        // Sizes
-        case TypographyTokens.sizeXXXLarge:
-            return SutraTypography.TextStyle.sutraLarge
-        case TypographyTokens.sizeXXLarge:
-            return SutraTypography.TextStyle.sutraLarge
-        case TypographyTokens.sizeXLarge:
-            return SutraTypography.TextStyle.sutraLarge
-        case TypographyTokens.sizeLarge:
-            return SutraTypography.TextStyle.sutraLarge
-        case TypographyTokens.sizeMedium:
-            return SutraTypography.TextStyle.sutraBody
-        case TypographyTokens.sizeSmall:
-            return SutraTypography.TextStyle.sutraSmall
-        case TypographyTokens.sizeXSmall:
-            return SutraTypography.TextStyle.sutraSmall
-        case TypographyTokens.sizeXXSmall:
-            return SutraTypography.TextStyle.caption
-
-        default:
-            return SutraTypography.TextStyle.sutraBody
-        }
-    }
-
-    public func spacing(for token: String) -> CGFloat {
-        switch token {
-        // Micro spacing
-        case SpacingTokens.spacingXXXS: return SutraSpacing.Micro.xxxs
-        case SpacingTokens.spacingXXS: return SutraSpacing.Micro.xxs
-        case SpacingTokens.spacingXS: return SutraSpacing.Micro.xs
-        case SpacingTokens.spacingSM: return SutraSpacing.Micro.sm
-
-        // Base spacing
-        case SpacingTokens.spacingBase: return SutraSpacing.Base.base
-        case SpacingTokens.spacingMD: return SutraSpacing.Base.md
-        case SpacingTokens.spacingLG: return SutraSpacing.Base.lg
-        case SpacingTokens.spacingXL: return SutraSpacing.Base.xl
-
-        // Component spacing
-        case SpacingTokens.spacingComponentSM: return SutraSpacing.Component.sm
-        case SpacingTokens.spacingComponentMD: return SutraSpacing.Component.md
-        case SpacingTokens.spacingComponentLG: return SutraSpacing.Component.lg
-        case SpacingTokens.spacingComponentXL: return SutraSpacing.Component.xl
-        case SpacingTokens.spacingComponentXXL: return SutraSpacing.Component.xxl
-
-        // Section spacing
-        case SpacingTokens.spacingSectionSM: return SutraSpacing.Section.sm
-        case SpacingTokens.spacingSectionMD: return SutraSpacing.Section.md
-        case SpacingTokens.spacingSectionLG: return SutraSpacing.Section.lg
-        case SpacingTokens.spacingSectionXL: return SutraSpacing.Section.xl
-        case SpacingTokens.spacingSectionXXL: return SutraSpacing.Section.xxl
-
-        // Content spacing
-        case SpacingTokens.spacingSutraLine: return SutraSpacing.Content.sutraLineSpacing
-        case SpacingTokens.spacingSutraParagraph: return SutraSpacing.Content.sutraParagraphSpacing
-        case SpacingTokens.spacingSutraChapter: return SutraSpacing.Content.sutraChapterSpacing
-        case SpacingTokens.spacingCommentaryLine: return SutraSpacing.Content.commentaryLineSpacing
-
-        default: return SutraSpacing.Base.md
-        }
-    }
-
-    public func shape(for token: String) -> CGFloat {
-        switch token {
-        case ShapeTokens.cornerRadiusXSmall: return SutraCornerRadius.xSmall
-        case ShapeTokens.cornerRadiusSmall: return SutraCornerRadius.small
-        case ShapeTokens.cornerRadiusMedium: return SutraCornerRadius.medium
-        case ShapeTokens.cornerRadiusLarge: return SutraCornerRadius.large
-        case ShapeTokens.cornerRadiusXLarge: return SutraCornerRadius.xLarge
-        case ShapeTokens.cornerRadiusRound: return SutraCornerRadius.round
-        default: return SutraCornerRadius.medium
-        }
-    }
-
-    public func motionDuration(for token: String) -> TimeInterval {
-        switch token {
-        case MotionTokens.durationInstant: return 0.0
-        case MotionTokens.durationFast: return 0.2
-        case MotionTokens.durationNormal: return 0.3
-        case MotionTokens.durationSlow: return 0.5
-        case MotionTokens.durationSlower: return 0.8
-        default: return 0.3
-        }
-    }
-
-    public func opacity(for token: String) -> CGFloat {
-        switch token {
-        case OpacityTokens.opacityTransparent: return 0.0
-        case OpacityTokens.opacitySubtle: return 0.1
-        case OpacityTokens.opacityLight: return 0.3
-        case OpacityTokens.opacityMedium: return 0.5
-        case OpacityTokens.opacityStrong: return 0.7
-        case OpacityTokens.opacityOpaque: return 1.0
-        default: return 1.0
-        }
-    }
-}
-
-// MARK: - Theme Change Notification
-extension Notification.Name {
-    public static let themeDidChange = Notification.Name("themeDidChange")
-}
-
-// MARK: - Token Extensions
-extension UIView {
-    public func applyToken(backgroundColor token: String, theme: SutraTheme? = nil) {
-        self.backgroundColor = SutraDesignTokens.shared.color(for: token, theme: theme)
-    }
-
-    public func applyToken(cornerRadius token: String) {
-        self.layer.cornerRadius = SutraDesignTokens.shared.shape(for: token)
-    }
-
-    public func applyToken(opacity token: String) {
-        self.alpha = SutraDesignTokens.shared.opacity(for: token)
-    }
-}
-
-extension UILabel {
-    public func applyToken(textStyle token: String, color: String? = nil, theme: SutraTheme? = nil) {
-        let style = SutraDesignTokens.shared.typography(for: token)
-        self.font = UIFont.sutraFont(style: style)
-
-        if let colorToken = color {
-            self.textColor = SutraDesignTokens.shared.color(for: colorToken, theme: theme)
-        }
-    }
-}
-
-extension CALayer {
-    public func applyToken(shadow token: String) {
-        switch token {
-        case SutraDesignTokens.ShadowTokens.shadowSubtle:
-            self.shadowColor = UIColor.black.cgColor
-            self.shadowOffset = CGSize(width: 0, height: 2)
-            self.shadowRadius = 4
-            self.shadowOpacity = 0.08
-        case SutraDesignTokens.ShadowTokens.shadowMedium:
-            self.shadowColor = UIColor.black.cgColor
-            self.shadowOffset = CGSize(width: 0, height: 4)
-            self.shadowRadius = 8
-            self.shadowOpacity = 0.12
-        case SutraDesignTokens.ShadowTokens.shadowStrong:
-            self.shadowColor = UIColor.black.cgColor
-            self.shadowOffset = CGSize(width: 0, height: 8)
-            self.shadowRadius = 16
-            self.shadowOpacity = 0.2
-        case SutraDesignTokens.ShadowTokens.shadowGlow:
-            self.shadowColor = SutraDesignTokens.shared.color(for: SutraDesignTokens.ColorTokens.accentPrimary).cgColor
-            self.shadowOffset = CGSize.zero
-            self.shadowRadius = 12
-            self.shadowOpacity = 0.3
-        default:
-            break
-        }
-    }
-}
-
-// MARK: - Animation Builder with Tokens
-public class SutraAnimationBuilder {
-    public static func animateWithTokens(duration token: String,
-                                       delay delayToken: String = SutraDesignTokens.MotionTokens.delayNone,
-                                       easing: String = SutraDesignTokens.MotionTokens.easingEaseInOut,
-                                       animations: @escaping () -> Void,
-                                       completion: ((Bool) -> Void)? = nil) {
-        let duration = SutraDesignTokens.shared.motionDuration(for: token)
-        let delay = SutraDesignTokens.shared.motionDuration(for: delayToken)
-
-        let options: UIView.AnimationOptions = {
-            switch easing {
-            case SutraDesignTokens.MotionTokens.easingEase:
-                return .curveEaseInOut
-            case SutraDesignTokens.MotionTokens.easingEaseIn:
-                return .curveEaseIn
-            case SutraDesignTokens.MotionTokens.easingEaseOut:
-                return .curveEaseOut
-            case SutraDesignTokens.MotionTokens.easingEaseInOut:
-                return .curveEaseInOut
-            case SutraDesignTokens.MotionTokens.easingSpring:
-                return .curveEaseInOut // Will use spring animation below
-            default:
-                return .curveEaseInOut
-            }
-        }()
-
-        if easing == SutraDesignTokens.MotionTokens.easingSpring {
-            UIView.animate(withDuration: duration,
-                          delay: delay,
-                          usingSpringWithDamping: 0.8,
-                          initialSpringVelocity: 0.5,
-                          options: options,
-                          animations: animations,
-                          completion: completion)
+    // MARK: - Theme Persistence
+    public func loadSavedTheme() {
+        if let savedTheme = UserDefaults.standard.string(forKey: "selectedTheme"),
+           let theme = SutraTheme(rawValue: savedTheme) {
+            currentTheme = theme
         } else {
-            UIView.animate(withDuration: duration,
-                          delay: delay,
-                          options: options,
-                          animations: animations,
-                          completion: completion)
+            currentTheme = determineAutoTheme()
         }
+    }
+
+    private func determineAutoTheme() -> SutraTheme {
+        if #available(iOS 13.0, *) {
+            switch UITraitCollection.current.userInterfaceStyle {
+            case .dark: return .dark
+            case .light: return .light
+            default: return .light
+            }
+        } else {
+            return .light
+        }
+    }
+
+    // MARK: - Theme Management
+    public func setTheme(_ theme: SutraTheme) {
+        currentTheme = theme
+    }
+
+    public func toggleTheme() {
+        switch currentTheme {
+        case .light: setTheme(.sepia)
+        case .sepia: setTheme(.dark)
+        case .dark: setTheme(.light)
+        }
+    }
+
+    private func applyTheme(_ theme: SutraTheme) {
+        DispatchQueue.main.async {
+            UIApplication.shared.windows.forEach { window in
+                window.overrideUserInterfaceStyle = self.interfaceStyle(for: theme)
+            }
+        }
+    }
+
+    private func interfaceStyle(for theme: SutraTheme) -> UIUserInterfaceStyle {
+        switch theme {
+        case .light, .sepia: return .light
+        case .dark: return .dark
+        }
+    }
+
+    // MARK: - Color Access
+    public func color(for token: ColorToken) -> UIColor {
+        let theme = themeProtocol(for: currentTheme)
+        return theme.color(for: token)
+    }
+
+    public func color(_ token: ColorToken) -> Color {
+        Color(color(for: token))
+    }
+
+    // MARK: - Spacing Access
+    public func spacing(for token: SpacingTokens) -> CGFloat {
+        switch token {
+        case .spacingXXS, .spacingXS, .spacingSM, .spacingComponentSM:
+            return SutraSpacing.Base.sm
+        case .spacingMD, .spacingComponentMD:
+            return SutraSpacing.Base.md
+        case .spacingLG, .spacingXL, .spacingXXL, .spacingComponentLG, .spacingComponentXL, .spacingComponentXXL:
+            return SutraSpacing.Base.lg
+        }
+    }
+
+    // MARK: - Shape Access
+    public func shape(for token: ShapeToken) -> CGFloat {
+        CGFloat(token.rawValue)
+    }
+
+    // MARK: - Motion Access
+    public func motionDuration(for token: MotionToken) -> TimeInterval {
+        TimeInterval(token.rawValue)
+    }
+
+    // MARK: - Internal
+    private func themeProtocol(for theme: SutraTheme) -> SutraThemeProtocol {
+        switch theme {
+        case .light: return LightTheme()
+        case .sepia: return SepiaTheme()
+        case .dark: return DarkTheme()
+        }
+    }
+}
+
+// MARK: - Notification Names
+extension Notification.Name {
+    static let themeDidChange = Notification.Name("SutraThemeDidChangeNotification")
+}
+
+// MARK: - SwiftUI Bridge
+public struct SutraDesignSystem {
+    // Colors
+    public static func color(_ token: ColorToken) -> Color {
+        Color(SutraDesignTokens.shared.color(for: token))
+    }
+
+    // Semantic colors
+    public static func sutraTextColor() -> Color {
+        SutraDesignSystem.color(.sutraText)
+    }
+
+    public static func primaryTextColor() -> Color {
+        SutraDesignSystem.color(.textPrimary)
+    }
+
+    public static func secondaryTextColor() -> Color {
+        SutraDesignSystem.color(.textSecondary)
+    }
+
+    public static func backgroundColor() -> Color {
+        SutraDesignSystem.color(.background)
+    }
+
+    public static func accentColor() -> Color {
+        SutraDesignSystem.color(.accent)
+    }
+
+    // Shapes
+    public static func cornerRadius(_ token: ShapeToken) -> CGFloat {
+        SutraDesignTokens.shared.shape(for: token)
+    }
+
+    // Motion
+    public static func motionDuration(_ token: MotionToken) -> TimeInterval {
+        SutraDesignTokens.shared.motionDuration(for: token)
+    }
+}
+
+// MARK: - UIKit Extensions
+extension UILabel {
+    public func applySutraColor(_ token: ColorToken) {
+        self.textColor = SutraDesignTokens.shared.color(for: token)
+    }
+}
+
+extension UIView {
+    public func applySutraBackground(_ token: ColorToken) {
+        self.backgroundColor = SutraDesignTokens.shared.color(for: token)
+    }
+}
+
+extension UIButton {
+    public func applySutraTint(_ token: ColorToken) {
+        self.tintColor = SutraDesignTokens.shared.color(for: token)
+    }
+}
+
+// MARK: - SwiftUI View Extensions
+extension View {
+    public func sutraBackground(_ token: ColorToken) -> some View {
+        self.background(SutraDesignSystem.color(token))
+    }
+
+    public func sutraForeground(_ token: ColorToken) -> some View {
+        self.foregroundColor(SutraDesignSystem.color(token))
+    }
+
+    public func sutraCornerRadius(_ token: ShapeToken) -> some View {
+        self.cornerRadius(SutraDesignSystem.cornerRadius(token))
     }
 }

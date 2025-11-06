@@ -76,15 +76,11 @@
 		CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */; };
 		CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */; };
 		CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */; };
-		CB1B21D12EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BF2EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift */; };
 		CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */; };
-		CB8A4D50265EE90000D1E7B9 /* LengyanDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */; };
 		CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */; };
 		CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */; };
-		CBC207092EBBD47B00EB7A45 /* DesignSystem+Interactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207052EBBD47B00EB7A45 /* DesignSystem+Interactions.swift */; };
-		CBC2070A2EBBD47B00EB7A45 /* DesignSystem+Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207082EBBD47B00EB7A45 /* DesignSystem+Tokens.swift */; };
-		CBC207102EBBD5DD00EB7A45 /* DesignSystem+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC2070F2EBBD5DD00EB7A45 /* DesignSystem+Components.swift */; };
-		CBC207122EBBD61900EB7A45 /* DesignSystem+Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207112EBBD61900EB7A45 /* DesignSystem+Colors.swift */; };
+		CBC207392EBCD71300EB7A45 /* DesignSystem+Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */; };
+		CBC2073B2EBCD79A00EB7A45 /* DesignSystem+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -184,16 +180,12 @@
 		CB1B21B22EBB1C8D00A1ADB7 /* IntegrationGuide.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = IntegrationGuide.md; sourceTree = "<group>"; };
 		CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Accessibility.swift"; sourceTree = "<group>"; };
 		CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Spacing.swift"; sourceTree = "<group>"; };
-		CB1B21BF2EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+ThemeManager.swift"; sourceTree = "<group>"; };
 		CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Typography.swift"; sourceTree = "<group>"; };
 		CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
-		CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LengyanDesignSystem.swift; sourceTree = "<group>"; };
 		CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernAudioPlayerView.swift; sourceTree = "<group>"; };
 		CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernFavoritesView.swift; sourceTree = "<group>"; };
-		CBC207052EBBD47B00EB7A45 /* DesignSystem+Interactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Interactions.swift"; sourceTree = "<group>"; };
-		CBC207082EBBD47B00EB7A45 /* DesignSystem+Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Tokens.swift"; sourceTree = "<group>"; };
-		CBC2070F2EBBD5DD00EB7A45 /* DesignSystem+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Components.swift"; sourceTree = "<group>"; };
-		CBC207112EBBD61900EB7A45 /* DesignSystem+Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Colors.swift"; sourceTree = "<group>"; };
+		CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Tokens.swift"; sourceTree = "<group>"; };
+		CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Layout.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -418,17 +410,14 @@
 		CB1B21C22EBB1C8D00A1ADB7 /* Design */ = {
 			isa = PBXGroup;
 			children = (
-				CBC207112EBBD61900EB7A45 /* DesignSystem+Colors.swift */,
-				CBC2070F2EBBD5DD00EB7A45 /* DesignSystem+Components.swift */,
-				CBC207052EBBD47B00EB7A45 /* DesignSystem+Interactions.swift */,
-				CBC207082EBBD47B00EB7A45 /* DesignSystem+Tokens.swift */,
+				CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */,
+				CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */,
 				CB1B21AF2EBB1C8D00A1ADB7 /* Accessibility */,
 				CB1B21B12EBB1C8D00A1ADB7 /* Gestures */,
 				CB1B21B42EBB1C8D00A1ADB7 /* Integrations */,
 				CB1B21B82EBB1C8D00A1ADB7 /* Navigation */,
 				CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */,
 				CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */,
-				CB1B21BF2EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift */,
 				CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */,
 			);
 			path = Design;
@@ -437,7 +426,6 @@
 		CB8A4D60265EE95000D1E7B9 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
-				CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */,
 				CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */,
 				CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */,
 			);
@@ -625,10 +613,10 @@
 				CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */,
 				CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */,
 				CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */,
-				CB1B21D12EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift in Sources */,
 				133CAB9F2364DDB700B61AC0 /* RABatchChanges.h in Sources */,
 				133CABA02364DDB700B61AC0 /* RABatchChanges.m in Sources */,
 				133CABA12364DDB700B61AC0 /* RATableView.h in Sources */,
+				CBC2073B2EBCD79A00EB7A45 /* DesignSystem+Layout.swift in Sources */,
 				133CABA22364DDB700B61AC0 /* RATableView.m in Sources */,
 				133CABA32364DDB700B61AC0 /* RATreeNode.h in Sources */,
 				133CABA42364DDB700B61AC0 /* RATreeNode.m in Sources */,
@@ -640,7 +628,6 @@
 				133CABAA2364DDB700B61AC0 /* RATreeNodeItem+ClassExtension.h in Sources */,
 				133CABAB2364DDB700B61AC0 /* RATreeNodeItem+Private.h in Sources */,
 				CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */,
-				CB8A4D50265EE90000D1E7B9 /* LengyanDesignSystem.swift in Sources */,
 				CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */,
 				CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */,
 				133CABAC2364DDB700B61AC0 /* RATreeNodeItem+Private.m in Sources */,
@@ -648,7 +635,6 @@
 				133CABAE2364DDB700B61AC0 /* RATreeNodeItem.m in Sources */,
 				133CABAF2364DDB700B61AC0 /* RATreeView+Enums.h in Sources */,
 				133CABB02364DDB700B61AC0 /* RATreeView+Enums.m in Sources */,
-				CBC207122EBBD61900EB7A45 /* DesignSystem+Colors.swift in Sources */,
 				133CABB12364DDB700B61AC0 /* RATreeView+Private.h in Sources */,
 				133CABB22364DDB700B61AC0 /* RATreeView+Private.m in Sources */,
 				133CABB32364DDB700B61AC0 /* RATreeView+RATreeNodeCollectionControllerDataSource.h in Sources */,
@@ -659,17 +645,15 @@
 				133CABB82364DDB700B61AC0 /* RATreeView+TableViewDelegate.m in Sources */,
 				133CABB92364DDB700B61AC0 /* RATreeView_ClassExtension.h in Sources */,
 				133CABBA2364DDB700B61AC0 /* RATreeView.h in Sources */,
-				CBC207102EBBD5DD00EB7A45 /* DesignSystem+Components.swift in Sources */,
 				133CABBB2364DDB700B61AC0 /* RATreeView.m in Sources */,
 				133CABBC2364DDB700B61AC0 /* UIView+Common.swift in Sources */,
 				133CABBD2364DDB700B61AC0 /* String+Common.swift in Sources */,
-				CBC207092EBBD47B00EB7A45 /* DesignSystem+Interactions.swift in Sources */,
-				CBC2070A2EBBD47B00EB7A45 /* DesignSystem+Tokens.swift in Sources */,
 				133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */,
 				1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */,
 				135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */,
 				1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */,
 				135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */,
+				CBC207392EBCD71300EB7A45 /* DesignSystem+Tokens.swift in Sources */,
 				13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */,
 				1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */,
 				13978CCD1D2028E5005031EE /* Prefers.swift in Sources */,

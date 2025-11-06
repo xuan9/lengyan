@@ -88,20 +88,20 @@ class SutraNavigationController: UINavigationController {
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = colors.surface(theme: theme)
         appearance.titleTextAttributes = [
-            .font: UIFont.sutraFont(style: SutraTypography.TextStyle.navigationTitle),
+            .font: SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold),
             .foregroundColor: colors.primary(theme: theme)
         ]
 
         // Configure large title appearance if needed
         appearance.largeTitleTextAttributes = [
-            .font: UIFont.sutraFont(style: SutraTypography.TextStyle.sectionTitle),
+            .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .medium),
             .foregroundColor: colors.primary(theme: theme)
         ]
 
         // Configure button appearance
         let buttonAppearance = UIBarButtonItemAppearance()
         buttonAppearance.normal.titleTextAttributes = [
-            .font: UIFont.sutraFont(style: SutraTypography.TextStyle.buttonMedium),
+            .font: SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium),
             .foregroundColor: colors.primary(theme: theme)
         ]
 
@@ -328,11 +328,11 @@ class SacredTitleView: UIView {
 
         backgroundColor = UIColor.clear
 
-        titleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.navigationTitle)
+        titleLabel.font = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold)
         titleLabel.textColor = colors.primary(theme: currentTheme)
         titleLabel.textAlignment = .center
 
-        subtitleLabel.font = UIFont.sutraFont(style: SutraTypography.TextStyle.caption)
+        subtitleLabel.font = SutraTypographyManager.shared.uiFont(for: .uiCaption, weight: .regular)
         subtitleLabel.textColor = colors.textSecondary(theme: currentTheme)
         subtitleLabel.textAlignment = .center
 

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 class Book: NSObject {
     static let shared:Book = Book()
@@ -178,68 +179,74 @@ class Book: NSObject {
     }
     
     //MARK: Making text for item name, title, sutra to show up
+    @MainActor
     func getTitleLine(_ item:[String:Any])->NSAttributedString{
-        let prefix = "☸ " 
+        let prefix = "☸ "
         let title:String = (item["name"] as? String ?? "")
-        // (item["id"] as! String) + " " +
         let parent = Book.shared.parentOfItem(item)
         let parentTitle = parent?["name"] as? String ?? ""
-        //        let titleAttributes = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline), NSForegroundColorAttributeName: UIColor.purpleColor()]
-        
-        let font:UIFont? = UIFont(name: "Arial", size: 14.0)
-        
+        // Use unified SutraTypography design system for proper Chinese font rendering
+        // Parent title uses index item style
+        let parentFont = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
         let attrString = NSMutableAttributedString(
             string: prefix + parentTitle as String,
-            attributes: [NSAttributedStringKey.font: font!])
-        
-        let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
+            attributes: [NSAttributedStringKey.font: parentFont])
+
+        // Divider "之" uses smaller caption style
+        let dividerFont = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .regular)
         let attrString2 = NSMutableAttributedString(
             string: (parent == nil ? "" : " 之 "),
-            attributes: [NSAttributedStringKey.font: font2!])
-        
-        let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
+            attributes: [NSAttributedStringKey.font: dividerFont])
+
+        // Title uses navigation title style
+        let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold)
         let attrString1 = NSMutableAttributedString(
             string: title as String,
-            attributes: [NSAttributedStringKey.font: font1!])
-        
+            attributes: [NSAttributedStringKey.font: titleFont])
+
         attrString.append(attrString2)
         attrString.append(attrString1)
         return attrString
     }
     
+    @MainActor
     func getTitle(_ item:[String:Any])->NSAttributedString{
         let title:String = (item["name"] as? String ?? "")
         let parent = Book.shared.parentOfItem(item)
         let parentTitle = parent?["name"] as? String ?? ""
-        let font:UIFont? = UIFont(name: "Arial", size: 12.0)
-        
+        // Use unified SutraTypography design system for proper Chinese font rendering
+        let font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
+
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.paragraphSpacing = 5
-        
+
         let attrString = NSMutableAttributedString(
             string: parentTitle as String,
-            attributes: [NSAttributedStringKey.font: font!,
+            attributes: [NSAttributedStringKey.font: font,
                          NSAttributedStringKey.paragraphStyle : paragraphStyle])
-        
-        let font2:UIFont? = UIFont(name: "Arial", size: 10.0)
+
+        // Divider "之" uses caption style
+        let dividerFont = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .regular)
         let attrString2 = NSMutableAttributedString(
             string: parent == nil ? "" : " 之",
-            attributes: [NSAttributedStringKey.font: font2!,     NSAttributedStringKey.paragraphStyle : paragraphStyle])
-        
+            attributes: [NSAttributedStringKey.font: dividerFont, NSAttributedStringKey.paragraphStyle : paragraphStyle])
+
         let paragraphStyle2 = NSMutableParagraphStyle()
         paragraphStyle2.alignment = .center
-        
-        let font1:UIFont? = UIFont(name: "Arial", size: 14.0)
+
+        // Title uses navigation title style
+        let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold)
         let titleText = parentTitle.count > 15 ? " " + title : "\n" + title
         let attrString1 = NSMutableAttributedString(
             string: titleText,
-            attributes: [NSAttributedStringKey.font: font1!,     NSAttributedStringKey.paragraphStyle : paragraphStyle2])
-        
+            attributes: [NSAttributedStringKey.font: titleFont, NSAttributedStringKey.paragraphStyle : paragraphStyle2])
+
         attrString.append(attrString2)
         attrString.append(attrString1)
         return attrString
     }
     
+    @MainActor
     func getTitleView(_ item:[String:Any])->UILabel{
         let label = UILabel(frame: CGRect(x: 0, y: 0, width: 400, height: 44))
         label.backgroundColor = UIColor.clear
@@ -252,44 +259,50 @@ class Book: NSObject {
         return label
     }
     
+    @MainActor
     func getItemName(_ name:String, withChapter:Int)->NSAttributedString{
         let chapterLabel = "  " + NSLocalizedString("chapter_\(withChapter  + 1)", comment: "chapter_name") + NSLocalizedString("start_qi", comment: "起")
-        
-        let noteFont = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote)
-        let itemFont = UIFont.systemFont(ofSize: noteFont.pointSize + 2, weight: UIFont.Weight.regular)
-        
+
+        // Use unified SutraTypography design system for proper Chinese font rendering
+        let itemFont = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
+        let noteFont = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .regular)
+
         let attrString = NSMutableAttributedString(
             string: name,
             attributes: [NSAttributedStringKey.font: itemFont])
-        
+
         let attrString2 = NSMutableAttributedString(
             string: chapterLabel,
             attributes: [NSAttributedStringKey.font: noteFont,
                          NSAttributedStringKey.foregroundColor: UIColor.gray])
-        
+
         attrString.append(attrString2)
         return attrString
     }
 
+    @MainActor
     func getSutraAttributeString(_ item:[String:Any], maxLength:Int = Int.max)->NSAttributedString{
         let text = getSutra(item, maxLength: maxLength)
         return self.getSutraAttributeString(text: text)
     }
     
+    @MainActor
     func getSutraAttributeString(text:String)->NSAttributedString{
         let pStyle = NSMutableParagraphStyle()
         pStyle.lineHeightMultiple = 1.618
         pStyle.maximumLineHeight = 40.0
         pStyle.minimumLineHeight = 10.0
-        
+
         pStyle.paragraphSpacing = 1
         pStyle.firstLineHeadIndent = 35
-        
-        let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body)
-        
+
+        // Use unified SutraTypography design system for sutra text
+        // This ensures proper Chinese font rendering with golden ratio scaling
+        let font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
+
         let pAttributes = [NSAttributedStringKey.paragraphStyle : pStyle,
                            NSAttributedStringKey.font: font]
-        
+
         return NSAttributedString(string: text, attributes:pAttributes)
     }
     

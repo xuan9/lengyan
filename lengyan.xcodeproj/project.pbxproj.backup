@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */; };
-		1313C43E1D53E99800395429 /* MediaTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1313C43D1D53E99800395429 /* MediaTableViewController.swift */; };
 		132014751F12B9850081FDDB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 132014771F12B9850081FDDB /* Localizable.strings */; };
 		133CAB9D2364DDB700B61AC0 /* RABatchChangeEntity.h in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB7A2364D96900B61AC0 /* RABatchChangeEntity.h */; };
 		133CAB9E2364DDB700B61AC0 /* RABatchChangeEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB7B2364D96900B61AC0 /* RABatchChangeEntity.m */; };
@@ -46,15 +45,12 @@
 		133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB9B2364D96900B61AC0 /* Utils.swift */; };
 		1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */; };
 		135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D605C1D16FA4A00029090 /* SutraPageViewController.swift */; };
-		135D605F1D16FABE00029090 /* SutraStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */; };
 		135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60601D16FB7400029090 /* SutraBookViewController.swift */; };
 		135D60631D173B1B00029090 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60621D173B1B00029090 /* Book.swift */; };
 		1361D0811F647C6A00426DB6 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1361D0831F647C6A00426DB6 /* InfoPlist.strings */; };
 		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
 		1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */; };
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
-		139073111D109193003A3333 /* StarsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073101D109193003A3333 /* StarsTableViewController.swift */; };
-		139073141D109193003A3333 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073121D109193003A3333 /* Main.storyboard */; };
 		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* BookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* BookTests.swift */; };
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
@@ -76,7 +72,18 @@
 		4AD063811EA3802200751922 /* ly06.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636C1EA244AC00751922 /* ly06.m4a */; settings = {ASSET_TAGS = (ly06, ); }; };
 		4AD063821EA3802200751922 /* ly10.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636D1EA244AC00751922 /* ly10.m4a */; settings = {ASSET_TAGS = (ly10, ); }; };
 		4AD063831EA3802200751922 /* ly04.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636E1EA244AC00751922 /* ly04.m4a */; settings = {ASSET_TAGS = (ly04, ); }; };
+		CB1B21C32EBB1C8D00A1ADB7 /* IntegrationGuide.md in Resources */ = {isa = PBXBuildFile; fileRef = CB1B21B22EBB1C8D00A1ADB7 /* IntegrationGuide.md */; };
+		CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */; };
+		CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */; };
+		CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */; };
+		CB1B21D12EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BF2EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift */; };
 		CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */; };
+		CB8A4D50265EE90000D1E7B9 /* LengyanDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */; };
+		CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */; };
+		CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */; };
+		CBC207092EBBD47B00EB7A45 /* DesignSystem+Interactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207052EBBD47B00EB7A45 /* DesignSystem+Interactions.swift */; };
+		CBC2070A2EBBD47B00EB7A45 /* DesignSystem+Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207082EBBD47B00EB7A45 /* DesignSystem+Tokens.swift */; };
+		CBC207102EBBD5DD00EB7A45 /* DesignSystem+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC2070F2EBBD5DD00EB7A45 /* DesignSystem+Components.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,11 +105,8 @@
 
 /* Begin PBXFileReference section */
 		130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraIndexViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
-		1313C43D1D53E99800395429 /* MediaTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = MediaTableViewController.swift; sourceTree = "<group>"; tabWidth = 4; };
 		132014761F12B9850081FDDB /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		132014781F12B9870081FDDB /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		1321D0681EEF141B005DC278 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
-		1321D0691EEF142A005DC278 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Main.strings"; sourceTree = "<group>"; };
 		133CAB792364D96900B61AC0 /* UIView+Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Common.swift"; sourceTree = "<group>"; };
 		133CAB7A2364D96900B61AC0 /* RABatchChangeEntity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RABatchChangeEntity.h; sourceTree = "<group>"; };
 		133CAB7B2364D96900B61AC0 /* RABatchChangeEntity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RABatchChangeEntity.m; sourceTree = "<group>"; };
@@ -139,7 +143,6 @@
 		133CAB9B2364D96900B61AC0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewControllera.swift; sourceTree = "<group>"; tabWidth = 4; };
 		135D605C1D16FA4A00029090 /* SutraPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageViewController.swift; sourceTree = "<group>"; };
-		135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = SutraStoryboard.storyboard; sourceTree = "<group>"; };
 		135D60601D16FB7400029090 /* SutraBookViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraBookViewController.swift; sourceTree = "<group>"; };
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		1361D0821F647C6A00426DB6 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -149,8 +152,6 @@
 		1382E5311EAB341900EBE749 /* todo.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; };
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390730C1D109193003A3333 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		139073101D109193003A3333 /* StarsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarsTableViewController.swift; sourceTree = "<group>"; };
-		139073131D109193003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		139073181D109194003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1390731A1D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390731F1D109194003A3333 /* lengyanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -179,7 +180,18 @@
 		4AD0636C1EA244AC00751922 /* ly06.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly06.m4a; sourceTree = "<group>"; };
 		4AD0636D1EA244AC00751922 /* ly10.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly10.m4a; sourceTree = "<group>"; };
 		4AD0636E1EA244AC00751922 /* ly04.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly04.m4a; sourceTree = "<group>"; };
+		CB1B21B22EBB1C8D00A1ADB7 /* IntegrationGuide.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = IntegrationGuide.md; sourceTree = "<group>"; };
+		CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Accessibility.swift"; sourceTree = "<group>"; };
+		CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Spacing.swift"; sourceTree = "<group>"; };
+		CB1B21BF2EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+ThemeManager.swift"; sourceTree = "<group>"; };
+		CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Typography.swift"; sourceTree = "<group>"; };
 		CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
+		CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LengyanDesignSystem.swift; sourceTree = "<group>"; };
+		CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernAudioPlayerView.swift; sourceTree = "<group>"; };
+		CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernFavoritesView.swift; sourceTree = "<group>"; };
+		CBC207052EBBD47B00EB7A45 /* DesignSystem+Interactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Interactions.swift"; sourceTree = "<group>"; };
+		CBC207082EBBD47B00EB7A45 /* DesignSystem+Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Tokens.swift"; sourceTree = "<group>"; };
+		CBC2070F2EBBD5DD00EB7A45 /* DesignSystem+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Components.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -229,8 +241,6 @@
 				4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */,
 				139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */,
 				135D60601D16FB7400029090 /* SutraBookViewController.swift */,
-				139073101D109193003A3333 /* StarsTableViewController.swift */,
-				1313C43D1D53E99800395429 /* MediaTableViewController.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -318,13 +328,13 @@
 		1390730B1D109193003A3333 /* lengyan */ = {
 			isa = PBXGroup;
 			children = (
+				CB1B21C22EBB1C8D00A1ADB7 /* Design */,
 				4AD063641EA244AC00751922 /* media */,
 				1390734B1D109284003A3333 /* data */,
 				133CAB732364D10E00B61AC0 /* Domain */,
 				133CAB772364D1FF00B61AC0 /* View */,
+				CB8A4D60265EE95000D1E7B9 /* SwiftUI */,
 				133CAB782364D96900B61AC0 /* Util */,
-				139073121D109193003A3333 /* Main.storyboard */,
-				135D605E1D16FABE00029090 /* SutraStoryboard.storyboard */,
 				139073171D109194003A3333 /* LaunchScreen.storyboard */,
 				13CA80F01EAB3BF600589E8F /* Assets.xcassets */,
 				1390731A1D109194003A3333 /* Info.plist */,
@@ -372,6 +382,63 @@
 			);
 			name = media;
 			path = "屏東能淨協會讀誦";
+			sourceTree = "<group>";
+		};
+		CB1B21AF2EBB1C8D00A1ADB7 /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Accessibility;
+			sourceTree = "<group>";
+		};
+		CB1B21B12EBB1C8D00A1ADB7 /* Gestures */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Gestures;
+			sourceTree = "<group>";
+		};
+		CB1B21B42EBB1C8D00A1ADB7 /* Integrations */ = {
+			isa = PBXGroup;
+			children = (
+				CB1B21B22EBB1C8D00A1ADB7 /* IntegrationGuide.md */,
+			);
+			path = Integrations;
+			sourceTree = "<group>";
+		};
+		CB1B21B82EBB1C8D00A1ADB7 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		CB1B21C22EBB1C8D00A1ADB7 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				CBC2070F2EBBD5DD00EB7A45 /* DesignSystem+Components.swift */,
+				CBC207052EBBD47B00EB7A45 /* DesignSystem+Interactions.swift */,
+				CBC207082EBBD47B00EB7A45 /* DesignSystem+Tokens.swift */,
+				CB1B21AF2EBB1C8D00A1ADB7 /* Accessibility */,
+				CB1B21B12EBB1C8D00A1ADB7 /* Gestures */,
+				CB1B21B42EBB1C8D00A1ADB7 /* Integrations */,
+				CB1B21B82EBB1C8D00A1ADB7 /* Navigation */,
+				CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */,
+				CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */,
+				CB1B21BF2EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift */,
+				CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		CB8A4D60265EE95000D1E7B9 /* SwiftUI */ = {
+			isa = PBXGroup;
+			children = (
+				CB8A4D4F265EE90000D1E7B9 /* LengyanDesignSystem.swift */,
+				CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */,
+				CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */,
+			);
+			path = SwiftUI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -518,12 +585,11 @@
 				13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */,
 				132014751F12B9850081FDDB /* Localizable.strings in Resources */,
 				4AD0637A1EA3801400751922 /* ly01.m4a in Resources */,
+				CB1B21C32EBB1C8D00A1ADB7 /* IntegrationGuide.md in Resources */,
 				139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */,
 				4AD0637B1EA3801900751922 /* ly07.m4a in Resources */,
 				4AD063811EA3802200751922 /* ly06.m4a in Resources */,
-				139073141D109193003A3333 /* Main.storyboard in Resources */,
 				4AD063831EA3802200751922 /* ly04.m4a in Resources */,
-				135D605F1D16FABE00029090 /* SutraStoryboard.storyboard in Resources */,
 				4AD063821EA3802200751922 /* ly10.m4a in Resources */,
 				1390734C1D109284003A3333 /* data in Resources */,
 				4AD0637C1EA3801D00751922 /* ly03.m4a in Resources */,
@@ -553,6 +619,10 @@
 			files = (
 				133CAB9D2364DDB700B61AC0 /* RABatchChangeEntity.h in Sources */,
 				133CAB9E2364DDB700B61AC0 /* RABatchChangeEntity.m in Sources */,
+				CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */,
+				CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */,
+				CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */,
+				CB1B21D12EBB1C8D00A1ADB7 /* DesignSystem+ThemeManager.swift in Sources */,
 				133CAB9F2364DDB700B61AC0 /* RABatchChanges.h in Sources */,
 				133CABA02364DDB700B61AC0 /* RABatchChanges.m in Sources */,
 				133CABA12364DDB700B61AC0 /* RATableView.h in Sources */,
@@ -567,6 +637,9 @@
 				133CABAA2364DDB700B61AC0 /* RATreeNodeItem+ClassExtension.h in Sources */,
 				133CABAB2364DDB700B61AC0 /* RATreeNodeItem+Private.h in Sources */,
 				CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */,
+				CB8A4D50265EE90000D1E7B9 /* LengyanDesignSystem.swift in Sources */,
+				CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */,
+				CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */,
 				133CABAC2364DDB700B61AC0 /* RATreeNodeItem+Private.m in Sources */,
 				133CABAD2364DDB700B61AC0 /* RATreeNodeItem.h in Sources */,
 				133CABAE2364DDB700B61AC0 /* RATreeNodeItem.m in Sources */,
@@ -582,12 +655,13 @@
 				133CABB82364DDB700B61AC0 /* RATreeView+TableViewDelegate.m in Sources */,
 				133CABB92364DDB700B61AC0 /* RATreeView_ClassExtension.h in Sources */,
 				133CABBA2364DDB700B61AC0 /* RATreeView.h in Sources */,
+				CBC207102EBBD5DD00EB7A45 /* DesignSystem+Components.swift in Sources */,
 				133CABBB2364DDB700B61AC0 /* RATreeView.m in Sources */,
 				133CABBC2364DDB700B61AC0 /* UIView+Common.swift in Sources */,
 				133CABBD2364DDB700B61AC0 /* String+Common.swift in Sources */,
+				CBC207092EBBD47B00EB7A45 /* DesignSystem+Interactions.swift in Sources */,
+				CBC2070A2EBBD47B00EB7A45 /* DesignSystem+Tokens.swift in Sources */,
 				133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */,
-				1313C43E1D53E99800395429 /* MediaTableViewController.swift in Sources */,
-				139073111D109193003A3333 /* StarsTableViewController.swift in Sources */,
 				1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */,
 				135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */,
 				1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */,
@@ -655,16 +729,6 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
-		139073121D109193003A3333 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				139073131D109193003A3333 /* Base */,
-				1321D0681EEF141B005DC278 /* zh-Hans */,
-				1321D0691EEF142A005DC278 /* zh-Hant */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		139073171D109194003A3333 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -728,7 +792,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PROVISIONING_PROFILE = "a997049f-513c-43e9-ab9e-932c0ee144b2";
@@ -783,7 +847,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -801,7 +865,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyan/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -826,7 +890,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyan/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

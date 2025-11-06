@@ -369,8 +369,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if (newCell == nil) {
             newCell = UITableViewCell.init(style:.value1,reuseIdentifier:identifier);
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
-            let font = UIFont.preferredFont(forTextStyle: UIFontTextStyle.footnote);
-            newCell!.textLabel?.font = UIFont .systemFont(ofSize: font.pointSize + 2, weight: UIFont.Weight.regular);
+            // Use unified SutraTypography design system for consistent index navigation
+            newCell!.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
             
             if (!isLeaf) {
                 let bookBtn = UIButton.init(type: .custom)

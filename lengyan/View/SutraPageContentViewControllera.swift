@@ -52,11 +52,13 @@ class SutraTableViewCell: UITableViewCell {
             object: nil
         )
 
-        // Zen card container with design system
-        let theme = SutraThemeManager.shared.currentTheme
-        containerView.backgroundColor = SutraColors.Semantic.surface(theme: theme)
+        // Zen card container with unified color system
+        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         containerView.layer.cornerRadius = 16
-        containerView.layer.applyToken(shadow: SutraDesignTokens.ShadowTokens.shadowMedium)
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        containerView.layer.shadowRadius = 12
+        containerView.layer.shadowOpacity = 0.15
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
 
@@ -67,10 +69,10 @@ class SutraTableViewCell: UITableViewCell {
         textView.isEditable = false
         textView.isScrollEnabled = false
         textView.textContainerInset = UIEdgeInsets(
-            top: SutraSpacing.Component.md,
-            left: SutraSpacing.Component.md,
-            bottom: SutraSpacing.Component.md,
-            right: SutraSpacing.Component.md
+            top: SutraSpacing.Base.md,
+            left: SutraSpacing.Base.md,
+            bottom: SutraSpacing.Base.md,
+            right: SutraSpacing.Base.md
         )
         textView.showsVerticalScrollIndicator = false
 
@@ -93,38 +95,31 @@ class SutraTableViewCell: UITableViewCell {
     func configureWithZenStyle(content: String, type: String) {
         contentType = type
 
-        // Configure typography using design system
-        let theme = SutraThemeManager.shared.currentTheme
-        let textStyle: SutraTextStyle
+        // Configure typography using unified design system
+        let textStyle: SutraTypographyStyle
 
         switch type {
         case "sutra":
             // Sutra text - primary zen styling
-            textStyle = SutraTypography.TextStyle.sutraBody
-            textView.textColor = SutraColors.Semantic.sutraText(theme: theme)
+            textStyle = .sutraBody
+            textView.textColor = SutraDesignTokens.shared.color(for: .sutraText)
 
         case "index":
             // Index text - lighter zen styling
-            textStyle = SutraTypography.TextStyle.indexItem
-            textView.textColor = SutraColors.Semantic.primary(theme: theme)
+            textStyle = .indexItem
+            textView.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
 
         default: // commentary
             // Commentary text - medium zen styling
-            textStyle = SutraTypography.TextStyle.commentary
-            textView.textColor = SutraColors.Semantic.commentaryText(theme: theme)
+            textStyle = .commentary
+            textView.textColor = SutraDesignTokens.shared.color(for: .commentaryText)
         }
 
-        // Apply design system typography
-        textView.font = UIFont.sutraFont(style: textStyle)
+        // Apply unified SutraTypography
+        textView.font = SutraTypographyManager.shared.uiFont(for: textStyle, weight: .regular)
 
-        // Apply design system spacing and styling
-        let attributedText = NSAttributedString.sutraAttributedText(
-            text: content,
-            style: textStyle,
-            color: textView.textColor ?? UIColor.black
-        )
-
-        textView.attributedText = attributedText
+        // Set text directly - font and color already applied above
+        textView.text = content
     }
 
     private func paragraphStyle(lineHeight: CGFloat, letterSpacing: CGFloat) {
@@ -169,10 +164,9 @@ class SutraTableViewCell: UITableViewCell {
     }
 
     // MARK: - Theme Support
-    public override func applyThemeColors() {
-        let theme = SutraThemeManager.shared.currentTheme
-        backgroundColor = SutraColors.Semantic.background(theme: theme)
-        containerView.backgroundColor = SutraColors.Semantic.surface(theme: theme)
+    public func applyThemeColors() {
+        backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
 
         // Refresh text colors based on content type
         if !contentType.isEmpty {
@@ -180,7 +174,7 @@ class SutraTableViewCell: UITableViewCell {
         }
     }
 
-    @objc public override func themeDidChange() {
+    @objc public func themeDidChange() {
         applyThemeColors()
     }
 
@@ -283,8 +277,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     private func applyThemeColorsToView() {
-        let theme = SutraThemeManager.shared.currentTheme
-        view.backgroundColor = SutraColors.Semantic.background(theme: theme)
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
     }
 
     private func setupThemeObserverForView() {
@@ -311,11 +304,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     private func configureTableViewWithDesignSystem() {
-        let theme = SutraThemeManager.shared.currentTheme
-
-        // Apply design system colors
+        // Apply unified color system colors
         tableView.backgroundColor = .clear
-        view.backgroundColor = SutraColors.Semantic.background(theme: theme)
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
 
         // Enhanced zen styling
         tableView.separatorStyle = .none
@@ -323,14 +314,14 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
         // Design system spacing
         tableView.contentInset = UIEdgeInsets(
-            top: SutraSpacing.Component.sm,
+            top: 24,
             left: 0,
-            bottom: SutraSpacing.Component.lg,
+            bottom: 40,
             right: 0
         )
 
         // Status bar overlay for immersive reading
-        statusBarOverlay.backgroundColor = SutraColors.Semantic.surface(theme: theme)
+        statusBarOverlay.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         statusBarOverlay.alpha = 0
         statusBarOverlay.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusBarOverlay)
@@ -344,10 +335,10 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     private func initFontsWithDesignSystem(){
-        // Enhanced zen typography system using design system
-        sutraFont = UIFont.sutraFont(style: SutraTypography.TextStyle.sutraLarge)
-        comentFont = UIFont.sutraFont(style: SutraTypography.TextStyle.commentary)
-        indexFont = UIFont.sutraFont(style: SutraTypography.TextStyle.indexItem)
+        // Enhanced zen typography system using unified SutraTypography
+        sutraFont = SutraTypographyManager.shared.uiFont(for: .sutraLarge, weight: .regular)
+        comentFont = SutraTypographyManager.shared.uiFont(for: .commentary, weight: .regular)
+        indexFont = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -359,7 +350,6 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         applyZenTempleSerenityDesignSystem()
 
         // Apply design system to navigation bar
-        navigationController?.navigationBar.applySutraDesignSystem()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -384,19 +374,20 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         guard let navigationController = navigationController else { return }
 
         navigationController.navigationBar.prefersLargeTitles = false
-        navigationController.navigationBar.backgroundColor = UIColorFromRGB(0xFFFEFB)
+        navigationController.navigationBar.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         navigationController.navigationBar.shadowImage = UIImage()
         navigationController.navigationBar.isTranslucent = true
 
         // Enhanced navigation bar appearance
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColorFromRGB(0xFFFEFB)
-        appearance.shadowColor = UIColorFromRGB(0xE0E0E0)
+        appearance.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        appearance.shadowColor = SutraDesignTokens.shared.color(for: .divider)
         appearance.shadowImage = UIImage()
+        // Use unified SutraTypography design system for consistent navigation titles
         appearance.titleTextAttributes = [
-            .font: UIFont(name: "PingFangTC-Medium", size: 17) ?? UIFont.systemFont(ofSize: 17, weight: .medium),
-            .foregroundColor: UIColorFromRGB(0x1C2A39)
+            .font: SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold),
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary)
         ]
 
         navigationController.navigationBar.standardAppearance = appearance
@@ -488,12 +479,12 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         }
 
         let cell = UITableViewCell()
-        cell.backgroundColor = UIColorFromRGB(0xFAF9F6)
+        cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         cell.selectionStyle = .none
 
         // Zen card container for action buttons
         let actionContainer = UIView()
-        actionContainer.backgroundColor = UIColorFromRGB(0xFFFEFB)
+        actionContainer.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         actionContainer.layer.cornerRadius = 20
         actionContainer.layer.shadowColor = UIColor.black.cgColor
         actionContainer.layer.shadowOffset = CGSize(width: 0, height: 6)
@@ -564,25 +555,25 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
     private func createZenActionButton(iconName: String, action: Selector, title: String) -> UIView {
         let containerView = UIView()
-        containerView.backgroundColor = UIColorFromRGB(0xFAF9F6)
+        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         containerView.layer.cornerRadius = 16
         containerView.layer.borderWidth = 1
-        containerView.layer.borderColor = UIColorFromRGB(0xE0E0E0).cgColor
+        containerView.layer.borderColor = SutraDesignTokens.shared.color(for: .divider).cgColor
         containerView.translatesAutoresizingMaskIntoConstraints = false
 
         // Icon
         let iconImageView = UIImageView()
         iconImageView.image = UIImage(systemName: iconName)
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = UIColorFromRGB(0x8B4513) // Sacred temple wood
+        iconImageView.tintColor = SutraDesignTokens.shared.color(for: .accent)
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
 
         // Title label
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = UIFont(name: "PingFangTC-Medium", size: 12) ??
-                        UIFont.systemFont(ofSize: 12, weight: .medium)
-        titleLabel.textColor = UIColorFromRGB(0x8B4513)
+        // Use unified SutraTypography design system for consistent button titles
+        titleLabel.font = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .regular)
+        titleLabel.textColor = SutraDesignTokens.shared.color(for: .accent)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 

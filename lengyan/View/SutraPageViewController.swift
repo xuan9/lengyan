@@ -130,10 +130,11 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         pageVC.view.backgroundColor = zenBackground
         pageVC.tableView.backgroundColor = zenBackground
 
-        // Update fonts with zen styling
-        pageVC.sutraFont = UIFont(name: "PingFangTC", size: 18) ?? UIFont.systemFont(ofSize: 18, weight: .medium)
-        pageVC.comentFont = UIFont(name: "PingFangTC", size: 16) ?? UIFont.systemFont(ofSize: 16, weight: .regular)
-        pageVC.indexFont = UIFont(name: "PingFangTC", size: 15) ?? UIFont.systemFont(ofSize: 15, weight: .light)
+        // Update fonts with unified SutraTypography design system
+        // Uses golden ratio scaling, Chinese font optimization, and proper line heights
+        pageVC.sutraFont = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
+        pageVC.comentFont = SutraTypographyManager.shared.uiFont(for: .commentary, weight: .regular)
+        pageVC.indexFont = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
     }
     
     public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
