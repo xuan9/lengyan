@@ -85,11 +85,21 @@ struct ModernAudioPlayerView: View {
             // Main Content
             ScrollView {
                 VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
-                    // Header
-                    Text("聽經")
-                        .font(SutraTypographyBridge.uiHeading())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+                    // Header with prominent title and subtitle
+                    VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
+                        Text("聽經")
+                            .font(SutraTypographyBridge.uiLargeTitle())
+                            .foregroundColor(SutraDesignSystem.sutraTextColor())
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text("屏東能淨協会證道")
+                            .font(SutraTypographyBridge.uiBody())
+                            .foregroundColor(SutraDesignSystem.secondaryTextColor())
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
+                    .padding(.bottom, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+                    .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
 
                     if isLoading {
                         ProgressView()
@@ -124,12 +134,12 @@ struct ModernAudioPlayerView: View {
         VStack(spacing: 0) {
             // White padding
             Rectangle()
-                .fill(Color.white)
+                .fill(SutraDesignSystem.backgroundColor())
                 .frame(height: 16)
 
             // Main player bar
             Rectangle()
-                .fill(Color(red: 0.851, green: 0.749, blue: 0.549))
+                .fill(SutraDesignSystem.color(.surface))
                 .frame(height: 90)
                 .overlay(
                     VStack(spacing: 8) {
@@ -140,20 +150,20 @@ struct ModernAudioPlayerView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(audioObserver.currentTrack ?? "")
-                                    .font(.system(size: 17, weight: .medium))
+                                    .font(SutraTypographyBridge.uiBody())
                                     .lineLimit(2)
-                                    .foregroundColor(.black)
+                                    .foregroundColor(SutraDesignSystem.sutraTextColor())
 
                                 HStack(spacing: 5) {
                                     Text(formatTime(audioObserver.currentTime))
-                                        .font(.system(size: 10, design: .monospaced))
-                                        .foregroundColor(.black)
+                                        .font(SutraTypographyBridge.uiSmall())
+                                        .foregroundColor(SutraDesignSystem.secondaryTextColor())
 
                                     Spacer()
 
                                     Text(formatTime(audioObserver.totalTime))
-                                        .font(.system(size: 10, design: .monospaced))
-                                        .foregroundColor(.black)
+                                        .font(SutraTypographyBridge.uiSmall())
+                                        .foregroundColor(SutraDesignSystem.secondaryTextColor())
                                 }
                             }
 
@@ -163,14 +173,14 @@ struct ModernAudioPlayerView: View {
                             Button(action: { showPlayModeMenu() }) {
                                 Image(selectedPlayMode.iconName)
                                     .renderingMode(.template)
-                                    .foregroundColor(.black)
+                                    .foregroundColor(SutraDesignSystem.accentColor())
                                     .frame(width: 24, height: 24)
                             }
 
                             // Play/Pause button
                             Button(action: togglePlayPause) {
                                 Image(audioObserver.isPlaying ? "ic_pause_circle_outline_48pt" : "ic_play_circle_outline_48pt")
-                                    .foregroundColor(.black)
+                                    .foregroundColor(SutraDesignSystem.accentColor())
                                     .frame(width: 40, height: 40)
                             }
                         }
@@ -209,15 +219,15 @@ struct ModernAudioPlayerView: View {
     // MARK: - Media Group Section
     private func mediaGroupSection(_ group: MediaGroup) -> some View {
         VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
-            // Section Header
+            // Section Header - World-class spacing and typography
             Text(group.name)
-                .font(SutraTypographyBridge.uiHeading())
+                .font(SutraTypographyBridge.uiTitle(weight: .semibold))
                 .foregroundColor(SutraDesignSystem.sutraTextColor())
-                .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
-                .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM))
+                .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+                .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
 
-            // Media Items
-            VStack(spacing: 1) {
+            // Media Items - Better spacing between items
+            VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
                 ForEach(group.files.indices, id: \.self) { index in
                     mediaItemRow(
                         name: group.names[index],
@@ -244,42 +254,38 @@ struct ModernAudioPlayerView: View {
         let status = downloadStatus[file] ?? .notDownloaded
         let progress = downloadProgress[file] ?? 0
 
-        return HStack {
-            // Leading space for visual hierarchy
-            Spacer()
-                .frame(width: 36)
+        return VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
+            // Title with download status
+            HStack {
+                Text(titleWithStatus(name: name, status: status))
+                    .font(SutraTypographyBridge.uiBody(weight: status == .downloaded ? .regular : .regular))
+                    .foregroundColor(status == .downloaded ? SutraDesignSystem.sutraTextColor() : SutraDesignSystem.secondaryTextColor())
 
-            VStack(alignment: .leading, spacing: 4) {
-                // Title with download status
-                HStack {
-                    Text(titleWithStatus(name: name, status: status))
-                        .font(.system(size: 17))
-                        .foregroundColor(status == .downloaded ? .primary : .secondary)
-
-                    Spacer()
-                }
-
-                // Download progress bar
-                if status == .downloading {
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            Rectangle()
-                                .fill(Color.gray)
-                                .frame(height: 2)
-
-                            Rectangle()
-                                .fill(Color.green)
-                                .frame(width: geometry.size.width * progress, height: 2)
-                        }
-                    }
-                    .frame(height: 2)
-                }
+                Spacer()
             }
 
-            Spacer()
-                .frame(width: 20)
+            // Download progress bar
+            if status == .downloading {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 3)
+
+                        Rectangle()
+                            .fill(SutraDesignSystem.color(.accent))
+                            .frame(width: geometry.size.width * progress, height: 3)
+                    }
+                }
+                .frame(height: 3)
+            }
         }
-        .padding(.vertical, 12)
+        .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+        .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(SutraDesignSystem.backgroundColor().opacity(0.6))
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             handleMediaItemTap(name: name, file: file, fileExtension: `extension`, groupName: groupName)

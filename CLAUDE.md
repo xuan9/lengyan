@@ -18,6 +18,53 @@ This is a native iOS application called "LengYan" (楞严) - a Buddhist sutra re
 - Run tests: Cmd+U
 - Test files are in `lengyanTests/` and `lengyanUITests/`
 
+### Mobile MCP Testing Setup
+To use Mobile MCP for automated testing and screenshots:
+
+#### Quick Start (Recommended)
+```bash
+# Start WebDriverAgent (only runs if not already running)
+./scripts/start-wda.sh
+
+# When done testing
+./scripts/stop-wda.sh
+```
+
+#### How It Works
+- WebDriverAgent runs as a background server on the iOS Simulator
+- Once started, it stays running until you stop it or restart the simulator
+- No need to reinstall or restart between test sessions
+- The helper scripts check if it's already running to avoid duplicate processes
+
+#### Manual Start (if needed)
+```bash
+cd ~/github/WebDriverAgent
+xcodebuild -project WebDriverAgent.xcodeproj \
+           -scheme WebDriverAgentRunner \
+           -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+           test
+```
+
+#### Verify WebDriverAgent Status
+- Check if running: `pgrep -f "WebDriverAgentRunner" || echo "Not running"`
+- Server endpoint: http://localhost:8100
+- Look for "ServerURLHere->http://..." in xcodebuild output
+
+#### Available Mobile MCP Tools
+Once WebDriverAgent is running, use these tools:
+- `mobile_list_available_devices` - List connected simulators/devices
+- `mobile_take_screenshot` - Capture app screenshots
+- `mobile_list_elements_on_screen` - Inspect UI hierarchy
+- `mobile_click_on_screen_at_coordinates` - Automate taps
+- `mobile_swipe_on_screen` - Test scrolling/gestures
+- `mobile_type_keys` - Input text
+- `mobile_press_button` - Press system buttons (HOME, BACK, etc.)
+
+#### Troubleshooting
+- **"Device not found"**: Check simulator is booted with `xcrun simctl list devices | grep Booted`
+- **Connection refused**: Restart WebDriverAgent with `./scripts/stop-wda.sh && ./scripts/start-wda.sh`
+- **Simulator crashed**: Reset simulator and restart WebDriverAgent
+
 ## Architecture & Code Structure
 
 ### Core Data Model

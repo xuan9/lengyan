@@ -123,32 +123,42 @@ struct ModernFavoritesView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
-                // Header
-                Text("收藏")
-                    .font(SutraTypographyBridge.uiHeading())
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+                // World-class Header with prominent title and helpful subtitle
+                VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM)) {
+                    Text("收藏")
+                        .font(SutraTypographyBridge.uiLargeTitle())
+                        .foregroundColor(SutraDesignSystem.sutraTextColor())
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Text("你喜欢的经文")
+                        .font(SutraTypographyBridge.uiBody())
+                        .foregroundColor(SutraDesignSystem.secondaryTextColor())
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
+                .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
 
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())
                         .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
                 } else if favorites.isEmpty {
-                    // Empty State
-                    VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
+                    // Empty State - World-class design with larger icon and better messaging
+                    VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL)) {
                         Image(systemName: "heart.text.square")
-                            .font(.system(size: 60))
-                            .foregroundColor(SutraDesignSystem.color(.accent).opacity(0.6))
+                            .font(.system(size: 80))
+                            .foregroundColor(SutraDesignSystem.color(.accent).opacity(0.5))
 
                         Text("暂无收藏")
-                            .font(SutraTypographyBridge.uiHeading())
+                            .font(SutraTypographyBridge.uiLargeTitle())
                             .foregroundColor(SutraDesignSystem.sutraTextColor())
 
                         Text("在阅读时点击收藏按钮，将喜欢的经文添加到这里")
                             .font(SutraTypographyBridge.uiBody())
                             .foregroundColor(SutraDesignSystem.secondaryTextColor())
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL))
+                            .lineSpacing(4)
+                            .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXXL))
                     }
                     .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
                 } else {
@@ -177,40 +187,48 @@ struct ModernFavoritesView: View {
     }
 
     private func favoriteCard(_ favorite: FavoriteItem) -> some View {
-        VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM)) {
-            HStack {
+        VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
+            // Title and heart button with better spacing
+            HStack(alignment: .top, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
                 Text(favorite.title)
-                    .font(SutraTypographyBridge.uiHeading())
+                    .font(SutraTypographyBridge.uiTitle(weight: .semibold))
                     .foregroundColor(SutraDesignSystem.sutraTextColor())
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Spacer()
 
+                // Larger, more tappable heart button
                 Button(action: { removeFavorite(favorite) }) {
                     Image(systemName: "heart.fill")
                         .foregroundColor(SutraDesignSystem.color(.accent))
-                        .font(.system(size: 16))
+                        .font(.system(size: 24))
+                        .frame(width: 44, height: 44) // iOS minimum touch target
                 }
             }
 
+            // Content preview with better typography
             Text(favorite.content)
-                .font(SutraTypographyBridge.sutraCaption())
+                .font(SutraTypographyBridge.uiBody())
                 .foregroundColor(SutraDesignSystem.secondaryTextColor())
-                .lineLimit(4)
+                .lineLimit(3)
+                .lineSpacing(4)
                 .multilineTextAlignment(.leading)
 
+            // Date with better readability
             Text(formatDate(from: favorite.path))
-                .font(SutraTypographyBridge.uiSmall())
+                .font(SutraTypographyBridge.uiCaption())
                 .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.7))
         }
-        .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+        .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(SutraDesignSystem.backgroundColor().opacity(0.5))
+            RoundedRectangle(cornerRadius: 16)
+                .fill(SutraDesignSystem.backgroundColor().opacity(0.6))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(SutraDesignSystem.color(.border).opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(SutraDesignSystem.color(.border).opacity(0.3), lineWidth: 1)
                 )
+                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -269,7 +287,7 @@ struct ModernFavoritesView: View {
 
     private func extractContentEfficiently(from item: [String: Any]) -> String {
         // Use a more efficient method to get content with length limit
-        if let children = item["children"] {
+        if item["children"] != nil {
             return "包含子章节"
         }
 
@@ -327,6 +345,13 @@ struct ModernFavoritesView: View {
     }
 
     private func openSutra(_ path: String, navigationController: UINavigationController) {
+        // Get the title for this sutra item
+        let item = Book.shared.itemOfPath(path)
+        let title = item["name"] as? String ?? "经文"
+
+        // Force navigation bar to be visible
+        navigationController.setNavigationBarHidden(false, animated: false)
+
         let sutraVC = SutraPurePageViewController(
             transitionStyle: .pageCurl,
             navigationOrientation: .horizontal,
@@ -334,26 +359,48 @@ struct ModernFavoritesView: View {
         )
         sutraVC.path = path
         sutraVC.isShowIndexButton = true
+        sutraVC.title = title
+
         sutraVC.onDismiss = {
-            navigationController.setNavigationBarHidden(false, animated: false)
+            navigationController.setNavigationBarHidden(true, animated: false)
         }
-        navigationController.isNavigationBarHidden = false
+
         navigationController.pushViewController(sutraVC, animated: true)
+
+        // Force navigation bar visibility after push
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            navigationController.setNavigationBarHidden(false, animated: false)
+            sutraVC.navigationController?.setNavigationBarHidden(false, animated: false)
+        }
     }
 
     private func openSpecificPage(_ path: String, navigationController: UINavigationController) {
-        let pageVC = SutraPageViewController(
-            transitionStyle: .pageCurl,
-            navigationOrientation: .horizontal,
-            options: nil
-        )
-
         // Find the page index for this path
         if let pageIndex = Book.shared.index?.firstIndex(where: { item in
             item["path"] as? String == path
         }) {
+            // Get the title for this page
+            let item = Book.shared.index?[pageIndex]
+            let title = item?["name"] as? String ?? "经文"
+
+            // Force navigation bar to be visible
+            navigationController.setNavigationBarHidden(false, animated: false)
+
+            let pageVC = SutraPageViewController(
+                transitionStyle: .pageCurl,
+                navigationOrientation: .horizontal,
+                options: nil
+            )
             pageVC.page = pageIndex
+            pageVC.title = title
+
             navigationController.pushViewController(pageVC, animated: true)
+
+            // Force navigation bar visibility after push
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                navigationController.setNavigationBarHidden(false, animated: false)
+                pageVC.navigationController?.setNavigationBarHidden(false, animated: false)
+            }
         } else {
             print("Error: Could not find page index for path: \(path)")
         }

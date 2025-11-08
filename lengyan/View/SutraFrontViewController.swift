@@ -18,29 +18,41 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        print("🔥 === SUTRA FRONT VIEW LOADING ===")
+        print("🔥 viewDidLoad() - view.bounds: \(self.view.bounds)")
+
         // Apply Zen Temple Serenity Design System FIRST
         applyZenTempleSerenityDesignSystem()
+        print("🔥 Design system applied")
 
         let bounds:CGRect = self.view.bounds;
         treeView = RATreeView(frame: CGRect(
             origin: CGPoint(x:bounds.origin.x - 5 ,y:bounds.origin.y + 0),
             size:   CGSize(width: bounds.size.width + 8 , height:bounds.size.height - 0 )));
+        print("🔥 TreeView created with frame: \(treeView.frame)")
 
         treeView.delegate = self
         treeView.dataSource = self
-        treeView.rowHeight = 50; // Enhanced for better zen spacing
+        treeView.rowHeight = 64; // World-class iOS touch targets (increased from 56pt)
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
 
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
         self.treeView.addGestureRecognizer(longPressRecognizer)
         view.addSubview(treeView)
+        print("🔥 TreeView added to view hierarchy")
 
         self.setupHeaderView(self.view.bounds.size)
+        print("🔥 Header setup complete")
+
         self.showList()
+        print("🔥 ShowList complete")
+
         self.setupFooterView(self.view.bounds.size)
+        print("🔥 Footer setup complete")
 
         let title = self.makeSutraIndexButton("", frame: CGRect(x: 3, y: 0, width: self.view.bounds.width - 3, height: 40));
         self.navigationItem.titleView = title;
+        print("🔥 === VIEW SETUP COMPLETE ===")
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -52,47 +64,45 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // Configure navigation bar behavior
         self.navigationController?.setNavigationBarHidden(false, animated: true)
         self.navigationController?.hidesBarsOnSwipe = false
-
-        // Add theme switching button
-        addThemeSwitchingButton()
     }
 
+    // Deprecated: Floating theme switch button removed for a calmer, unified front view.
     private func addThemeSwitchingButton() {
         let themeButton = UIButton(type: .system)
-        themeButton.setImage(UIImage(systemName: "paintbrush"), for: .normal)
+        themeButton.setTitle("🎨", for: .normal)
+        themeButton.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .medium)
+        themeButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(themeButton)
 
-        // Use unified design tokens
-        // TODO: currentTheme will be provided by design system
-// TODO:         themeButton.tintColor = UIColor.red
-// TODO:         themeButton.backgroundColor = UIColor.white
-// TODO:         themeButton.layer.cornerRadius = 20
-// TODO:         themeButton.layer.borderWidth = 1
-// TODO:         themeButton.layer.borderColor = UIColor.red.withAlphaComponent(0.3).cgColor
-// TODO: 
-// TODO:         themeButton.translatesAutoresizingMaskIntoConstraints = false
-// TODO:         view.addSubview(themeButton)
-// TODO: 
-// TODO:         NSLayoutConstraint.activate([
-// TODO:             themeButton.widthAnchor.constraint(equalToConstant: 40),
-// TODO:             themeButton.heightAnchor.constraint(equalToConstant: 40),
-// TODO:             themeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-// TODO:             themeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
-// TODO:         ])
-// TODO: 
-// TODO:         themeButton.addTarget(self, action: #selector(themeButtonTapped), for: .touchUpInside)
-// TODO:     }
-// TODO: 
-// TODO:     @objc private func themeButtonTapped() {
-        // Toggle between light, sepia, and dark themes using unified color system
-        // currentTheme is read-only from design tokens
+        NSLayoutConstraint.activate([
+            themeButton.widthAnchor.constraint(equalToConstant: 44),
+            themeButton.heightAnchor.constraint(equalToConstant: 44),
+            themeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            themeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
+        ])
+
+        // Use semantic navigation colors
+        themeButton.setTitleColor(SutraDesignTokens.shared.color(for: .navigationBar), for: .normal)
+        themeButton.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        themeButton.layer.cornerRadius = 22
+        themeButton.layer.shadowColor = UIColor.black.cgColor
+        themeButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        themeButton.layer.shadowOpacity = 0.2
+        themeButton.layer.shadowRadius = 4
+
+        themeButton.addTarget(self, action: #selector(themeButtonTapped), for: .touchUpInside)
+    }
+
+    @objc private func themeButtonTapped() {
+        // Use animated theme cycling (borrowed from SutraDesignSystem)
+        SutraDesignTokens.shared.cycleToNextTheme()
 
         // Provide haptic feedback
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
 
-        // Refresh the UI
+        // Refresh the UI with current design tokens
         applyZenTempleSerenityDesignSystem()
-        enhanceChapterButtons()
     }
 
     // MARK: - Zen Temple Serenity Design System Application
@@ -110,7 +120,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     private func applyThemeColorsToView() {
-        // TODO: Use design system - view.backgroundColor = UIColor(hex: "#FFFEF7") // Light theme background
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
     }
 
     private func setupThemeObserverForView() {
@@ -121,7 +131,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     @objc private func themeDidChangeForFrontViewController() {
         applyThemeColorsToView()
         configureTreeViewWithDesignSystem()
-        enhanceChapterButtons()
     }
 
     deinit {
@@ -132,11 +141,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // Guard against treeView not being initialized yet (can happen during early notification calls)
         guard let treeView = treeView else { return }
 
-        treeView.backgroundColor = .clear
-        // TODO: Use design system - view.backgroundColor = UIColor(hex: "#FFFEF7")
-
-        // Enhanced spacing for zen reading experience
-        treeView.rowHeight = 50
+        // FIXED: Use the same background as the view so it's visible
+        let bgColor = SutraDesignTokens.shared.color(for: .background)
+        treeView.backgroundColor = bgColor
+        treeView.rowHeight = 64  // World-class iOS touch targets
         treeView.separatorStyle = RATreeViewCellSeparatorStyleNone
     }
 
@@ -183,6 +191,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         treeView.rowHeight = 50 // Increased for zen styling
     }
 
+    // Deprecated: Legacy recursive chapter button restyling removed to rely on makeSutraChapterButton styling.
     private func enhanceChapterButtons() {
         // Find all chapter buttons and enhance them
         for subview in view.subviews {
@@ -308,11 +317,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     private func getCurrentColors() -> (background: UIColor, accent: UIColor, primaryText: UIColor) {
-        // Use Zen Temple Serenity colors
+        // Unified with SutraDesignTokens for consistency
         return (
-            background: UIColorFromRGB(0xFAF9F6),
-            accent: UIColorFromRGB(0x8B4513),
-            primaryText: UIColorFromRGB(0x1C2A39)
+            background: SutraDesignTokens.shared.color(for: .background),
+            accent: SutraDesignTokens.shared.color(for: .accent),
+            primaryText: SutraDesignTokens.shared.color(for: .textPrimary)
         )
     }
 
@@ -331,112 +340,144 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         print("🎨 Setting up header with theme: \(theme)")
 
-        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 18 + 90 + 10))
+        // World-class header height: 20 + 28 + 12 + 120 + 20 = 200pt
+        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 200))
         header.backgroundColor = backgroundColor
 
-        let indexes = UIView(frame: CGRect(x: 0, y: 20, width: width, height: 88));
-        let chapterButtonWidth=(width - 20)/5;
+        // Elegant subtitle with proper typography (開經偈)
+        let subTitle = UIButton.init(type: .custom);
+        subTitle.frame = CGRect(x: 16, y: 20, width: width - 32, height: 28);
+        let subTitleText = NSLocalizedString("kai_jing_ji", comment: "無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義")
+        subTitle.setTitle(subTitleText, for: UIControlState())
+        subTitle.titleLabel?.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular)
+        subTitle.titleLabel?.numberOfLines = 2
+        subTitle.titleLabel?.lineBreakMode = .byCharWrapping
+        subTitle.setTitleColor(primaryTextColor.withAlphaComponent(0.65), for: UIControlState())
+        subTitle.addTarget(self, action: #selector(self.openRootIndex), for: .touchUpInside)
+        header.addSubview(subTitle)
+
+        // World-class chapter button grid with proper spacing
+        let horizontalPadding: CGFloat = 16
+        let buttonSpacing: CGFloat = 8
+        let totalSpacing = horizontalPadding * 2 + buttonSpacing * 4  // 4 gaps between 5 buttons
+        let chapterButtonWidth = (width - totalSpacing) / 5
+        let buttonHeight: CGFloat = 52  // Increased from 44pt
+        let verticalSpacing: CGFloat = 8
+
+        let indexes = UIView(frame: CGRect(x: 0, y: 68, width: width, height: buttonHeight * 2 + verticalSpacing))
+
         for i in 1...10 {
-            let btn = self.makeSutraChapterButton(i - 1, frame: CGRect(x: Int(10 + Float(chapterButtonWidth) * Float((i>5 ? i - 5 : i) - 1)), y: i<6 ? 0 : 44, width: Int(chapterButtonWidth), height: 44));
+            let row = (i - 1) / 5  // 0 or 1
+            let col = (i - 1) % 5  // 0 to 4
+            let x = horizontalPadding + (chapterButtonWidth + buttonSpacing) * CGFloat(col)
+            let y = (buttonHeight + verticalSpacing) * CGFloat(row)
 
-            // Enhanced styling for chapter buttons - make them more visible
-            btn.backgroundColor = backgroundColor
-            btn.setTitleColor(primaryTextColor, for: .normal)
-            btn.layer.cornerRadius = 8
-            btn.layer.borderWidth = 2  // Thicker border for visibility
-            btn.layer.borderColor = accentColor.cgColor  // Use accent color for border
+            let btn = self.makeSutraChapterButton(i - 1, frame: CGRect(x: x, y: y, width: chapterButtonWidth, height: buttonHeight))
 
-            // Add shadow for better visibility
+            // World-class button styling
+            btn.layer.cornerRadius = 12  // More refined radius
+            btn.layer.borderWidth = 1.5  // Subtle border
+            btn.layer.borderColor = accentColor.withAlphaComponent(0.3).cgColor
+
+            // Elegant shadow
             btn.layer.shadowColor = UIColor.black.cgColor
             btn.layer.shadowOffset = CGSize(width: 0, height: 2)
-            btn.layer.shadowRadius = 4
-            btn.layer.shadowOpacity = 0.2
+            btn.layer.shadowRadius = 6
+            btn.layer.shadowOpacity = 0.1
+            btn.layer.masksToBounds = false
 
             indexes.addSubview(btn);
         }
-        let subTitle = UIButton.init(type: .custom);
-        subTitle.frame = CGRect(x: 12, y: 5, width: width-10, height: 15);
-        let subTitleText = NSLocalizedString("kai_jing_ji", comment: "無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義")
-        subTitle.setTitle(subTitleText, for: UIControlState())
-        subTitle.titleLabel?.font = SutraTypographySystem().uiFont(for: .sutraCaption, weight: .regular)
-        subTitle.titleLabel!.adjustsFontSizeToFitWidth = true;
-        subTitle.setTitleColor(primaryTextColor.withAlphaComponent(0.7), for: UIControlState())
-        subTitle.addTarget(self, action: #selector(self.openRootIndex), for: .touchUpInside)
-        header.addSubview(subTitle)
         header.addSubview(indexes)
 
-
+        // Subtle divider line
         let px = 1 / UIScreen.main.scale
-        let frame = CGRect(x: 0, y: header.frame.height - px, width: self.treeView.frame.size.width, height: px)
+        let frame = CGRect(x: 16, y: header.frame.height - px, width: self.treeView.frame.size.width - 32, height: px)
         let line: UIView = UIView(frame: frame)
-        line.backgroundColor = dividerColor
+        line.backgroundColor = dividerColor.withAlphaComponent(0.5)
         header.addSubview(line)
+
         self.treeView.treeHeaderView = header
     }
     
     func setupFooterView(_ size:CGSize) {
         let width = size.width
-        let theme = SutraDesignTokens.shared.currentTheme
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let primaryTextColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        let accentColor = SutraDesignTokens.shared.color(for: .accent)
         let dividerColor = SutraDesignTokens.shared.color(for: .divider)
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
 
-        let footerSeperator = UIView(frame: CGRect(x: 0, y: 2, width: width - 10, height: 1))
-        footerSeperator.backgroundColor = dividerColor
+        // World-class footer height: ~200pt for better breathing room
+        let footer:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 200))
+        footer.backgroundColor = backgroundColor
+
+        // Subtle top divider with proper spacing
+        let footerSeperator = UIView(frame: CGRect(x: 16, y: 20, width: width - 32, height: 1))
+        footerSeperator.backgroundColor = dividerColor.withAlphaComponent(0.3)
+        footer.addSubview(footerSeperator)
 
         let footerText1 = NSLocalizedString("footer_txt_1", comment: "南無楞嚴會上佛菩薩\n南無楞嚴會上佛菩薩\n南無楞嚴會上佛菩薩")
         let footerText2 = NSLocalizedString("footer_txt_2", comment: "經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站")
         let footerText3 = NSLocalizedString("footer_txt_3", comment: "感恩法界佛教總會！本屏中列出部分關鍵科判以方便檢索，可點擊經名打開完整科判。")
-        let footerLabel = UILabel(frame: CGRect(x: 20, y: 10, width: width - 20, height: 60))
+
+        // Main footer label with better typography (南無楞嚴會上佛菩薩)
+        let footerLabel = UILabel(frame: CGRect(x: 24, y: 36, width: width - 48, height: 70))
         footerLabel.text = footerText1
         footerLabel.numberOfLines = 3
         footerLabel.textAlignment = .center
-        footerLabel.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular)
+        footerLabel.font = SutraTypographySystem().uiFont(for: .uiBody, weight: .regular)  // Larger font
         footerLabel.textColor = primaryTextColor
-        footerLabel.adjustsFontSizeToFitWidth = true;
+        footerLabel.lineBreakMode = .byWordWrapping
+        footer.addSubview(footerLabel)
 
-        let linkButton = UIButton(frame: CGRect(x: 10, y: 70, width: width - 30, height: 20))
+        // Link button with proper styling
+        let linkButton = UIButton(frame: CGRect(x: 20, y: 114, width: width - 40, height: 32))
         linkButton.setTitle(footerText2, for: .normal)
         linkButton.contentHorizontalAlignment = .center
         linkButton.setImage(UIImage.init(named: "ic_link")?.withRenderingMode(.alwaysTemplate), for: .normal)
         linkButton.addTarget(self, action: #selector(self.openDrbaLink(_:)), for: .touchUpInside)
         linkButton.semanticContentAttribute = .forceRightToLeft
-        linkButton.titleLabel?.font = SutraTypographySystem().uiFont(for: .sutraCaption, weight: .regular)
-        linkButton.titleLabel?.adjustsFontSizeToFitWidth = true;
-        linkButton.setTitleColor(accentColor, for: .normal)
+        linkButton.titleLabel?.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .medium)
+        linkButton.titleLabel?.numberOfLines = 2
+        linkButton.titleLabel?.lineBreakMode = .byCharWrapping
+        linkButton.setTitleColor(SutraDesignTokens.shared.color(for: .accent), for: .normal)  // Use accent color
         linkButton.backgroundColor = backgroundColor
-        linkButton.tintColor = accentColor
+        linkButton.tintColor = SutraDesignTokens.shared.color(for: .accent)
+        footer.addSubview(linkButton)
 
-        let footerLabel2 = UILabel(frame: CGRect(x: 10, y: 85, width: width - 20, height: 40))
+        // Secondary footer label with generous spacing
+        let footerLabel2 = UILabel(frame: CGRect(x: 24, y: 154, width: width - 48, height: 42))
         footerLabel2.text = footerText3
         footerLabel2.textAlignment = .center
-        footerLabel2.numberOfLines = 3
-        footerLabel2.font = SutraTypographySystem().uiFont(for: .sutraCaption, weight: .regular)
-        footerLabel2.textColor = secondaryTextColor
-        footerLabel2.adjustsFontSizeToFitWidth = true;
-
-        let footer:UIView = UIView(frame: CGRect(x: 5, y: 2, width: width - 20, height: 140))
-        footer.backgroundColor = backgroundColor
-        footer.addSubview(footerSeperator)
-        footer.addSubview(footerLabel)
-        footer.addSubview(linkButton)
+        footerLabel2.numberOfLines = 2
+        footerLabel2.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular)
+        footerLabel2.textColor = secondaryTextColor.withAlphaComponent(0.8)
+        footerLabel2.lineBreakMode = .byCharWrapping
         footer.addSubview(footerLabel2)
+
         self.treeView.treeFooterView = footer
     }
     func makeSutraChapterButton(_ chapter:Int, frame:CGRect?) ->UIButton {
-        let btn = UIButton.init(type: .custom);
-        if(frame != nil) {
-            btn.frame = frame!
+        let btn = UIButton(type: .custom)
+        if let frame = frame {
+            btn.frame = frame
         }
-        btn.setTitle(NSLocalizedString("chapter_\(chapter+1)", comment: "chapter_name"), for: UIControlState())
-        btn.addTarget(self, action: #selector(onSutraChapterButtonTouchUp(_:)), for: .touchUpInside)
+        btn.setTitle(NSLocalizedString("chapter_\(chapter+1)", comment: "chapter_name"), for: .normal)
         btn.tag = chapter
-        btn.titleLabel?.adjustsFontSizeToFitWidth = true;
-        btn.setTitleColor(UIColor.black, for: UIControlState())
+        btn.addTarget(self, action: #selector(onSutraChapterButtonTouchUp(_:)), for: .touchUpInside)
+        btn.titleLabel?.adjustsFontSizeToFitWidth = true
+
+        // Enhanced Zen chapter button styling with better touch targets
+        btn.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        btn.setTitleColor(SutraDesignTokens.shared.color(for: .textPrimary), for: .normal)
         btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
-        return btn;
+        btn.layer.cornerRadius = 12  // More refined for Zen aesthetic
+        btn.layer.shadowColor = UIColor.black.cgColor
+        btn.layer.shadowOffset = CGSize(width: 0, height: 1)
+        btn.layer.shadowOpacity = 0.06  // More subtle
+        btn.layer.shadowRadius = 3
+
+        return btn
     }
     
     func makeSutraIndexButton(_ path:String, frame:CGRect?) ->UIButton {
@@ -449,7 +490,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let count = sutraIndexButtons.count;
         btn.tag = count
         btn.titleLabel?.adjustsFontSizeToFitWidth = true;
-        btn.setTitleColor(UIColor.black, for: UIControlState())
+
+        // Use semantic text color instead of hardcoded black
+        btn.setTitleColor(SutraDesignTokens.shared.color(for: .textPrimary), for: .normal)
         btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold)
         sutraIndexButtons.append(path)
         return btn;
@@ -479,8 +522,18 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func showList(){
+        print("🔥 showList() called - Book.shared.loaded = \(Book.shared.loaded)")
         self.tree = Book.shared.getKeyItems();
+
+        if let tree = self.tree {
+            print("🔥 Tree loaded with \(tree.count) items")
+        } else {
+            print("🔥 ERROR - tree is nil! Book data may not be loaded properly.")
+        }
+
+        print("🔥 Reloading treeView...")
         self.treeView.reloadData()
+        print("🔥 TreeView has \(treeView.visibleCells()?.count ?? 0) visible cells")
     }
     
     
@@ -554,7 +607,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     func treeView(_ treeView: RATreeView, numberOfChildrenOfItem item: Any?) -> Int {
         if(item == nil){
-            return self.tree?.count ?? 0
+            let count = self.tree?.count ?? 0
+            print("🔥 Root level: returning \(count) children")
+            return count
         } else {
             return 0
         }
@@ -566,16 +621,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if (newCell == nil) {
             newCell = UITableViewCell.init(style:.value1,reuseIdentifier:"indexCell");
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
-            // Use unified SutraTypography design system for consistent tree navigation
             newCell!.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
         }
+
         let cell = newCell!;
         let item = item as! [String];
         let name = item[1];
         cell.textLabel?.text =  name
 
         // Apply enhanced design system styling
-        let theme = SutraDesignTokens.shared.currentTheme
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let primaryTextColor = SutraDesignTokens.shared.color(for: .textPrimary)
         let accentColor = SutraDesignTokens.shared.color(for: .accent)
@@ -587,9 +641,25 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         cell.tintColor = accentColor
         cell.accessoryView?.tintColor = accentColor
 
+        // Add world-class card styling with subtle elevation
+        cell.layer.cornerRadius = 12
+        cell.layer.shadowColor = UIColor.black.cgColor
+        cell.layer.shadowOffset = CGSize(width: 0, height: 2)
+        cell.layer.shadowRadius = 8
+        cell.layer.shadowOpacity = 0.08
+        cell.layer.masksToBounds = false
+
+        // Add subtle border for definition
+        cell.layer.borderWidth = 0.5
+        cell.layer.borderColor = SutraDesignTokens.shared.color(for: .divider).cgColor
+
+        // Add content inset for breathing room
+        cell.contentView.layoutMargins = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
+
         // Add enhanced selection background
         let selectedBackgroundView = UIView()
         selectedBackgroundView.backgroundColor = cardColor
+        selectedBackgroundView.layer.cornerRadius = 12
         cell.selectedBackgroundView = selectedBackgroundView
 
         cell.accessoryType = .disclosureIndicator

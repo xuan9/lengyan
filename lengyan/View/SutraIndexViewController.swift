@@ -30,8 +30,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             size:   CGSize(width: bounds.size.width + 10 , height:bounds.size.height - 5 )));
         treeView.delegate = self
         treeView.dataSource = self
-        treeView.backgroundColor = UIColor.white
-        view.backgroundColor = UIColor.white
+        treeView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(treeView)
         treeView.rowHeight = 34.0
@@ -59,7 +59,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         super.viewWillAppear(animated)
         self.navigationController?.setNavigationBarHidden(false, animated: true)
         self.navigationController?.hidesBarsOnSwipe = false;
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
+        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .sutraText)
         treeView.visibleCells()?.forEach({ (cell) in
             let item = treeView.item(for: cell as! UITableViewCell)
             treeView.expandRow(forItem: item, expandChildren: false, with: RATreeViewRowAnimationNone)
@@ -135,14 +135,14 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.navigationBar.isTranslucent = false;
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(close))//✕
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
+        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .sutraText)
         
         let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .plain, target: self, action: #selector(openAsPage))
-        listButton.tintColor = UIColor.darkText;
+        listButton.tintColor = SutraDesignTokens.shared.color(for: .sutraText);
         
         if self.isShowSutraButton {
             let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(openSutra))
-            sutraButton.tintColor = UIColor.darkText;
+            sutraButton.tintColor = SutraDesignTokens.shared.color(for: .sutraText);
 
             self.navigationItem.setRightBarButtonItems([listButton,sutraButton], animated: false)
         } else {
@@ -389,10 +389,12 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         let cell = newCell!;
         let name = item["name"]! as? String
+        let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
+        let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
         if item["children"] == nil {
-            cell.textLabel?.textColor = self.view.tintColor;
+            cell.textLabel?.textColor = primaryTextColor
         } else {
-            cell.textLabel?.textColor =  UIColor.darkText;
+            cell.textLabel?.textColor = secondaryTextColor
         }
         cell.textLabel?.text = name!; 
         return cell

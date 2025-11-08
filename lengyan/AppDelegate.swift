@@ -27,6 +27,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
+        // Load and apply theme using the enhanced design system
+        SutraDesignTokens.shared.loadSavedTheme()
+        SutraDesignTokens.shared.applyThemeToApp()
+
         // Create programmatic UI with enhanced design system
         setupProgrammaticUI()
 
@@ -78,6 +82,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             image: UIImage(named: "ic_library_music"),
             selectedImage: UIImage(named: "ic_library_music")
         )
+        // Hide navigation bar for cleaner SwiftUI interface
+        listeningNavController.navigationBar.isHidden = true
 
         // Setup Favorites Tab with SwiftUI
         let modernFavorites = ModernFavoritesView()
@@ -88,6 +94,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             image: UIImage(named: "baseline_star_black_24pt"),
             selectedImage: UIImage(named: "baseline_star_black_24pt")
         )
+        // Hide navigation bar for cleaner SwiftUI interface
+        favoritesNavController.navigationBar.isHidden = true
 
         // Configure Tab Bar Appearance
         tabBarController.tabBar.isTranslucent = false
@@ -194,18 +202,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // MARK: - Zen Temple Serenity Design System
     private func setupZenNavigationAppearance() {
-        // Apply design system to navigation bars
-        // TODO: Implement when needed
-        // UINavigationBar.appearance().applySutraDesignSystem()
+        // Apply design system to navigation bars using semantic color tokens
+        UINavigationBar.appearance().barTintColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        UINavigationBar.appearance().backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        UINavigationBar.appearance().tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
     }
 
     private func setupZenTabBarAppearance() {
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()
-            let theme = SutraDesignTokens.shared.currentTheme
-            appearance.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-            appearance.shadowColor = SutraDesignTokens.shared.color(for: .divider)
+
+            // Use new semantic color tokens (borrowed from SutraDesignSystem)
+            appearance.backgroundColor = SutraDesignTokens.shared.color(for: .tabBar)
+            appearance.shadowColor = SutraDesignTokens.shared.color(for: .separator)
             appearance.shadowImage = UIImage()
 
             // Zen tab item styling with unified typography
@@ -226,12 +236,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         } else {
-            // Fallback for iOS 13-14 using unified color system
-            UITabBar.appearance().barTintColor = SutraDesignTokens.shared.color(for: .surface)
+            // Fallback for iOS 13-14 using semantic color tokens
+            UITabBar.appearance().barTintColor = SutraDesignTokens.shared.color(for: .tabBar)
             UITabBar.appearance().shadowImage = UIImage()
             UITabBar.appearance().backgroundImage = UIImage()
 
-            // Set tab bar item colors with unified system
+            // Set tab bar item colors with semantic system
             UITabBar.appearance().tintColor = SutraDesignTokens.shared.color(for: .accent)
             UITabBar.appearance().unselectedItemTintColor = SutraDesignTokens.shared.color(for: .textSecondary)
         }

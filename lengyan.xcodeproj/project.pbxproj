@@ -72,7 +72,6 @@
 		4AD063811EA3802200751922 /* ly06.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636C1EA244AC00751922 /* ly06.m4a */; settings = {ASSET_TAGS = (ly06, ); }; };
 		4AD063821EA3802200751922 /* ly10.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636D1EA244AC00751922 /* ly10.m4a */; settings = {ASSET_TAGS = (ly10, ); }; };
 		4AD063831EA3802200751922 /* ly04.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636E1EA244AC00751922 /* ly04.m4a */; settings = {ASSET_TAGS = (ly04, ); }; };
-		CB1B21C32EBB1C8D00A1ADB7 /* IntegrationGuide.md in Resources */ = {isa = PBXBuildFile; fileRef = CB1B21B22EBB1C8D00A1ADB7 /* IntegrationGuide.md */; };
 		CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */; };
 		CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */; };
 		CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */; };
@@ -177,7 +176,6 @@
 		4AD0636C1EA244AC00751922 /* ly06.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly06.m4a; sourceTree = "<group>"; };
 		4AD0636D1EA244AC00751922 /* ly10.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly10.m4a; sourceTree = "<group>"; };
 		4AD0636E1EA244AC00751922 /* ly04.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly04.m4a; sourceTree = "<group>"; };
-		CB1B21B22EBB1C8D00A1ADB7 /* IntegrationGuide.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = IntegrationGuide.md; sourceTree = "<group>"; };
 		CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Accessibility.swift"; sourceTree = "<group>"; };
 		CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Spacing.swift"; sourceTree = "<group>"; };
 		CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Typography.swift"; sourceTree = "<group>"; };
@@ -378,44 +376,11 @@
 			path = "屏東能淨協會讀誦";
 			sourceTree = "<group>";
 		};
-		CB1B21AF2EBB1C8D00A1ADB7 /* Accessibility */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Accessibility;
-			sourceTree = "<group>";
-		};
-		CB1B21B12EBB1C8D00A1ADB7 /* Gestures */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Gestures;
-			sourceTree = "<group>";
-		};
-		CB1B21B42EBB1C8D00A1ADB7 /* Integrations */ = {
-			isa = PBXGroup;
-			children = (
-				CB1B21B22EBB1C8D00A1ADB7 /* IntegrationGuide.md */,
-			);
-			path = Integrations;
-			sourceTree = "<group>";
-		};
-		CB1B21B82EBB1C8D00A1ADB7 /* Navigation */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Navigation;
-			sourceTree = "<group>";
-		};
 		CB1B21C22EBB1C8D00A1ADB7 /* Design */ = {
 			isa = PBXGroup;
 			children = (
 				CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */,
 				CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */,
-				CB1B21AF2EBB1C8D00A1ADB7 /* Accessibility */,
-				CB1B21B12EBB1C8D00A1ADB7 /* Gestures */,
-				CB1B21B42EBB1C8D00A1ADB7 /* Integrations */,
-				CB1B21B82EBB1C8D00A1ADB7 /* Navigation */,
 				CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */,
 				CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */,
 				CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */,
@@ -576,7 +541,6 @@
 				13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */,
 				132014751F12B9850081FDDB /* Localizable.strings in Resources */,
 				4AD0637A1EA3801400751922 /* ly01.m4a in Resources */,
-				CB1B21C32EBB1C8D00A1ADB7 /* IntegrationGuide.md in Resources */,
 				139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */,
 				4AD0637B1EA3801900751922 /* ly07.m4a in Resources */,
 				4AD063811EA3802200751922 /* ly06.m4a in Resources */,
@@ -899,6 +863,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyanTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -919,6 +884,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyanTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -937,6 +903,7 @@
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyanUITests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -957,6 +924,7 @@
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyanUITests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

@@ -71,15 +71,15 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
         }
 
-        // Apply Zen Temple Serenity colors
-        let zenPrimary = UIColorFromRGB(0x1C2A39)
-        let zenSurface = UIColorFromRGB(0xFFFEFB)
-        let zenBookmark = UIColorFromRGB(0xD4AF37)
-        let zenTextTertiary = UIColorFromRGB(0x7F8C8D)
+        // Apply sutra design system colors for a calm, ink-on-paper feel
+        let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
+        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
+        let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        let backgroundColor = SutraDesignTokens.shared.color(for: .background)
 
-        self.navigationItem.leftBarButtonItem?.tintColor = zenPrimary
-        self.navigationItem.rightBarButtonItem?.tintColor = Prefers.shared.likes.contains(path!) ? zenBookmark : zenTextTertiary
-        self.navigationController?.navigationBar.backgroundColor = zenSurface
+        self.navigationItem.leftBarButtonItem?.tintColor = primaryTextColor
+        self.navigationItem.rightBarButtonItem?.tintColor = Prefers.shared.likes.contains(path!) ? bookmarkColor : secondaryTextColor
+        self.navigationController?.navigationBar.backgroundColor = backgroundColor
         self.navigationController?.navigationBar.isTranslucent = false;
     }
         
@@ -125,10 +125,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
     // Apply Zen design enhancements to the page content
     private func enhancePageViewController(_ pageVC: SutraPageContentViewController) {
-        // Apply zen background color
-        let zenBackground = UIColorFromRGB(0xFAF9F6)
-        pageVC.view.backgroundColor = zenBackground
-        pageVC.tableView.backgroundColor = zenBackground
+        // Apply semantic sutra background for page and table
+        let backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        pageVC.view.backgroundColor = backgroundColor
+        pageVC.tableView.backgroundColor = backgroundColor
 
         // Update fonts with unified SutraTypography design system
         // Uses golden ratio scaling, Chinese font optimization, and proper line heights

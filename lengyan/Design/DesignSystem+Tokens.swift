@@ -72,6 +72,12 @@ public enum ColorToken: String, CaseIterable {
     // Status
     case bookmark
     case favorite
+
+    // UI System (borrowed from SutraDesignSystem)
+    case navigationBar
+    case tabBar
+    case separator
+    case bookmarkStar
 }
 
 // MARK: - Theme Protocol
@@ -79,32 +85,43 @@ protocol SutraThemeProtocol {
     func color(for token: ColorToken) -> UIColor
 }
 
-// MARK: - Light Theme Implementation
+// MARK: - Light Theme Implementation - Enhanced Zen Palette
 struct LightTheme: SutraThemeProtocol {
     func color(for token: ColorToken) -> UIColor {
         switch token {
-        case .background: return UIColor(hex: "#FFFEF7") ?? .black
-        case .surface: return .white
-        case .card: return .white
-        case .overlay: return UIColor.black.withAlphaComponent(0.4)
+        // Background - Traditional rice paper colors
+        case .background: return UIColor(hex: "#FAF9F6") ?? .white  // Warm rice paper white
+        case .surface: return UIColor(hex: "#F5F2ED") ?? .white     // Aged paper surface
+        case .card: return UIColor(hex: "#FFFFFF")?.withAlphaComponent(0.8) ?? .white  // Subtle card
+        case .overlay: return UIColor.black.withAlphaComponent(0.3)
 
-        case .textPrimary: return UIColor(hex: "#2C3E50") ?? .black
-        case .textSecondary: return UIColor(hex: "#5D6D7E") ?? .black
-        case .textTertiary: return UIColor(hex: "#7F8C8D") ?? .black
+        // Text - Traditional ink colors with better contrast
+        case .textPrimary: return UIColor(hex: "#2C2C2C") ?? .black    // Deep ink black
+        case .textSecondary: return UIColor(hex: "#5A5A5A") ?? .darkGray  // Medium ink
+        case .textTertiary: return UIColor(hex: "#8A8A8A") ?? .gray  // Light ink
         case .textOnAccent: return .white
 
-        case .sutraText: return UIColor(hex: "#1A252F") ?? .black
-        case .commentaryText: return UIColor(hex: "#34495E") ?? .black
-        case .chapterTitle: return UIColor(hex: "#C0392B") ?? .black
+        // Sutra-specific - Traditional calligraphy colors
+        case .sutraText: return UIColor(hex: "#1A1A1A") ?? .black      // Darkest ink for sutras
+        case .commentaryText: return UIColor(hex: "#3A3A3A") ?? .darkGray  // Commentary ink
+        case .chapterTitle: return UIColor(hex: "#8B4513") ?? .brown   // Traditional seal ink red-brown
 
-        case .primary: return UIColor(hex: "#2C3E50") ?? .black
-        case .accent: return UIColor(hex: "#C0392B") ?? .black
-        case .divider: return UIColor(hex: "#E8E8E8") ?? .black
-        case .border: return UIColor(hex: "#D5D8DC") ?? .black
-        case .shadow: return UIColor.black.withAlphaComponent(0.08)
+        // UI Elements - Muted Zen palette
+        case .primary: return UIColor(hex: "#5A5A5A") ?? .darkGray
+        case .accent: return UIColor(hex: "#8B4513") ?? .brown          // Muted traditional red
+        case .divider: return UIColor(hex: "#E8E5E0") ?? .lightGray        // Subtle divider
+        case .border: return UIColor(hex: "#D0CCC7") ?? .lightGray         // Soft border
+        case .shadow: return UIColor.black.withAlphaComponent(0.05)    // Very subtle shadow
 
-        case .bookmark: return UIColor(hex: "#F39C12") ?? .black
-        case .favorite: return UIColor(hex: "#E74C3C") ?? .black
+        // Status - Traditional auspicious colors
+        case .bookmark: return UIColor(hex: "#D4A574") ?? .orange       // Golden brown
+        case .favorite: return UIColor(hex: "#C08552") ?? .orange       // Traditional cinnabar
+
+        // UI System - Warmer, more traditional tones
+        case .navigationBar: return UIColor(hex: "#F8F6F3") ?? .white     // Warm white
+        case .tabBar: return UIColor(hex: "#F8F6F3") ?? .white           // Warm white
+        case .separator: return UIColor(hex: "#E0DCD6") ?? .systemGray3  // Muted separator
+        case .bookmarkStar: return UIColor(hex: "#D4A574") ?? .systemYellow // Traditional gold
         }
     }
 }
@@ -113,28 +130,34 @@ struct LightTheme: SutraThemeProtocol {
 struct SepiaTheme: SutraThemeProtocol {
     func color(for token: ColorToken) -> UIColor {
         switch token {
-        case .background: return UIColor(hex: "#F5E6D3") ?? .black
-        case .surface: return UIColor(hex: "#FAF0E6") ?? .black
+        case .background: return UIColor(hex: "#F5E6D3") ?? UIColor(red: 0.96, green: 0.90, blue: 0.83, alpha: 1.0)
+        case .surface: return UIColor(hex: "#FAF0E6") ?? UIColor(red: 0.98, green: 0.94, blue: 0.90, alpha: 1.0)
         case .card: return .white
         case .overlay: return UIColor.black.withAlphaComponent(0.5)
 
         case .textPrimary: return UIColor(hex: "#3E2723") ?? .black
-        case .textSecondary: return UIColor(hex: "#5D4037") ?? .black
-        case .textTertiary: return UIColor(hex: "#795548") ?? .black
+        case .textSecondary: return UIColor(hex: "#5D4037") ?? .darkGray
+        case .textTertiary: return UIColor(hex: "#795548") ?? .gray
         case .textOnAccent: return .white
 
         case .sutraText: return UIColor(hex: "#2E1A17") ?? .black
-        case .commentaryText: return UIColor(hex: "#4A3426") ?? .black
-        case .chapterTitle: return UIColor(hex: "#8D6E63") ?? .black
+        case .commentaryText: return UIColor(hex: "#4A3426") ?? .darkGray
+        case .chapterTitle: return UIColor(hex: "#8D6E63") ?? .brown
 
-        case .primary: return UIColor(hex: "#4A3426") ?? .black
-        case .accent: return UIColor(hex: "#8D6E63") ?? .black
-        case .divider: return UIColor(hex: "#D7CCC8") ?? .black
-        case .border: return UIColor(hex: "#BCAAA4") ?? .black
+        case .primary: return UIColor(hex: "#4A3426") ?? .darkGray
+        case .accent: return UIColor(hex: "#8D6E63") ?? .brown
+        case .divider: return UIColor(hex: "#D7CCC8") ?? .lightGray
+        case .border: return UIColor(hex: "#BCAAA4") ?? .lightGray
         case .shadow: return UIColor.black.withAlphaComponent(0.12)
 
-        case .bookmark: return UIColor(hex: "#FFB74D") ?? .black
-        case .favorite: return UIColor(hex: "#8D6E63") ?? .black
+        case .bookmark: return UIColor(hex: "#FFB74D") ?? .orange
+        case .favorite: return UIColor(hex: "#8D6E63") ?? .brown
+
+        // UI System colors - WHITE for MAXIMUM CONTRAST
+        case .navigationBar: return .white        // WHITE navbar
+        case .tabBar: return .white              // WHITE tabbar
+        case .separator: return UIColor(hex: "#D0C4BC") ?? .systemGray3     // Separator
+        case .bookmarkStar: return UIColor(hex: "#D4A017") ?? .systemYellow // Golden brown
         }
     }
 }
@@ -143,28 +166,34 @@ struct SepiaTheme: SutraThemeProtocol {
 struct DarkTheme: SutraThemeProtocol {
     func color(for token: ColorToken) -> UIColor {
         switch token {
-        case .background: return UIColor(hex: "#1C1C1E") ?? .black
-        case .surface: return UIColor(hex: "#2C2C2E") ?? .black
-        case .card: return UIColor(hex: "#3A3A3C") ?? .black
+        case .background: return UIColor(hex: "#1C1C1E") ?? UIColor(red: 0.11, green: 0.11, blue: 0.12, alpha: 1.0)
+        case .surface: return UIColor(hex: "#2C2C2E") ?? UIColor(red: 0.17, green: 0.17, blue: 0.18, alpha: 1.0)
+        case .card: return UIColor(hex: "#3A3A3C") ?? UIColor(red: 0.23, green: 0.23, blue: 0.24, alpha: 1.0)
         case .overlay: return UIColor.black.withAlphaComponent(0.7)
 
         case .textPrimary: return .white
-        case .textSecondary: return UIColor(hex: "#AEAEB2") ?? .black
-        case .textTertiary: return UIColor(hex: "#8E8E93") ?? .black
+        case .textSecondary: return UIColor(hex: "#AEAEB2") ?? .lightGray
+        case .textTertiary: return UIColor(hex: "#8E8E93") ?? .gray
         case .textOnAccent: return .white
 
-        case .sutraText: return UIColor(hex: "#F5F5F5") ?? .black
-        case .commentaryText: return UIColor(hex: "#ECF0F1") ?? .black
-        case .chapterTitle: return UIColor(hex: "#3498DB") ?? .black
+        case .sutraText: return UIColor(hex: "#F5F5F5") ?? .white
+        case .commentaryText: return UIColor(hex: "#ECF0F1") ?? .lightGray
+        case .chapterTitle: return UIColor(hex: "#3498DB") ?? .systemBlue
 
-        case .primary: return UIColor(hex: "#ECF0F1") ?? .black
-        case .accent: return UIColor(hex: "#3498DB") ?? .black
-        case .divider: return UIColor(hex: "#38383A") ?? .black
-        case .border: return UIColor(hex: "#48484A") ?? .black
+        case .primary: return UIColor(hex: "#ECF0F1") ?? .lightGray
+        case .accent: return UIColor(hex: "#3498DB") ?? .systemBlue
+        case .divider: return UIColor(hex: "#38383A") ?? .darkGray
+        case .border: return UIColor(hex: "#48484A") ?? .darkGray
         case .shadow: return UIColor.black.withAlphaComponent(0.3)
 
-        case .bookmark: return UIColor(hex: "#FFA726") ?? .black
-        case .favorite: return UIColor(hex: "#3498DB") ?? .black
+        case .bookmark: return UIColor(hex: "#FFA726") ?? .orange
+        case .favorite: return UIColor(hex: "#3498DB") ?? .systemBlue
+
+        // UI System colors - DARK GRAY for contrast in dark theme
+        case .navigationBar: return UIColor(hex: "#1C1C1E") ?? .systemGray2  // Dark gray navbar
+        case .tabBar: return UIColor(hex: "#1C1C1E") ?? .systemGray2         // Dark gray tabbar
+        case .separator: return UIColor(hex: "#3A3A3E") ?? .systemGray4     // Separator
+        case .bookmarkStar: return UIColor(hex: "#FFD54F") ?? .systemYellow // Bright golden
         }
     }
 }
@@ -254,12 +283,109 @@ public final class SutraDesignTokens {
         }
     }
 
+    /// Cycle to the next theme with animation (borrowed from SutraThemeManager)
+    public func cycleToNextTheme() {
+        let nextTheme: SutraTheme
+
+        switch currentTheme {
+        case .light:
+            nextTheme = .sepia
+        case .sepia:
+            nextTheme = .dark
+        case .dark:
+            nextTheme = .light
+        }
+
+        setTheme(nextTheme)
+
+        // Animate theme transition with cross-dissolve
+        if let window = UIApplication.shared.windows.first {
+            UIView.transition(with: window,
+                              duration: 0.3,
+                              options: .transitionCrossDissolve,
+                              animations: {
+                // Force UI update
+            })
+        }
+    }
+
     private func applyTheme(_ theme: SutraTheme) {
         DispatchQueue.main.async {
+            // Update global UIKit appearance proxies (borrowed from SutraDesignSystem)
+            self.applyThemeToApp()
+
+            // Also update interface style for views that don't use appearance proxies
             UIApplication.shared.windows.forEach { window in
                 window.overrideUserInterfaceStyle = self.interfaceStyle(for: theme)
             }
         }
+    }
+
+    // MARK: - Global Theme Application (borrowed from SutraDesignSystem)
+    /// Applies the current theme to ALL UIKit appearance proxies
+    /// This makes theme changes GLOBAL and AUTOMATIC
+    public func applyThemeToApp() {
+        let colors = (
+            navigationBar: self.color(for: .navigationBar),
+            tabBar: self.color(for: .tabBar),
+            separator: self.color(for: .separator),
+            bookmarkStar: self.color(for: .bookmarkStar),
+            textPrimary: self.color(for: .textPrimary),
+            accent: self.color(for: .accent),
+            background: self.color(for: .background)
+        )
+
+        // World-class navigation bar styling with modern iOS appearance
+        if #available(iOS 13.0, *) {
+            let navBarAppearance = UINavigationBarAppearance()
+            navBarAppearance.configureWithOpaqueBackground()
+            navBarAppearance.backgroundColor = colors.navigationBar
+            navBarAppearance.titleTextAttributes = [
+                .foregroundColor: colors.textPrimary,
+                .font: UIFont.systemFont(ofSize: 20, weight: .semibold)  // Larger, bolder titles
+            ]
+            navBarAppearance.largeTitleTextAttributes = [
+                .foregroundColor: colors.textPrimary,
+                .font: UIFont.systemFont(ofSize: 34, weight: .bold)
+            ]
+
+            // Subtle shadow for depth
+            navBarAppearance.shadowColor = colors.textPrimary.withAlphaComponent(0.1)
+
+            UINavigationBar.appearance().standardAppearance = navBarAppearance
+            UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
+            UINavigationBar.appearance().compactAppearance = navBarAppearance
+            UINavigationBar.appearance().tintColor = colors.textPrimary
+        } else {
+            // Fallback for older iOS versions
+            UINavigationBar.appearance().backgroundColor = colors.navigationBar
+            UINavigationBar.appearance().barTintColor = colors.navigationBar
+            UINavigationBar.appearance().tintColor = colors.textPrimary
+            UINavigationBar.appearance().titleTextAttributes = [
+                .foregroundColor: colors.textPrimary,
+                .font: UIFont.systemFont(ofSize: 20, weight: .semibold)
+            ]
+        }
+
+        // World-class tab bar styling with proper icons
+        if #available(iOS 13.0, *) {
+            let tabBarAppearance = UITabBarAppearance()
+            tabBarAppearance.configureWithOpaqueBackground()
+            tabBarAppearance.backgroundColor = colors.tabBar
+
+            UITabBar.appearance().standardAppearance = tabBarAppearance
+            if #available(iOS 15.0, *) {
+                UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+            }
+            UITabBar.appearance().tintColor = colors.accent
+        } else {
+            UITabBar.appearance().backgroundColor = colors.tabBar
+            UITabBar.appearance().barTintColor = colors.tabBar
+            UITabBar.appearance().tintColor = colors.accent
+        }
+
+        // NOTE: Removed UIView.appearance().backgroundColor - too aggressive
+        // Individual views should set their own backgrounds using SutraDesignTokens
     }
 
     private func interfaceStyle(for theme: SutraTheme) -> UIUserInterfaceStyle {
@@ -342,6 +468,23 @@ public struct SutraDesignSystem {
 
     public static func accentColor() -> Color {
         SutraDesignSystem.color(.accent)
+    }
+
+    // UI System colors (borrowed from SutraDesignSystem)
+    public static func navigationBarColor() -> Color {
+        SutraDesignSystem.color(.navigationBar)
+    }
+
+    public static func tabBarColor() -> Color {
+        SutraDesignSystem.color(.tabBar)
+    }
+
+    public static func separatorColor() -> Color {
+        SutraDesignSystem.color(.separator)
+    }
+
+    public static func bookmarkStarColor() -> Color {
+        SutraDesignSystem.color(.bookmarkStar)
     }
 
     // Shapes

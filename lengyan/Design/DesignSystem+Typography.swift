@@ -87,61 +87,94 @@ extension UIFont.Weight {
     }
 }
 
-// MARK: - Chinese Font Manager
+// MARK: - Enhanced Chinese Font Manager
 struct ChineseFontManager {
     static func appropriateUIFont(size: CGFloat, weight: UIFont.Weight) -> UIFont {
-        // Auto-detect Chinese font based on locale
         let preferredLanguages = Locale.preferredLanguages
 
         if preferredLanguages.first?.hasPrefix("zh-Hant") == true {
-            // Traditional Chinese
-            if let font = UIFont(name: "PingFangTC", size: size) {
-                return font
+            // Traditional Chinese - Enhanced font hierarchy
+            let traditionalFonts = [
+                "PingFangTC-Regular", "PingFangTC-Medium", "PingFangTC-Semibold",
+                "Hiragino Sans", "Noto Sans TC", "Source Han Sans TC"
+            ]
+
+            for fontName in traditionalFonts {
+                if let font = createUIFont(name: fontName, size: size, weight: weight) {
+                    return font
+                }
             }
         } else if preferredLanguages.first?.hasPrefix("zh-Hans") == true {
-            // Simplified Chinese
-            if let font = UIFont(name: "PingFangSC", size: size) {
+            // Simplified Chinese - Enhanced font hierarchy
+            let simplifiedFonts = [
+                "PingFangSC-Regular", "PingFangSC-Medium", "PingFangSC-Semibold",
+                "Hiragino Sans CNS", "Noto Sans SC", "Source Han Sans SC"
+            ]
+
+            for fontName in simplifiedFonts {
+                if let font = createUIFont(name: fontName, size: size, weight: weight) {
+                    return font
+                }
+            }
+        }
+
+        // Best fallback - system font with Chinese support
+        return UIFont.systemFont(ofSize: size, weight: weight)
+    }
+
+    private static func createUIFont(name: String, size: CGFloat, weight: UIFont.Weight) -> UIFont? {
+        // Try direct font name first
+        if let font = UIFont(name: name, size: size) {
+            return font
+        }
+
+        // Try with weight suffix
+        let weightSuffixes = ["", "-Regular", "-Medium", "-Semibold", "-Bold"]
+        for suffix in weightSuffixes {
+            if let font = UIFont(name: name + suffix, size: size) {
                 return font
             }
         }
 
-        // Fallback to system font
-        return UIFont.systemFont(ofSize: size, weight: weight)
+        return nil
     }
 }
 
 // MARK: - Typography Definition
 struct SutraTypographyDefinition {
-    // Size definitions using Golden Ratio
+    // Size definitions - World-class iOS readability scale
+    // Optimized for Chinese text and modern iOS standards
     static let sizes = (
-        caption: 14 as CGFloat,
-        small: 12 as CGFloat,
-        base: GoldenRatioTypography.level0,
-        heading: GoldenRatioTypography.level1,
-        title: GoldenRatioTypography.level2,
-        large: GoldenRatioTypography.level3,
-        xl: GoldenRatioTypography.level4
+        caption: 15 as CGFloat,   // Increased from 14pt for better legibility
+        small: 13 as CGFloat,     // Increased from 12pt
+        base: 17 as CGFloat,      // iOS standard body size (was 16pt)
+        heading: 22 as CGFloat,   // Increased from 20pt for better hierarchy
+        title: 28 as CGFloat,     // Increased from 24pt for prominence
+        large: 34 as CGFloat,     // Increased from 28pt
+        xl: 40 as CGFloat         // Increased from 34pt for maximum impact
     )
 
-    // Character spacing configuration
+    // Character spacing configuration - Optimized for Chinese reading
+    // Enhanced spacing for better legibility and Zen aesthetics
     static let characterSpacing: [SutraTypographyStyle: CGFloat] = [
-        .sutraBody: 0.5,
-        .sutraLarge: 0.5,
-        .sutraTitle: 0.5,
-        .commentary: 0.5,
-        .navigationTitle: 0,
-        .uiLargeTitle: 0,
-        .uiTitle: 0,
-        .uiHeading: 0,
-        .uiBody: 0,
-        .uiCaption: 0,
-        .uiSmall: 0,
-        .indexItem: 0,
-        .menuItem: 0,
-        .sutraCaption: 0,
-        .buttonLarge: 0,
-        .buttonMedium: 0,
-        .label: 0
+        .sutraBody: 0.8,        // Increased spacing for sutra readability
+        .sutraLarge: 1.0,       // Maximum spacing for large sutra text
+        .sutraTitle: 0.6,       // Moderate spacing for titles
+        .sutraCaption: 0.5,     // Subtle spacing for captions
+        .commentary: 0.7,       // Good spacing for commentary
+        // UI elements: minimal spacing for clarity
+        .navigationTitle: 0.2,  // Slight spacing for navigation
+        .uiLargeTitle: 0.3,     // Minimal spacing for UI titles
+        .uiTitle: 0.2,          // Minimal spacing for UI titles
+        .uiHeading: 0.1,        // Very minimal spacing for headings
+        .uiBody: 0.1,           // Very minimal spacing for body
+        .uiCaption: 0.0,        // No spacing for small UI text
+        .uiSmall: 0.0,          // No spacing for smallest text
+        .indexItem: 0.3,        // Slight spacing for index items
+        .menuItem: 0.2,         // Slight spacing for menu items
+        .buttonLarge: 0.1,      // Minimal spacing for buttons
+        .buttonMedium: 0.1,     // Minimal spacing for buttons
+        .label: 0.0             // No spacing for labels
     ]
 }
 
@@ -188,12 +221,13 @@ struct SutraTypographySystem: SutraTypography {
             return (s.base, adjustedWeight)
 
         // UI Elements
+        // Fixed: Use correct harmonious sizes (from original UnifiedSutraTypography)
         case .uiLargeTitle:
-            return (s.xl, weight == .regular ? .bold : adjustedWeight)
+            return (34, weight == .regular ? .bold : adjustedWeight)  // 34pt, not 110pt!
         case .uiTitle:
-            return (s.title, weight == .regular ? .semibold : adjustedWeight)
+            return (24, weight == .regular ? .semibold : adjustedWeight)  // 24pt, not 42pt!
         case .uiHeading:
-            return (s.heading, weight == .regular ? .medium : adjustedWeight)
+            return (20, weight == .regular ? .medium : adjustedWeight)  // 20pt, not 26pt!
         case .uiBody:
             return (s.base, adjustedWeight)
         case .uiCaption:

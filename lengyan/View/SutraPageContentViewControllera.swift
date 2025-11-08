@@ -52,13 +52,13 @@ class SutraTableViewCell: UITableViewCell {
             object: nil
         )
 
-        // Zen card container with unified color system
+        // Enhanced Zen card container with traditional aesthetics
         containerView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-        containerView.layer.cornerRadius = 16
+        containerView.layer.cornerRadius = 20  // More refined corner radius
         containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        containerView.layer.shadowRadius = 12
-        containerView.layer.shadowOpacity = 0.15
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)   // Subtle shadow
+        containerView.layer.shadowRadius = 8                           // Softer shadow
+        containerView.layer.shadowOpacity = 0.08                        // Very subtle for Zen serenity
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
 
@@ -69,21 +69,21 @@ class SutraTableViewCell: UITableViewCell {
         textView.isEditable = false
         textView.isScrollEnabled = false
         textView.textContainerInset = UIEdgeInsets(
-            top: SutraSpacing.Base.md,
-            left: SutraSpacing.Base.md,
-            bottom: SutraSpacing.Base.md,
-            right: SutraSpacing.Base.md
+            top: SutraSpacing.Zen.cardPadding,
+            left: SutraSpacing.Zen.cardPadding,
+            bottom: SutraSpacing.Zen.cardPadding,
+            right: SutraSpacing.Zen.cardPadding
         )
         textView.showsVerticalScrollIndicator = false
 
         containerView.addSubview(textView)
 
-        // Design system spacing
+        // Enhanced Zen spacing system
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: SutraSpacing.Base.sm),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: SutraSpacing.Base.md),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -SutraSpacing.Base.md),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -SutraSpacing.Base.sm),
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: SutraSpacing.Zen.cardMargin),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: SutraSpacing.Zen.contentMargin),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -SutraSpacing.Zen.contentMargin),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -SutraSpacing.Zen.cardMargin),
 
             textView.topAnchor.constraint(equalTo: containerView.topAnchor),
             textView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
