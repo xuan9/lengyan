@@ -249,7 +249,7 @@ class Book: NSObject {
     @MainActor
     func getTitleView(_ item:[String:Any])->UILabel{
         let label = UILabel(frame: CGRect(x: 0, y: 0, width: 400, height: 44))
-        label.backgroundColor = UIColor.clear
+        label.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         label.numberOfLines = 2
         label.textAlignment = NSTextAlignment.left
         label.attributedText = getTitle(item)
@@ -274,7 +274,7 @@ class Book: NSObject {
         let attrString2 = NSMutableAttributedString(
             string: chapterLabel,
             attributes: [NSAttributedStringKey.font: noteFont,
-                         NSAttributedStringKey.foregroundColor: UIColor.gray])
+                         NSAttributedStringKey.foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary)])
 
         attrString.append(attrString2)
         return attrString

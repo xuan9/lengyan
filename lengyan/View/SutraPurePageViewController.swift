@@ -47,8 +47,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬  ", style: .plain, target: self, action: #selector(close))
         self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
         
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
-        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
+        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
+        self.navigationItem.rightBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
         self.navigationController?.navigationBar.isTranslucent = false;
         self.setPageTitle()
         self.updateStarButton();
@@ -74,8 +74,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
         }
 
-        self.navigationItem.rightBarButtonItem?.tintColor = UIColor.darkText
-        likeButton.tintColor = UIColor.darkText
+        self.navigationItem.rightBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
+        likeButton.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
     }
 
     @objc func openIndex(){

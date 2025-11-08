@@ -22,7 +22,7 @@ class SutraPurePageContentViewController: UIViewController {
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        view.backgroundColor = UIColor.white
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
 
         if item == nil {
             item = Book.shared.itemOfPath(path!)
@@ -49,8 +49,8 @@ class SutraPurePageContentViewController: UIViewController {
         sutraTextView.isEditable = false;
         // Use unified SutraTypography design system for optimal reading experience
         sutraTextView.font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
-        sutraTextView.backgroundColor = UIColor.white
-        sutraTextView.textColor = UIColor.darkText
+        sutraTextView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        sutraTextView.textColor = SutraDesignTokens.shared.color(for: .sutraText)
         let text = Book.shared.getSutraAttributeString(meta);
         sutraTextView.attributedText = text;
         view.addSubview(sutraTextView);
@@ -73,7 +73,7 @@ class SutraPurePageContentViewController: UIViewController {
         let topBarView = UIView(frame: CGRect(
             origin: CGPoint(x:0 ,y:0 ),
             size:   CGSize(width: view.bounds.size.width , height:60 )));
-        topBarView.backgroundColor = UIColor.white
+        topBarView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         view.addSubview(topBarView)
         
         onDismiss?();

@@ -16,7 +16,7 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.white
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         self.addSutra(sutra: Book.shared.getChapterSutra(chapter: self.pageIndex));
         updateHeader()
     }
@@ -40,8 +40,8 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
         sutraTextView.isEditable = false;
         // Use unified SutraTypography design system for consistent chapter reading experience
         sutraTextView.font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
-        sutraTextView.backgroundColor = UIColor.white
-        sutraTextView.textColor = UIColor.darkText
+        sutraTextView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        sutraTextView.textColor = SutraDesignTokens.shared.color(for: .sutraText)
         let text = Book.shared.getSutraAttributeString(text: sutra);
         sutraTextView.attributedText = text;
         view.addSubview(sutraTextView);
@@ -63,14 +63,14 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "  ❬   ", style: .plain, target: self, action: #selector(close))
         
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
+        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
     }
     
     @objc func close(){
         let topBarView = UIView(frame: CGRect(
             origin: CGPoint(x:0 ,y:0 ),
             size:   CGSize(width: view.bounds.size.width , height:60 )));
-        topBarView.backgroundColor = UIColor.white
+        topBarView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         view.addSubview(topBarView)
         
         onDismiss?();

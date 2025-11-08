@@ -132,7 +132,7 @@ class SutraBookViewController: UITableViewController{
         // Use SutraTypography design system
         let attributes: [NSAttributedString.Key: Any] = [
             .font: SutraTypographyManager.shared.uiFont(for: .sutraBody),
-            .foregroundColor: UIColor.label
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary)
         ]
 
         return NSAttributedString(string: text, attributes: attributes)
@@ -142,7 +142,7 @@ class SutraBookViewController: UITableViewController{
         // Use SutraTypography design system for index items
         let attributes: [NSAttributedString.Key: Any] = [
             .font: SutraTypographyManager.shared.uiFont(for: .indexItem),
-            .foregroundColor: UIColor.gray
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary)
         ]
 
         return NSAttributedString(string: name, attributes: attributes)

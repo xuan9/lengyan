@@ -63,9 +63,9 @@ public final class AppCoordinator: Coordinator {
         // Configure navigation bar appearance
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.systemBackground
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+        appearance.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        appearance.titleTextAttributes = [.foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary)]
+        appearance.largeTitleTextAttributes = [.foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary)]
 
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance

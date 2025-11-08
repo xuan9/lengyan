@@ -9,18 +9,23 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Typography Styles (Type-Safe)
+// MARK: - Typography Styles (Type-Safe) - 禅意字体系统
 public enum SutraTypographyStyle: String, CaseIterable {
-    // Navigation & Titles
+    // 📜 Web Design System Hierarchy - 网页设计系统层级
+    case sutraTitle         // 主标题: 32px, 粗体 - 经典标题
+    case chapterTitle       // 章节标题: 24px, 中等 - 章节名称
+    case sacredText         // 正文: 18px, 常规 - 经文内容
+    case auxiliaryText      // 辅助文本: 14px - 说明文字
+
+    // 🏛️ iOS Navigation & Titles - iOS导航与标题
     case navigationTitle
     case sutraLarge
-    case sutraTitle
 
-    // Body Text
+    // 📖 Body Text - 正文文本
     case sutraBody
     case sutraCaption
 
-    // UI Elements
+    // 🎨 UI Elements - 界面元素
     case uiLargeTitle
     case uiTitle
     case uiHeading
@@ -28,11 +33,11 @@ public enum SutraTypographyStyle: String, CaseIterable {
     case uiCaption
     case uiSmall
 
-    // Index & Menu
+    // 📚 Index & Menu - 索引与菜单
     case indexItem
     case menuItem
 
-    // Special
+    // ✨ Special - 特殊样式
     case commentary
     case buttonLarge
     case buttonMedium
@@ -140,11 +145,18 @@ struct ChineseFontManager {
     }
 }
 
-// MARK: - Typography Definition
+// MARK: - Typography Definition - 禅意字体层级
 struct SutraTypographyDefinition {
-    // Size definitions - World-class iOS readability scale
-    // Optimized for Chinese text and modern iOS standards
-    static let sizes = (
+    // 🌸 Web Design System Sizes - 网页设计系统尺寸 (from 设计系统总结.md)
+    static let webSizes = (
+        sutraTitle: 32 as CGFloat,    // 主标题: 32px, 粗体 - 经典标题
+        chapterTitle: 24 as CGFloat,  // 章节标题: 24px, 中等 - 章节名称
+        sacredText: 18 as CGFloat,    // 正文: 18px, 常规 - 经文内容
+        auxiliaryText: 14 as CGFloat  // 辅助文本: 14px - 说明文字
+    )
+
+    // 📱 iOS-Optimized Sizes - iOS优化尺寸
+    static let iOSizes = (
         caption: 15 as CGFloat,   // Increased from 14pt for better legibility
         small: 13 as CGFloat,     // Increased from 12pt
         base: 17 as CGFloat,      // iOS standard body size (was 16pt)
@@ -154,16 +166,23 @@ struct SutraTypographyDefinition {
         xl: 40 as CGFloat         // Increased from 34pt for maximum impact
     )
 
-    // Character spacing configuration - Optimized for Chinese reading
-    // Enhanced spacing for better legibility and Zen aesthetics
+    // 🎨 Character Spacing - 禅意字符间距
+    // Optimized for Chinese reading and Zen aesthetics
     static let characterSpacing: [SutraTypographyStyle: CGFloat] = [
-        .sutraBody: 0.8,        // Increased spacing for sutra readability
-        .sutraLarge: 1.0,       // Maximum spacing for large sutra text
-        .sutraTitle: 0.6,       // Moderate spacing for titles
-        .sutraCaption: 0.5,     // Subtle spacing for captions
-        .commentary: 0.7,       // Good spacing for commentary
-        // UI elements: minimal spacing for clarity
-        .navigationTitle: 0.2,  // Slight spacing for navigation
+        // 📜 Web Design System Spacing - 网页设计系统间距
+        .sutraTitle: 0.6,        // 主标题间距
+        .chapterTitle: 0.5,      // 章节标题间距
+        .sacredText: 0.8,        // 正文间距 - 经文内容可读性
+        .auxiliaryText: 0.3,     // 辅助文本间距
+
+        // 📱 iOS Optimized Spacing - iOS优化间距
+        .sutraBody: 0.8,         // Increased spacing for sutra readability
+        .sutraLarge: 1.0,        // Maximum spacing for large sutra text
+        .sutraCaption: 0.5,      // Subtle spacing for captions
+        .commentary: 0.7,        // Good spacing for commentary
+
+        // 🎯 UI Elements Spacing - 界面元素间距
+        .navigationTitle: 0.2,   // Slight spacing for navigation
         .uiLargeTitle: 0.3,     // Minimal spacing for UI titles
         .uiTitle: 0.2,          // Minimal spacing for UI titles
         .uiHeading: 0.1,        // Very minimal spacing for headings
@@ -203,53 +222,61 @@ struct SutraTypographySystem: SutraTypography {
     private func sizeAndWeight(for style: SutraTypographyStyle, weight: UIFont.Weight) -> (CGFloat, UIFont.Weight) {
         // Default weight handling
         let adjustedWeight: UIFont.Weight = (weight == .regular) ? weight : weight
-        let s = SutraTypographyDefinition.sizes
+        let web = SutraTypographyDefinition.webSizes
+        let ios = SutraTypographyDefinition.iOSizes
 
         switch style {
-        // Navigation & Titles
-        case .navigationTitle:
-            return (s.title, weight == .regular ? .semibold : adjustedWeight)
-        case .sutraLarge:
-            return (s.large, adjustedWeight)
+        // 📜 Web Design System Hierarchy - 网页设计系统层级
         case .sutraTitle:
-            return (s.title, weight == .regular ? .medium : adjustedWeight)
+            return (web.sutraTitle, weight == .regular ? .bold : adjustedWeight)    // 主标题: 32px, 粗体
+        case .chapterTitle:
+            return (web.chapterTitle, weight == .regular ? .medium : adjustedWeight) // 章节标题: 24px, 中等
+        case .sacredText:
+            return (web.sacredText, adjustedWeight)                               // 正文: 18px, 常规
+        case .auxiliaryText:
+            return (web.auxiliaryText, adjustedWeight)                              // 辅助文本: 14px
 
-        // Body Text
+        // 🏛️ iOS Navigation & Titles - iOS导航与标题
+        case .navigationTitle:
+            return (ios.title, weight == .regular ? .semibold : adjustedWeight)
+        case .sutraLarge:
+            return (ios.large, adjustedWeight)
+
+        // 📖 Body Text - 正文文本
         case .sutraBody:
-            return (s.heading, adjustedWeight)
+            return (ios.heading, adjustedWeight)
         case .sutraCaption:
-            return (s.base, adjustedWeight)
+            return (ios.base, adjustedWeight)
 
-        // UI Elements
-        // Fixed: Use correct harmonious sizes (from original UnifiedSutraTypography)
+        // 🎨 UI Elements - 界面元素
         case .uiLargeTitle:
-            return (34, weight == .regular ? .bold : adjustedWeight)  // 34pt, not 110pt!
+            return (ios.large, weight == .regular ? .bold : adjustedWeight)  // 34pt
         case .uiTitle:
-            return (24, weight == .regular ? .semibold : adjustedWeight)  // 24pt, not 42pt!
+            return (ios.title, weight == .regular ? .semibold : adjustedWeight)  // 28pt
         case .uiHeading:
-            return (20, weight == .regular ? .medium : adjustedWeight)  // 20pt, not 26pt!
+            return (ios.heading, weight == .regular ? .medium : adjustedWeight)  // 22pt
         case .uiBody:
-            return (s.base, adjustedWeight)
+            return (ios.base, adjustedWeight)
         case .uiCaption:
-            return (s.caption, adjustedWeight)
+            return (ios.caption, adjustedWeight)
         case .uiSmall:
-            return (s.small, adjustedWeight)
+            return (ios.small, adjustedWeight)
 
-        // Index & Menu
+        // 📚 Index & Menu - 索引与菜单
         case .indexItem:
-            return (s.heading, adjustedWeight)
+            return (ios.heading, adjustedWeight)
         case .menuItem:
-            return (s.base, adjustedWeight)
+            return (ios.base, adjustedWeight)
 
-        // Special
+        // ✨ Special - 特殊样式
         case .commentary:
-            return (s.heading, adjustedWeight)
+            return (ios.heading, adjustedWeight)
         case .buttonLarge:
-            return (s.heading, weight == .regular ? .semibold : adjustedWeight)
+            return (ios.heading, weight == .regular ? .semibold : adjustedWeight)
         case .buttonMedium:
-            return (s.base, weight == .regular ? .medium : adjustedWeight)
+            return (ios.base, weight == .regular ? .medium : adjustedWeight)
         case .label:
-            return (s.caption, adjustedWeight)
+            return (ios.caption, adjustedWeight)
         }
     }
 }
@@ -280,16 +307,29 @@ public final class SutraTypographyManager {
     }
 }
 
-// MARK: - SwiftUI Typography Bridge
+// MARK: - SwiftUI Typography Bridge - 禅意字体桥接
 @MainActor
 public struct SutraTypographyBridge {
-    // Sutra text styles
-    public static func sutraLarge(weight: Font.Weight = .regular) -> Font {
-        SutraTypographyManager.shared.font(for: .sutraLarge, weight: weight)
+    // 📜 Web Design System Styles - 网页设计系统样式
+    public static func sutraTitle(weight: Font.Weight = .bold) -> Font {
+        SutraTypographyManager.shared.font(for: .sutraTitle, weight: weight)
     }
 
-    public static func sutraTitle(weight: Font.Weight = .regular) -> Font {
-        SutraTypographyManager.shared.font(for: .sutraTitle, weight: weight)
+    public static func chapterTitle(weight: Font.Weight = .medium) -> Font {
+        SutraTypographyManager.shared.font(for: .chapterTitle, weight: weight)
+    }
+
+    public static func sacredText(weight: Font.Weight = .regular) -> Font {
+        SutraTypographyManager.shared.font(for: .sacredText, weight: weight)
+    }
+
+    public static func auxiliaryText(weight: Font.Weight = .regular) -> Font {
+        SutraTypographyManager.shared.font(for: .auxiliaryText, weight: weight)
+    }
+
+    // 📱 iOS Optimized Styles - iOS优化样式
+    public static func sutraLarge(weight: Font.Weight = .regular) -> Font {
+        SutraTypographyManager.shared.font(for: .sutraLarge, weight: weight)
     }
 
     public static func sutraBody(weight: Font.Weight = .regular) -> Font {

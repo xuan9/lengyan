@@ -20,13 +20,13 @@ final class ReaderViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(close))
-        self.navigationItem.leftBarButtonItem?.tintColor = UIColor.darkText
+        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
         self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
         
 
@@ -48,7 +48,7 @@ final class ReaderViewController: UIViewController {
     //  }
     //
     private func setupContentView() {
-        contentView.backgroundColor = .white
+        contentView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentView.showsVerticalScrollIndicator = false
         contentView.showsHorizontalScrollIndicator = false
@@ -104,7 +104,7 @@ final class ReaderViewController: UIViewController {
             )
             
             // 5
-            textView.backgroundColor = .white
+            textView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
             textView.isEditable = false
             textView.isSelectable = false
             textView.textContainerInset = textInsets

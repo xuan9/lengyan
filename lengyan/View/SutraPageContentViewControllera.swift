@@ -52,22 +52,34 @@ class SutraTableViewCell: UITableViewCell {
             object: nil
         )
 
-        // Enhanced Zen card container with traditional aesthetics
+        // 🏛️ Sacred Zen card container with divine aesthetics
         containerView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         containerView.layer.cornerRadius = 20  // More refined corner radius
-        containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)   // Subtle shadow
-        containerView.layer.shadowRadius = 8                           // Softer shadow
-        containerView.layer.shadowOpacity = 0.08                        // Very subtle for Zen serenity
+
+        // Enhanced sacred shadow with divine glow
+        containerView.layer.shadowColor = SutraDesignTokens.shared.color(for: .bookmark).cgColor
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 4)   // Elevated shadow
+        containerView.layer.shadowRadius = 15                           // Softer, divine shadow
+        containerView.layer.shadowOpacity = 0.15                        // Subtle divine presence
+
+        // Add sacred border
+        containerView.layer.borderWidth = 1
+        containerView.layer.borderColor = SutraDesignTokens.shared.color(for: .bookmark).withAlphaComponent(0.3).cgColor
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
 
-        // Enhanced text view with design system styling
+        // 📜 Sacred text view with divine reading experience
         textView = UITextView()
         textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.backgroundColor = UIColor.clear
+        textView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         textView.isEditable = false
         textView.isScrollEnabled = false
+
+        // Add subtle divine glow to text container
+        textView.layer.shadowColor = SutraDesignTokens.shared.color(for: .primary).withAlphaComponent(0.1).cgColor
+        textView.layer.shadowOffset = CGSize(width: 0, height: 1)
+        textView.layer.shadowRadius = 3
+        textView.layer.shadowOpacity = 0.05
         textView.textContainerInset = UIEdgeInsets(
             top: SutraSpacing.Zen.cardPadding,
             left: SutraSpacing.Zen.cardPadding,
@@ -378,21 +390,45 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         navigationController.navigationBar.shadowImage = UIImage()
         navigationController.navigationBar.isTranslucent = true
 
-        // Enhanced navigation bar appearance
+        // 🏛️ Sacred navigation bar appearance with divine aesthetics
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-        appearance.shadowColor = SutraDesignTokens.shared.color(for: .divider)
-        appearance.shadowImage = UIImage()
-        // Use unified SutraTypography design system for consistent navigation titles
+        appearance.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+
+        // Add subtle sacred glow to navigation bar
+        appearance.shadowColor = SutraDesignTokens.shared.color(for: .bookmark).withAlphaComponent(0.3)
+        appearance.shadowImage = createSacredShadowImage()
+
+        // Enhanced sacred styling with divine colors
+        let sacredShadow = NSShadow()
+        sacredShadow.shadowColor = SutraDesignTokens.shared.color(for: .bookmark).withAlphaComponent(0.5).cgColor
+        sacredShadow.shadowOffset = CGSize(width: 0, height: 1)
+        sacredShadow.shadowBlurRadius = 2
+
         appearance.titleTextAttributes = [
-            .font: SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold),
-            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary)
+            .foregroundColor: SutraDesignTokens.shared.color(for: .sutraText),
+            .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .semibold),
+            .shadow: sacredShadow
         ]
 
         navigationController.navigationBar.standardAppearance = appearance
         navigationController.navigationBar.compactAppearance = appearance
         navigationController.navigationBar.scrollEdgeAppearance = appearance
+    }
+
+    // MARK: - Sacred Shadow Creation - 神圣阴影创建
+    private func createSacredShadowImage() -> UIImage {
+        let size = CGSize(width: 1, height: 1)
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+
+        let context = UIGraphicsGetCurrentContext()!
+        context.setFillColor(SutraDesignTokens.shared.color(for: .bookmark).withAlphaComponent(0.1).cgColor)
+        context.fill(CGRect(x: 0, y: 0, width: size.width, height: size.height))
+
+        let image = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+
+        return image
     }
     
     
@@ -486,7 +522,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         let actionContainer = UIView()
         actionContainer.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         actionContainer.layer.cornerRadius = 20
-        actionContainer.layer.shadowColor = UIColor.black.cgColor
+        actionContainer.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
         actionContainer.layer.shadowOffset = CGSize(width: 0, height: 6)
         actionContainer.layer.shadowRadius = 16
         actionContainer.layer.shadowOpacity = 0.12
@@ -632,7 +668,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     @objc func toggleLike() {
         if Prefers.shared.isLike(path) {
             Prefers.shared.unlike(path)
-            navigationController?.navigationBar.tintColor = UIColor.lightGray
+            navigationController?.navigationBar.tintColor = SutraDesignTokens.shared.color(for: .textSecondary)
         } else {
             Prefers.shared.like(path)
             navigationController?.navigationBar.tintColor = view.tintColor

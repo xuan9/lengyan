@@ -8,20 +8,20 @@
 
 import UIKit
 
-// MARK: - Enhanced Zen Spacing System
-/// Optimized spacing for Chinese text readability and Zen aesthetics
-/// Based on traditional Chinese book layout principles
+// MARK: - 禅意间距系统 - Web Design System Migration
+/// Zen Spacing System - 禅意极简主义
+/// Optimized spacing based on web design system (基础间距: 4px)
 public struct SutraSpacing {
 
-    // MARK: - Base Spacing
-    /// Essential spacing values optimized for Chinese reading
+    // MARK: - Base Spacing - 基础间距 (from 设计系统总结.md)
+    /// Web Design System: 基础间距: 4px (0.25rem)
     public struct Base {
-        public static let xs: CGFloat = 4    // Micro spacing
-        public static let sm: CGFloat = 8    // Small spacing
-        public static let md: CGFloat = 16   // Medium spacing (increased for Chinese)
-        public static let lg: CGFloat = 24   // Large spacing (increased for readability)
-        public static let xl: CGFloat = 32   // Extra large spacing
-        public static let xxl: CGFloat = 48  // Section spacing
+        public static let xs: CGFloat = 4    // 基础间距: 4px (0.25rem)
+        public static let sm: CGFloat = 8    // 小间距: 8px (0.5rem) - 按钮内边距
+        public static let md: CGFloat = 16   // 中间距: 16px (1rem) - 段落间距
+        public static let lg: CGFloat = 24   // 大间距: 24px (1.5rem) - 组件间距
+        public static let xl: CGFloat = 32   // 超大间距: 32px (2rem) - 区块间距
+        public static let xxl: CGFloat = 48  // 章节间距
     }
 
     // MARK: - Chinese Reading Specific Spacing
@@ -34,14 +34,15 @@ public struct SutraSpacing {
         public static let chapterSpacing: CGFloat = 48         // Chapter spacing
     }
 
-    // MARK: - Zen Layout Spacing
-    /// Traditional Zen layout proportions based on Golden Ratio
+    // MARK: - Zen Layout Spacing - 禅意布局间距
+    /// Web Design System: 70% 禅雾灰 + 20% 禅纸白 + 10% 禅竹绿
+    /// Traditional Zen layout proportions based on web design principles
     public struct Zen {
-        public static let cardPadding: CGFloat = 24           // Card padding
-        public static let cardMargin: CGFloat = 16            // Card margin
-        public static let contentMargin: CGFloat = 20         // Content margin
-        public static let navigationHeight: CGFloat = 56      // Navigation height
-        public static let tabBarHeight: CGFloat = 64          // Tab bar height
+        public static let cardPadding: CGFloat = 24           // 卡片内边距
+        public static let cardMargin: CGFloat = 16            // 卡片外边距
+        public static let contentMargin: CGFloat = 20         // 内容边距
+        public static let navigationHeight: CGFloat = 56      // 导航栏高度
+        public static let tabBarHeight: CGFloat = 64          // 标签栏高度
     }
 
     // MARK: - Touch Target Spacing (Mobile UX)

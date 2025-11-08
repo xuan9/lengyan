@@ -25,6 +25,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         applyZenTempleSerenityDesignSystem()
         print("🔥 Design system applied")
 
+        // Setup theme observer for dynamic theme changes
+        setupThemeObserverForView()
+        print("🔥 Theme observer setup")
+
         let bounds:CGRect = self.view.bounds;
         treeView = RATreeView(frame: CGRect(
             origin: CGPoint(x:bounds.origin.x - 5 ,y:bounds.origin.y + 0),
@@ -85,7 +89,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         themeButton.setTitleColor(SutraDesignTokens.shared.color(for: .navigationBar), for: .normal)
         themeButton.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         themeButton.layer.cornerRadius = 22
-        themeButton.layer.shadowColor = UIColor.black.cgColor
+        themeButton.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
         themeButton.layer.shadowOffset = CGSize(width: 0, height: 2)
         themeButton.layer.shadowOpacity = 0.2
         themeButton.layer.shadowRadius = 4
@@ -125,7 +129,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     private func setupThemeObserverForView() {
         // TODO: Add theme observer if needed
-        // NotificationCenter.default.addObserver(self, selector: #selector(themeDidChangeForFrontViewController), name: .themeDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(themeDidChangeForFrontViewController), name: .themeDidChange, object: nil)
     }
 
     @objc private func themeDidChangeForFrontViewController() {
@@ -218,41 +222,45 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     private func enhanceButtonWithCompleteZenStyling(_ button: UIButton) {
         let buttonText = button.titleLabel?.text ?? ""
 
-        // Enhanced zen styling using unified design tokens
+        // 🏯 Sacred Temple Styling - 神圣寺庙样式
         if buttonText.contains("卷") || buttonText.contains("品") {
-            // Chapter button - sacred temple styling with unified color system
-            // TODO: Use design tokens - button.backgroundColor = UIColor.white
-            button.setTitleColor(UIColor.systemGray, for: .normal)
-            button.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .semibold)
+            // Chapter button - golden sacred temple styling
+            button.backgroundColor = SutraDesignTokens.shared.color(for: .card)
+            button.setTitleColor(SutraDesignTokens.shared.color(for: .chapterTitle), for: .normal)
+            button.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .bold)
 
-            // Design system corner radius and shadows
-            button.layer.cornerRadius = 16
-            button.layer.borderWidth = 2
-            button.layer.borderColor = UIColor.systemGray.cgColor
-            button.layer.shadowColor = UIColor.black.cgColor
-            button.layer.shadowOffset = CGSize(width: 0, height: 2)
-            button.layer.shadowRadius = 4
-            button.layer.shadowOpacity = 0.2
+            // Sacred temple styling with enhanced visual impact
+            button.layer.cornerRadius = 20
+            button.layer.borderWidth = 3
+            button.layer.borderColor = SutraDesignTokens.shared.color(for: .bookmark).cgColor  // 鎏金边框
+            button.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
+            button.layer.shadowOffset = CGSize(width: 0, height: 4)
+            button.layer.shadowRadius = 8
+            button.layer.shadowOpacity = 0.3
 
-            // Add subtle gradient background
-            addZenGradientToButton(button)
+            // Add sacred gradient background
+            addSacredGradientToButton(button)
 
         } else if buttonText.contains("楞嚴經") || buttonText.contains("首楞嚴經") {
-            // Main title - enhanced zen styling with unified color system
+            // Main title - divine sutra title styling
             button.backgroundColor = .clear
-            button.setTitleColor(UIColor.systemGray, for: .normal)
-            button.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .bold)
+            button.setTitleColor(SutraDesignTokens.shared.color(for: .sutraText), for: .normal)
+            button.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .heavy)
             button.titleLabel?.textAlignment = .center
+            button.titleLabel?.numberOfLines = 0
+
+            // Add enhanced divine glow effect with multiple layers
+            addDivineGlowToTitle(button)
 
         } else {
-            // Other buttons - subtle zen styling with unified color system
-            button.backgroundColor = UIColor.white
-            button.setTitleColor(UIColor.systemGray, for: .normal)
+            // Other buttons - elegant zen styling
+            button.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+            button.setTitleColor(SutraDesignTokens.shared.color(for: .textSecondary), for: .normal)
             button.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
             button.layer.cornerRadius = 12
             button.layer.borderWidth = 1
-            button.layer.borderColor = UIColor.systemGray.cgColor
-            button.layer.shadowColor = UIColor.black.cgColor
+            button.layer.borderColor = SutraDesignTokens.shared.color(for: .border).cgColor
+            button.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
             button.layer.shadowOffset = CGSize(width: 0, height: 2)
             button.layer.shadowRadius = 4
             button.layer.shadowOpacity = 0.2
@@ -262,20 +270,32 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         enhanceButtonTouchFeedback(button)
     }
 
-    private func addZenGradientToButton(_ button: UIButton) {
+    private func addSacredGradientToButton(_ button: UIButton) {
+        // Remove existing gradient if any
+        button.layer.sublayers?.removeAll { $0 is CAGradientLayer }
+
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = button.bounds
 
-        // Use unified color system for gradient
-        let surfaceColor = UIColor.white
-        let cardColor = SutraDesignTokens.shared.color(for: .card)
+        // 🌅 Enhanced Sacred gradient with multiple divine colors
+        let sacredGold = SutraDesignTokens.shared.color(for: .bookmark)  // 鎏金色
+        let divineLight = SutraDesignTokens.shared.color(for: .surface)   // 佛光色
+        let pureWhite = SutraDesignTokens.shared.color(for: .card)       // 纯净色
+        let zenGreen = SutraDesignTokens.shared.color(for: .primary)      // 竹翠绿
 
+        // Multi-stop gradient for divine effect
         gradientLayer.colors = [
-            surfaceColor.withAlphaComponent(0.9).cgColor,
-            cardColor.cgColor
+            pureWhite.cgColor,
+            divineLight.cgColor,
+            sacredGold.withAlphaComponent(0.4).cgColor,
+            zenGreen.withAlphaComponent(0.2).cgColor,
+            pureWhite.cgColor
         ]
+
+        // Enhanced gradient animation
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 0, y: 1)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        gradientLayer.locations = [0.0, 0.3, 0.5, 0.7, 1.0]
         gradientLayer.cornerRadius = button.layer.cornerRadius
 
         // Replace existing background if present
@@ -297,23 +317,207 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     @objc private func zenButtonTouchDown(_ button: UIButton) {
-        UIView.animate(withDuration: 0.1, delay: 0, options: [.curveEaseOut]) {
-            button.transform = CGAffineTransform(scaleX: 0.96, y: 0.96)
-            button.alpha = 0.8
+        // Enhanced sacred touch down animation
+        UIView.animate(withDuration: 0.15, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseOut]) {
+            button.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            button.alpha = 0.85
+
+            // Enhanced sacred glow effect on touch
+            button.layer.shadowRadius = 12
+            button.layer.shadowOpacity = 0.4
+            button.layer.shadowColor = SutraDesignTokens.shared.color(for: .bookmark).cgColor
         }
+
+        // Haptic feedback for sacred interaction
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
     }
 
     @objc private func zenButtonTouchUp(_ button: UIButton) {
-        UIView.animate(withDuration: 0.1, delay: 0, options: [.curveEaseOut]) {
-            button.transform = .identity
+        // Enhanced sacred touch up animation with bounce
+        UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.8, options: [.curveEaseOut]) {
+            button.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
             button.alpha = 1.0
+
+            // Restore enhanced shadow
+            button.layer.shadowRadius = 8
+            button.layer.shadowOpacity = 0.3
+        }
+
+        // Return to normal after bounce
+        UIView.animate(withDuration: 0.1, delay: 0.2, options: [.curveEaseOut]) {
+            button.transform = .identity
+            button.layer.shadowRadius = 4
+            button.layer.shadowOpacity = 0.2
         }
     }
 
     @objc private func zenButtonTapped(_ button: UIButton) {
-        // Add subtle haptic feedback if available
+        // Sacred haptic feedback for divine interaction
+        let selectionFeedback = UISelectionFeedbackGenerator()
+        selectionFeedback.selectionChanged()
+
+        // Additional haptic feedback for sacred confirmation
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
+    }
+
+    // MARK: - Serene Cell Styling - 宁静单元格样式
+    private func enhanceCellWithSacredStyling(_ cell: UITableViewCell) {
+        let name = cell.textLabel?.text ?? ""
+
+        if name.contains("卷") || name.contains("品") {
+            // 🍃 Chapter cell - 宁静而生机勃勃
+            cell.backgroundColor = SutraDesignTokens.shared.color(for: .card)
+
+            // 添加微妙的渐变背景
+            addSubtleGradientToCell(cell)
+
+            // 简约而雅致的边框
+            cell.layer.borderWidth = 0.5
+            cell.layer.borderColor = SutraDesignTokens.shared.color(for: .bookmark).withAlphaComponent(0.3).cgColor
+
+            // 轻柔的阴影，不干扰阅读
+            cell.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
+            cell.layer.shadowRadius = 4
+            cell.layer.shadowOpacity = 0.1
+            cell.layer.shadowOffset = CGSize(width: 0, height: 1)
+
+            // 优雅的文本样式
+            cell.textLabel?.textColor = SutraDesignTokens.shared.color(for: .chapterTitle)
+            cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .medium)
+
+        } else if name.contains("楞嚴經") || name.contains("首楞嚴經") {
+            // 🌸 Main title cell - 宁静而庄重
+            cell.backgroundColor = .clear
+            cell.textLabel?.textColor = SutraDesignTokens.shared.color(for: .sutraText)
+            cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .semibold)
+
+            // 添加微妙的呼吸感
+            addSubtleBreathingToCell(cell)
+        }
+    }
+
+    // MARK: - 宁静微妙的渐变效果
+    private func addSubtleGradientToCell(_ cell: UITableViewCell) {
+        // Remove existing gradients
+        cell.layer.sublayers?.removeAll { $0.name == "subtleGradient" }
+
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.name = "subtleGradient"
+        gradientLayer.frame = cell.bounds
+
+        // 🌸 宁静而微妙的渐变
+        let surfaceColor = SutraDesignTokens.shared.color(for: .surface)
+        let cardColor = SutraDesignTokens.shared.color(for: .card)
+        let primaryColor = SutraDesignTokens.shared.color(for: .primary)
+
+        // 极简的两色渐变，营造宁静感
+        gradientLayer.colors = [
+            cardColor.cgColor,
+            surfaceColor.withAlphaComponent(0.3).cgColor,
+            cardColor.cgColor
+        ]
+
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        gradientLayer.locations = [0.0, 0.5, 1.0]
+        gradientLayer.cornerRadius = cell.layer.cornerRadius
+
+        // Insert behind cell content
+        cell.layer.insertSublayer(gradientLayer, at: 0)
+
+        // Store gradient layer reference for bounds changes
+        objc_setAssociatedObject(cell, "subtleGradient", gradientLayer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+
+    // MARK: - 微妙的呼吸感效果
+    private func addSubtleBreathingToCell(_ cell: UITableViewCell) {
+        // 为文本标签添加微妙的阴影效果
+        cell.textLabel?.layer.shadowColor = SutraDesignTokens.shared.color(for: .bookmark).withAlphaComponent(0.3).cgColor
+        cell.textLabel?.layer.shadowRadius = 2
+        cell.textLabel?.layer.shadowOpacity = 0.5
+        cell.textLabel?.layer.shadowOffset = CGSize(width: 0, height: 1)
+
+        // 添加非常缓慢的呼吸动画
+        let breathingAnimation = CABasicAnimation(keyPath: "shadowOpacity")
+        breathingAnimation.duration = 8.0  // 8秒周期，非常缓慢
+        breathingAnimation.fromValue = 0.3
+        breathingAnimation.toValue = 0.7
+        breathingAnimation.timingFunction = CAMediaTimingFunction(name: "easeInEaseOut")
+        breathingAnimation.autoreverses = true
+        breathingAnimation.repeatCount = .infinity
+
+        cell.textLabel?.layer.add(breathingAnimation, forKey: "breathing")
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "bounds", let cell = object as? UITableViewCell {
+            // 更新微妙的渐变层
+            if let gradientLayer = objc_getAssociatedObject(cell, "subtleGradient") as? CAGradientLayer {
+                gradientLayer.frame = cell.bounds
+            }
+        }
+    }
+
+    // MARK: - Divine Glow Effects - 神圣光辉效果
+    private func addDivineGlowToTitle(_ button: UIButton) {
+        // Remove existing glow layers
+        button.layer.sublayers?.removeAll { $0.name == "divineGlow" }
+
+        let sacredGold = SutraDesignTokens.shared.color(for: .bookmark)  // 鎏金色
+        let divineOrange = SutraDesignTokens.shared.color(for: .accent)   // 佛光橙
+
+        // Create multiple glow layers for divine effect
+        let glowLayers: [(radius: CGFloat, opacity: Float, color: UIColor)] = [
+            (radius: 15, opacity: 0.6, color: sacredGold),
+            (radius: 25, opacity: 0.3, color: divineOrange),
+            (radius: 35, opacity: 0.15, color: sacredGold),
+            (radius: 45, opacity: 0.08, color: divineOrange)
+        ]
+
+        for glow in glowLayers {
+            let glowLayer = CALayer()
+            glowLayer.name = "divineGlow"
+            glowLayer.frame = button.bounds
+            glowLayer.backgroundColor = glow.color.cgColor
+            glowLayer.cornerRadius = 8
+            glowLayer.opacity = glow.opacity
+
+            // Create glow mask
+            let glowMask = CAShapeLayer()
+            glowMask.path = UIBezierPath(roundedRect: button.bounds, cornerRadius: 8).cgPath
+            glowLayer.mask = glowMask
+
+            // Apply blur effect for glow
+            if let blurFilter = CIFilter(name: "CIGaussianBlur") {
+                blurFilter.setValue(glow.radius, forKey: kCIInputRadiusKey)
+                glowLayer.filters = [blurFilter]
+            }
+
+            // Insert behind button content
+            button.layer.insertSublayer(glowLayer, at: 0)
+        }
+
+        // Add subtle pulse animation to glow
+        addPulseAnimationToGlow(button)
+    }
+
+    private func addPulseAnimationToGlow(_ button: UIButton) {
+        let pulseAnimation = CABasicAnimation(keyPath: "opacity")
+        pulseAnimation.duration = 2.0
+        pulseAnimation.fromValue = 0.8
+        pulseAnimation.toValue = 1.2
+        pulseAnimation.timingFunction = CAMediaTimingFunction(name: "easeInEaseOut")
+        pulseAnimation.autoreverses = true
+        pulseAnimation.repeatCount = .infinity
+
+        // Apply to all glow layers
+        button.layer.sublayers?.forEach { layer in
+            if layer.name == "divineGlow" {
+                layer.add(pulseAnimation, forKey: "divinePulse")
+            }
+        }
     }
 
     private func getCurrentColors() -> (background: UIColor, accent: UIColor, primaryText: UIColor) {
@@ -380,7 +584,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             btn.layer.borderColor = accentColor.withAlphaComponent(0.3).cgColor
 
             // Elegant shadow
-            btn.layer.shadowColor = UIColor.black.cgColor
+            btn.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
             btn.layer.shadowOffset = CGSize(width: 0, height: 2)
             btn.layer.shadowRadius = 6
             btn.layer.shadowOpacity = 0.1
@@ -472,7 +676,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         btn.setTitleColor(SutraDesignTokens.shared.color(for: .textPrimary), for: .normal)
         btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
         btn.layer.cornerRadius = 12  // More refined for Zen aesthetic
-        btn.layer.shadowColor = UIColor.black.cgColor
+        btn.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
         btn.layer.shadowOffset = CGSize(width: 0, height: 1)
         btn.layer.shadowOpacity = 0.06  // More subtle
         btn.layer.shadowRadius = 3
@@ -641,9 +845,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         cell.tintColor = accentColor
         cell.accessoryView?.tintColor = accentColor
 
+        // 🏯 Apply sacred styling to cell content view
+        enhanceCellWithSacredStyling(cell)
+
+  
         // Add world-class card styling with subtle elevation
         cell.layer.cornerRadius = 12
-        cell.layer.shadowColor = UIColor.black.cgColor
+        cell.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
         cell.layer.shadowOffset = CGSize(width: 0, height: 2)
         cell.layer.shadowRadius = 8
         cell.layer.shadowOpacity = 0.08
@@ -713,13 +921,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     private func setupEnhancedDesign() {
         print("🎨 Applying enhanced design")
 
-        // Apply enhanced colors using design tokens
-        view.backgroundColor = UIColor.white
-        treeView.backgroundColor = UIColor.white
+        // Apply enhanced colors using design tokens - 禅意色彩哲学
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        treeView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
 
-        // Enhanced navigation bar styling
-        navigationController?.navigationBar.backgroundColor = UIColor.white
-        navigationController?.navigationBar.barTintColor = UIColor.white
+        // Enhanced navigation bar styling - 禅意色彩
+        navigationController?.navigationBar.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        navigationController?.navigationBar.barTintColor = SutraDesignTokens.shared.color(for: .navigationBar)
             // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
             // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
             // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)

@@ -376,8 +376,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 let bookBtn = UIButton.init(type: .custom)
                 bookBtn.frame = CGRect(x: 0, y: 0.0, width: 38, height: treeView.rowHeight)
                 bookBtn.setTitle("❭", for: UIControlState())
-                bookBtn.tintColor = UIColor.darkText
-                bookBtn.setTitleColor(UIColor.lightGray, for: .normal)
+                bookBtn.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
+                bookBtn.setTitleColor(SutraDesignTokens.shared.color(for: .textSecondary), for: .normal)
                 // FIX: Add proper accessibility label for UI testing
                 bookBtn.accessibilityLabel = "chevron"
                 bookBtn.isAccessibilityElement = true

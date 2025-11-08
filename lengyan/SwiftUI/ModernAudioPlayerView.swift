@@ -101,7 +101,7 @@ struct ModernAudioPlayerView: View {
                     .padding(.bottom, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
                     .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
 
-                    if isLoading {
+                      if isLoading {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                             .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
