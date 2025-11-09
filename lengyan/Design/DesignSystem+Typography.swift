@@ -172,11 +172,11 @@ struct SutraTypographyDefinition {
         // 📜 Web Design System Spacing - 网页设计系统间距
         .sutraTitle: 0.6,        // 主标题间距
         .chapterTitle: 0.5,      // 章节标题间距
-        .sacredText: 0.8,        // 正文间距 - 经文内容可读性
+        .sacredText: 1.0,        // 正文间距 - 经文内容可读性增强
         .auxiliaryText: 0.3,     // 辅助文本间距
 
         // 📱 iOS Optimized Spacing - iOS优化间距
-        .sutraBody: 0.8,         // Increased spacing for sutra readability
+        .sutraBody: 1.0,         // Enhanced spacing for sutra readability
         .sutraLarge: 1.0,        // Maximum spacing for large sutra text
         .sutraCaption: 0.5,      // Subtle spacing for captions
         .commentary: 0.7,        // Good spacing for commentary

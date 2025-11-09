@@ -86,6 +86,9 @@ class SutraTableViewCell: UITableViewCell {
             bottom: SutraSpacing.Zen.cardPadding,
             right: SutraSpacing.Zen.cardPadding
         )
+
+        // Traditional Chinese paragraph indentation (2 characters for sutra text)
+        textView.textContainer.lineFragmentPadding = 16.0
         textView.showsVerticalScrollIndicator = false
 
         containerView.addSubview(textView)
@@ -138,7 +141,13 @@ class SutraTableViewCell: UITableViewCell {
         let style = NSMutableParagraphStyle()
         style.lineSpacing = (textView.font!.lineHeight * lineHeight) - textView.font!.lineHeight
         style.paragraphSpacing = 8
-        style.firstLineHeadIndent = 0
+
+        // Traditional Chinese paragraph indentation for sutra text
+        if contentType == "sutra" {
+            style.firstLineHeadIndent = 32.0  // 2-character indentation for sacred text
+        } else {
+            style.firstLineHeadIndent = 0
+        }
 
         let attributes: [NSAttributedString.Key: Any] = [
             .paragraphStyle: style,

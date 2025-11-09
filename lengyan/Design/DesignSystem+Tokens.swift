@@ -90,19 +90,19 @@ struct LightTheme: SutraThemeProtocol {
     func color(for token: ColorToken) -> UIColor {
         switch token {
         // 🌅 Sacred Zen Background Colors - 神圣禅意背景色
-        case .background: return UIColor(hex: "#FAF7F0") ?? .white       // 宣纸米色 - 温暖神圣的基础
-        case .surface: return UIColor(hex: "#FFF8E7") ?? .white         // 佛光暖黄 - 内容区域温暖光芒
-        case .card: return UIColor(hex: "#FFFFFF")?.withAlphaComponent(0.98) ?? .white  // 纯净宣纸 - 内容载体
+        case .background: return UIColor(hex: "#FAF8F3") ?? .white       // 传世宣纸 - 温暖如传统宣纸的米色
+        case .surface: return UIColor(hex: "#FAF7F0") ?? .white         // 古籍纸色 - 内容区域温暖如古籍
+        case .card: return UIColor(hex: "#FFFEF9")?.withAlphaComponent(0.98) ?? .white  // 纯净宣纸 - 内容载体
         case .overlay: return UIColor(hex: "#2C1810")?.withAlphaComponent(0.7) ?? .black // 古墨遮罩
 
         // 🖋️ Sacred Text Colors - 神圣文字色
-        case .textPrimary: return UIColor(hex: "#1A1A1A") ?? .black        // 浓墨黑 - 主要文本，庄重深邃
+        case .textPrimary: return UIColor(hex: "#262626") ?? .black        // 传统墨黑 - 主要文本，庄重深邃
         case .textSecondary: return UIColor(hex: "#4A3728") ?? .darkGray   // 古檀褐 - 次要文本，沉稳厚重
         case .textTertiary: return UIColor(hex: "#8B7355") ?? .gray       // 沉香木 - 提示文本，温暖淡雅
         case .textOnAccent: return UIColor(hex: "#FFF8E7") ?? .white      // 佛光白 - 强调色上的神圣光辉
 
         // 📜 Sutra-specific Sacred Colors - 经文专用神圣色
-        case .sutraText: return UIColor(hex: "#0F0F0F") ?? .black         // 御墨黑 - 经文内容，极其庄重
+        case .sutraText: return UIColor(hex: "#0D0D0D") ?? .black         // 传世御墨 - 经文内容，传统墨色
         case .commentaryText: return UIColor(hex: "#5C4033") ?? .darkGray // 茶褐 - 注释文字，古朴厚重
         case .chapterTitle: return UIColor(hex: "#B8860B") ?? .systemYellow // 鎏金色 - 章节标题，神圣尊贵
 
