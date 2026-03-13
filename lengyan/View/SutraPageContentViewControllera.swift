@@ -522,8 +522,13 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
     
     func zenActionRow() -> UITableViewCell{
-        if (navigationController?.isNavigationBarHidden ?? true){
-            return UITableViewCell()
+        // 修正预加载漏洞：如果 navigationController 暂时为空，绝不能认定它处于隐藏状态
+        if (navigationController?.isNavigationBarHidden == true){
+            let emptyCell = UITableViewCell()
+            emptyCell.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+            emptyCell.contentView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+            emptyCell.selectionStyle = .none
+            return emptyCell
         }
 
         let cell = UITableViewCell()
@@ -536,23 +541,20 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         actionContainer.translatesAutoresizingMaskIntoConstraints = false
         cell.addSubview(actionContainer)
 
-        // Create zen-styled action buttons
-        let shareButton = createZenActionButton(
-            iconName: "square.and.arrow.up",
-            action: #selector(share(sender:)),
-            title: NSLocalizedString("share", comment: "")
-        )
+        // 极简改版：收藏与分享已上移至 NavigationBar
+        // 底部仅保留“原典”按钮（如果支持的话）
+        if meta["children"] == nil {
+            let emptyCell = UITableViewCell()
+            emptyCell.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+            emptyCell.contentView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+            emptyCell.selectionStyle = .none
+            return emptyCell
+        }
 
         let pureSutraButton = createZenActionButton(
             iconName: "book",
             action: #selector(SutraPageContentViewController.pureSutra),
             title: NSLocalizedString("original_text", comment: "")
-        )
-
-        let bookmarkButton = createZenActionButton(
-            iconName: Prefers.shared.isLike(path) ? "heart.fill" : "heart",
-            action: #selector(toggleLike),
-            title: "收藏"
         )
 
         // Stack view for button arrangement
@@ -563,14 +565,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         buttonStack.spacing = 20
         buttonStack.translatesAutoresizingMaskIntoConstraints = false
 
-        if meta["children"] != nil {
-            buttonStack.addArrangedSubview(shareButton)
-            buttonStack.addArrangedSubview(pureSutraButton)
-            buttonStack.addArrangedSubview(bookmarkButton)
-        } else {
-            buttonStack.addArrangedSubview(shareButton)
-            buttonStack.addArrangedSubview(bookmarkButton)
-        }
+        buttonStack.addArrangedSubview(pureSutraButton)
 
         actionContainer.addSubview(buttonStack)
 
@@ -587,10 +582,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             buttonStack.trailingAnchor.constraint(equalTo: actionContainer.trailingAnchor, constant: -20),
             buttonStack.bottomAnchor.constraint(equalTo: actionContainer.bottomAnchor, constant: -20),
 
-            // Button size constraints
-            shareButton.heightAnchor.constraint(equalToConstant: 60),
-            pureSutraButton.heightAnchor.constraint(equalToConstant: 60),
-            bookmarkButton.heightAnchor.constraint(equalToConstant: 60)
+            pureSutraButton.heightAnchor.constraint(equalToConstant: 60)
         ])
 
         return cell
@@ -668,16 +660,6 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         UIView.animate(withDuration: 0.1) {
             button.superview?.transform = .identity
             button.superview?.alpha = 1.0
-        }
-    }
-    
-    @objc func toggleLike() {
-        if Prefers.shared.isLike(path) {
-            Prefers.shared.unlike(path)
-            navigationController?.navigationBar.tintColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        } else {
-            Prefers.shared.like(path)
-            navigationController?.navigationBar.tintColor = view.tintColor
         }
     }
     

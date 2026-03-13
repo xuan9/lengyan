@@ -21,8 +21,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.edgesForExtendedLayout = [];
-        self.extendedLayoutIncludesOpaqueBars = false;
         self.automaticallyAdjustsScrollViewInsets = false;
+        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 翻页控制器底层背景色
         
         if page < 0 {
             self.close()
@@ -60,30 +60,56 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationController?.popViewController(animated: true)
     }
     
+    @objc func share() {
+        // Take a beautiful snapshot of the zen paper page for sharing
+        UIGraphicsBeginImageContextWithOptions(self.view.frame.size, false, 0.0)
+        self.view.layer.render(in: UIGraphicsGetCurrentContext()!)
+        guard let img = UIGraphicsGetImageFromCurrentImageContext() else {
+            UIGraphicsEndImageContext()
+            return
+        }
+        UIGraphicsEndImageContext()
+        
+        let activityViewController = UIActivityViewController(activityItems: [img], applicationActivities: nil)
+        if let popover = activityViewController.popoverPresentationController {
+            popover.barButtonItem = self.navigationItem.rightBarButtonItems?.last
+        }
+        self.present(activityViewController, animated: true, completion: nil)
+    }
+    
     func setTitle() {
         // Use modern SF Symbols for better accessibility and consistency
         let backIcon = UIImage(systemName: "chevron.left")
         let backBarButton = UIBarButtonItem(image: backIcon, style: .plain, target: self, action: #selector(close))
         self.navigationItem.leftBarButtonItem = backBarButton
 
-        if(Prefers.shared.likes.contains(path!)){
-            let bookmarkIcon = UIImage(systemName: "bookmark.fill")
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: #selector(unlike))
-        } else {
-            let bookmarkIcon = UIImage(systemName: "bookmark")
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: #selector(like))
-        }
+        // Right side: Bookmark + Share (禅意极简排列)
+        let shareIcon = UIImage(systemName: "square.and.arrow.up")
+        let shareButton = UIBarButtonItem(image: shareIcon, style: .plain, target: self, action: #selector(share))
+
+        let isLiked = Prefers.shared.likes.contains(path!)
+        let bookmarkIcon = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
+        let bookmarkButton = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: isLiked ? #selector(unlike) : #selector(like))
 
         // Apply sutra design system colors for a calm, ink-on-paper feel
         let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        let backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        let backgroundColor = SutraDesignTokens.shared.color(for: .surface) // Seamless scroll background
 
         self.navigationItem.leftBarButtonItem?.tintColor = primaryTextColor
-        self.navigationItem.rightBarButtonItem?.tintColor = Prefers.shared.likes.contains(path!) ? bookmarkColor : secondaryTextColor
+        shareButton.tintColor = secondaryTextColor
+        bookmarkButton.tintColor = isLiked ? bookmarkColor : secondaryTextColor
+
+        // Grouping right buttons: [Share on the far right] [Bookmark]
+        // Note: rightBarButtonItems renders from right to left (index 0 is rightmost)
+        self.navigationItem.rightBarButtonItems = [shareButton, bookmarkButton]
+        
         self.navigationController?.navigationBar.backgroundColor = backgroundColor
-        self.navigationController?.navigationBar.isTranslucent = false;
+        self.navigationController?.navigationBar.isTranslucent = false
+        // Remove standard hairline boundary to create seamless transition with content based purely on typography weight and whitespace
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
     }
         
     public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?

@@ -198,11 +198,11 @@ class Book: NSObject {
             string: (parent == nil ? "" : " 之 "),
             attributes: [NSAttributedStringKey.font: dividerFont])
 
-        // Title uses navigation title style
-        let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold)
+        // Title uses navigation title style but with lighter weight and more letter spacing for elegance
+        let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .regular)
         let attrString1 = NSMutableAttributedString(
             string: title as String,
-            attributes: [NSAttributedStringKey.font: titleFont])
+            attributes: [NSAttributedStringKey.font: titleFont, NSAttributedStringKey.kern: 2.0])
 
         attrString.append(attrString2)
         attrString.append(attrString1)
@@ -233,13 +233,18 @@ class Book: NSObject {
 
         let paragraphStyle2 = NSMutableParagraphStyle()
         paragraphStyle2.alignment = .center
+        paragraphStyle2.paragraphSpacingBefore = 2 // 稍微缩短主副标距离，防止两行文字顶破导航栏上下边缘
 
-        // Title uses navigation title style
-        let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold)
+        // Title uses navigation title style - lighter, airier
+        let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .regular)
         let titleText = parentTitle.count > 15 ? " " + title : "\n" + title
         let attrString1 = NSMutableAttributedString(
             string: titleText,
-            attributes: [NSAttributedStringKey.font: titleFont, NSAttributedStringKey.paragraphStyle : paragraphStyle2])
+            attributes: [
+                NSAttributedStringKey.font: titleFont,
+                NSAttributedStringKey.paragraphStyle : paragraphStyle2,
+                NSAttributedStringKey.kern: 3.0 // 典雅宽绰的字间距
+            ])
 
         attrString.append(attrString2)
         attrString.append(attrString1)
@@ -248,14 +253,15 @@ class Book: NSObject {
     
     @MainActor
     func getTitleView(_ item:[String:Any])->UILabel{
-        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 400, height: 44))
+        let label = UILabel()
         label.backgroundColor = .clear  // 让导航栏背景自然透出
         label.numberOfLines = 2
-        label.textAlignment = NSTextAlignment.left
+        label.textAlignment = NSTextAlignment.center // 标题居中更显古典庄严
         label.attributedText = getTitle(item)
         label.adjustsFontSizeToFitWidth = true
-        label.minimumScaleFactor = 0.3
+        label.minimumScaleFactor = 0.5
         label.isUserInteractionEnabled = true
+        label.sizeToFit()
         return label
     }
     
@@ -288,22 +294,23 @@ class Book: NSObject {
     
     @MainActor
     func getSutraAttributeString(text:String)->NSAttributedString{
+        // Use unified SutraTypography design system for sutra text
+        let font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
+        let textColor = SutraDesignTokens.shared.color(for: .sutraText)
+
         let pStyle = NSMutableParagraphStyle()
         pStyle.lineHeightMultiple = 1.8       // 提升行距呼吸感（与阅读页统一）
         pStyle.maximumLineHeight = 44.0       // 配合更大行高
         pStyle.minimumLineHeight = 10.0
 
-        pStyle.paragraphSpacing = 8           // 段落间留白（原1pt太紧凑）
-        pStyle.firstLineHeadIndent = 28       // 更自然的首行缩进
-
-        // Use unified SutraTypography design system for sutra text
-        let font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
-        let textColor = SutraDesignTokens.shared.color(for: .sutraText)
+        pStyle.paragraphSpacing = 24          // 段落间重现古卷的留白呼吸
+        pStyle.firstLineHeadIndent = font.pointSize * 2.0 // 精确的首行二字缩进
 
         let pAttributes: [NSAttributedStringKey: Any] = [
             NSAttributedStringKey.paragraphStyle: pStyle,
             NSAttributedStringKey.font: font,
-            NSAttributedStringKey.foregroundColor: textColor
+            NSAttributedStringKey.foregroundColor: textColor,
+            NSAttributedStringKey.kern: 1.5   // 文字呼吸感
         ]
 
         return NSAttributedString(string: text, attributes:pAttributes)

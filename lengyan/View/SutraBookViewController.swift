@@ -34,8 +34,8 @@ class SutraBookViewController: UITableViewController{
         super.viewDidLoad()
         self.tableView.estimatedRowHeight = 300
         self.tableView.separatorStyle = .none
-        self.tableView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        self.tableView.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 无界宣纸
+        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         self.setTitleBar()
     }
     
@@ -114,8 +114,9 @@ class SutraBookViewController: UITableViewController{
         let contents:[[String:String]]? =  (Book.shared.contents?[path!]);
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "SutraBookTableViewCell", for: indexPath) as! SutraBookTableViewCell
-        cell.textView.textContainerInset = UIEdgeInsetsMake(24, 20, 24, 20)
+        cell.textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 24, right: 12)
         cell.textView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        cell.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 确保细胞底部颜色一致
 
         
         if(contents == nil){
@@ -144,13 +145,14 @@ class SutraBookViewController: UITableViewController{
         pStyle.lineHeightMultiple = 1.8
         pStyle.maximumLineHeight = 44.0
         pStyle.minimumLineHeight = 10.0
-        pStyle.paragraphSpacing = 8
-        pStyle.firstLineHeadIndent = 28
+        pStyle.paragraphSpacing = 24 // 增加段落呼吸感
+        pStyle.firstLineHeadIndent = SutraTypographyManager.shared.uiFont(for: .sutraBody).pointSize * 2.0 // 传统中文首段缩进2字
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: SutraTypographyManager.shared.uiFont(for: .sutraBody),
             .foregroundColor: SutraDesignTokens.shared.color(for: .sutraText),
-            .paragraphStyle: pStyle
+            .paragraphStyle: pStyle,
+            .kern: 1.5 // 增加字间距，视界空灵
         ]
 
         return NSAttributedString(string: text, attributes: attributes)
