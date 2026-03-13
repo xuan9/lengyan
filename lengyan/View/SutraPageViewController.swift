@@ -129,7 +129,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     // Apply Zen design enhancements to the page content
     private func enhancePageViewController(_ pageVC: SutraPageContentViewController) {
         // Apply semantic sutra background for page and table
-        let backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        let backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 无界宣纸沉浸色向下透传
         pageVC.view.backgroundColor = backgroundColor
         pageVC.tableView.backgroundColor = backgroundColor
 

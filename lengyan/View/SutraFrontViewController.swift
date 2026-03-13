@@ -169,7 +169,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         gradientLayer.frame = backgroundView.bounds
 
         // Use semantic colors from design system
-        let theme = SutraDesignTokens.shared.currentTheme
         let bgColor = SutraDesignTokens.shared.color(for: .background)
         let surfaceColor = SutraDesignTokens.shared.color(for: .surface)
 
@@ -199,11 +198,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     private func enhanceChapterButtons() {
         // Find all chapter buttons and enhance them
         for subview in view.subviews {
-            if let treeView = subview as? RATreeView {
-                for cellSubview in treeView.subviews {
-                    if let headerView = cellSubview as? UIView {
-                        enhanceButtonsInView(headerView)
-                    }
+            if subview is RATreeView {
+                for cellSubview in subview.subviews {
+                    enhanceButtonsInView(cellSubview)
                 }
             }
         }
@@ -520,12 +517,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
 
-    private func getCurrentColors() -> (background: UIColor, accent: UIColor, primaryText: UIColor) {
+    private func getCurrentColors() -> (background: UIColor, accent: UIColor) {
         // Unified with SutraDesignTokens for consistency
         return (
             background: SutraDesignTokens.shared.color(for: .background),
-            accent: SutraDesignTokens.shared.color(for: .accent),
-            primaryText: SutraDesignTokens.shared.color(for: .textPrimary)
+            accent: SutraDesignTokens.shared.color(for: .accent)
         )
     }
 
@@ -537,7 +533,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func setupHeaderView(_ size:CGSize) {
         let width = size.width
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        let primaryTextColor = SutraDesignTokens.shared.color(for: .textPrimary)
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
         // 🏛️ Sacred header - 增大高度到240pt，给开经偈和卷章按钮更充裕的呼吸空间
@@ -548,12 +543,12 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let subTitle = UIButton.init(type: .custom)
         subTitle.frame = CGRect(x: 24, y: 20, width: width - 48, height: 40)
         let subTitleText = NSLocalizedString("kai_jing_ji", comment: "無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義")
-        subTitle.setTitle(subTitleText, for: UIControlState())
-        subTitle.titleLabel?.font = SutraTypographySystem().uiFont(for: .sacredText, weight: .regular)
+        subTitle.setTitle(subTitleText, for: .normal)
+        subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .sacredText, weight: .regular)
         subTitle.titleLabel?.numberOfLines = 2
         subTitle.titleLabel?.lineBreakMode = .byCharWrapping
         subTitle.titleLabel?.textAlignment = .center
-        subTitle.setTitleColor(SutraDesignTokens.shared.color(for: .textTertiary), for: UIControlState())
+        subTitle.setTitleColor(SutraDesignTokens.shared.color(for: .textTertiary), for: .normal)
         subTitle.addTarget(self, action: #selector(self.openRootIndex), for: .touchUpInside)
         header.addSubview(subTitle)
 
@@ -578,7 +573,22 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
         header.addSubview(indexes)
 
-        // ✨ 装饰性金色渐隐分隔线
+        // ✨ 装饰性金色渐隐分隔线 (开经偈下方)
+        let subTitleBottom = subTitle.frame.maxY + 12
+        let lotusDividerView = UIView(frame: CGRect(x: 60, y: subTitleBottom, width: width - 120, height: 1.0))
+        let lotusDivider = CAGradientLayer()
+        lotusDivider.frame = CGRect(x: 0, y: 0, width: lotusDividerView.frame.width, height: 1.0)
+        lotusDivider.colors = [
+            UIColor.clear.cgColor,
+            decorativeGold.withAlphaComponent(0.8).cgColor,
+            UIColor.clear.cgColor
+        ]
+        lotusDivider.startPoint = CGPoint(x: 0, y: 0.5)
+        lotusDivider.endPoint = CGPoint(x: 1, y: 0.5)
+        lotusDividerView.layer.addSublayer(lotusDivider)
+        header.addSubview(lotusDividerView)
+
+        // ✨ 底部边界装饰性细线
         let dividerFrame = CGRect(x: 32, y: header.frame.height - 1, width: width - 64, height: 0.5)
         let dividerLine = UIView(frame: dividerFrame)
         dividerLine.backgroundColor = decorativeGold.withAlphaComponent(0.3)
@@ -594,37 +604,54 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
 
-        // 🏛️ 庄严尾部 - 220pt呼吸空间
-        let footer:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 220))
+        // 🏛️ 庄严尾部 - 280pt呼吸空间
+        let footer:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 280))
         footer.backgroundColor = backgroundColor
 
         // ✨ 装饰性金色渐隐分隔线
-        let dividerLine = UIView(frame: CGRect(x: 40, y: 20, width: width - 80, height: 0.5))
-        dividerLine.backgroundColor = decorativeGold.withAlphaComponent(0.4)
-        footer.addSubview(dividerLine)
+        let dividerLineView = UIView(frame: CGRect(x: 40, y: 10, width: width - 80, height: 0.5))
+        let dividerLine = CAGradientLayer()
+        dividerLine.frame = CGRect(x: 0, y: 0, width: dividerLineView.frame.width, height: 0.5)
+        dividerLine.colors = [UIColor.clear.cgColor, decorativeGold.withAlphaComponent(0.4).cgColor, UIColor.clear.cgColor]
+        dividerLine.startPoint = CGPoint(x: 0, y: 0.5)
+        dividerLine.endPoint = CGPoint(x: 1, y: 0.5)
+        dividerLineView.layer.addSublayer(dividerLine)
+        footer.addSubview(dividerLineView)
 
         let footerText1 = NSLocalizedString("footer_txt_1", comment: "南無楞嚴會上佛菩薩\n南無楞嚴會上佛菩薩\n南無楞嚴會上佛菩薩")
         let footerText2 = NSLocalizedString("footer_txt_2", comment: "經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站")
         let footerText3 = NSLocalizedString("footer_txt_3", comment: "感恩法界佛教總會！本屏中列出部分關鍵科判以方便檢索，可點擊經名打開完整科判。")
 
-        // 🙏 「南無楞嚴會上佛菩薩」- 使用鎏金色，庄严神圣
-        let footerLabel = UILabel(frame: CGRect(x: 32, y: 36, width: width - 64, height: 76))
-        footerLabel.text = footerText1
+        // 🌸 莲花装饰符 (替代法轮避免字体不支持)
+        let decoration = UILabel(frame: CGRect(x: 0, y: 30, width: width, height: 24))
+        decoration.text = "✧   ❀   ✧"
+        decoration.font = UIFont.systemFont(ofSize: 16)
+        decoration.textColor = decorativeGold
+        decoration.textAlignment = .center
+        footer.addSubview(decoration)
+
+        // 🙏 「南無楞嚴會上佛菩薩」- 使用鎏金色，增加行距，高度扩充到100
+        let footerLabel = UILabel(frame: CGRect(x: 20, y: 64, width: width - 40, height: 100))
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 6
+        paragraphStyle.alignment = .center
+        footerLabel.attributedText = NSAttributedString(string: footerText1, attributes: [
+            .font: SutraTypographyManager.shared.uiFont(for: .sacredText, weight: .medium),
+            .foregroundColor: bookmarkColor,
+            .paragraphStyle: paragraphStyle
+        ])
         footerLabel.numberOfLines = 3
-        footerLabel.textAlignment = .center
-        footerLabel.font = SutraTypographySystem().uiFont(for: .sacredText, weight: .medium)
-        footerLabel.textColor = bookmarkColor  // 鎏金色，神圣尊贵
         footerLabel.lineBreakMode = .byWordWrapping
         footer.addSubview(footerLabel)
 
-        // 🔗 来源链接 - 使用 accent 色
-        let linkButton = UIButton(frame: CGRect(x: 24, y: 120, width: width - 48, height: 36))
+        // 🔗 来源链接 - 使用 accent 色，调整排版Y轴
+        let linkButton = UIButton(frame: CGRect(x: 20, y: 174, width: width - 40, height: 44))
         linkButton.setTitle(footerText2, for: .normal)
         linkButton.contentHorizontalAlignment = .center
         linkButton.setImage(UIImage(systemName: "link")?.withRenderingMode(.alwaysTemplate), for: .normal)
         linkButton.addTarget(self, action: #selector(self.openDrbaLink(_:)), for: .touchUpInside)
         linkButton.semanticContentAttribute = .forceRightToLeft
-        linkButton.titleLabel?.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .medium)
+        linkButton.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiCaption, weight: .medium)
         linkButton.titleLabel?.numberOfLines = 2
         linkButton.titleLabel?.lineBreakMode = .byCharWrapping
         linkButton.setTitleColor(SutraDesignTokens.shared.color(for: .accent), for: .normal)
@@ -632,14 +659,18 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         linkButton.tintColor = SutraDesignTokens.shared.color(for: .accent)
         footer.addSubview(linkButton)
 
-        // 说明文字 - 更淡雅的次要文字
-        let footerLabel2 = UILabel(frame: CGRect(x: 32, y: 164, width: width - 64, height: 44))
-        footerLabel2.text = footerText3
-        footerLabel2.textAlignment = .center
-        footerLabel2.numberOfLines = 2
-        footerLabel2.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular)
-        footerLabel2.textColor = secondaryTextColor.withAlphaComponent(0.6)
-        footerLabel2.lineBreakMode = .byCharWrapping
+        // 说明文字 - 更淡雅的次要文字，调整段落间距
+        let footerLabel2 = UILabel(frame: CGRect(x: 20, y: 222, width: width - 40, height: 44))
+        let footer2Paragraph = NSMutableParagraphStyle()
+        footer2Paragraph.lineSpacing = 4
+        footer2Paragraph.alignment = .center
+        footerLabel2.attributedText = NSAttributedString(string: footerText3, attributes: [
+            .font: SutraTypographyManager.shared.uiFont(for: .uiCaption, weight: .regular),
+            .foregroundColor: secondaryTextColor.withAlphaComponent(0.6),
+            .paragraphStyle: footer2Paragraph
+        ])
+        footerLabel2.numberOfLines = 0
+        footerLabel2.lineBreakMode = .byWordWrapping
         footer.addSubview(footerLabel2)
 
         self.treeView.treeFooterView = footer
@@ -679,15 +710,27 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(frame != nil) {
             btn.frame = frame!
         }
-        btn.setTitle(Book.shared.itemOfPath(path)["name"] as! String?, for: UIControlState())
+        if let name = Book.shared.itemOfPath(path)["name"] as? String {
+            btn.setTitle(name, for: .normal)
+        }
         btn.addTarget(self, action: #selector(onSutraIndexButtonTouchUp(_:)), for: .touchUpInside)
         let count = sutraIndexButtons.count;
         btn.tag = count
         btn.titleLabel?.adjustsFontSizeToFitWidth = true;
 
-        // Use semantic text color instead of hardcoded black
-        btn.setTitleColor(SutraDesignTokens.shared.color(for: .textPrimary), for: .normal)
-        btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .semibold)
+        // 🏛️ 首页经题装饰 - 使用大标题色（鎏金色），增加强调神圣感
+        let titleColor = SutraDesignTokens.shared.color(for: .chapterTitle)
+        btn.setTitleColor(titleColor, for: .normal)
+        btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .heavy)
+        
+        let titleText = btn.title(for: .normal) ?? ""
+        if titleText.count > 0 {
+            // 给导航栏文字上方增加一条细金线装饰
+            let topBorder = UIView(frame: CGRect(x: 20, y: 0, width: UIScreen.main.bounds.width - 46, height: 0.5))
+            topBorder.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold)
+            btn.addSubview(topBorder)
+        }
+
         sutraIndexButtons.append(path)
         return btn;
     }
@@ -708,7 +751,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     @objc func openDrbaLink(_ sender:UIButton) {
-        UIApplication.shared.openURL(URL.init(string: "http://www.drbachinese.org/online_reading/sutra_explanation/Shu/contents.htm")!)
+        if let url = URL(string: "http://www.drbachinese.org/online_reading/sutra_explanation/Shu/contents.htm") {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
     }
     
     func close(){
@@ -821,7 +866,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let cell = newCell!;
         let item = item as! [String];
         let name = item[1];
-        cell.textLabel?.text =  name
+        
+        // 🌿 添加精致的金色引导点
+        let dot = "•  "
+        let attrText = NSMutableAttributedString(string: dot + name)
+        attrText.addAttribute(.foregroundColor, value: SutraDesignTokens.shared.color(for: .decorativeGold), range: NSRange(location: 0, length: 1))
+        
+        cell.textLabel?.attributedText = attrText
 
         // Apply enhanced design system styling
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
@@ -831,7 +882,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         cell.backgroundColor = backgroundColor
         cell.textLabel?.textColor = primaryTextColor
-        cell.textLabel?.font = SutraTypographySystem().uiFont(for: .indexItem, weight: .regular)
+        cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
         cell.tintColor = accentColor
         cell.accessoryView?.tintColor = accentColor
 
@@ -918,50 +969,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // Enhanced navigation bar styling - 禅意色彩
         navigationController?.navigationBar.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         navigationController?.navigationBar.barTintColor = SutraDesignTokens.shared.color(for: .navigationBar)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-            // TODO: Use design tokens - return ColorConfig(background: .white, primaryText: .black, secondaryText: .gray, accent: .red, chapterButton: .white, navigationBar: .white, separator: .gray)
-        // Color configuration will use design tokens
+     
         }
     }
 

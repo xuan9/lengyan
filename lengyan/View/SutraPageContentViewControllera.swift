@@ -52,19 +52,18 @@ class SutraTableViewCell: UITableViewCell {
             object: nil
         )
 
-        // 🏛️ Sacred Zen card container - 简化阴影，南禅意
-        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-        containerView.layer.cornerRadius = 16
-
-        // 单层极柔阴影（开销更低）
-        containerView.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        containerView.layer.shadowRadius = 8
-        containerView.layer.shadowOpacity = 0.08
-
-        // 古金 hairline 边框
-        containerView.layer.borderWidth = 0.5
-        containerView.layer.borderColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.2).cgColor
+        // 🏛️ Sacred Zen card container - 极致扁平化，宣纸质感
+        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        containerView.layer.cornerRadius = 0
+        containerView.layer.shadowOpacity = 0
+        containerView.layer.borderWidth = 0
+        
+        // 【视觉锚点】：在宽广的宣纸上，用一根若隐若现的古金细线（左侧边框）托住经文的版心
+        let leftBorder = CALayer()
+        leftBorder.name = "zenAnchorLine"
+        leftBorder.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.3).cgColor
+        containerView.layer.addSublayer(leftBorder)
+        
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
 
@@ -75,13 +74,13 @@ class SutraTableViewCell: UITableViewCell {
         textView.isEditable = false
         textView.isScrollEnabled = false
 
-        // 经文容器内边距 - 增大呼吸空间
+        // 经文篇章留白体系 - 无缝长轴中的段落呼吸感
         textView.layer.shadowColor = UIColor.clear.cgColor  // 移除文本无用阴影
         textView.textContainerInset = UIEdgeInsets(
-            top: 32,
-            left: 28,
-            bottom: 32,
-            right: 28
+            top: 12,
+            left: 12,
+            bottom: 24, // 下留白更大，产生自然的段落间隔
+            right: 12
         )
 
         // Traditional Chinese paragraph indentation (2 characters for sutra text)
@@ -90,12 +89,12 @@ class SutraTableViewCell: UITableViewCell {
 
         containerView.addSubview(textView)
 
-        // Enhanced Zen spacing system
+        // Seamless scroll structure - no borders or horizontal gaps
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: SutraSpacing.Zen.cardMargin),
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: SutraSpacing.Zen.contentMargin),
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -SutraSpacing.Zen.contentMargin),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -SutraSpacing.Zen.cardMargin),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 0),
 
             textView.topAnchor.constraint(equalTo: containerView.topAnchor),
             textView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
@@ -109,50 +108,54 @@ class SutraTableViewCell: UITableViewCell {
 
         // Configure typography using unified design system
         let textStyle: SutraTypographyStyle
+        var textColor: UIColor
 
         switch type {
         case "sutra":
-            // Sutra text - primary zen styling
             textStyle = .sutraBody
-            textView.textColor = SutraDesignTokens.shared.color(for: .sutraText)
-
+            textColor = SutraDesignTokens.shared.color(for: .sutraText)
         case "index":
-            // Index text - lighter zen styling
             textStyle = .indexItem
-            textView.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
-
+            textColor = SutraDesignTokens.shared.color(for: .textPrimary)
         default: // commentary
-            // Commentary text - medium zen styling
             textStyle = .commentary
-            textView.textColor = SutraDesignTokens.shared.color(for: .commentaryText)
+            textColor = SutraDesignTokens.shared.color(for: .commentaryText)
         }
 
-        // Apply unified SutraTypography
-        textView.font = SutraTypographyManager.shared.uiFont(for: textStyle, weight: .regular)
-
-        // Set text directly - font and color already applied above
-        textView.text = content
-    }
-
-    private func paragraphStyle(lineHeight: CGFloat, letterSpacing: CGFloat) {
-        let style = NSMutableParagraphStyle()
-        style.lineSpacing = (textView.font!.lineHeight * lineHeight) - textView.font!.lineHeight
-        style.paragraphSpacing = 8
-
-        // Traditional Chinese paragraph indentation for sutra text
-        if contentType == "sutra" {
-            style.firstLineHeadIndent = 32.0  // 2-character indentation for sacred text
+        let font = SutraTypographyManager.shared.uiFont(for: textStyle, weight: .regular)
+        
+        // 🖋 高级排版体系 - 恢复古籍呼吸感
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = 1.8  // 古典经卷的舒朗行高
+        paragraphStyle.paragraphSpacing = 24     // 段落之间的分明停顿
+        
+        // Sutra 专属缩进
+        if type == "sutra" {
+            paragraphStyle.firstLineHeadIndent = font.pointSize * 2.0 // 传统中文首行缩进两字
         } else {
-            style.firstLineHeadIndent = 0
+            paragraphStyle.firstLineHeadIndent = 0
         }
 
         let attributes: [NSAttributedString.Key: Any] = [
-            .paragraphStyle: style,
-            .kern: letterSpacing
+            .font: font,
+            .foregroundColor: textColor,
+            .paragraphStyle: paragraphStyle,
+            .kern: 1.5 // 增加字间距，让视界更空灵
         ]
 
-        if let attributedText = textView.attributedText {
-            textView.attributedText = NSAttributedString(string: attributedText.string, attributes: attributes)
+        textView.attributedText = NSAttributedString(string: content, attributes: attributes)
+        
+        // 更新左侧锚定线的显示状态（仅在经文正文时显示）
+        if let borderLayer = containerView.layer.sublayers?.first(where: { $0.name == "zenAnchorLine" }) {
+            borderLayer.isHidden = (type != "sutra")
+        }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // 动态调整金线的高度与位置
+        if let borderLayer = containerView.layer.sublayers?.first(where: { $0.name == "zenAnchorLine" }) {
+            borderLayer.frame = CGRect(x: 4, y: 16, width: 1, height: containerView.bounds.height - 32)
         }
     }
 
@@ -183,8 +186,8 @@ class SutraTableViewCell: UITableViewCell {
 
     // MARK: - Theme Support
     public func applyThemeColors() {
-        backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 细胞底色同样是净色
+        containerView.backgroundColor = .clear // 透明度直接露底
 
         // Refresh text colors based on content type
         if !contentType.isEmpty {
@@ -295,7 +298,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     private func applyThemeColorsToView() {
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 视界极致统一
     }
 
     private func setupThemeObserverForView() {
@@ -323,8 +326,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
     private func configureTableViewWithDesignSystem() {
         // Apply unified color system colors
-        tableView.backgroundColor = .clear
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        tableView.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 满屏宣纸
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
 
         // Enhanced zen styling
         tableView.separatorStyle = .none
@@ -368,6 +371,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         applyZenTempleSerenityDesignSystem()
 
         // Apply design system to navigation bar
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+        configureZenNavigationBar()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -407,7 +412,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
         // Enhanced sacred styling with divine colors
         let sacredShadow = NSShadow()
-        sacredShadow.shadowColor = SutraDesignTokens.shared.color(for: .bookmark).withAlphaComponent(0.5).cgColor
+        sacredShadow.shadowColor = SutraDesignTokens.shared.color(for: .bookmark)
+            .withAlphaComponent(0.5)
         sacredShadow.shadowOffset = CGSize(width: 0, height: 1)
         sacredShadow.shadowBlurRadius = 2
 
@@ -521,17 +527,12 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         }
 
         let cell = UITableViewCell()
-        cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        cell.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
         cell.selectionStyle = .none
 
-        // Zen card container for action buttons
+        // Zen card container for action buttons - 极简扁平
         let actionContainer = UIView()
-        actionContainer.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-        actionContainer.layer.cornerRadius = 20
-        actionContainer.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
-        actionContainer.layer.shadowOffset = CGSize(width: 0, height: 6)
-        actionContainer.layer.shadowRadius = 16
-        actionContainer.layer.shadowOpacity = 0.12
+        actionContainer.backgroundColor = .clear
         actionContainer.translatesAutoresizingMaskIntoConstraints = false
         cell.addSubview(actionContainer)
 
@@ -597,17 +598,16 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
     private func createZenActionButton(iconName: String, action: Selector, title: String) -> UIView {
         let containerView = UIView()
-        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        containerView.layer.cornerRadius = 16
-        containerView.layer.borderWidth = 1
-        containerView.layer.borderColor = SutraDesignTokens.shared.color(for: .divider).cgColor
+        containerView.backgroundColor = .clear // 极简透明背景
+        containerView.layer.cornerRadius = 0
+        containerView.layer.borderWidth = 0
         containerView.translatesAutoresizingMaskIntoConstraints = false
 
         // Icon
         let iconImageView = UIImageView()
         iconImageView.image = UIImage(systemName: iconName)
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = SutraDesignTokens.shared.color(for: .accent)
+        iconImageView.tintColor = SutraDesignTokens.shared.color(for: .textSecondary)
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
 
         // Title label
@@ -615,7 +615,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         titleLabel.text = title
         // Use unified SutraTypography design system for consistent button titles
         titleLabel.font = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .regular)
-        titleLabel.textColor = SutraDesignTokens.shared.color(for: .accent)
+        titleLabel.textColor = SutraDesignTokens.shared.color(for: .textSecondary)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 

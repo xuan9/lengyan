@@ -35,6 +35,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(treeView)
         treeView.rowHeight = 44.0  // iOS 最小触摸目标
+        treeView.separatorColor = SutraDesignTokens.shared.color(for: .sacredGlow)
                 
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
         self.treeView.addGestureRecognizer(longPressRecognizer)
@@ -398,15 +399,21 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
         
         let cell = newCell!;
-        let name = item["name"]! as? String
+        let name = item["name"]! as? String ?? ""
         let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        if item["children"] == nil {
-            cell.textLabel?.textColor = primaryTextColor
-        } else {
-            cell.textLabel?.textColor = secondaryTextColor
-        }
-        cell.textLabel?.text = name!; 
+        
+        // 🌿 禅意前缀装饰
+        let prefix = isLeaf ? "•  " : "▸  "
+        let attrText = NSMutableAttributedString(string: prefix + name)
+        
+        let prefixColor = isLeaf ? SutraDesignTokens.shared.color(for: .decorativeGold) : SutraDesignTokens.shared.color(for: .textTertiary)
+        let textColor = isLeaf ? primaryTextColor : secondaryTextColor
+        
+        attrText.addAttribute(.foregroundColor, value: prefixColor, range: NSRange(location: 0, length: prefix.utf16.count))
+        attrText.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: prefix.utf16.count, length: name.utf16.count))
+        
+        cell.textLabel?.attributedText = attrText
         return cell
     }
     

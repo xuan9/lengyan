@@ -85,21 +85,28 @@ struct ModernAudioPlayerView: View {
             // Main Content
             ScrollView {
                 VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
-                    // Header with prominent title and subtitle
+                    // Header with prominent title
                     VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
-                        Text(NSLocalizedString("media_tab_title", comment: ""))
-                            .font(SutraTypographyBridge.uiLargeTitle())
-                            .foregroundColor(SutraDesignSystem.sutraTextColor())
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        // 🏛️ 顶部鎏金装饰细线
+                        Rectangle()
+                            .fill(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
+                            .frame(width: 48, height: 2)
+                            .padding(.bottom, 4)
 
-                        Text("屏東能淨協会證道")
-                            .font(SutraTypographyBridge.uiBody())
-                            .foregroundColor(SutraDesignSystem.secondaryTextColor())
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(NSLocalizedString("media_tab_title", comment: ""))
+                                .font(SutraTypographyBridge.uiLargeTitle(weight: .bold))
+                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .chapterTitle)))
+
+                            // 🌸 莲花印记装饰
+                            Text("❀")
+                                .font(.system(size: 20))
+                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
+                        }
                     }
-                    .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
+                    .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
                     .padding(.bottom, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-                    .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
+                    .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
 
                       if isLoading {
                         ProgressView()
@@ -113,7 +120,7 @@ struct ModernAudioPlayerView: View {
                     }
                 }
                 .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
-                .padding(.bottom, audioObserver.showPlayerBar ? 100 : 20) // Space for player bar
+                .padding(.bottom, audioObserver.showPlayerBar ? 160 : 20) // 给 TabBar 和底部播放器留出充足空间
             }
 
             // Media Player Bar (appears when playing)
@@ -121,7 +128,7 @@ struct ModernAudioPlayerView: View {
                 mediaPlayerBar
             }
         }
-        .background(SutraDesignSystem.backgroundColor())
+        .background(Color(SutraDesignTokens.shared.color(for: .background)))
         .edgesIgnoringSafeArea(.bottom)
         .onAppear {
             loadMediaData()
@@ -134,32 +141,33 @@ struct ModernAudioPlayerView: View {
         VStack(spacing: 0) {
             // 极细分隔线
             Rectangle()
-                .fill(SutraDesignSystem.color(.decorativeGold).opacity(0.2))
+                .fill(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.2))
                 .frame(height: 0.5)
 
             // 主播放器栏 - 毛玻璃质感
             VStack(spacing: 8) {
-                // 鎏金进度条
+                // 鎏金进度条 - 增加水平内边距以免滑块溢出碰撞文字
                 progressSlider
+                    .padding(.horizontal, 24)
 
                 // 标题和控制
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(audioObserver.currentTrack ?? "")
-                            .font(SutraTypographyBridge.uiBody())
+                            .font(SutraTypographyBridge.uiBody(weight: .regular))
                             .lineLimit(2)
-                            .foregroundColor(SutraDesignSystem.sutraTextColor())
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
 
                         HStack(spacing: 5) {
                             Text(formatTime(audioObserver.currentTime))
-                                .font(SutraTypographyBridge.uiSmall())
-                                .foregroundColor(SutraDesignSystem.secondaryTextColor())
+                                .font(SutraTypographyBridge.uiCaption(weight: .regular))
+                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
 
                             Spacer()
 
                             Text(formatTime(audioObserver.totalTime))
-                                .font(SutraTypographyBridge.uiSmall())
-                                .foregroundColor(SutraDesignSystem.secondaryTextColor())
+                                .font(SutraTypographyBridge.uiCaption(weight: .regular))
+                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
                         }
                     }
 
@@ -169,20 +177,21 @@ struct ModernAudioPlayerView: View {
                     Button(action: { showPlayModeMenu() }) {
                         Image(selectedPlayMode.iconName)
                             .renderingMode(.template)
-                            .foregroundColor(SutraDesignSystem.accentColor())
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .accent)))
                             .frame(width: 24, height: 24)
                     }
 
                     // 播放/暂停
                     Button(action: togglePlayPause) {
                         Image(audioObserver.isPlaying ? "ic_pause_circle_outline_48pt" : "ic_play_circle_outline_48pt")
-                            .foregroundColor(SutraDesignSystem.accentColor())
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .accent)))
                             .frame(width: 44, height: 44)
                     }
                 }
                 .padding(.horizontal, 24)
             }
             .padding(.vertical, 12)
+            .padding(.bottom, 50) // 增加底部安全区高度，避免被 TabBar 遮挡
             .background(.ultraThinMaterial)
         }
         .transition(.move(edge: .bottom))
@@ -195,17 +204,17 @@ struct ModernAudioPlayerView: View {
             ZStack(alignment: .leading) {
                 // 轨道
                 Rectangle()
-                    .fill(SutraDesignSystem.color(.decorativeGold).opacity(0.2))
+                    .fill(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.2))
                     .frame(height: 3)
 
                 // 鎏金进度
                 Rectangle()
-                    .fill(SutraDesignSystem.color(.bookmark))
+                    .fill(Color(SutraDesignTokens.shared.color(for: .bookmark)))
                     .frame(width: geometry.size.width * (audioObserver.totalTime > 0 ? audioObserver.currentTime / audioObserver.totalTime : 0), height: 3)
 
                 // 滑块圆点 - 增大到14pt
                 Circle()
-                    .fill(SutraDesignSystem.color(.bookmark))
+                    .fill(Color(SutraDesignTokens.shared.color(for: .bookmark)))
                     .frame(width: 14, height: 14)
                     .offset(x: geometry.size.width * (audioObserver.totalTime > 0 ? audioObserver.currentTime / audioObserver.totalTime : 0) - 7)
             }
@@ -217,11 +226,18 @@ struct ModernAudioPlayerView: View {
     private func mediaGroupSection(_ group: MediaGroup) -> some View {
         VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
             // Section Header - World-class spacing and typography
-            Text(group.name)
-                .font(SutraTypographyBridge.uiTitle(weight: .semibold))
-                .foregroundColor(SutraDesignSystem.sutraTextColor())
-                .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-                .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+            HStack(spacing: 8) {
+                Text("❖")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
+
+                Text(group.name)
+                    .font(SutraTypographyBridge.uiTitle(weight: .semibold))
+                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .chapterTitle)))
+            }
+            .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+            .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+            .padding(.bottom, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
 
             // Media Items - Better spacing between items
             VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
@@ -238,12 +254,12 @@ struct ModernAudioPlayerView: View {
         .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(SutraDesignSystem.color(.surface))
+                .fill(Color(SutraDesignTokens.shared.color(for: .card)))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
-                        .stroke(SutraDesignSystem.color(.decorativeGold).opacity(0.2), lineWidth: 0.5)
+                        .stroke(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.15), lineWidth: 0.5)
                 )
-                .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)), radius: 6, x: 0, y: 2)
+                .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)), radius: 8, x: 0, y: 3)
         )
     }
 
@@ -254,10 +270,15 @@ struct ModernAudioPlayerView: View {
 
         return VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
             // Title with download status
-            HStack {
+            HStack(spacing: 4) {
+                // 🌿 圆点前缀
+                Text("• ")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(status == .downloaded ? Color(SutraDesignTokens.shared.color(for: .decorativeGold)) : Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+
                 Text(titleWithStatus(name: name, status: status))
-                    .font(SutraTypographyBridge.uiBody(weight: status == .downloaded ? .regular : .regular))
-                    .foregroundColor(status == .downloaded ? SutraDesignSystem.sutraTextColor() : SutraDesignSystem.secondaryTextColor())
+                    .font(SutraTypographyBridge.uiBody(weight: .regular))
+                    .foregroundColor(status == .downloaded ? Color(SutraDesignTokens.shared.color(for: .sutraText)) : Color(SutraDesignTokens.shared.color(for: .textSecondary)))
 
                 Spacer()
             }
@@ -271,7 +292,7 @@ struct ModernAudioPlayerView: View {
                             .frame(height: 3)
 
                         Rectangle()
-                            .fill(SutraDesignSystem.color(.accent))
+                            .fill(Color(SutraDesignTokens.shared.color(for: .accent)))
                             .frame(width: geometry.size.width * progress, height: 3)
                     }
                 }
@@ -279,10 +300,14 @@ struct ModernAudioPlayerView: View {
             }
         }
         .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-        .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
+        .padding(.vertical, 14)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(SutraDesignSystem.backgroundColor().opacity(0.6))
+                .fill(Color(SutraDesignTokens.shared.color(for: .background)).opacity(0.6))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.1), lineWidth: 0.5)
+                )
         )
         .contentShape(Rectangle())
         .onTapGesture {
