@@ -52,19 +52,19 @@ class SutraTableViewCell: UITableViewCell {
             object: nil
         )
 
-        // 🏛️ Sacred Zen card container with divine aesthetics
+        // 🏛️ Sacred Zen card container - 简化阴影，南禅意
         containerView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-        containerView.layer.cornerRadius = 20  // More refined corner radius
+        containerView.layer.cornerRadius = 16
 
-        // Enhanced sacred shadow with divine glow
-        containerView.layer.shadowColor = SutraDesignTokens.shared.color(for: .bookmark).cgColor
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 4)   // Elevated shadow
-        containerView.layer.shadowRadius = 15                           // Softer, divine shadow
-        containerView.layer.shadowOpacity = 0.15                        // Subtle divine presence
+        // 单层极柔阴影（开销更低）
+        containerView.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        containerView.layer.shadowRadius = 8
+        containerView.layer.shadowOpacity = 0.08
 
-        // Add sacred border
-        containerView.layer.borderWidth = 1
-        containerView.layer.borderColor = SutraDesignTokens.shared.color(for: .bookmark).withAlphaComponent(0.3).cgColor
+        // 古金 hairline 边框
+        containerView.layer.borderWidth = 0.5
+        containerView.layer.borderColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.2).cgColor
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
 
@@ -75,16 +75,13 @@ class SutraTableViewCell: UITableViewCell {
         textView.isEditable = false
         textView.isScrollEnabled = false
 
-        // Add subtle divine glow to text container
-        textView.layer.shadowColor = SutraDesignTokens.shared.color(for: .primary).withAlphaComponent(0.1).cgColor
-        textView.layer.shadowOffset = CGSize(width: 0, height: 1)
-        textView.layer.shadowRadius = 3
-        textView.layer.shadowOpacity = 0.05
+        // 经文容器内边距 - 增大呼吸空间
+        textView.layer.shadowColor = UIColor.clear.cgColor  // 移除文本无用阴影
         textView.textContainerInset = UIEdgeInsets(
-            top: SutraSpacing.Zen.cardPadding,
-            left: SutraSpacing.Zen.cardPadding,
-            bottom: SutraSpacing.Zen.cardPadding,
-            right: SutraSpacing.Zen.cardPadding
+            top: 32,
+            left: 28,
+            bottom: 32,
+            right: 28
         )
 
         // Traditional Chinese paragraph indentation (2 characters for sutra text)
@@ -473,8 +470,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     
     func paragraphOf(text:String, font:UIFont?) -> NSAttributedString{
     let paragraphStyle: NSMutableParagraphStyle = NSMutableParagraphStyle()
-    paragraphStyle.lineHeightMultiple = 1.6
-    paragraphStyle.maximumLineHeight = 40.0
+    paragraphStyle.lineHeightMultiple = 1.8
+    paragraphStyle.maximumLineHeight = 44.0
     paragraphStyle.minimumLineHeight = 10.0
     
     let attributes = font == nil ? [NSAttributedStringKey.paragraphStyle: paragraphStyle]
@@ -507,10 +504,10 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         // Apply comprehensive zen styling
         cell.configureWithZenStyle(content: textContent, type: contentType)
 
-        // Add subtle entrance animation
+        // 含蓄的禅意入场动画
         cell.alpha = 0
-        cell.transform = CGAffineTransform(translationX: 0, y: 20)
-        UIView.animate(withDuration: 0.4, delay: Double(row) * 0.05, options: .curveEaseOut) {
+        cell.transform = CGAffineTransform(translationX: 0, y: 12)
+        UIView.animate(withDuration: 0.35, delay: Double(row) * 0.03, options: .curveEaseOut) {
             cell.alpha = 1
             cell.transform = .identity
         }
@@ -542,13 +539,13 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         let shareButton = createZenActionButton(
             iconName: "square.and.arrow.up",
             action: #selector(share(sender:)),
-            title: "分享"
+            title: NSLocalizedString("share", comment: "")
         )
 
         let pureSutraButton = createZenActionButton(
             iconName: "book",
             action: #selector(SutraPageContentViewController.pureSutra),
-            title: "原文"
+            title: NSLocalizedString("original_text", comment: "")
         )
 
         let bookmarkButton = createZenActionButton(

@@ -9,6 +9,42 @@
 import SwiftUI
 import UIKit
 
+// MARK: - Traditional Chinese Typography Principles
+/// Traditional Chinese character spacing based on printing standards
+public enum TraditionalSpacing {
+    case tight        // 紧密 - Classical texts
+    case standard     // 标准 - Modern reading
+    case comfortable  // 舒适 - Extended reading
+    case contemplative // 冥想 - Meditation mode
+
+    var characterSpacing: CGFloat {
+        switch self {
+        case .tight: return 0.02
+        case .standard: return 0.08
+        case .comfortable: return 0.12
+        case .contemplative: return 0.18
+        }
+    }
+
+    var lineSpacingMultiplier: CGFloat {
+        switch self {
+        case .tight: return 1.4
+        case .standard: return 1.618  // Golden ratio
+        case .comfortable: return 1.8
+        case .contemplative: return 2.0
+        }
+    }
+
+    var paragraphIndent: CGFloat {
+        switch self {
+        case .tight: return 24.0      // 1.5 characters
+        case .standard: return 32.0   // 2 characters (traditional)
+        case .comfortable: return 40.0 // 2.5 characters
+        case .contemplative: return 48.0 // 3 characters
+        }
+    }
+}
+
 // MARK: - Typography Styles (Type-Safe) - 禅意字体系统
 public enum SutraTypographyStyle: String, CaseIterable {
     // 📜 Web Design System Hierarchy - 网页设计系统层级
@@ -151,7 +187,7 @@ struct SutraTypographyDefinition {
     static let webSizes = (
         sutraTitle: 32 as CGFloat,    // 主标题: 32px, 粗体 - 经典标题
         chapterTitle: 24 as CGFloat,  // 章节标题: 24px, 中等 - 章节名称
-        sacredText: 18 as CGFloat,    // 正文: 18px, 常规 - 经文内容
+        sacredText: 20 as CGFloat,    // 正文: 20px, 常规 - 经文内容（提升庄重感）
         auxiliaryText: 14 as CGFloat  // 辅助文本: 14px - 说明文字
     )
 
@@ -172,12 +208,12 @@ struct SutraTypographyDefinition {
         // 📜 Web Design System Spacing - 网页设计系统间距
         .sutraTitle: 0.6,        // 主标题间距
         .chapterTitle: 0.5,      // 章节标题间距
-        .sacredText: 1.0,        // 正文间距 - 经文内容可读性增强
+        .sacredText: 1.2,        // 正文间距 - 经文内容呼吸感增强
         .auxiliaryText: 0.3,     // 辅助文本间距
 
         // 📱 iOS Optimized Spacing - iOS优化间距
-        .sutraBody: 1.0,         // Enhanced spacing for sutra readability
-        .sutraLarge: 1.0,        // Maximum spacing for large sutra text
+        .sutraBody: 1.2,         // 经文正文呼吸感增强
+        .sutraLarge: 1.2,        // 大字经文呼吸感
         .sutraCaption: 0.5,      // Subtle spacing for captions
         .commentary: 0.7,        // Good spacing for commentary
 

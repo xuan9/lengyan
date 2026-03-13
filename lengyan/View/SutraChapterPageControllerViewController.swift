@@ -44,17 +44,13 @@ class SutraChapterPageViewController: UIPageViewController, UIPageViewController
     }
     
     func setTitle() {
-        // Modern back button with design system
+        // SF Symbol 返回按钮
         let closeButton = UIBarButtonItem(
-            title: " ❬  ",
+            image: UIImage(systemName: "chevron.left"),
             style: .plain,
             target: self,
             action: #selector(close)
         )
-
-        if let backImage = UIImage(named: "ic_chevron_left_18pt") {
-            closeButton.setBackButtonBackgroundImage(backImage, for: .normal, barMetrics: .default)
-        }
 
         self.navigationItem.leftBarButtonItem = closeButton
 

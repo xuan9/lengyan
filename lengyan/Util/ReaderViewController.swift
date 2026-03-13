@@ -27,7 +27,7 @@ final class ReaderViewController: UIViewController {
         
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(close))
         self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
+        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage(systemName: "chevron.left"), for: .normal, barMetrics: .default)
         
 
         setupContentView()

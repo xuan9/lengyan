@@ -12,8 +12,19 @@
 "footer_txt_3" = "感恩法界佛教总会！\n\n本屏中所列为部分关键科判以方便检索，可点击经名打开完整科判。";
 
 "lengyan_book_title" = "《楞严经》";
+"reading_tab_title" = "阅读";
 "media_tab_title" = "听经";
 "star_tab_title" = "收藏";
+"favorites_subtitle" = "你喜欢的经文";
+"no_favorites" = "暂无收藏";
+"no_favorites_description" = "在阅读时点击收藏按钮，将喜欢的经文添加到这里";
+"unknown_sutra" = "未知经文";
+"contains_sub_chapters" = "包含子章节";
+"sutra" = "经文";
+"cancel" = "取消";
+"share" = "分享";
+"original_text" = "原文";
+"menu" = "菜单";
 
 "downloading_text" = "正在下载...";
 "download_failed" = "下载失败，稍后重试";

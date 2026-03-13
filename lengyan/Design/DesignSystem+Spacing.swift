@@ -38,9 +38,9 @@ public struct SutraSpacing {
     /// Web Design System: 70% 禅雾灰 + 20% 禅纸白 + 10% 禅竹绿
     /// Traditional Zen layout proportions based on web design principles
     public struct Zen {
-        public static let cardPadding: CGFloat = 24           // 卡片内边距
+        public static let cardPadding: CGFloat = 28           // 卡片内边距（增强呼吸感）
         public static let cardMargin: CGFloat = 16            // 卡片外边距
-        public static let contentMargin: CGFloat = 20         // 内容边距
+        public static let contentMargin: CGFloat = 24         // 内容边距（增强呼吸感）
         public static let navigationHeight: CGFloat = 56      // 导航栏高度
         public static let tabBarHeight: CGFloat = 64          // 标签栏高度
     }

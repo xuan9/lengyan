@@ -44,38 +44,58 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     }
     
     func setTitle() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬  ", style: .plain, target: self, action: #selector(close))
-        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
-        
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.left"),
+            style: .plain,
+            target: self,
+            action: #selector(close)
+        )
         self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        self.navigationItem.rightBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
         self.navigationController?.navigationBar.isTranslucent = false;
         self.setPageTitle()
         self.updateStarButton();
     }
     
     func updateStarButton(){
-        var likeButton:UIBarButtonItem;
+        var likeButton: UIBarButtonItem
+        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
+        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
+
         if Prefers.shared.likes.contains(path!) {
-            likeButton = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
+            likeButton = UIBarButtonItem(
+                image: UIImage(systemName: "bookmark.fill"),
+                style: .plain,
+                target: self,
+                action: #selector(unlike)
+            )
+            likeButton.tintColor = bookmarkColor  // 鎏金色
         } else {
-            likeButton = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
+            likeButton = UIBarButtonItem(
+                image: UIImage(systemName: "bookmark"),
+                style: .plain,
+                target: self,
+                action: #selector(like)
+            )
+            likeButton.tintColor = secondaryColor
         }
         
         if self.isShowIndexButton  {
-            let item = Book.shared.itemOfPath(self.path!);
+            let item = Book.shared.itemOfPath(self.path!)
             if(item["children"] != nil ){
-                let indexButton = UIBarButtonItem(image: UIImage.init(named: "ic_view_list_18pt")?.withRenderingMode(.alwaysTemplate), style: .plain, target: self, action: #selector(openIndex))
-                 self.navigationItem.setRightBarButtonItems([indexButton,likeButton], animated: false)
+                let indexButton = UIBarButtonItem(
+                    image: UIImage(systemName: "list.bullet.rectangle"),
+                    style: .plain,
+                    target: self,
+                    action: #selector(openIndex)
+                )
+                indexButton.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
+                self.navigationItem.setRightBarButtonItems([indexButton, likeButton], animated: false)
             } else {
                 self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
             }
         } else {
             self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
         }
-
-        self.navigationItem.rightBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        likeButton.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
     }
 
     @objc func openIndex(){

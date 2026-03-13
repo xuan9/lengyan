@@ -145,3 +145,7 @@ The app follows a hybrid UIKit/SwiftUI approach:
 - App requires JSON data files to be present in bundle
 - Audio functionality needs physical device for full testing
 - Different behavior between Simplified/Traditional Chinese modes
+
+## Architecture Lessons Learned
+
+**Simple apps need simple solutions** - Question whether "best practices" actually apply to your specific context before implementing them blindly.

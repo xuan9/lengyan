@@ -61,14 +61,17 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     func setTitle() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(close))
-        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
-
+        // Use modern SF Symbols for better accessibility and consistency
+        let backIcon = UIImage(systemName: "chevron.left")
+        let backBarButton = UIBarButtonItem(image: backIcon, style: .plain, target: self, action: #selector(close))
+        self.navigationItem.leftBarButtonItem = backBarButton
 
         if(Prefers.shared.likes.contains(path!)){
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"★", style: .plain, target: self, action: #selector(unlike))
+            let bookmarkIcon = UIImage(systemName: "bookmark.fill")
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: #selector(unlike))
         } else {
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title:"☆", style: .plain, target: self, action: #selector(like))
+            let bookmarkIcon = UIImage(systemName: "bookmark")
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: #selector(like))
         }
 
         // Apply sutra design system colors for a calm, ink-on-paper feel

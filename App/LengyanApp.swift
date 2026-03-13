@@ -40,20 +40,32 @@ struct ContentView: View {
         TabView {
             ReadingView()
                 .tabItem {
-                    Image(systemName: "book")
-                    Text("阅读")
+                    VStack(spacing: 2) {
+                        Image(systemName: "doc.text")
+                            .font(.system(size: 20))
+                        Text(NSLocalizedString("reading_tab_title", comment: ""))
+                            .font(.caption)
+                    }
                 }
 
             AudioView()
                 .tabItem {
-                    Image(systemName: "music.note.list")
-                    Text("听经")
+                    VStack(spacing: 2) {
+                        Image(systemName: "music.note.list")
+                            .font(.system(size: 20))
+                        Text(NSLocalizedString("media_tab_title", comment: ""))
+                            .font(.caption)
+                    }
                 }
 
             FavoritesView()
                 .tabItem {
-                    Image(systemName: "star")
-                    Text("收藏")
+                    VStack(spacing: 2) {
+                        Image(systemName: "star")
+                            .font(.system(size: 20))
+                        Text(NSLocalizedString("star_tab_title", comment: ""))
+                            .font(.caption)
+                    }
                 }
         }
         .tint(SutraThemeManager.shared.accentColor())
@@ -88,7 +100,7 @@ struct FavoritesView: View {
     var body: some View {
         Text("Favorites (Coming Soon)")
             .font(.title)
-            .navigationTitle("收藏")
+            .navigationTitle(NSLocalizedString("star_tab_title", comment: ""))
     }
 }
 

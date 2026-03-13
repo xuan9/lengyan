@@ -70,14 +70,18 @@ public enum ColorToken: String, CaseIterable {
     case shadow              // 禅暮紫 - #6b46c1 (阴影)
 
     // ⭐ Status Colors - 状态色
-    case bookmark            // 禅竹绿 - #4a5d3a (收藏色)
-    case favorite            // 禅暮紫 - #6b46c1 (喜爱色)
+    case bookmark            // 鎏金 - #B8860B (收藏色)
+    case favorite            // 朱砂红 - #DC143C (喜爱色)
+
+    // ✨ Decorative Colors - 装饰色
+    case decorativeGold      // 古金微光 - #C4A265 (卡片边缘装饰)
+    case sacredGlow          // 佛光柔辉 - #FFE4B5 (选中状态柔光)
 
     // 🏛️ UI System Colors - 界面系统色
-    case navigationBar       // 禅雾灰 - #f8f9f6 (导航栏)
-    case tabBar              // 禅雾灰 - #f8f9f6 (标签栏)
-    case separator           // 禅雾灰 - #f8f9f6 (分隔符)
-    case bookmarkStar        // 禅暮紫 - #6b46c1 (书签星)
+    case navigationBar       // 宣纸暖色 - #FAF8F3 (导航栏)
+    case tabBar              // 宣纸米色 - #FAF7F0 (标签栏)
+    case separator           // 宣纸纹 - #E8DCC4 (分隔符)
+    case bookmarkStar        // 鎏金 - #B8860B (书签星)
 }
 
 // MARK: - Theme Protocol
@@ -91,7 +95,7 @@ struct LightTheme: SutraThemeProtocol {
         switch token {
         // 🌅 Sacred Zen Background Colors - 神圣禅意背景色
         case .background: return UIColor(hex: "#FAF8F3") ?? .white       // 传世宣纸 - 温暖如传统宣纸的米色
-        case .surface: return UIColor(hex: "#FAF7F0") ?? .white         // 古籍纸色 - 内容区域温暖如古籍
+        case .surface: return UIColor(hex: "#FFF8E7") ?? .white         // 佛光暖黄 - 内容区域，与背景形成微妙温暖对比
         case .card: return UIColor(hex: "#FFFEF9")?.withAlphaComponent(0.98) ?? .white  // 纯净宣纸 - 内容载体
         case .overlay: return UIColor(hex: "#2C1810")?.withAlphaComponent(0.7) ?? .black // 古墨遮罩
 
@@ -108,7 +112,7 @@ struct LightTheme: SutraThemeProtocol {
 
         // 🎋 Vibrant Zen Accent Colors - 生机禅意强调色
         case .primary: return UIColor(hex: "#228B22") ?? .systemGreen      // 竹翠绿 - 主要操作，生机勃勃
-        case .accent: return UIColor(hex: "#FF6B35") ?? .systemOrange     // 佛光橙 - 辅助强调，温暖活力
+        case .accent: return UIColor(hex: "#2E7D32") ?? .systemGreen     // 禅竹翠 - 辅助强调，沉稳生机
         case .divider: return UIColor(hex: "#E8DCC4") ?? .lightGray      // 宣纸纹 - 分隔线，自然纹理
         case .border: return UIColor(hex: "#D4A574") ?? .lightGray        // 古铜色 - 边框，古典雅致
         case .shadow: return UIColor(hex: "#8B4513")?.withAlphaComponent(0.15) ?? .brown // 古木影 - 阴影
@@ -116,6 +120,10 @@ struct LightTheme: SutraThemeProtocol {
         // ⭐ Sacred Status Colors - 神圣状态色
         case .bookmark: return UIColor(hex: "#B8860B") ?? .systemYellow     // 鎏金 - 收藏标记，珍贵如金
         case .favorite: return UIColor(hex: "#DC143C") ?? .systemRed       // 朱砂红 - 喜爱标记，神圣印章
+
+        // ✨ Decorative Colors - 装饰色
+        case .decorativeGold: return UIColor(hex: "#C4A265") ?? .systemYellow  // 古金微光 - 卡片边缘装饰
+        case .sacredGlow: return UIColor(hex: "#FFE4B5") ?? .systemYellow     // 佛光柔辉 - 选中状态柔光
 
         // 🏛️ Sacred UI System Colors - 神圣界面系统色
         case .navigationBar: return UIColor(hex: "#FFF8E7") ?? .white      // 佛光暖黄 - 导航栏神圣光辉
@@ -152,6 +160,10 @@ struct SepiaTheme: SutraThemeProtocol {
 
         case .bookmark: return UIColor(hex: "#FFB74D") ?? .orange
         case .favorite: return UIColor(hex: "#8D6E63") ?? .brown
+
+        // ✨ Decorative Colors
+        case .decorativeGold: return UIColor(hex: "#A0845C") ?? .systemYellow
+        case .sacredGlow: return UIColor(hex: "#F5E6D3") ?? .systemYellow
 
         // UI System colors - WHITE for MAXIMUM CONTRAST
         case .navigationBar: return .white        // WHITE navbar
@@ -193,6 +205,10 @@ struct DarkTheme: SutraThemeProtocol {
         // ⭐ Night Sacred Status Colors - 夜间神圣状态色
         case .bookmark: return UIColor(hex: "#FFD700") ?? .systemYellow  // 夜间鎏金 - 收藏标记，如月如金
         case .favorite: return UIColor(hex: "#FF69B4") ?? .systemRed  // 夜间朱砂 - 喜爱标记，神圣印章
+
+        // ✨ Night Decorative Colors - 夜间装饰色
+        case .decorativeGold: return UIColor(hex: "#DAA520") ?? .systemYellow  // 夜间古金微光
+        case .sacredGlow: return UIColor(hex: "#8B6914")?.withAlphaComponent(0.3) ?? .systemYellow  // 夜间佛光柔辉
 
         // 🌙 Night Sacred UI System Colors - 夜间神圣界面系统色
         case .navigationBar: return UIColor(hex: "#2A1F1A") ?? .systemGray2  // 深檀木色 - 导航栏夜间神圣

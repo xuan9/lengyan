@@ -87,7 +87,7 @@ struct ModernAudioPlayerView: View {
                 VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
                     // Header with prominent title and subtitle
                     VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
-                        Text("聽經")
+                        Text(NSLocalizedString("media_tab_title", comment: ""))
                             .font(SutraTypographyBridge.uiLargeTitle())
                             .foregroundColor(SutraDesignSystem.sutraTextColor())
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -129,88 +129,85 @@ struct ModernAudioPlayerView: View {
         }
     }
 
-    // MARK: - Media Player Bar
+    // MARK: - Media Player Bar - 毛玻璃质感播放器
     private var mediaPlayerBar: some View {
         VStack(spacing: 0) {
-            // White padding
+            // 极细分隔线
             Rectangle()
-                .fill(SutraDesignSystem.backgroundColor())
-                .frame(height: 16)
+                .fill(SutraDesignSystem.color(.decorativeGold).opacity(0.2))
+                .frame(height: 0.5)
 
-            // Main player bar
-            Rectangle()
-                .fill(SutraDesignSystem.color(.surface))
-                .frame(height: 90)
-                .overlay(
-                    VStack(spacing: 8) {
-                        // Progress bar
-                        progressSlider
+            // 主播放器栏 - 毛玻璃质感
+            VStack(spacing: 8) {
+                // 鎏金进度条
+                progressSlider
 
-                        // Title and controls
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(audioObserver.currentTrack ?? "")
-                                    .font(SutraTypographyBridge.uiBody())
-                                    .lineLimit(2)
-                                    .foregroundColor(SutraDesignSystem.sutraTextColor())
+                // 标题和控制
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(audioObserver.currentTrack ?? "")
+                            .font(SutraTypographyBridge.uiBody())
+                            .lineLimit(2)
+                            .foregroundColor(SutraDesignSystem.sutraTextColor())
 
-                                HStack(spacing: 5) {
-                                    Text(formatTime(audioObserver.currentTime))
-                                        .font(SutraTypographyBridge.uiSmall())
-                                        .foregroundColor(SutraDesignSystem.secondaryTextColor())
-
-                                    Spacer()
-
-                                    Text(formatTime(audioObserver.totalTime))
-                                        .font(SutraTypographyBridge.uiSmall())
-                                        .foregroundColor(SutraDesignSystem.secondaryTextColor())
-                                }
-                            }
+                        HStack(spacing: 5) {
+                            Text(formatTime(audioObserver.currentTime))
+                                .font(SutraTypographyBridge.uiSmall())
+                                .foregroundColor(SutraDesignSystem.secondaryTextColor())
 
                             Spacer()
 
-                            // Play mode button
-                            Button(action: { showPlayModeMenu() }) {
-                                Image(selectedPlayMode.iconName)
-                                    .renderingMode(.template)
-                                    .foregroundColor(SutraDesignSystem.accentColor())
-                                    .frame(width: 24, height: 24)
-                            }
-
-                            // Play/Pause button
-                            Button(action: togglePlayPause) {
-                                Image(audioObserver.isPlaying ? "ic_pause_circle_outline_48pt" : "ic_play_circle_outline_48pt")
-                                    .foregroundColor(SutraDesignSystem.accentColor())
-                                    .frame(width: 40, height: 40)
-                            }
+                            Text(formatTime(audioObserver.totalTime))
+                                .font(SutraTypographyBridge.uiSmall())
+                                .foregroundColor(SutraDesignSystem.secondaryTextColor())
                         }
-                        .padding(.horizontal, 30)
                     }
-                )
+
+                    Spacer()
+
+                    // 播放模式
+                    Button(action: { showPlayModeMenu() }) {
+                        Image(selectedPlayMode.iconName)
+                            .renderingMode(.template)
+                            .foregroundColor(SutraDesignSystem.accentColor())
+                            .frame(width: 24, height: 24)
+                    }
+
+                    // 播放/暂停
+                    Button(action: togglePlayPause) {
+                        Image(audioObserver.isPlaying ? "ic_pause_circle_outline_48pt" : "ic_play_circle_outline_48pt")
+                            .foregroundColor(SutraDesignSystem.accentColor())
+                            .frame(width: 44, height: 44)
+                    }
+                }
+                .padding(.horizontal, 24)
+            }
+            .padding(.vertical, 12)
+            .background(.ultraThinMaterial)
         }
         .transition(.move(edge: .bottom))
         .animation(.easeInOut(duration: 0.3), value: audioObserver.showPlayerBar)
     }
 
-    // MARK: - Progress Slider
+    // MARK: - Progress Slider - 鎏金进度条
     private var progressSlider: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                // Track
+                // 轨道
                 Rectangle()
-                    .fill(Color.black.opacity(0.3))
-                    .frame(height: 4)
+                    .fill(SutraDesignSystem.color(.decorativeGold).opacity(0.2))
+                    .frame(height: 3)
 
-                // Progress
+                // 鎏金进度
                 Rectangle()
-                    .fill(Color(red: 0.941, green: 0.918, blue: 0.839))
-                    .frame(width: geometry.size.width * (audioObserver.totalTime > 0 ? audioObserver.currentTime / audioObserver.totalTime : 0), height: 4)
+                    .fill(SutraDesignSystem.color(.bookmark))
+                    .frame(width: geometry.size.width * (audioObserver.totalTime > 0 ? audioObserver.currentTime / audioObserver.totalTime : 0), height: 3)
 
-                // Scrubber circle
+                // 滑块圆点 - 增大到14pt
                 Circle()
-                    .fill(Color(red: 0.941, green: 0.918, blue: 0.839))
-                    .frame(width: 12, height: 12)
-                    .offset(x: geometry.size.width * (audioObserver.totalTime > 0 ? audioObserver.currentTime / audioObserver.totalTime : 0) - 6)
+                    .fill(SutraDesignSystem.color(.bookmark))
+                    .frame(width: 14, height: 14)
+                    .offset(x: geometry.size.width * (audioObserver.totalTime > 0 ? audioObserver.currentTime / audioObserver.totalTime : 0) - 7)
             }
         }
         .frame(height: 25)
@@ -240,12 +237,13 @@ struct ModernAudioPlayerView: View {
         }
         .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(SutraDesignSystem.backgroundColor().opacity(0.5))
+            RoundedRectangle(cornerRadius: 14)
+                .fill(SutraDesignSystem.color(.surface))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(SutraDesignSystem.color(.border).opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(SutraDesignSystem.color(.decorativeGold).opacity(0.2), lineWidth: 0.5)
                 )
+                .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)), radius: 6, x: 0, y: 2)
         )
     }
 

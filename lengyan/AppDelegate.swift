@@ -13,34 +13,36 @@ import SwiftUI
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
+
     var window: UIWindow?
 
-    internal var lastScheduledNotificationFireDay: Int?;
-    internal static let MAX_SCHEDULED_NOTIFICATIONS:Int = 7;
-    
+    internal var lastScheduledNotificationFireDay: Int?
+    internal static let MAX_SCHEDULED_NOTIFICATIONS: Int = 7
+
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        
+        // Load book data synchronously
         Book.shared.loadDataSyncWithCompletionHandler { () in
             print("Book data loaded on start")
         }
         return true
     }
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
         // Load and apply theme using the enhanced design system
         SutraDesignTokens.shared.loadSavedTheme()
         SutraDesignTokens.shared.applyThemeToApp()
 
-        // Create programmatic UI with enhanced design system
-        setupProgrammaticUI()
+        // Setup main UI
+        setupMainUI()
 
+        // Handle notification if app was launched from notification
         let notification = launchOptions?[UIApplicationLaunchOptionsKey.localNotification] as? UILocalNotification
-
         if notification != nil {
             DispatchQueue.global().async {
                 for _ in (0..<100) {
                     if Book.shared.loaded {
-                        break;
+                        break
                     }
                     Thread.sleep(forTimeInterval: 0.1)
                 }
@@ -53,22 +55,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
-    private func setupProgrammaticUI() {
-        // Apply comprehensive Zen Temple Serenity design system
-        setupZenNavigationAppearance()
-        setupZenTabBarAppearance()
-
+    private func setupMainUI() {
+        // Create main window
         let window = UIWindow(frame: UIScreen.main.bounds)
         self.window = window
 
-        // Create Tab Bar Controller
+        // Create and setup the main tab bar controller
         let tabBarController = UITabBarController()
+        setupTabs(for: tabBarController)
+        configureAppearance()
 
+        window.rootViewController = tabBarController
+        window.makeKeyAndVisible()
+    }
+
+    private func setupTabs(for tabBarController: UITabBarController) {
         // Setup Reading Tab
         let sutraFrontVC = SutraFrontViewController()
         let readingNavController = UINavigationController(rootViewController: sutraFrontVC)
         readingNavController.tabBarItem = UITabBarItem(
-            title: "閱讀",
+            title: NSLocalizedString("reading_tab_title", comment: ""),
             image: UIImage(named: "book"),
             selectedImage: UIImage(named: "book")
         )
@@ -78,9 +84,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let audioHostingController = UIHostingController(rootView: modernAudioPlayer)
         let listeningNavController = UINavigationController(rootViewController: audioHostingController)
         listeningNavController.tabBarItem = UITabBarItem(
-            title: "聽經",
-            image: UIImage(named: "ic_library_music"),
-            selectedImage: UIImage(named: "ic_library_music")
+            title: NSLocalizedString("media_tab_title", comment: ""),
+            image: UIImage(systemName: "music.note.list")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
+            selectedImage: UIImage(systemName: "music.note.list")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
         // Hide navigation bar for cleaner SwiftUI interface
         listeningNavController.navigationBar.isHidden = true
@@ -90,28 +96,112 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let favoritesHostingController = UIHostingController(rootView: modernFavorites)
         let favoritesNavController = UINavigationController(rootViewController: favoritesHostingController)
         favoritesNavController.tabBarItem = UITabBarItem(
-            title: "收藏",
-            image: UIImage(named: "baseline_star_black_24pt"),
-            selectedImage: UIImage(named: "baseline_star_black_24pt")
+            title: NSLocalizedString("star_tab_title", comment: ""),
+            image: UIImage(systemName: "heart")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
+            selectedImage: UIImage(systemName: "heart.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
         // Hide navigation bar for cleaner SwiftUI interface
         favoritesNavController.navigationBar.isHidden = true
 
-        // Configure Tab Bar Appearance
-        tabBarController.tabBar.isTranslucent = false
+        tabBarController.viewControllers = [readingNavController, listeningNavController, favoritesNavController]
+    }
 
-        // Set View Controllers
-        tabBarController.viewControllers = [
-            readingNavController,
-            listeningNavController,
-            favoritesNavController
+    private func configureAppearance() {
+        // Apply Zen design system
+        setupZenNavigationAppearance()
+        setupZenTabBarAppearance()
+    }
+
+    private func setupZenNavigationAppearance() {
+        // Enhanced Zen navigation appearance
+        let navigationBarAppearance = UINavigationBarAppearance()
+
+        // Create zen-inspired colors
+        let designSystem = SutraDesignTokens.shared
+
+        navigationBarAppearance.configureWithOpaqueBackground()
+        navigationBarAppearance.backgroundColor = designSystem.color(for: .background)
+        navigationBarAppearance.shadowColor = designSystem.color(for: .decorativeGold).withAlphaComponent(0.15)
+        navigationBarAppearance.shadowImage = UIImage()
+
+        // Set typography for zen aesthetics
+        let largeTitleFont = SutraTypographySystem().uiFont(for: .uiLargeTitle, weight: .regular)
+        let titleFont = SutraTypographySystem().uiFont(for: .uiHeading, weight: .regular)
+
+        navigationBarAppearance.largeTitleTextAttributes = [
+            .font: largeTitleFont,
+            .foregroundColor: designSystem.color(for: .textPrimary)
         ]
 
-        // Setup enhanced design will be called in viewDidLoad
+        navigationBarAppearance.titleTextAttributes = [
+            .font: titleFont,
+            .foregroundColor: designSystem.color(for: .textPrimary)
+        ]
 
-        // Set Root View Controller
-        window.rootViewController = tabBarController
-        window.makeKeyAndVisible()
+        // Apply appearance globally
+        UINavigationBar.appearance().standardAppearance = navigationBarAppearance
+        UINavigationBar.appearance().compactAppearance = navigationBarAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+
+        // Set translucent to true for better zen aesthetics
+        UINavigationBar.appearance().isTranslucent = true
+        UINavigationBar.appearance().backgroundColor = designSystem.color(for: .background)
+    }
+
+    private func setupZenTabBarAppearance() {
+        // Enhanced Zen TabBar styling with better visual hierarchy
+        let appearance = UITabBarAppearance()
+
+        // Create zen-inspired colors
+        let designSystem = SutraDesignTokens.shared
+
+        // Background with subtle zen transparency
+        appearance.backgroundColor = designSystem.color(for: .background)
+        appearance.backgroundEffect = UIBlurEffect(style: .light)
+
+        // 微妙金色分隔线
+        appearance.shadowColor = designSystem.color(for: .decorativeGold).withAlphaComponent(0.15)
+        appearance.shadowImage = UIImage()
+
+        // TabBar 翠竹绿选中 + 淡雅未选中
+        appearance.selectionIndicatorTintColor = designSystem.color(for: .primary)
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .font: SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular),
+            .foregroundColor: designSystem.color(for: .textTertiary)
+        ]
+
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .font: SutraTypographySystem().uiFont(for: .uiCaption, weight: .medium),
+            .foregroundColor: designSystem.color(for: .primary)
+        ]
+
+        // Increase vertical position offset to prevent text-icon overlap
+        appearance.stackedLayoutAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 3)
+        appearance.stackedLayoutAppearance.selected.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 3)
+
+        // Icon appearance with zen colors
+        appearance.stackedLayoutAppearance.normal.iconColor = designSystem.color(for: .textTertiary)
+        appearance.stackedLayoutAppearance.selected.iconColor = designSystem.color(for: .primary)
+
+        // Compact appearance for smaller devices
+        appearance.compactInlineLayoutAppearance.normal.titleTextAttributes = appearance.stackedLayoutAppearance.normal.titleTextAttributes
+        appearance.compactInlineLayoutAppearance.selected.titleTextAttributes = appearance.stackedLayoutAppearance.selected.titleTextAttributes
+        appearance.compactInlineLayoutAppearance.normal.iconColor = appearance.stackedLayoutAppearance.normal.iconColor
+        appearance.compactInlineLayoutAppearance.selected.iconColor = appearance.stackedLayoutAppearance.selected.iconColor
+
+        // Inline appearance for newer iOS versions
+        if #available(iOS 15.0, *) {
+            appearance.inlineLayoutAppearance.normal.titleTextAttributes = appearance.stackedLayoutAppearance.normal.titleTextAttributes
+            appearance.inlineLayoutAppearance.selected.titleTextAttributes = appearance.stackedLayoutAppearance.selected.titleTextAttributes
+            appearance.inlineLayoutAppearance.normal.iconColor = appearance.stackedLayoutAppearance.normal.iconColor
+            appearance.inlineLayoutAppearance.selected.iconColor = appearance.stackedLayoutAppearance.selected.iconColor
+        }
+
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+
+        // Ensure consistent translucency
+        UITabBar.appearance().isTranslucent = true
     }
 
     @available(iOS 10.0, *)
@@ -200,53 +290,4 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     }
 
-    // MARK: - Zen Temple Serenity Design System
-    private func setupZenNavigationAppearance() {
-        // Apply design system to navigation bars using semantic color tokens
-        UINavigationBar.appearance().barTintColor = SutraDesignTokens.shared.color(for: .navigationBar)
-        UINavigationBar.appearance().backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
-        UINavigationBar.appearance().tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-    }
-
-    private func setupZenTabBarAppearance() {
-        if #available(iOS 15.0, *) {
-            let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-
-            // Use new semantic color tokens (borrowed from SutraDesignSystem)
-            appearance.backgroundColor = SutraDesignTokens.shared.color(for: .tabBar)
-            appearance.shadowColor = SutraDesignTokens.shared.color(for: .separator)
-            appearance.shadowImage = UIImage()
-
-            // Zen tab item styling with unified typography
-            let normalFont = SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular)
-            let selectedFont = SutraTypographySystem().uiFont(for: .uiCaption, weight: .medium)
-
-            appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-                .font: normalFont,
-                .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary)
-            ]
-
-            appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-                .font: selectedFont,
-                .foregroundColor: SutraDesignTokens.shared.color(for: .accent)
-            ]
-
-            // Apply to all tab bars
-            UITabBar.appearance().standardAppearance = appearance
-            UITabBar.appearance().scrollEdgeAppearance = appearance
-        } else {
-            // Fallback for iOS 13-14 using semantic color tokens
-            UITabBar.appearance().barTintColor = SutraDesignTokens.shared.color(for: .tabBar)
-            UITabBar.appearance().shadowImage = UIImage()
-            UITabBar.appearance().backgroundImage = UIImage()
-
-            // Set tab bar item colors with semantic system
-            UITabBar.appearance().tintColor = SutraDesignTokens.shared.color(for: .accent)
-            UITabBar.appearance().unselectedItemTintColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        }
-
-        UITabBar.appearance().isTranslucent = true
-    }
 }
-

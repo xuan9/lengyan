@@ -34,23 +34,29 @@ class SutraChapterContentViewController: UIViewController, SutraPage {
     }
     
     func addSutra(sutra:String){
-        let sutraTextView = UITextView();
-        sutraTextView.isSelectable = true;
-        sutraTextView.isScrollEnabled = true;
-        sutraTextView.isEditable = false;
-        // Use unified SutraTypography design system for consistent chapter reading experience
+        let sutraTextView = UITextView()
+        sutraTextView.isSelectable = true
+        sutraTextView.isScrollEnabled = true
+        sutraTextView.isEditable = false
+
+        // 🏛️ 禅意经文排版
         sutraTextView.font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
-        sutraTextView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        sutraTextView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)   // 层次感
         sutraTextView.textColor = SutraDesignTokens.shared.color(for: .sutraText)
-        let text = Book.shared.getSutraAttributeString(text: sutra);
-        sutraTextView.attributedText = text;
-        view.addSubview(sutraTextView);
+
+        // 增加上下呼吸空间
+        sutraTextView.textContainerInset = UIEdgeInsets(top: 24, left: 4, bottom: 24, right: 4)
+
+        let text = Book.shared.getSutraAttributeString(text: sutra)
+        sutraTextView.attributedText = text
+        view.addSubview(sutraTextView)
+
         if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
-            sutraTextView.bindFrameToSuperviewBounds(paddingHorizontal:20, paddingVertical: 10)
+            sutraTextView.bindFrameToSuperviewBounds(paddingHorizontal: 44, paddingVertical: 10)
         } else {
-            sutraTextView.bindFrameToSuperviewBounds(paddingHorizontal:2, paddingVertical: 0)
+            sutraTextView.bindFrameToSuperviewBounds(paddingHorizontal: 20, paddingVertical: 0)
         }
-        self.sutraView = sutraTextView;
+        self.sutraView = sutraTextView
     }
     override func viewDidLayoutSubviews() {
         self.sutraView?.setContentOffset(.zero, animated:false);

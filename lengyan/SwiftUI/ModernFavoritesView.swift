@@ -125,12 +125,12 @@ struct ModernFavoritesView: View {
             VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
                 // World-class Header with prominent title and helpful subtitle
                 VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM)) {
-                    Text("收藏")
+                    Text(NSLocalizedString("star_tab_title", comment: ""))
                         .font(SutraTypographyBridge.uiLargeTitle())
                         .foregroundColor(SutraDesignSystem.sutraTextColor())
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text("你喜欢的经文")
+                    Text(NSLocalizedString("favorites_subtitle", comment: ""))
                         .font(SutraTypographyBridge.uiBody())
                         .foregroundColor(SutraDesignSystem.secondaryTextColor())
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,24 +143,24 @@ struct ModernFavoritesView: View {
                         .progressViewStyle(CircularProgressViewStyle())
                         .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
                 } else if favorites.isEmpty {
-                    // Empty State - World-class design with larger icon and better messaging
+                    // 🌺 禅意空状态 - 莲花图标 + 脉动动画
                     VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL)) {
                         Image(systemName: "heart.text.square")
-                            .font(.system(size: 80))
-                            .foregroundColor(SutraDesignSystem.color(.accent).opacity(0.5))
+                            .font(.system(size: 72, weight: .ultraLight))
+                            .foregroundColor(SutraDesignSystem.color(.decorativeGold).opacity(0.5))
 
-                        Text("暂无收藏")
-                            .font(SutraTypographyBridge.uiLargeTitle())
-                            .foregroundColor(SutraDesignSystem.sutraTextColor())
+                        Text(NSLocalizedString("no_favorites", comment: ""))
+                            .font(SutraTypographyBridge.uiTitle(weight: .medium))
+                            .foregroundColor(SutraDesignSystem.color(.textTertiary))
 
-                        Text("在阅读时点击收藏按钮，将喜欢的经文添加到这里")
+                        Text(NSLocalizedString("no_favorites_description", comment: ""))
                             .font(SutraTypographyBridge.uiBody())
-                            .foregroundColor(SutraDesignSystem.secondaryTextColor())
+                            .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.6))
                             .multilineTextAlignment(.center)
-                            .lineSpacing(4)
-                            .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXXL))
+                            .lineSpacing(6)
+                            .padding(.horizontal, 40)
                     }
-                    .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
+                    .padding(.top, 80)
                 } else {
                     // Favorites List
                     VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
@@ -187,48 +187,58 @@ struct ModernFavoritesView: View {
     }
 
     private func favoriteCard(_ favorite: FavoriteItem) -> some View {
-        VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
-            // Title and heart button with better spacing
-            HStack(alignment: .top, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
-                Text(favorite.title)
-                    .font(SutraTypographyBridge.uiTitle(weight: .semibold))
-                    .foregroundColor(SutraDesignSystem.sutraTextColor())
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+        HStack(spacing: 0) {
+            // 左侧装饰竖线 - accent 翠竹绿
+            RoundedRectangle(cornerRadius: 2)
+                .fill(SutraDesignSystem.accentColor())
+                .frame(width: 3)
+                .padding(.vertical, 8)
 
-                Spacer()
+            VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
+                // 标题和心形按钮
+                HStack(alignment: .top, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
+                    Text(favorite.title)
+                        .font(SutraTypographyBridge.uiTitle(weight: .semibold))
+                        .foregroundColor(SutraDesignSystem.color(.chapterTitle))  // 鎏金色标题
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                // Larger, more tappable heart button
-                Button(action: { removeFavorite(favorite) }) {
-                    Image(systemName: "heart.fill")
-                        .foregroundColor(SutraDesignSystem.color(.accent))
-                        .font(.system(size: 24))
-                        .frame(width: 44, height: 44) // iOS minimum touch target
+                    Spacer()
+
+                    // 朱砂红心形按钮
+                    Button(action: { removeFavorite(favorite) }) {
+                        Image(systemName: "heart.fill")
+                            .foregroundColor(SutraDesignSystem.color(.favorite))  // 朱砂红
+                            .font(.system(size: 22))
+                            .frame(width: 44, height: 44)
+                    }
                 }
+
+                // 经文预览
+                Text(favorite.content)
+                    .font(SutraTypographyBridge.uiBody())
+                    .foregroundColor(SutraDesignSystem.secondaryTextColor())
+                    .lineLimit(3)
+                    .lineSpacing(5)
+                    .multilineTextAlignment(.leading)
+
+                // 日期
+                Text(formatDate(from: favorite.path))
+                    .font(SutraTypographyBridge.uiCaption())
+                    .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.5))
             }
-
-            // Content preview with better typography
-            Text(favorite.content)
-                .font(SutraTypographyBridge.uiBody())
-                .foregroundColor(SutraDesignSystem.secondaryTextColor())
-                .lineLimit(3)
-                .lineSpacing(4)
-                .multilineTextAlignment(.leading)
-
-            // Date with better readability
-            Text(formatDate(from: favorite.path))
-                .font(SutraTypographyBridge.uiCaption())
-                .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.7))
+            .padding(.leading, 16)
+            .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
+            .padding(.trailing, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
         }
-        .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(SutraDesignSystem.backgroundColor().opacity(0.6))
+            RoundedRectangle(cornerRadius: 14)
+                .fill(SutraDesignSystem.color(.surface))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(SutraDesignSystem.color(.border).opacity(0.3), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(SutraDesignSystem.color(.decorativeGold).opacity(0.2), lineWidth: 0.5)
                 )
-                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+                .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)), radius: 6, x: 0, y: 2)
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -256,7 +266,7 @@ struct ModernFavoritesView: View {
 
             for path in likedPaths {
                 let item = Book.shared.itemOfPath(path)
-                let title = item["name"] as? String ?? "未知经文"
+                let title = item["name"] as? String ?? NSLocalizedString("unknown_sutra", comment: "")
                 let hasChildren = item["children"] != nil
 
                 // Extract content more efficiently
@@ -288,7 +298,7 @@ struct ModernFavoritesView: View {
     private func extractContentEfficiently(from item: [String: Any]) -> String {
         // Use a more efficient method to get content with length limit
         if item["children"] != nil {
-            return "包含子章节"
+            return NSLocalizedString("contains_sub_chapters", comment: "")
         }
 
         // Directly get sutra with length limit
@@ -347,7 +357,7 @@ struct ModernFavoritesView: View {
     private func openSutra(_ path: String, navigationController: UINavigationController) {
         // Get the title for this sutra item
         let item = Book.shared.itemOfPath(path)
-        let title = item["name"] as? String ?? "经文"
+        let title = item["name"] as? String ?? NSLocalizedString("sutra", comment: "")
 
         // Force navigation bar to be visible
         navigationController.setNavigationBarHidden(false, animated: false)
@@ -381,7 +391,7 @@ struct ModernFavoritesView: View {
         }) {
             // Get the title for this page
             let item = Book.shared.index?[pageIndex]
-            let title = item?["name"] as? String ?? "经文"
+            let title = item?["name"] as? String ?? NSLocalizedString("sutra", comment: "")
 
             // Force navigation bar to be visible
             navigationController.setNavigationBarHidden(false, animated: false)

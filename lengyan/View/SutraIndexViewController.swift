@@ -34,7 +34,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(treeView)
-        treeView.rowHeight = 34.0
+        treeView.rowHeight = 44.0  // iOS 最小触摸目标
                 
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
         self.treeView.addGestureRecognizer(longPressRecognizer)
@@ -134,10 +134,15 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
         self.navigationController?.navigationBar.isTranslucent = false;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(close))//✕
-        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .sutraText)
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.left"),
+            style: .plain,
+            target: self,
+            action: #selector(close)
+        )
+        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
         
-        let listButton = UIBarButtonItem(image: UIImage.init(named: "ic_format_list_bulleted_18pt"), style: .plain, target: self, action: #selector(openAsPage))
+        let listButton = UIBarButtonItem(image: UIImage(systemName: "list.bullet.rectangle"), style: .plain, target: self, action: #selector(openAsPage))
         listButton.tintColor = SutraDesignTokens.shared.color(for: .sutraText);
         
         if self.isShowSutraButton {
@@ -159,7 +164,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func menu(){
-        let alert = UIAlertController(title: "菜單", message: nil, preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: NSLocalizedString("menu", comment: ""), message: nil, preferredStyle: .actionSheet)
         
         let firstAction:UIAlertAction
         if(!Prefers.shared.isLike(path!)){
@@ -178,7 +183,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             Prefers.shared.like(self.path!)
         }
         
-        let cancelAction = UIAlertAction(title: "取消", style: .cancel) { (alert: UIAlertAction!) -> Void in
+        let cancelAction = UIAlertAction(title: NSLocalizedString("cancel", comment: ""), style: .cancel) { (alert: UIAlertAction!) -> Void in
         }
         alert.addAction(firstAction)
         alert.addAction(secondAction)
@@ -367,25 +372,30 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         var newCell = treeView.dequeueReusableCell(withIdentifier: identifier) as? UITableViewCell;
         
         if (newCell == nil) {
-            newCell = UITableViewCell.init(style:.value1,reuseIdentifier:identifier);
-            newCell!.textLabel?.adjustsFontSizeToFitWidth = true;
-            // Use unified SutraTypography design system for consistent index navigation
+            newCell = UITableViewCell.init(style:.value1,reuseIdentifier:identifier)
+            newCell!.textLabel?.adjustsFontSizeToFitWidth = true
             newCell!.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
+
+            // 🏛️ 禅意单元格背景
+            newCell!.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+            let selectedBg = UIView()
+            selectedBg.backgroundColor = SutraDesignTokens.shared.color(for: .sacredGlow)
+            newCell!.selectedBackgroundView = selectedBg
             
             if (!isLeaf) {
+                let chevronImage = UIImage(systemName: "chevron.right")?
+                    .withConfiguration(UIImage.SymbolConfiguration(pointSize: 12, weight: .medium))
                 let bookBtn = UIButton.init(type: .custom)
                 bookBtn.frame = CGRect(x: 0, y: 0.0, width: 38, height: treeView.rowHeight)
-                bookBtn.setTitle("❭", for: UIControlState())
-                bookBtn.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-                bookBtn.setTitleColor(SutraDesignTokens.shared.color(for: .textSecondary), for: .normal)
-                // FIX: Add proper accessibility label for UI testing
+                bookBtn.setImage(chevronImage, for: .normal)
+                bookBtn.tintColor = SutraDesignTokens.shared.color(for: .textTertiary)
                 bookBtn.accessibilityLabel = "chevron"
                 bookBtn.isAccessibilityElement = true
                 bookBtn.addTarget(self, action: #selector(openAsPageFromCellButton(_:)) , for: .touchUpInside)
-                newCell!.accessoryView = bookBtn;
+                newCell!.accessoryView = bookBtn
             }
             
-        } 
+        }
         
         let cell = newCell!;
         let name = item["name"]! as? String

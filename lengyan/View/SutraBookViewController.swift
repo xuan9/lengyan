@@ -32,8 +32,10 @@ class SutraBookViewController: UITableViewController{
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.tableView.estimatedRowHeight = 300;
-        self.tableView.separatorStyle = .none;
+        self.tableView.estimatedRowHeight = 300
+        self.tableView.separatorStyle = .none
+        self.tableView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         self.setTitleBar()
     }
     
@@ -74,12 +76,19 @@ class SutraBookViewController: UITableViewController{
     }
     
     func setTitleBar() {
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title:" ❬   ", style: .plain, target: self, action: #selector(SutraIndexViewController.close))
-        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage.init(named: "ic_chevron_left_18pt"), for: .normal, barMetrics: .default)
+        // Use modern SF Symbols for consistency
+        let backIcon = UIImage(systemName: "chevron.left")
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: backIcon, style: .plain, target: self, action: #selector(SutraIndexViewController.close))
 
-        
+        // Apply typography system for title
         self.title = "楞嚴經"
-        self.navigationController?.navigationBar.isTranslucent = false;
+        self.navigationController?.navigationBar.isTranslucent = false
+
+        // Apply design system colors
+        if let navBar = self.navigationController?.navigationBar {
+            navBar.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+            navBar.barTintColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        }
     }
     
     override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -105,7 +114,8 @@ class SutraBookViewController: UITableViewController{
         let contents:[[String:String]]? =  (Book.shared.contents?[path!]);
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "SutraBookTableViewCell", for: indexPath) as! SutraBookTableViewCell
-        cell.textView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);
+        cell.textView.textContainerInset = UIEdgeInsetsMake(24, 20, 24, 20)
+        cell.textView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
 
         
         if(contents == nil){
@@ -129,10 +139,18 @@ class SutraBookViewController: UITableViewController{
 
         let text = sutraContents.joined(separator: "\n")
 
-        // Use SutraTypography design system
+        // 🏛️ 禅意排版 - 与 Book.getSutraAttributeString 统一
+        let pStyle = NSMutableParagraphStyle()
+        pStyle.lineHeightMultiple = 1.8
+        pStyle.maximumLineHeight = 44.0
+        pStyle.minimumLineHeight = 10.0
+        pStyle.paragraphSpacing = 8
+        pStyle.firstLineHeadIndent = 28
+
         let attributes: [NSAttributedString.Key: Any] = [
             .font: SutraTypographyManager.shared.uiFont(for: .sutraBody),
-            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary)
+            .foregroundColor: SutraDesignTokens.shared.color(for: .sutraText),
+            .paragraphStyle: pStyle
         ]
 
         return NSAttributedString(string: text, attributes: attributes)

@@ -249,7 +249,7 @@ class Book: NSObject {
     @MainActor
     func getTitleView(_ item:[String:Any])->UILabel{
         let label = UILabel(frame: CGRect(x: 0, y: 0, width: 400, height: 44))
-        label.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        label.backgroundColor = .clear  // 让导航栏背景自然透出
         label.numberOfLines = 2
         label.textAlignment = NSTextAlignment.left
         label.attributedText = getTitle(item)
@@ -289,19 +289,22 @@ class Book: NSObject {
     @MainActor
     func getSutraAttributeString(text:String)->NSAttributedString{
         let pStyle = NSMutableParagraphStyle()
-        pStyle.lineHeightMultiple = 1.618
-        pStyle.maximumLineHeight = 40.0
+        pStyle.lineHeightMultiple = 1.8       // 提升行距呼吸感（与阅读页统一）
+        pStyle.maximumLineHeight = 44.0       // 配合更大行高
         pStyle.minimumLineHeight = 10.0
 
-        pStyle.paragraphSpacing = 1
-        pStyle.firstLineHeadIndent = 35
+        pStyle.paragraphSpacing = 8           // 段落间留白（原1pt太紧凑）
+        pStyle.firstLineHeadIndent = 28       // 更自然的首行缩进
 
         // Use unified SutraTypography design system for sutra text
-        // This ensures proper Chinese font rendering with golden ratio scaling
         let font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
+        let textColor = SutraDesignTokens.shared.color(for: .sutraText)
 
-        let pAttributes = [NSAttributedStringKey.paragraphStyle : pStyle,
-                           NSAttributedStringKey.font: font]
+        let pAttributes: [NSAttributedStringKey: Any] = [
+            NSAttributedStringKey.paragraphStyle: pStyle,
+            NSAttributedStringKey.font: font,
+            NSAttributedStringKey.foregroundColor: textColor
+        ]
 
         return NSAttributedString(string: text, attributes:pAttributes)
     }

@@ -536,70 +536,53 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     func setupHeaderView(_ size:CGSize) {
         let width = size.width
-        let theme = SutraDesignTokens.shared.currentTheme
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let primaryTextColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        let accentColor = SutraDesignTokens.shared.color(for: .accent)
-        let dividerColor = SutraDesignTokens.shared.color(for: .divider)
+        let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
-        print("🎨 Setting up header with theme: \(theme)")
-
-        // World-class header height: 20 + 28 + 12 + 120 + 20 = 200pt
-        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 200))
+        // 🏛️ Sacred header - 增大高度到240pt，给开经偈和卷章按钮更充裕的呼吸空间
+        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 240))
         header.backgroundColor = backgroundColor
 
-        // Elegant subtitle with proper typography (開經偈)
-        let subTitle = UIButton.init(type: .custom);
-        subTitle.frame = CGRect(x: 16, y: 20, width: width - 32, height: 28);
+        // 📜 开经偈 - 增大字号、增加字距向读者展示禅意
+        let subTitle = UIButton.init(type: .custom)
+        subTitle.frame = CGRect(x: 24, y: 20, width: width - 48, height: 40)
         let subTitleText = NSLocalizedString("kai_jing_ji", comment: "無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義")
         subTitle.setTitle(subTitleText, for: UIControlState())
-        subTitle.titleLabel?.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular)
+        subTitle.titleLabel?.font = SutraTypographySystem().uiFont(for: .sacredText, weight: .regular)
         subTitle.titleLabel?.numberOfLines = 2
         subTitle.titleLabel?.lineBreakMode = .byCharWrapping
-        subTitle.setTitleColor(primaryTextColor.withAlphaComponent(0.65), for: UIControlState())
+        subTitle.titleLabel?.textAlignment = .center
+        subTitle.setTitleColor(SutraDesignTokens.shared.color(for: .textTertiary), for: UIControlState())
         subTitle.addTarget(self, action: #selector(self.openRootIndex), for: .touchUpInside)
         header.addSubview(subTitle)
 
-        // World-class chapter button grid with proper spacing
-        let horizontalPadding: CGFloat = 16
-        let buttonSpacing: CGFloat = 8
-        let totalSpacing = horizontalPadding * 2 + buttonSpacing * 4  // 4 gaps between 5 buttons
+        // 🏋️ 鎏金卡片风格卷章按钮网格
+        let horizontalPadding: CGFloat = 20
+        let buttonSpacing: CGFloat = 10
+        let totalSpacing = horizontalPadding * 2 + buttonSpacing * 4
         let chapterButtonWidth = (width - totalSpacing) / 5
-        let buttonHeight: CGFloat = 52  // Increased from 44pt
-        let verticalSpacing: CGFloat = 8
+        let buttonHeight: CGFloat = 56
+        let verticalSpacing: CGFloat = 10
 
-        let indexes = UIView(frame: CGRect(x: 0, y: 68, width: width, height: buttonHeight * 2 + verticalSpacing))
+        let indexes = UIView(frame: CGRect(x: 0, y: 76, width: width, height: buttonHeight * 2 + verticalSpacing))
 
         for i in 1...10 {
-            let row = (i - 1) / 5  // 0 or 1
-            let col = (i - 1) % 5  // 0 to 4
+            let row = (i - 1) / 5
+            let col = (i - 1) % 5
             let x = horizontalPadding + (chapterButtonWidth + buttonSpacing) * CGFloat(col)
             let y = (buttonHeight + verticalSpacing) * CGFloat(row)
 
             let btn = self.makeSutraChapterButton(i - 1, frame: CGRect(x: x, y: y, width: chapterButtonWidth, height: buttonHeight))
-
-            // World-class button styling
-            btn.layer.cornerRadius = 12  // More refined radius
-            btn.layer.borderWidth = 1.5  // Subtle border
-            btn.layer.borderColor = accentColor.withAlphaComponent(0.3).cgColor
-
-            // Elegant shadow
-            btn.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
-            btn.layer.shadowOffset = CGSize(width: 0, height: 2)
-            btn.layer.shadowRadius = 6
-            btn.layer.shadowOpacity = 0.1
-            btn.layer.masksToBounds = false
-
-            indexes.addSubview(btn);
+            indexes.addSubview(btn)
         }
         header.addSubview(indexes)
 
-        // Subtle divider line
-        let px = 1 / UIScreen.main.scale
-        let frame = CGRect(x: 16, y: header.frame.height - px, width: self.treeView.frame.size.width - 32, height: px)
-        let line: UIView = UIView(frame: frame)
-        line.backgroundColor = dividerColor.withAlphaComponent(0.5)
-        header.addSubview(line)
+        // ✨ 装饰性金色渐隐分隔线
+        let dividerFrame = CGRect(x: 32, y: header.frame.height - 1, width: width - 64, height: 0.5)
+        let dividerLine = UIView(frame: dividerFrame)
+        dividerLine.backgroundColor = decorativeGold.withAlphaComponent(0.3)
+        header.addSubview(dividerLine)
 
         self.treeView.treeHeaderView = header
     }
@@ -607,55 +590,55 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func setupFooterView(_ size:CGSize) {
         let width = size.width
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        let primaryTextColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        let dividerColor = SutraDesignTokens.shared.color(for: .divider)
+        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
+        let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
 
-        // World-class footer height: ~200pt for better breathing room
-        let footer:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 200))
+        // 🏛️ 庄严尾部 - 220pt呼吸空间
+        let footer:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 220))
         footer.backgroundColor = backgroundColor
 
-        // Subtle top divider with proper spacing
-        let footerSeperator = UIView(frame: CGRect(x: 16, y: 20, width: width - 32, height: 1))
-        footerSeperator.backgroundColor = dividerColor.withAlphaComponent(0.3)
-        footer.addSubview(footerSeperator)
+        // ✨ 装饰性金色渐隐分隔线
+        let dividerLine = UIView(frame: CGRect(x: 40, y: 20, width: width - 80, height: 0.5))
+        dividerLine.backgroundColor = decorativeGold.withAlphaComponent(0.4)
+        footer.addSubview(dividerLine)
 
         let footerText1 = NSLocalizedString("footer_txt_1", comment: "南無楞嚴會上佛菩薩\n南無楞嚴會上佛菩薩\n南無楞嚴會上佛菩薩")
         let footerText2 = NSLocalizedString("footer_txt_2", comment: "經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站")
         let footerText3 = NSLocalizedString("footer_txt_3", comment: "感恩法界佛教總會！本屏中列出部分關鍵科判以方便檢索，可點擊經名打開完整科判。")
 
-        // Main footer label with better typography (南無楞嚴會上佛菩薩)
-        let footerLabel = UILabel(frame: CGRect(x: 24, y: 36, width: width - 48, height: 70))
+        // 🙏 「南無楞嚴會上佛菩薩」- 使用鎏金色，庄严神圣
+        let footerLabel = UILabel(frame: CGRect(x: 32, y: 36, width: width - 64, height: 76))
         footerLabel.text = footerText1
         footerLabel.numberOfLines = 3
         footerLabel.textAlignment = .center
-        footerLabel.font = SutraTypographySystem().uiFont(for: .uiBody, weight: .regular)  // Larger font
-        footerLabel.textColor = primaryTextColor
+        footerLabel.font = SutraTypographySystem().uiFont(for: .sacredText, weight: .medium)
+        footerLabel.textColor = bookmarkColor  // 鎏金色，神圣尊贵
         footerLabel.lineBreakMode = .byWordWrapping
         footer.addSubview(footerLabel)
 
-        // Link button with proper styling
-        let linkButton = UIButton(frame: CGRect(x: 20, y: 114, width: width - 40, height: 32))
+        // 🔗 来源链接 - 使用 accent 色
+        let linkButton = UIButton(frame: CGRect(x: 24, y: 120, width: width - 48, height: 36))
         linkButton.setTitle(footerText2, for: .normal)
         linkButton.contentHorizontalAlignment = .center
-        linkButton.setImage(UIImage.init(named: "ic_link")?.withRenderingMode(.alwaysTemplate), for: .normal)
+        linkButton.setImage(UIImage(systemName: "link")?.withRenderingMode(.alwaysTemplate), for: .normal)
         linkButton.addTarget(self, action: #selector(self.openDrbaLink(_:)), for: .touchUpInside)
         linkButton.semanticContentAttribute = .forceRightToLeft
         linkButton.titleLabel?.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .medium)
         linkButton.titleLabel?.numberOfLines = 2
         linkButton.titleLabel?.lineBreakMode = .byCharWrapping
-        linkButton.setTitleColor(SutraDesignTokens.shared.color(for: .accent), for: .normal)  // Use accent color
-        linkButton.backgroundColor = backgroundColor
+        linkButton.setTitleColor(SutraDesignTokens.shared.color(for: .accent), for: .normal)
+        linkButton.backgroundColor = .clear
         linkButton.tintColor = SutraDesignTokens.shared.color(for: .accent)
         footer.addSubview(linkButton)
 
-        // Secondary footer label with generous spacing
-        let footerLabel2 = UILabel(frame: CGRect(x: 24, y: 154, width: width - 48, height: 42))
+        // 说明文字 - 更淡雅的次要文字
+        let footerLabel2 = UILabel(frame: CGRect(x: 32, y: 164, width: width - 64, height: 44))
         footerLabel2.text = footerText3
         footerLabel2.textAlignment = .center
         footerLabel2.numberOfLines = 2
         footerLabel2.font = SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular)
-        footerLabel2.textColor = secondaryTextColor.withAlphaComponent(0.8)
+        footerLabel2.textColor = secondaryTextColor.withAlphaComponent(0.6)
         footerLabel2.lineBreakMode = .byCharWrapping
         footer.addSubview(footerLabel2)
 
@@ -671,15 +654,22 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         btn.addTarget(self, action: #selector(onSutraChapterButtonTouchUp(_:)), for: .touchUpInside)
         btn.titleLabel?.adjustsFontSizeToFitWidth = true
 
-        // Enhanced Zen chapter button styling with better touch targets
-        btn.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        // 🏛️ 鎏金卡片风格卷章按钮
+        btn.backgroundColor = SutraDesignTokens.shared.color(for: .card)
         btn.setTitleColor(SutraDesignTokens.shared.color(for: .textPrimary), for: .normal)
         btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
-        btn.layer.cornerRadius = 12  // More refined for Zen aesthetic
+        btn.layer.cornerRadius = 14
+
+        // 古金 hairline 边框
+        btn.layer.borderWidth = 0.5
+        btn.layer.borderColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.4).cgColor
+
+        // 极柔软的暖色阴影
         btn.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
-        btn.layer.shadowOffset = CGSize(width: 0, height: 1)
-        btn.layer.shadowOpacity = 0.06  // More subtle
-        btn.layer.shadowRadius = 3
+        btn.layer.shadowOffset = CGSize(width: 0, height: 2)
+        btn.layer.shadowOpacity = 0.08
+        btn.layer.shadowRadius = 6
+        btn.layer.masksToBounds = false
 
         return btn
     }
