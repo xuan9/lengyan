@@ -193,11 +193,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     func setPageTitle() {
         if path == nil { return }
         let item = Book.shared.itemOfPath(path!);
-        if self.navigationItem.titleView is UILabel {
-            (self.navigationItem.titleView as! UILabel).attributedText = Book.shared.getTitle(item)
-        } else {
-            self.navigationItem.titleView = Book.shared.getTitleView(item);
-        }
+        self.navigationItem.titleView = Book.shared.getTitleView(item);
     }
     
 }

@@ -81,166 +81,162 @@ struct ModernAudioPlayerView: View {
     @State private var resourceRequests: [String: NSBundleResourceRequest] = [:] // Store requests
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Main Content
-            ScrollView {
-                VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
-                    // Header with prominent title
-                    VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
-                        // 🏛️ 顶部鎏金装饰细线
-                        Rectangle()
-                            .fill(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
-                            .frame(width: 48, height: 2)
-                            .padding(.bottom, 4)
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                // Header with prominent title (Fixed at top)
+                ZenTabHeaderView(titleKey: "media_tab_title", symbolName: "headphones")
 
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(NSLocalizedString("media_tab_title", comment: ""))
-                                .font(SutraTypographyBridge.uiLargeTitle(weight: .bold))
-                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .chapterTitle)))
-
-                            // 🌸 莲花印记装饰
-                            Text("❀")
-                                .font(.system(size: 20))
-                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
+                // Main Content
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
+                        } else {
+                            // Media Groups List
+                            ForEach(mediaGroups) { group in
+                                mediaGroupSection(group)
+                            }
                         }
                     }
-                    .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-                    .padding(.bottom, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-                    .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-
-                      if isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                            .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
-                    } else {
-                        // Media Groups List
-                        ForEach(mediaGroups) { group in
-                            mediaGroupSection(group)
-                        }
-                    }
+                    .padding(.bottom, audioObserver.showPlayerBar ? 220 : 120) // 增加留白量，给底部播放器与最后一条曲目之间留出两行呼吸空间
                 }
-                .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
-                .padding(.bottom, audioObserver.showPlayerBar ? 160 : 20) // 给 TabBar 和底部播放器留出充足空间
+                .background(Color(SutraDesignTokens.shared.color(for: .background)))
             }
+            .background(Color(SutraDesignTokens.shared.color(for: .background)))
 
             // Media Player Bar (appears when playing)
             if audioObserver.showPlayerBar {
                 mediaPlayerBar
             }
         }
-        .background(Color(SutraDesignTokens.shared.color(for: .background)))
         .edgesIgnoringSafeArea(.bottom)
         .onAppear {
             loadMediaData()
             setupAudioSession()
+            resumeLastPlayback() // 恢复播放以正确显示名称
+            audioObserver.showPlayerBar = true // 确保刚启动时就显示空胶囊
         }
     }
 
-    // MARK: - Media Player Bar - 毛玻璃质感播放器
+    // MARK: - Media Player Bar - 悬浮胶囊控制台
     private var mediaPlayerBar: some View {
         VStack(spacing: 0) {
-            // 极细分隔线
-            Rectangle()
-                .fill(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.2))
-                .frame(height: 0.5)
-
-            // 主播放器栏 - 毛玻璃质感
-            VStack(spacing: 8) {
-                // 鎏金进度条 - 增加水平内边距以免滑块溢出碰撞文字
-                progressSlider
-                    .padding(.horizontal, 24)
-
-                // 标题和控制
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(audioObserver.currentTrack ?? "")
-                            .font(SutraTypographyBridge.uiBody(weight: .regular))
-                            .lineLimit(2)
-                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
-
-                        HStack(spacing: 5) {
-                            Text(formatTime(audioObserver.currentTime))
-                                .font(SutraTypographyBridge.uiCaption(weight: .regular))
-                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
-
-                            Spacer()
-
-                            Text(formatTime(audioObserver.totalTime))
-                                .font(SutraTypographyBridge.uiCaption(weight: .regular))
-                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
-                        }
-                    }
-
-                    Spacer()
-
-                    // 播放模式
-                    Button(action: { showPlayModeMenu() }) {
-                        Image(selectedPlayMode.iconName)
-                            .renderingMode(.template)
-                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .accent)))
-                            .frame(width: 24, height: 24)
-                    }
-
-                    // 播放/暂停
-                    Button(action: togglePlayPause) {
-                        Image(audioObserver.isPlaying ? "ic_pause_circle_outline_48pt" : "ic_play_circle_outline_48pt")
-                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .accent)))
-                            .frame(width: 44, height: 44)
-                    }
+            HStack(spacing: 16) {
+                // 播放/暂停
+                Button(action: togglePlayPause) {
+                    Image(audioObserver.isPlaying ? "ic_pause_circle_outline_48pt" : "ic_play_circle_outline_48pt")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 36, height: 36)
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .accent)))
                 }
-                .padding(.horizontal, 24)
+                
+                // 曲目与进度
+                VStack(alignment: .leading, spacing: 6) {
+                    if audioObserver.currentTrack?.isEmpty ?? true {
+                        Text("请 轻 触 上 列 卷 名 听 经")
+                            .font(.system(size: 14, weight: .light, design: .serif))
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                            .lineLimit(1)
+                    } else {
+                        Text(audioObserver.currentTrack!)
+                            .font(SutraTypographyBridge.uiBody(weight: .medium))
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
+                            .lineLimit(1)
+                    }
+                    
+                    // 含时间的拖拽式进度带
+                    progressSliderWithTime
+                }
+                
+                Spacer()
+                
+                // 播放模式
+                Button(action: { showPlayModeMenu() }) {
+                    Image(selectedPlayMode.iconName)
+                        .renderingMode(.template)
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                        .frame(width: 24, height: 24)
+                }
             }
-            .padding(.vertical, 12)
-            .padding(.bottom, 50) // 增加底部安全区高度，避免被 TabBar 遮挡
-            .background(.ultraThinMaterial)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThinMaterial)
+                    .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)).opacity(0.15), radius: 12, x: 0, y: 6)
+            )
+            .padding(.horizontal, 16) // 扩宽胶囊播放器，填满更多边缘作为稳固底座
+            .padding(.bottom, 110) // 悬浮于 TabBar 之上
         }
-        .transition(.move(edge: .bottom))
-        .animation(.easeInOut(duration: 0.3), value: audioObserver.showPlayerBar)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: audioObserver.showPlayerBar)
     }
 
-    // MARK: - Progress Slider - 鎏金进度条
-    private var progressSlider: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                // 轨道
-                Rectangle()
-                    .fill(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.2))
-                    .frame(height: 3)
+    // MARK: - Progress Slider - 线型拖拽 + 时间显示
+    private var progressSliderWithTime: some View {
+        HStack(spacing: 8) {
+            Text(formatTime(audioObserver.currentTime))
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
 
-                // 鎏金进度
-                Rectangle()
-                    .fill(Color(SutraDesignTokens.shared.color(for: .bookmark)))
-                    .frame(width: geometry.size.width * (audioObserver.totalTime > 0 ? audioObserver.currentTime / audioObserver.totalTime : 0), height: 3)
+            GeometryReader { geometry in
+                let progress = audioObserver.totalTime > 0 ? CGFloat(audioObserver.currentTime / audioObserver.totalTime) : 0
+                ZStack(alignment: .leading) {
+                    // 轨道
+                    Rectangle()
+                        .fill(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.15))
+                        .frame(height: 3)
+                        .cornerRadius(1.5)
 
-                // 滑块圆点 - 增大到14pt
-                Circle()
-                    .fill(Color(SutraDesignTokens.shared.color(for: .bookmark)))
-                    .frame(width: 14, height: 14)
-                    .offset(x: geometry.size.width * (audioObserver.totalTime > 0 ? audioObserver.currentTime / audioObserver.totalTime : 0) - 7)
+                    // 进度
+                    Rectangle()
+                        .fill(Color(SutraDesignTokens.shared.color(for: .bookmark)))
+                        .frame(width: max(0, min(geometry.size.width * progress, geometry.size.width)), height: 3)
+                        .cornerRadius(1.5)
+                }
+                .contentShape(Rectangle()) // 增加点击/拖拽热区
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            guard audioObserver.totalTime > 0 else { return }
+                            let percent = min(max(value.location.x / geometry.size.width, 0), 1)
+                            let seekTime = audioObserver.totalTime * Double(percent)
+                            audioObserver.currentTime = seekTime
+                            
+                            // 实际调整播放器进度
+                            let cmTime = CMTime(seconds: seekTime, preferredTimescale: 600)
+                            audioObserver.queuePlayer?.seek(to: cmTime, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+                        }
+                )
             }
+            .frame(height: 12) // 给热区一些高度
+
+            Text(formatTime(audioObserver.totalTime))
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
         }
-        .frame(height: 25)
     }
 
     // MARK: - Media Group Section
     private func mediaGroupSection(_ group: MediaGroup) -> some View {
-        VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
-            // Section Header - World-class spacing and typography
-            HStack(spacing: 8) {
-                Text("❖")
-                    .font(.system(size: 14))
-                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
+        VStack(alignment: .leading, spacing: 0) {
+            // Section Header - 极简引言：全大写/加宽字距的细小印记
+            Text(group.name)
+                .font(.system(size: 13, weight: .semibold))
+                .tracking(2.0)
+                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
+                .lineLimit(1)
+                .padding(.horizontal, 48) // 增加留白，让整体列表向屏幕居中区靠拢
+                .padding(.top, 32)
+                .padding(.bottom, 12)
 
-                Text(group.name)
-                    .font(SutraTypographyBridge.uiTitle(weight: .semibold))
-                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .chapterTitle)))
-            }
-            .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-            .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-            .padding(.bottom, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
-
-            // Media Items - Better spacing between items
-            VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
+            // Media Items - Airy list
+            VStack(spacing: 0) {
                 ForEach(group.files.indices, id: \.self) { index in
                     mediaItemRow(
                         name: group.names[index],
@@ -251,16 +247,6 @@ struct ModernAudioPlayerView: View {
                 }
             }
         }
-        .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(SutraDesignTokens.shared.color(for: .card)))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.15), lineWidth: 0.5)
-                )
-                .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)), radius: 8, x: 0, y: 3)
-        )
     }
 
     // MARK: - Media Item Row
@@ -268,47 +254,58 @@ struct ModernAudioPlayerView: View {
         let status = downloadStatus[file] ?? .notDownloaded
         let progress = downloadProgress[file] ?? 0
 
-        return VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS)) {
-            // Title with download status
-            HStack(spacing: 4) {
-                // 🌿 圆点前缀
-                Text("• ")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(status == .downloaded ? Color(SutraDesignTokens.shared.color(for: .decorativeGold)) : Color(SutraDesignTokens.shared.color(for: .textTertiary)))
-
+        return VStack(alignment: .leading, spacing: 0) {
+            // 古雅目录样式的曲目行
+            HStack(alignment: .bottom, spacing: 12) {
                 Text(titleWithStatus(name: name, status: status))
-                    .font(SutraTypographyBridge.uiBody(weight: .regular))
+                    .font(.system(size: 21, weight: .regular, design: .serif)) // 更大、更有经文感的 Serif 字体
                     .foregroundColor(status == .downloaded ? Color(SutraDesignTokens.shared.color(for: .sutraText)) : Color(SutraDesignTokens.shared.color(for: .textSecondary)))
 
-                Spacer()
-            }
+                // 目录虚线引线
+                GeometryReader { geometry in
+                    Path { path in
+                        path.move(to: CGPoint(x: 0, y: geometry.size.height / 2))
+                        path.addLine(to: CGPoint(x: geometry.size.width, y: geometry.size.height / 2))
+                    }
+                    .stroke(style: StrokeStyle(lineWidth: 1.0, lineCap: .round, dash: [0.1, 5])) // 柔和的散点虚线
+                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.3))
+                }
+                .frame(height: 1)
+                .padding(.bottom, 10)
 
+                // 右侧微标暗示可操作与状态
+                if status != .downloaded && status != .downloading {
+                    Image(systemName: "icloud.and.arrow.down")
+                        .font(.system(size: 14, weight: .light))
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                        .padding(.bottom, 4)
+                } else if status == .downloaded {
+                    Text("·") // 极细微的点，保持视觉平衡
+                        .font(.system(size: 14, weight: .ultraLight))
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.3))
+                        .padding(.bottom, 6)
+                }
+            }
+            .padding(.vertical, 16)
+            
             // Download progress bar
             if status == .downloading {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 3)
+                            .fill(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.2))
+                            .frame(height: 1)
 
                         Rectangle()
                             .fill(Color(SutraDesignTokens.shared.color(for: .accent)))
-                            .frame(width: geometry.size.width * progress, height: 3)
+                            .frame(width: max(0, min(geometry.size.width * progress, geometry.size.width)), height: 1)
                     }
                 }
-                .frame(height: 3)
+                .frame(height: 1)
+                .padding(.top, 4)
             }
         }
-        .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD))
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(SutraDesignTokens.shared.color(for: .background)).opacity(0.6))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.1), lineWidth: 0.5)
-                )
-        )
+        .padding(.horizontal, 48) // 适中的古典随列表靠拢留白
         .contentShape(Rectangle())
         .onTapGesture {
             handleMediaItemTap(name: name, file: file, fileExtension: `extension`, groupName: groupName)
@@ -471,31 +468,20 @@ struct ModernAudioPlayerView: View {
             return
         }
 
-        // Check if we already have the same file loaded and playing
-        if let currentFile = audioObserver.lastPlayFile?.1,
-           currentFile == lastFileName,
-           audioObserver.queuePlayer?.currentItem != nil {
-            print("📝 Same file already loaded: \(lastFileName), preserving state")
-            return
-        }
-
-        // Find the media group and item for this file
+        // 只恢复UI显示，不实际加载资源（避免在 onAppear 时触发资源访问导致崩溃）
+        // 找到对应的曲目名称
         for group in mediaGroups {
             if let index = group.files.firstIndex(of: lastFileName) {
-                // Validate index bounds
                 guard index < group.names.count && index < group.files.count else {
                     print("❌ Index out of bounds for file: \(lastFileName)")
                     continue
                 }
 
                 let name = group.names[index]
-                let file = group.files[index]
-                let ext = group.fileExtension
-
-                // Mark as downloaded and load without autoplaying
-                downloadStatus[file] = .downloaded
-                playMedia(name: name, file: file, fileExtension: ext, autoplay: false)
-                print("📝 Resumed last playback: \(name)")
+                // 只更新UI显示，不调用 playMedia（避免资源访问冲突）
+                audioObserver.currentTrack = name
+                downloadStatus[lastFileName] = .downloaded
+                print("📝 Resumed playback UI: \(name)")
                 break
             }
         }
@@ -588,13 +574,24 @@ struct ModernAudioPlayerView: View {
         if let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
             playAudio(url: url, name: name, autoplay: autoplay)
         } else {
+            // 保护：检查资源请求是否已经在访问中
+            guard !resourceRequests.keys.contains(file) else {
+                print("⚠️ Resource request already in progress for: \(file)")
+                return
+            }
+
+            // 保存请求引用
+            resourceRequests[file] = request
+
             request.conditionallyBeginAccessingResources { available in
                 if available, let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
                     self.playAudio(url: url, name: name, autoplay: autoplay)
-                }
-                else {
+                } else {
                     print("❌ Resource not available: \(file)")
                 }
+
+                // 清除请求引用
+                self.resourceRequests.removeValue(forKey: file)
             }
         }
     }
@@ -807,9 +804,6 @@ class AudioPlayerObserver: NSObject, ObservableObject {
                 if let item = newItem {
                     self?.showPlayerBar = true
                     self?.totalTime = CMTimeGetSeconds(item.duration)
-                } else {
-                    self?.showPlayerBar = false
-                    self?.currentTrack = nil
                 }
             }
             .store(in: &cancellables)

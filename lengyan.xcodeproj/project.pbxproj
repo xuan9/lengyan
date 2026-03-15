@@ -60,6 +60,7 @@
 		13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13CA80F01EAB3BF600589E8F /* Assets.xcassets */; };
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
 		13FE31F523678EFD00F632E9 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FE31F423678EFD00F632E9 /* Constants.swift */; };
+		3BF29E40DB63BEF90783469B /* ZenTabHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */; };
 		4A3D33CA206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */; };
 		4A6C6BB21EE5A5C400B447DC /* lyz1.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB11EE5A4F300B447DC /* lyz1.m4a */; settings = {ASSET_TAGS = (lyz1, ); }; };
 		4AD0637A1EA3801400751922 /* ly01.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063651EA244AC00751922 /* ly01.m4a */; settings = {ASSET_TAGS = (ly01, ); }; };
@@ -72,6 +73,7 @@
 		4AD063811EA3802200751922 /* ly06.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636C1EA244AC00751922 /* ly06.m4a */; settings = {ASSET_TAGS = (ly06, ); }; };
 		4AD063821EA3802200751922 /* ly10.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636D1EA244AC00751922 /* ly10.m4a */; settings = {ASSET_TAGS = (ly10, ); }; };
 		4AD063831EA3802200751922 /* ly04.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD0636E1EA244AC00751922 /* ly04.m4a */; settings = {ASSET_TAGS = (ly04, ); }; };
+		A68C1C994600674BC5F7FB08 /* SutraAcknowledgmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */; };
 		CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */; };
 		CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */; };
 		CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */; };
@@ -184,6 +186,8 @@
 		CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernFavoritesView.swift; sourceTree = "<group>"; };
 		CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Tokens.swift"; sourceTree = "<group>"; };
 		CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Layout.swift"; sourceTree = "<group>"; };
+		E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SutraAcknowledgmentsView.swift; sourceTree = "<group>"; };
+		ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZenTabHeaderView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -393,6 +397,8 @@
 			children = (
 				CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */,
 				CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */,
+				ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */,
+				E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
@@ -627,6 +633,8 @@
 				13FE31F523678EFD00F632E9 /* Constants.swift in Sources */,
 				1390730D1D109193003A3333 /* AppDelegate.swift in Sources */,
 				130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */,
+				3BF29E40DB63BEF90783469B /* ZenTabHeaderView.swift in Sources */,
+				A68C1C994600674BC5F7FB08 /* SutraAcknowledgmentsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

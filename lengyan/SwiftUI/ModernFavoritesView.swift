@@ -124,19 +124,7 @@ struct ModernFavoritesView: View {
         ScrollView {
             VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
                 // World-class Header with prominent title and helpful subtitle
-                VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM)) {
-                    Text(NSLocalizedString("star_tab_title", comment: ""))
-                        .font(SutraTypographyBridge.uiLargeTitle())
-                        .foregroundColor(SutraDesignSystem.sutraTextColor())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Text(NSLocalizedString("favorites_subtitle", comment: ""))
-                        .font(SutraTypographyBridge.uiBody())
-                        .foregroundColor(SutraDesignSystem.secondaryTextColor())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
-                .padding(.horizontal, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXS))
+                ZenTabHeaderView(titleKey: "star_tab_title", symbolName: "bookmark")
 
                 if isLoading {
                     ProgressView()
@@ -194,41 +182,26 @@ struct ModernFavoritesView: View {
                 .frame(width: 3)
                 .padding(.vertical, 8)
 
-            VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
-                // 标题和心形按钮
-                HStack(alignment: .top, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
-                    Text(favorite.title)
-                        .font(SutraTypographyBridge.uiTitle(weight: .semibold))
-                        .foregroundColor(SutraDesignSystem.color(.chapterTitle))  // 鎏金色标题
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Spacer()
-
-                    // 朱砂红心形按钮
-                    Button(action: { removeFavorite(favorite) }) {
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(SutraDesignSystem.color(.favorite))  // 朱砂红
-                            .font(.system(size: 22))
-                            .frame(width: 44, height: 44)
-                    }
-                }
-
-                // 经文预览
+            VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM)) {
+                // 经文阅读区域 (突出显示经典原文)
                 Text(favorite.content)
-                    .font(SutraTypographyBridge.uiBody())
-                    .foregroundColor(SutraDesignSystem.secondaryTextColor())
-                    .lineLimit(3)
-                    .lineSpacing(5)
+                    .font(SutraTypographyBridge.uiTitle(weight: .light)) // 使用轻量体以显清秀，字号保持如阅读正文
+                    .foregroundColor(SutraDesignSystem.sutraTextColor()) // 使用阅读页主体文字色
+                    .lineLimit(4)
+                    .lineSpacing(8) // 更宽松的行距，提升如纸上阅读般的舒适感
                     .multilineTextAlignment(.leading)
-
-                // 日期
-                Text(formatDate(from: favorite.path))
-                    .font(SutraTypographyBridge.uiCaption())
-                    .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.5))
+                    
+                // 索引出处/标题 (极其弱化地放置在底部右侧)
+                HStack {
+                    Spacer()
+                    Text(favorite.title)
+                        .font(SutraTypographyBridge.uiCaption())
+                        .foregroundColor(SutraDesignSystem.color(.textTertiary).opacity(0.8))  // 弱化标题为辅助索引
+                        .lineLimit(1)
+                }
             }
             .padding(.leading, 16)
-            .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
+            .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) // 收缩上下边距
             .padding(.trailing, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
         }
         .background(
@@ -296,18 +269,37 @@ struct ModernFavoritesView: View {
     }
 
     private func extractContentEfficiently(from item: [String: Any]) -> String {
-        // Use a more efficient method to get content with length limit
-        if item["children"] != nil {
-            return NSLocalizedString("contains_sub_chapters", comment: "")
+        // 获取经文内容（Book.shared.getSutra 会自动处理子节点拼接）
+        let rawContent = Book.shared.getSutra(item)
+
+        // 单次遍历策略：过滤空白字符 + 限制长度
+        // 避免多次 replacingOccurrences 创建中间字符串的性能开销
+        let maxCount = 50
+        var result = ""
+        result.reserveCapacity(maxCount + 3) // 预分配容量，避免多次重分配
+        var charCount = 0
+
+        for char in rawContent {
+            // 跳过常见空白字符，使预览更紧凑
+            if char == "\n" || char == " " || char == "\t" {
+                continue
+            }
+
+            result.append(char)
+            charCount += 1
+
+            // 达到目标长度立即停止，避免处理无用字符
+            if charCount >= maxCount {
+                break
+            }
         }
 
-        // Directly get sutra with length limit
-        let content = Book.shared.getSutra(item)
-        if content.count > 150 {
-            let index = content.index(content.startIndex, offsetBy: 150)
-            return String(content[..<index]) + "..."
+        // 添加省略号指示（仅在截断时）
+        if charCount >= maxCount && rawContent.count > maxCount {
+            result.append("...")
         }
-        return content
+
+        return result.isEmpty ? NSLocalizedString("no_content_preview", comment: "") : result
     }
 
 

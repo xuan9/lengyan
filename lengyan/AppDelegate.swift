@@ -104,6 +104,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         favoritesNavController.navigationBar.isHidden = true
 
         tabBarController.viewControllers = [readingNavController, listeningNavController, favoritesNavController]
+        tabBarController.selectedIndex = 1 // TEMP for screenshot
     }
 
     private func configureAppearance() {

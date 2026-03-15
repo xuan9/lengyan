@@ -252,17 +252,60 @@ class Book: NSObject {
     }
     
     @MainActor
-    func getTitleView(_ item:[String:Any])->UILabel{
-        let label = UILabel()
-        label.backgroundColor = .clear  // 让导航栏背景自然透出
-        label.numberOfLines = 2
-        label.textAlignment = NSTextAlignment.center // 标题居中更显古典庄严
-        label.attributedText = getTitle(item)
-        label.adjustsFontSizeToFitWidth = true
-        label.minimumScaleFactor = 0.5
-        label.isUserInteractionEnabled = true
-        label.sizeToFit()
-        return label
+    func getTitleView(_ item:[String:Any])->UIView{
+        let title:String = (item["name"] as? String ?? "")
+        let parent = Book.shared.parentOfItem(item)
+        let parentTitle = parent?["name"] as? String ?? ""
+        
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.spacing = 2
+        
+        if parent != nil && !parentTitle.isEmpty {
+            let parentLabel = UILabel()
+            parentLabel.font = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .regular)
+            parentLabel.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
+            parentLabel.textAlignment = .center
+            parentLabel.lineBreakMode = .byTruncatingTail // 强制单行截掉长尾
+            parentLabel.adjustsFontSizeToFitWidth = true
+            parentLabel.minimumScaleFactor = 0.7 // 允许在截断前适度缩小文字
+            parentLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal) // 给左右按钮让位
+            
+            let pText = parentTitle + " 之"
+            let pAttr = NSMutableAttributedString(string: pText)
+            pAttr.addAttribute(NSAttributedStringKey.kern, value: 1.0, range: NSRange(location: 0, length: pAttr.length))
+            
+            // 将辅助介词“之”单独缩小及减淡颜色
+            let zhiRange = (pText as NSString).range(of: " 之")
+            if zhiRange.location != NSNotFound {
+                let zhiFont = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .light).withSize(10)
+                pAttr.addAttribute(NSAttributedStringKey.font, value: zhiFont, range: zhiRange)
+                // 采用与主标题相同的主色，仅依靠字号大小差异来区分，保证绝对的可读性
+                pAttr.addAttribute(NSAttributedStringKey.foregroundColor, value: SutraDesignTokens.shared.color(for: .textPrimary), range: zhiRange)
+            }
+            
+            parentLabel.attributedText = pAttr
+            
+            stackView.addArrangedSubview(parentLabel)
+        }
+        
+        let titleLabel = UILabel()
+        let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .regular)
+        titleLabel.font = titleFont
+        titleLabel.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
+        titleLabel.textAlignment = .center
+        titleLabel.lineBreakMode = .byTruncatingTail // 强制单行截掉长尾避免三行坍塌
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.minimumScaleFactor = 0.6 // 对于正标题允许更大程度缩放
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        
+        let attr = NSMutableAttributedString(string: title)
+        attr.addAttribute(NSAttributedStringKey.kern, value: 3.0, range: NSRange(location: 0, length: attr.length))
+        titleLabel.attributedText = attr
+        
+        stackView.addArrangedSubview(titleLabel)
+        return stackView
     }
     
     @MainActor
