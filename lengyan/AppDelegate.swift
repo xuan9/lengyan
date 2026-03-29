@@ -100,7 +100,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             image: UIImage(systemName: "heart")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
             selectedImage: UIImage(systemName: "heart.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
-        // Hide navigation bar for cleaner SwiftUI interface
+        // Hide navigation bar on root; show dynamically when pushing detail pages
         favoritesNavController.navigationBar.isHidden = true
 
         tabBarController.viewControllers = [readingNavController, listeningNavController, favoritesNavController]

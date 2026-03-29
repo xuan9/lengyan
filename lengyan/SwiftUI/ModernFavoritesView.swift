@@ -166,6 +166,8 @@ struct ModernFavoritesView: View {
         .edgesIgnoringSafeArea(.bottom)
         .onAppear {
             loadFavorites()
+            // Hide nav bar when returning to favorites root
+            hideNavBar()
         }
         .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
             // Refresh cache when favorites change from other views
@@ -405,6 +407,15 @@ struct ModernFavoritesView: View {
             }
         } else {
             print("Error: Could not find page index for path: \(path)")
+        }
+    }
+
+    private func hideNavBar() {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first,
+           let tabBarController = window.rootViewController as? UITabBarController,
+           let navigationController = tabBarController.selectedViewController as? UINavigationController {
+            navigationController.setNavigationBarHidden(true, animated: false)
         }
     }
 }
