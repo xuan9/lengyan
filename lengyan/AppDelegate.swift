@@ -104,7 +104,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         favoritesNavController.navigationBar.isHidden = true
 
         tabBarController.viewControllers = [readingNavController, listeningNavController, favoritesNavController]
-        tabBarController.selectedIndex = 1 // TEMP for screenshot
+        tabBarController.selectedIndex = 0
     }
 
     private func configureAppearance() {
@@ -121,7 +121,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let designSystem = SutraDesignTokens.shared
 
         navigationBarAppearance.configureWithOpaqueBackground()
-        navigationBarAppearance.backgroundColor = designSystem.color(for: .background)
+        navigationBarAppearance.backgroundColor = designSystem.color(for: .navigationBar)
         navigationBarAppearance.shadowColor = designSystem.color(for: .decorativeGold).withAlphaComponent(0.15)
         navigationBarAppearance.shadowImage = UIImage()
 
@@ -144,9 +144,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().compactAppearance = navigationBarAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
 
-        // Set translucent to true for better zen aesthetics
-        UINavigationBar.appearance().isTranslucent = true
-        UINavigationBar.appearance().backgroundColor = designSystem.color(for: .background)
+        UINavigationBar.appearance().isTranslucent = false
+        UINavigationBar.appearance().backgroundColor = designSystem.color(for: .navigationBar)
     }
 
     private func setupZenTabBarAppearance() {

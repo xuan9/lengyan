@@ -20,7 +20,7 @@ final class ReaderViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
@@ -48,7 +48,7 @@ final class ReaderViewController: UIViewController {
     //  }
     //
     private func setupContentView() {
-        contentView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        contentView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentView.showsVerticalScrollIndicator = false
         contentView.showsHorizontalScrollIndicator = false
@@ -104,7 +104,7 @@ final class ReaderViewController: UIViewController {
             )
             
             // 5
-            textView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+            textView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
             textView.isEditable = false
             textView.isSelectable = false
             textView.textContainerInset = textInsets

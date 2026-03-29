@@ -22,7 +22,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.edgesForExtendedLayout = [];
         self.automaticallyAdjustsScrollViewInsets = false;
-        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 翻页控制器底层背景色
+        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // 翻页控制器底层背景色
         
         if page < 0 {
             self.close()
@@ -95,7 +95,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        let backgroundColor = SutraDesignTokens.shared.color(for: .surface) // Seamless scroll background
+        let backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // Seamless scroll background
 
         self.navigationItem.leftBarButtonItem?.tintColor = primaryTextColor
         shareButton.tintColor = secondaryTextColor
@@ -155,7 +155,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     // Apply Zen design enhancements to the page content
     private func enhancePageViewController(_ pageVC: SutraPageContentViewController) {
         // Apply semantic sutra background for page and table
-        let backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 无界宣纸沉浸色向下透传
+        let backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // 无界宣纸沉浸色向下透传
         pageVC.view.backgroundColor = backgroundColor
         pageVC.tableView.backgroundColor = backgroundColor
 

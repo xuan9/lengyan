@@ -45,7 +45,7 @@
 		133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB9B2364D96900B61AC0 /* Utils.swift */; };
 		1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */; };
 		135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D605C1D16FA4A00029090 /* SutraPageViewController.swift */; };
-		135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60601D16FB7400029090 /* SutraBookViewController.swift */; };
+
 		135D60631D173B1B00029090 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60621D173B1B00029090 /* Book.swift */; };
 		1361D0811F647C6A00426DB6 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1361D0831F647C6A00426DB6 /* InfoPlist.strings */; };
 		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
@@ -56,12 +56,12 @@
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
 		1390734C1D109284003A3333 /* data in Resources */ = {isa = PBXBuildFile; fileRef = 1390734B1D109284003A3333 /* data */; };
 		13978CCD1D2028E5005031EE /* Prefers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13978CCC1D2028E5005031EE /* Prefers.swift */; };
-		139E5E0E2061A6B100F18539 /* SutraChapterContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */; };
+
 		13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13CA80F01EAB3BF600589E8F /* Assets.xcassets */; };
 		13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */; };
 		13FE31F523678EFD00F632E9 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FE31F423678EFD00F632E9 /* Constants.swift */; };
 		3BF29E40DB63BEF90783469B /* ZenTabHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */; };
-		4A3D33CA206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */; };
+
 		4A6C6BB21EE5A5C400B447DC /* lyz1.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4A6C6BB11EE5A4F300B447DC /* lyz1.m4a */; settings = {ASSET_TAGS = (lyz1, ); }; };
 		4AD0637A1EA3801400751922 /* ly01.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063651EA244AC00751922 /* ly01.m4a */; settings = {ASSET_TAGS = (ly01, ); }; };
 		4AD0637B1EA3801900751922 /* ly07.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4AD063661EA244AC00751922 /* ly07.m4a */; settings = {ASSET_TAGS = (ly07, ); }; };
@@ -141,7 +141,7 @@
 		133CAB9B2364D96900B61AC0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewControllera.swift; sourceTree = "<group>"; tabWidth = 4; };
 		135D605C1D16FA4A00029090 /* SutraPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageViewController.swift; sourceTree = "<group>"; };
-		135D60601D16FB7400029090 /* SutraBookViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraBookViewController.swift; sourceTree = "<group>"; };
+
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		1361D0821F647C6A00426DB6 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		1361D0841F647C7400426DB6 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -161,12 +161,12 @@
 		1390734B1D109284003A3333 /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = data; sourceTree = "<group>"; };
 		139073521D1093D8003A3333 /* lengyan-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "lengyan-Bridging-Header.h"; sourceTree = "<group>"; };
 		13978CCC1D2028E5005031EE /* Prefers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Prefers.swift; sourceTree = "<group>"; };
-		139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraChapterContentViewController.swift; sourceTree = "<group>"; };
+
 		13CA80F01EAB3BF600589E8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		13DF26861F1BC410007DEF71 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
 		13FE31F423678EFD00F632E9 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraChapterPageControllerViewController.swift; sourceTree = "<group>"; };
+
 		4A6C6BB11EE5A4F300B447DC /* lyz1.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = lyz1.m4a; sourceTree = "<group>"; };
 		4AD063651EA244AC00751922 /* ly01.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly01.m4a; sourceTree = "<group>"; };
 		4AD063661EA244AC00751922 /* ly07.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly07.m4a; sourceTree = "<group>"; };
@@ -234,9 +234,6 @@
 				1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */,
 				1372181B1D402B720037332A /* SutraPurePageViewController.swift */,
 				1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */,
-				4A3D33C9206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift */,
-				139E5E0D2061A6B100F18539 /* SutraChapterContentViewController.swift */,
-				135D60601D16FB7400029090 /* SutraBookViewController.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -620,15 +617,12 @@
 				133CABBD2364DDB700B61AC0 /* String+Common.swift in Sources */,
 				133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */,
 				1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */,
-				135D60611D16FB7400029090 /* SutraBookViewController.swift in Sources */,
 				1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */,
 				135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */,
 				CBC207392EBCD71300EB7A45 /* DesignSystem+Tokens.swift in Sources */,
 				13E120FE1D27FBFC002B8B1C /* SutraFrontViewController.swift in Sources */,
 				1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */,
 				13978CCD1D2028E5005031EE /* Prefers.swift in Sources */,
-				4A3D33CA206CD3C6002A7214 /* SutraChapterPageControllerViewController.swift in Sources */,
-				139E5E0E2061A6B100F18539 /* SutraChapterContentViewController.swift in Sources */,
 				135D60631D173B1B00029090 /* Book.swift in Sources */,
 				13FE31F523678EFD00F632E9 /* Constants.swift in Sources */,
 				1390730D1D109193003A3333 /* AppDelegate.swift in Sources */,

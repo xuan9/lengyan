@@ -137,7 +137,7 @@ struct ModernAudioPlayerView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     if audioObserver.currentTrack?.isEmpty ?? true {
                         Text("请 轻 触 上 列 卷 名 听 经")
-                            .font(.system(size: 14, weight: .light, design: .serif))
+                            .font(SutraTypographyBridge.auxiliaryText(weight: .light))
                             .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
                             .lineLimit(1)
                     } else {
@@ -179,7 +179,7 @@ struct ModernAudioPlayerView: View {
     private var progressSliderWithTime: some View {
         HStack(spacing: 8) {
             Text(formatTime(audioObserver.currentTime))
-                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .font(SutraTypographyBridge.auxiliaryText(weight: .semibold))
                 .monospacedDigit()
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
 
@@ -216,7 +216,7 @@ struct ModernAudioPlayerView: View {
             .frame(height: 12) // 给热区一些高度
 
             Text(formatTime(audioObserver.totalTime))
-                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .font(SutraTypographyBridge.auxiliaryText(weight: .semibold))
                 .monospacedDigit()
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
         }
@@ -227,7 +227,7 @@ struct ModernAudioPlayerView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Section Header - 极简引言：全大写/加宽字距的细小印记
             Text(group.name)
-                .font(.system(size: 13, weight: .semibold))
+                .font(SutraTypographyBridge.uiCaption(weight: .semibold))
                 .tracking(2.0)
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
                 .lineLimit(1)
@@ -258,7 +258,7 @@ struct ModernAudioPlayerView: View {
             // 古雅目录样式的曲目行
             HStack(alignment: .bottom, spacing: 12) {
                 Text(titleWithStatus(name: name, status: status))
-                    .font(.system(size: 21, weight: .regular, design: .serif)) // 更大、更有经文感的 Serif 字体
+                    .font(SutraTypographyBridge.sacredText(weight: .regular))
                     .foregroundColor(status == .downloaded ? Color(SutraDesignTokens.shared.color(for: .sutraText)) : Color(SutraDesignTokens.shared.color(for: .textSecondary)))
 
                 // 目录虚线引线
@@ -276,12 +276,12 @@ struct ModernAudioPlayerView: View {
                 // 右侧微标暗示可操作与状态
                 if status != .downloaded && status != .downloading {
                     Image(systemName: "icloud.and.arrow.down")
-                        .font(.system(size: 14, weight: .light))
+                        .font(SutraTypographyBridge.auxiliaryText(weight: .light))
                         .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
                         .padding(.bottom, 4)
                 } else if status == .downloaded {
                     Text("·") // 极细微的点，保持视觉平衡
-                        .font(.system(size: 14, weight: .ultraLight))
+                        .font(SutraTypographyBridge.auxiliaryText(weight: .ultraLight))
                         .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.3))
                         .padding(.bottom, 6)
                 }

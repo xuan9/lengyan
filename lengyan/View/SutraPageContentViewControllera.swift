@@ -53,7 +53,7 @@ class SutraTableViewCell: UITableViewCell {
         )
 
         // 🏛️ Sacred Zen card container - 极致扁平化，宣纸质感
-        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        containerView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         containerView.layer.cornerRadius = 0
         containerView.layer.shadowOpacity = 0
         containerView.layer.borderWidth = 0
@@ -70,7 +70,7 @@ class SutraTableViewCell: UITableViewCell {
         // 📜 Sacred text view with divine reading experience
         textView = UITextView()
         textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        textView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         textView.isEditable = false
         textView.isScrollEnabled = false
 
@@ -186,7 +186,7 @@ class SutraTableViewCell: UITableViewCell {
 
     // MARK: - Theme Support
     public func applyThemeColors() {
-        backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 细胞底色同样是净色
+        backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // 细胞底色同样是净色
         containerView.backgroundColor = .clear // 透明度直接露底
 
         // Refresh text colors based on content type
@@ -298,7 +298,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     private func applyThemeColorsToView() {
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 视界极致统一
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // 视界极致统一
     }
 
     private func setupThemeObserverForView() {
@@ -326,8 +326,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
     private func configureTableViewWithDesignSystem() {
         // Apply unified color system colors
-        tableView.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 满屏宣纸
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        tableView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // 满屏宣纸
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
 
         // Enhanced zen styling
         tableView.separatorStyle = .none
@@ -342,7 +342,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         )
 
         // Status bar overlay for immersive reading
-        statusBarOverlay.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        statusBarOverlay.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         statusBarOverlay.alpha = 0
         statusBarOverlay.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusBarOverlay)
@@ -397,9 +397,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         guard let navigationController = navigationController else { return }
 
         navigationController.navigationBar.prefersLargeTitles = false
-        navigationController.navigationBar.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        navigationController.navigationBar.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         navigationController.navigationBar.shadowImage = UIImage()
-        navigationController.navigationBar.isTranslucent = true
+        navigationController.navigationBar.isTranslucent = false
 
         // 🏛️ Sacred navigation bar appearance with divine aesthetics
         let appearance = UINavigationBarAppearance()
@@ -525,14 +525,14 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         // 修正预加载漏洞：如果 navigationController 暂时为空，绝不能认定它处于隐藏状态
         if (navigationController?.isNavigationBarHidden == true){
             let emptyCell = UITableViewCell()
-            emptyCell.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-            emptyCell.contentView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+            emptyCell.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+            emptyCell.contentView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
             emptyCell.selectionStyle = .none
             return emptyCell
         }
 
         let cell = UITableViewCell()
-        cell.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+        cell.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         cell.selectionStyle = .none
 
         // Zen card container for action buttons - 极简扁平
@@ -545,8 +545,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         // 底部仅保留“原典”按钮（如果支持的话）
         if meta["children"] == nil {
             let emptyCell = UITableViewCell()
-            emptyCell.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-            emptyCell.contentView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
+            emptyCell.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+            emptyCell.contentView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
             emptyCell.selectionStyle = .none
             return emptyCell
         }

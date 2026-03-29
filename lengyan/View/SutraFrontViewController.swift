@@ -38,7 +38,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         treeView.delegate = self
         treeView.dataSource = self
-        treeView.rowHeight = 64; // World-class iOS touch targets (increased from 56pt)
+        treeView.rowHeight = 44; // 紧凑目录行高，减少无谓留白
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
 
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
@@ -65,6 +65,25 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         // Refresh design system on appearance
         applyZenTempleSerenityDesignSystem()
+
+        // Force stable navigation bar color on every appearance
+        let navColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        if let navBar = self.navigationController?.navigationBar {
+            navBar.isTranslucent = false
+            navBar.backgroundColor = navColor
+            navBar.barTintColor = navColor
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = navColor
+            appearance.shadowColor = .clear
+            appearance.titleTextAttributes = [
+                .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary),
+                .font: SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .medium)
+            ]
+            navBar.standardAppearance = appearance
+            navBar.scrollEdgeAppearance = appearance
+            navBar.compactAppearance = appearance
+        }
 
         // Configure navigation bar behavior
         self.navigationController?.setNavigationBarHidden(false, animated: true)
@@ -146,10 +165,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // Guard against treeView not being initialized yet (can happen during early notification calls)
         guard let treeView = treeView else { return }
 
-        // FIXED: Use the same background as the view so it's visible
         let bgColor = SutraDesignTokens.shared.color(for: .background)
         treeView.backgroundColor = bgColor
-        treeView.rowHeight = 64  // World-class iOS touch targets
+        treeView.rowHeight = 44  // 紧凑目录行高
         treeView.separatorStyle = RATreeViewCellSeparatorStyleNone
     }
 
@@ -623,8 +641,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         btn.tag = count
         btn.titleLabel?.adjustsFontSizeToFitWidth = true;
 
-        // 🏛️ 首页经题装饰 - 使用大标题色（鎏金色），增加强调神圣感
-        let titleColor = SutraDesignTokens.shared.color(for: .chapterTitle)
+        // 🏛️ 首页经题 - 回归墨色，与经卷传统一致；金色退居装饰角色
+        let titleColor = SutraDesignTokens.shared.color(for: .textPrimary)
         btn.setTitleColor(titleColor, for: .normal)
         btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .medium)
         
@@ -745,11 +763,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let content = Book.shared.getSutraAttributeString(text: Book.shared.getChapterSutra(chapter: chapter))
         let title = NSLocalizedString("chapter_\(chapter + 1)", comment: "chapter_name");
         let pageVC = ReaderViewController.init(title: title, content: content)
-        
-//        let pageVC = SutraChapterPageViewController.init( transitionStyle:.pageCurl,
-//                                                   navigationOrientation:.horizontal,
-//                                                   options: .none)
-//        pageVC.pageIndex = chapter;
         self.navigationController?.pushViewController(pageVC, animated: true)
     }
 
@@ -807,8 +820,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         cell.layer.shadowOpacity = 0
         cell.layer.borderWidth = 0
 
-        // 维持素雅的段落留白，稍微压缩行高以聚拢内容
-        cell.contentView.layoutMargins = UIEdgeInsets(top: 10, left: 24, bottom: 10, right: 24)
+        // 紧凑行内留白，目录密度舒适
+        cell.contentView.layoutMargins = UIEdgeInsets(top: 4, left: 24, bottom: 4, right: 24)
         
         // 收紧层级缩进，回归朴素雅致的古风目录
         cell.indentationWidth = 15
