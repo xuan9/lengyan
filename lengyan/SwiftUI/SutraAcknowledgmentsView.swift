@@ -22,13 +22,13 @@ struct SutraAcknowledgmentsView: View {
                                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
                         }
 
-                        Text("经文和科判均选自法界佛教总会《大佛顶首楞严经》浅释网站。感恩法界佛教总会！")
+                        Text("经文和科判来自法界佛教总会网站《大佛顶首楞严经浅释》。感恩法界佛教总会编辑整理！其经文援用《龙藏》及交光法师之《大佛顶首楞严经正脉疏》等，并以圆锳法师简要科判为主。")
                             .font(Font(SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .regular)))
                             .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textPrimary)))
                             .lineSpacing(6)
                     }
                     
-
+ 
                     // 音频来源
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 8) {
