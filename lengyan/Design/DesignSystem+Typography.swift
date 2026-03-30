@@ -129,80 +129,63 @@ extension UIFont.Weight {
 }
 
 // MARK: - Enhanced Chinese Font Manager
-/// 霞鹜文楷 (LXGW WenKai) — 楷体字形，如千年碑帖
-/// Simplified: LXGW WenKai | Traditional: LXGW WenKai TC
+/// 系统字体 PingFang — 细字重 + 大字号 = 典雅通透
+/// Light weight at larger sizes: the quieter the font, the louder the content
 struct ChineseFontManager {
-    // PostScript names — verified via fontTools
-    private static let lxgwHansRegular = "LXGWWenKai-Regular"
-    private static let lxgwHansMedium  = "LXGWWenKai-Medium"
-    private static let lxgwHantRegular = "LXGWWenKaiTC-Regular"
-    private static let lxgwHantMedium  = "LXGWWenKaiTC-Medium"
-
-    static func appropriateUIFont(size: CGFloat, weight: UIFont.Weight) -> UIFont {
-        // Use Book.shared language detection (iterates all preferred languages, default simplified)
-        let isSimplified = Book.shared.isSimplifiedChinese
-        let regularName = isSimplified ? lxgwHansRegular : lxgwHantRegular
-        let mediumName  = isSimplified ? lxgwHansMedium  : lxgwHantMedium
-        let fontName = weight <= .regular ? regularName : mediumName
-
-        if let font = UIFont(name: fontName, size: size) {
-            return font
-        }
-
-        // Fallback — 系统字体
+    static func appropriateUIFont(size: CGFloat, weight: UIFont.Weight, style: SutraTypographyStyle) -> UIFont {
         return UIFont.systemFont(ofSize: size, weight: weight)
     }
 }
 
 // MARK: - Typography Definition - 禅意字体层级
 struct SutraTypographyDefinition {
-    // 🌸 Web Design System Sizes - 网页设计系统尺寸 (from 设计系统总结.md)
+    // 🌸 Web Design System Sizes — 细字重 + 大字号策略
     static let webSizes = (
-        sutraTitle: 32 as CGFloat,    // 主标题: 32px, 粗体 - 经典标题
-        chapterTitle: 24 as CGFloat,  // 章节标题: 24px, 中等 - 章节名称
-        sacredText: 20 as CGFloat,    // 正文: 20px, 常规 - 经文内容（提升庄重感）
-        auxiliaryText: 14 as CGFloat  // 辅助文本: 14px - 说明文字
+        sutraTitle: 34 as CGFloat,    // 32→34, 配 Light 字重
+        chapterTitle: 26 as CGFloat,  // 24→26, 配 Light 字重
+        sacredText: 22 as CGFloat,    // 20→22, 配 Light 字重
+        auxiliaryText: 15 as CGFloat  // 14→15
     )
 
-    // 📱 iOS-Optimized Sizes - iOS优化尺寸
+    // 📱 iOS-Optimized Sizes — 细字重需稍大字号补偿视觉重量
     static let iOSizes = (
-        caption: 15 as CGFloat,   // Increased from 14pt for better legibility
-        small: 13 as CGFloat,     // Increased from 12pt
-        base: 17 as CGFloat,      // iOS standard body size (was 16pt)
-        heading: 22 as CGFloat,   // Increased from 20pt for better hierarchy
-        title: 28 as CGFloat,     // Increased from 24pt for prominence
-        large: 34 as CGFloat,     // Increased from 28pt
-        xl: 40 as CGFloat         // Increased from 34pt for maximum impact
+        caption: 16 as CGFloat,   // 15→16
+        small: 14 as CGFloat,     // 13→14
+        base: 18 as CGFloat,      // 17→18, 核心阅读尺寸
+        heading: 24 as CGFloat,   // 22→24
+        title: 30 as CGFloat,     // 28→30
+        large: 36 as CGFloat,     // 34→36
+        xl: 42 as CGFloat         // 40→42
     )
 
     // 🎨 Character Spacing - 禅意字符间距
     // Optimized for Chinese reading and Zen aesthetics
     static let characterSpacing: [SutraTypographyStyle: CGFloat] = [
-        // 📜 Web Design System Spacing - 网页设计系统间距
-        .sutraTitle: 0.6,        // 主标题间距
-        .chapterTitle: 0.5,      // 章节标题间距
-        .sacredText: 1.2,        // 正文间距 - 经文内容呼吸感增强
-        .auxiliaryText: 0.3,     // 辅助文本间距
+        // 📜 经文 — PingFang 字宽充足，微收字距更紧凑雅致
+        .sutraTitle: 0.4,
+        .chapterTitle: 0.3,
+        .sacredText: 0.5,          // 1.2→0.5
+        .auxiliaryText: 0.2,
 
-        // 📱 iOS Optimized Spacing - iOS优化间距
-        .sutraBody: 1.2,         // 经文正文呼吸感增强
-        .sutraLarge: 1.2,        // 大字经文呼吸感
-        .sutraCaption: 0.5,      // Subtle spacing for captions
-        .commentary: 0.7,        // Good spacing for commentary
+        // 📖 正文
+        .sutraBody: 0.5,           // 1.2→0.5
+        .sutraLarge: 0.5,          // 1.2→0.5
+        .sutraCaption: 0.3,
+        .commentary: 0.4,          // 0.7→0.4
 
-        // 🎯 UI Elements Spacing - 界面元素间距
-        .navigationTitle: 0.2,   // Slight spacing for navigation
-        .uiLargeTitle: 0.3,     // Minimal spacing for UI titles
-        .uiTitle: 0.2,          // Minimal spacing for UI titles
-        .uiHeading: 0.1,        // Very minimal spacing for headings
-        .uiBody: 0.1,           // Very minimal spacing for body
-        .uiCaption: 0.0,        // No spacing for small UI text
-        .uiSmall: 0.0,          // No spacing for smallest text
-        .indexItem: 0.3,        // Slight spacing for index items
-        .menuItem: 0.2,         // Slight spacing for menu items
-        .buttonLarge: 0.1,      // Minimal spacing for buttons
-        .buttonMedium: 0.1,     // Minimal spacing for buttons
-        .label: 0.0             // No spacing for labels
+        // 🎯 UI — 层次靠字号，字距最小化
+        .navigationTitle: 0.1,
+        .uiLargeTitle: 0.2,
+        .uiTitle: 0.1,
+        .uiHeading: 0.0,
+        .uiBody: 0.0,
+        .uiCaption: 0.0,
+        .uiSmall: 0.0,
+        .indexItem: 0.2,
+        .menuItem: 0.1,
+        .buttonLarge: 0.0,
+        .buttonMedium: 0.0,
+        .label: 0.0
     ]
 }
 
@@ -216,12 +199,12 @@ struct SutraTypographySystem: SutraTypography {
 
     func uiFont(for style: SutraTypographyStyle, weight: UIFont.Weight = .regular) -> UIFont {
         let (size, fontWeight) = sizeAndWeight(for: style, weight: weight)
-        return ChineseFontManager.appropriateUIFont(size: size, weight: fontWeight)
+        return ChineseFontManager.appropriateUIFont(size: size, weight: fontWeight, style: style)
     }
 
     func lineHeight(for style: SutraTypographyStyle) -> CGFloat {
         let (size, _) = sizeAndWeight(for: style, weight: .regular)
-        return GoldenRatioTypography.lineHeight(base: size)
+        return size * 1.8  // 细字重需更多行间呼吸
     }
 
     func characterSpacing(for style: SutraTypographyStyle) -> CGFloat {
@@ -235,41 +218,41 @@ struct SutraTypographySystem: SutraTypography {
         let ios = SutraTypographyDefinition.iOSizes
 
         switch style {
-        // 📜 Web Design System Hierarchy - 网页设计系统层级
+        // 📜 经文层级 — 细字大号，如宣纸淡墨
         case .sutraTitle:
-            return (web.sutraTitle, weight == .regular ? .bold : adjustedWeight)    // 主标题: 32px, 粗体
+            return (web.sutraTitle, weight == .regular ? .regular : adjustedWeight)
         case .chapterTitle:
-            return (web.chapterTitle, weight == .regular ? .medium : adjustedWeight) // 章节标题: 24px, 中等
+            return (web.chapterTitle, weight == .regular ? .light : adjustedWeight)
         case .sacredText:
-            return (web.sacredText, adjustedWeight)                               // 正文: 18px, 常规
+            return (web.sacredText, weight == .regular ? .light : adjustedWeight)
         case .auxiliaryText:
-            return (web.auxiliaryText, adjustedWeight)                              // 辅助文本: 14px
+            return (web.auxiliaryText, weight == .regular ? .light : adjustedWeight)
 
-        // 🏛️ iOS Navigation & Titles - iOS导航与标题
+        // 🏛️ 导航标题 — Regular 足矣，大号即有分量
         case .navigationTitle:
-            return (ios.title, weight == .regular ? .semibold : adjustedWeight)
+            return (ios.title, weight == .regular ? .regular : adjustedWeight)
         case .sutraLarge:
-            return (ios.large, adjustedWeight)
+            return (ios.large, weight == .regular ? .light : adjustedWeight)
 
-        // 📖 Body Text - 正文文本
+        // 📖 正文 — Light 通透，大号清晰
         case .sutraBody:
-            return (ios.heading, adjustedWeight)
+            return (ios.heading, weight == .regular ? .light : adjustedWeight)
         case .sutraCaption:
-            return (ios.base, adjustedWeight)
+            return (ios.base, weight == .regular ? .light : adjustedWeight)
 
-        // 🎨 UI Elements - 界面元素
+        // 🎨 UI 元素 — 层次靠字号而非字重
         case .uiLargeTitle:
-            return (ios.large, weight == .regular ? .bold : adjustedWeight)  // 34pt
+            return (ios.large, weight == .regular ? .regular : adjustedWeight)
         case .uiTitle:
-            return (ios.title, weight == .regular ? .semibold : adjustedWeight)  // 28pt
+            return (ios.title, weight == .regular ? .regular : adjustedWeight)
         case .uiHeading:
-            return (ios.heading, weight == .regular ? .medium : adjustedWeight)  // 22pt
+            return (ios.heading, weight == .regular ? .light : adjustedWeight)
         case .uiBody:
-            return (ios.base, adjustedWeight)
+            return (ios.base, weight == .regular ? .light : adjustedWeight)
         case .uiCaption:
-            return (ios.caption, adjustedWeight)
+            return (ios.caption, weight == .regular ? .light : adjustedWeight)
         case .uiSmall:
-            return (ios.small, adjustedWeight)
+            return (ios.small, weight == .regular ? .light : adjustedWeight)
 
         // 📚 Index & Menu - 索引与菜单
         case .indexItem:
