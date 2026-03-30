@@ -152,13 +152,15 @@ struct ModernAudioPlayerView: View {
                 }
                 
                 Spacer()
-                
-                // 播放模式
-                Button(action: { showPlayModeMenu() }) {
-                    Image(selectedPlayMode.iconName)
-                        .renderingMode(.template)
-                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
-                        .frame(width: 24, height: 24)
+
+                // 播放模式 — 仅在有曲目时显示
+                if audioObserver.currentTrack != nil && !(audioObserver.currentTrack?.isEmpty ?? true) {
+                    Button(action: { showPlayModeMenu() }) {
+                        Image(selectedPlayMode.iconName)
+                            .renderingMode(.template)
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                            .frame(width: 24, height: 24)
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -189,16 +191,16 @@ struct ModernAudioPlayerView: View {
                     // 轨道
                     Rectangle()
                         .fill(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.15))
-                        .frame(height: 3)
-                        .cornerRadius(1.5)
+                        .frame(height: 5)
+                        .cornerRadius(2.5)
 
                     // 进度
                     Rectangle()
                         .fill(Color(SutraDesignTokens.shared.color(for: .bookmark)))
-                        .frame(width: max(0, min(geometry.size.width * progress, geometry.size.width)), height: 3)
-                        .cornerRadius(1.5)
+                        .frame(width: max(0, min(geometry.size.width * progress, geometry.size.width)), height: 5)
+                        .cornerRadius(2.5)
                 }
-                .contentShape(Rectangle()) // 增加点击/拖拽热区
+                .contentShape(Rectangle())
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
@@ -206,14 +208,14 @@ struct ModernAudioPlayerView: View {
                             let percent = min(max(value.location.x / geometry.size.width, 0), 1)
                             let seekTime = audioObserver.totalTime * Double(percent)
                             audioObserver.currentTime = seekTime
-                            
+
                             // 实际调整播放器进度
                             let cmTime = CMTime(seconds: seekTime, preferredTimescale: 600)
                             audioObserver.queuePlayer?.seek(to: cmTime, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
                         }
                 )
             }
-            .frame(height: 12) // 给热区一些高度
+            .frame(height: 24) // 加大拖拽热区
 
             Text(formatTime(audioObserver.totalTime))
                 .font(SutraTypographyBridge.auxiliaryText(weight: .semibold))
@@ -255,39 +257,14 @@ struct ModernAudioPlayerView: View {
         let progress = downloadProgress[file] ?? 0
 
         return VStack(alignment: .leading, spacing: 0) {
-            // 古雅目录样式的曲目行
-            HStack(alignment: .bottom, spacing: 12) {
-                Text(titleWithStatus(name: name, status: status))
-                    .font(SutraTypographyBridge.sacredText(weight: .regular))
-                    .foregroundColor(status == .downloaded ? Color(SutraDesignTokens.shared.color(for: .sutraText)) : Color(SutraDesignTokens.shared.color(for: .textSecondary)))
+            // 极简曲目行：只用文字深浅区分状态，去除虚线与图标噪音
+            Text(titleWithStatus(name: name, status: status))
+                .font(SutraTypographyBridge.sacredText(weight: .regular))
+                .foregroundColor(status == .downloaded
+                    ? Color(SutraDesignTokens.shared.color(for: .sutraText))
+                    : Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                .padding(.vertical, 16)
 
-                // 目录虚线引线
-                GeometryReader { geometry in
-                    Path { path in
-                        path.move(to: CGPoint(x: 0, y: geometry.size.height / 2))
-                        path.addLine(to: CGPoint(x: geometry.size.width, y: geometry.size.height / 2))
-                    }
-                    .stroke(style: StrokeStyle(lineWidth: 1.0, lineCap: .round, dash: [0.1, 5])) // 柔和的散点虚线
-                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.3))
-                }
-                .frame(height: 1)
-                .padding(.bottom, 10)
-
-                // 右侧微标暗示可操作与状态
-                if status != .downloaded && status != .downloading {
-                    Image(systemName: "icloud.and.arrow.down")
-                        .font(SutraTypographyBridge.auxiliaryText(weight: .light))
-                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
-                        .padding(.bottom, 4)
-                } else if status == .downloaded {
-                    Text("·") // 极细微的点，保持视觉平衡
-                        .font(SutraTypographyBridge.auxiliaryText(weight: .ultraLight))
-                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.3))
-                        .padding(.bottom, 6)
-                }
-            }
-            .padding(.vertical, 16)
-            
             // Download progress bar
             if status == .downloading {
                 GeometryReader { geometry in
@@ -305,7 +282,7 @@ struct ModernAudioPlayerView: View {
                 .padding(.top, 4)
             }
         }
-        .padding(.horizontal, 48) // 适中的古典随列表靠拢留白
+        .padding(.horizontal, 48)
         .contentShape(Rectangle())
         .onTapGesture {
             handleMediaItemTap(name: name, file: file, fileExtension: `extension`, groupName: groupName)
