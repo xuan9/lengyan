@@ -484,7 +484,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // 使用带有特定换行符的开经偈
         let subTitleText = "无上甚深微妙法 百千万劫难遭遇\n我今见闻得受持 愿解如来真实义"
         subTitle.setTitle(subTitleText, for: .normal)
-        subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .light)
+        subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .ultraLight)
         subTitle.titleLabel?.numberOfLines = 2
         
         // 设置行距
@@ -492,7 +492,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         paragraphStyle.lineSpacing = 6
         paragraphStyle.alignment = .center
         let attributedSubTitle = NSAttributedString(string: subTitleText, attributes: [
-            .font: SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .light),
+            .font: SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .ultraLight),
             .foregroundColor: SutraDesignTokens.shared.color(for: .textTertiary),
             .paragraphStyle: paragraphStyle
         ])
@@ -614,6 +614,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         btn.setTitle(NSLocalizedString("chapter_\(chapter+1)", comment: "chapter_name"), for: .normal)
         btn.tag = chapter
         btn.addTarget(self, action: #selector(onSutraChapterButtonTouchUp(_:)), for: .touchUpInside)
+        btn.addTarget(self, action: #selector(chapterTouchDown(_:)), for: .touchDown)
+        btn.addTarget(self, action: #selector(chapterTouchUp(_:)), for: [.touchUpOutside, .touchCancel])
         btn.titleLabel?.adjustsFontSizeToFitWidth = true
 
         // 📜 古雅经卷文字按钮，摒弃红尘卡片相
@@ -661,6 +663,23 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     @objc func onSutraIndexButtonTouchUp(_ sender:UIButton){
         let path = sutraIndexButtons[sender.tag]
         self.openIndex(Book.shared.itemOfPath(path))
+    }
+
+    // MARK: - Chapter Button Touch Feedback
+    @objc private func chapterTouchDown(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.12) {
+            sender.transform = CGAffineTransform(scaleX: 0.94, y: 0.94)
+            sender.alpha = 0.7
+        }
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+    }
+
+    @objc private func chapterTouchUp(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .curveEaseOut) {
+            sender.transform = .identity
+            sender.alpha = 1.0
+        }
     }
     
     @objc func onSutraChapterButtonTouchUp(_ sender:UIButton){
