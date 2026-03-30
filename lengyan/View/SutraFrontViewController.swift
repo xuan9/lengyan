@@ -55,8 +55,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.setupFooterView(self.view.bounds.size)
         print("🔥 Footer setup complete")
 
-        let title = self.makeSutraIndexButton("", frame: CGRect(x: 3, y: 0, width: self.view.bounds.width - 3, height: 40));
-        self.navigationItem.titleView = title;
+        // 签名时刻：竖排经题，如古卷直排
+        let verticalTitle = self.makeVerticalSutraTitle()
+        self.navigationItem.titleView = verticalTitle;
         print("🔥 === VIEW SETUP COMPLETE ===")
     }
 
@@ -629,7 +630,43 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         return btn
     }
-    
+
+    // MARK: - 古卷经题（签名时刻）
+    /// 如古卷印章，经题从右至左横排，配以金线框装饰
+    private func makeVerticalSutraTitle() -> UIView {
+        let sutraName = "首楞嚴經"
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: 140, height: 40))
+
+        // 从右到左排列（传统直排方向）
+        let chars = Array(sutraName).reversed()
+        let fullText = String(chars)
+
+        let titleLabel = UILabel()
+        titleLabel.text = fullText
+        titleLabel.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .semibold)
+        titleLabel.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
+        titleLabel.textAlignment = .center
+        titleLabel.frame = CGRect(x: 0, y: 4, width: 140, height: 32)
+        // 增大字距，如古印疏朗
+        titleLabel.attributedText = NSAttributedString(string: fullText, attributes: [
+            .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .semibold),
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary),
+            .kern: 6.0
+        ])
+        container.addSubview(titleLabel)
+
+        // 金线框装饰
+        let topLine = UIView(frame: CGRect(x: 16, y: 0, width: 108, height: 0.5))
+        topLine.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.35)
+        container.addSubview(topLine)
+
+        let bottomLine = UIView(frame: CGRect(x: 16, y: 39.5, width: 108, height: 0.5))
+        bottomLine.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.35)
+        container.addSubview(bottomLine)
+
+        return container
+    }
+
     func makeSutraIndexButton(_ path:String, frame:CGRect?) ->UIButton {
         let btn = UIButton.init(type: .custom);
         if(frame != nil) {
