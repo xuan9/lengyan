@@ -82,6 +82,11 @@
 		CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */; };
 		CBC207392EBCD71300EB7A45 /* DesignSystem+Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */; };
 		CBC2073B2EBCD79A00EB7A45 /* DesignSystem+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */; };
+		6533609759A14752A6850059 /* LXGWWenKai-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 722BB3048D834BBB8FC2CE90 /* LXGWWenKai-Regular.ttf */; };
+		6432B1CF49B045F8A8D642A8 /* LXGWWenKai-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6FB4697959414237B9CE64E8 /* LXGWWenKai-Medium.ttf */; };
+		A54C7FF4D3F14D6696855A6A /* LXGWWenKaiTC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 11D34166BFB54B879453E306 /* LXGWWenKaiTC-Regular.ttf */; };
+		3A0EFD749E944D45A68E8406 /* LXGWWenKaiTC-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0D15C20D449143D0846EE8D3 /* LXGWWenKaiTC-Medium.ttf */; };
+
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -188,6 +193,11 @@
 		CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Layout.swift"; sourceTree = "<group>"; };
 		E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SutraAcknowledgmentsView.swift; sourceTree = "<group>"; };
 		ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZenTabHeaderView.swift; sourceTree = "<group>"; };
+		722BB3048D834BBB8FC2CE90 /* LXGWWenKai-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = LXGWWenKai-Regular.ttf; sourceTree = "<group>"; };
+		6FB4697959414237B9CE64E8 /* LXGWWenKai-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = LXGWWenKai-Medium.ttf; sourceTree = "<group>"; };
+		11D34166BFB54B879453E306 /* LXGWWenKaiTC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = LXGWWenKaiTC-Regular.ttf; sourceTree = "<group>"; };
+		0D15C20D449143D0846EE8D3 /* LXGWWenKaiTC-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = LXGWWenKaiTC-Medium.ttf; sourceTree = "<group>"; };
+
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -336,6 +346,8 @@
 				1390730C1D109193003A3333 /* AppDelegate.swift */,
 				139073521D1093D8003A3333 /* lengyan-Bridging-Header.h */,
 				1382E5311EAB341900EBE749 /* todo.txt */,
+				4D7F77DC4F17404198E7918E /* Fonts */,
+			
 			);
 			path = lengyan;
 			sourceTree = "<group>";
@@ -398,6 +410,17 @@
 				E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */,
 			);
 			path = SwiftUI;
+			sourceTree = "<group>";
+		};
+		4D7F77DC4F17404198E7918E /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				722BB3048D834BBB8FC2CE90 /* LXGWWenKai-Regular.ttf */,
+				6FB4697959414237B9CE64E8 /* LXGWWenKai-Medium.ttf */,
+				11D34166BFB54B879453E306 /* LXGWWenKaiTC-Regular.ttf */,
+				0D15C20D449143D0846EE8D3 /* LXGWWenKaiTC-Medium.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -551,6 +574,11 @@
 				4AD063821EA3802200751922 /* ly10.m4a in Resources */,
 				1390734C1D109284003A3333 /* data in Resources */,
 				4AD0637C1EA3801D00751922 /* ly03.m4a in Resources */,
+				6533609759A14752A6850059 /* LXGWWenKai-Regular.ttf in Resources */,
+				6432B1CF49B045F8A8D642A8 /* LXGWWenKai-Medium.ttf in Resources */,
+				A54C7FF4D3F14D6696855A6A /* LXGWWenKaiTC-Regular.ttf in Resources */,
+				3A0EFD749E944D45A68E8406 /* LXGWWenKaiTC-Medium.ttf in Resources */,
+			
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

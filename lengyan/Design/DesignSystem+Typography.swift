@@ -129,55 +129,28 @@ extension UIFont.Weight {
 }
 
 // MARK: - Enhanced Chinese Font Manager
+/// 霞鹜文楷 (LXGW WenKai) — 楷体字形，如千年碑帖
+/// Simplified: LXGW WenKai | Traditional: LXGW WenKai TC
 struct ChineseFontManager {
+    // PostScript names — verified via fontTools
+    private static let lxgwHansRegular = "LXGWWenKai-Regular"
+    private static let lxgwHansMedium  = "LXGWWenKai-Medium"
+    private static let lxgwHantRegular = "LXGWWenKaiTC-Regular"
+    private static let lxgwHantMedium  = "LXGWWenKaiTC-Medium"
+
     static func appropriateUIFont(size: CGFloat, weight: UIFont.Weight) -> UIFont {
-        let preferredLanguages = Locale.preferredLanguages
+        // Use Book.shared language detection (iterates all preferred languages, default simplified)
+        let isSimplified = Book.shared.isSimplifiedChinese
+        let regularName = isSimplified ? lxgwHansRegular : lxgwHantRegular
+        let mediumName  = isSimplified ? lxgwHansMedium  : lxgwHantMedium
+        let fontName = weight <= .regular ? regularName : mediumName
 
-        if preferredLanguages.first?.hasPrefix("zh-Hant") == true {
-            // Traditional Chinese - Enhanced font hierarchy
-            let traditionalFonts = [
-                "PingFangTC-Regular", "PingFangTC-Medium", "PingFangTC-Semibold",
-                "Hiragino Sans", "Noto Sans TC", "Source Han Sans TC"
-            ]
-
-            for fontName in traditionalFonts {
-                if let font = createUIFont(name: fontName, size: size, weight: weight) {
-                    return font
-                }
-            }
-        } else if preferredLanguages.first?.hasPrefix("zh-Hans") == true {
-            // Simplified Chinese - Enhanced font hierarchy
-            let simplifiedFonts = [
-                "PingFangSC-Regular", "PingFangSC-Medium", "PingFangSC-Semibold",
-                "Hiragino Sans CNS", "Noto Sans SC", "Source Han Sans SC"
-            ]
-
-            for fontName in simplifiedFonts {
-                if let font = createUIFont(name: fontName, size: size, weight: weight) {
-                    return font
-                }
-            }
-        }
-
-        // Best fallback - system font with Chinese support
-        return UIFont.systemFont(ofSize: size, weight: weight)
-    }
-
-    private static func createUIFont(name: String, size: CGFloat, weight: UIFont.Weight) -> UIFont? {
-        // Try direct font name first
-        if let font = UIFont(name: name, size: size) {
+        if let font = UIFont(name: fontName, size: size) {
             return font
         }
 
-        // Try with weight suffix
-        let weightSuffixes = ["", "-Regular", "-Medium", "-Semibold", "-Bold"]
-        for suffix in weightSuffixes {
-            if let font = UIFont(name: name + suffix, size: size) {
-                return font
-            }
-        }
-
-        return nil
+        // Fallback — 系统字体
+        return UIFont.systemFont(ofSize: size, weight: weight)
     }
 }
 
