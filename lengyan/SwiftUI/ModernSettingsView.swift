@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UserNotifications
 
 struct ModernSettingsView: View {
     @State private var fontSizeLevel: Int = Prefers.shared.fontSizeLevel
@@ -26,6 +25,7 @@ struct ModernSettingsView: View {
                 // ── 修行 ──
                 zenSection("修行") {
                     reminderControl
+                    if isReminderOn { compactTimePicker }
                 }
 
                 // ── 外观 ──
@@ -55,7 +55,7 @@ struct ModernSettingsView: View {
         }
         .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
-        .onAppear { hideNavBar() }
+        .onAppear { NavigationHelper.hideNavBar() }
     }
 
     // MARK: - Section
@@ -80,20 +80,14 @@ struct ModernSettingsView: View {
             .padding(.vertical, 4)
     }
 
-    // MARK: - 字体大小 — 文字即界面
+    // MARK: - 字体大小
 
     private var fontSizeControl: some View {
         HStack(alignment: .lastTextBaseline, spacing: 0) {
             ForEach(0..<5, id: \.self) { i in
                 let isSelected = fontSizeLevel == i
 
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        fontSizeLevel = i
-                        Prefers.shared.fontSizeLevel = i
-                        NotificationCenter.default.post(name: .fontSizeDidChange, object: nil)
-                    }
-                }) {
+                Button(action: { changeFontSize(i) }) {
                     Text(sizeLabels[i])
                         .font(.system(size: sizeFonts[i], weight: isSelected ? .medium : .light))
                         .foregroundColor(isSelected
@@ -116,7 +110,15 @@ struct ModernSettingsView: View {
         .padding(.vertical, 12)
     }
 
-    // MARK: - 主题 — 三个色块圆点
+    private func changeFontSize(_ level: Int) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            fontSizeLevel = level
+            Prefers.shared.fontSizeLevel = level
+            NotificationCenter.default.post(name: .fontSizeDidChange, object: nil)
+        }
+    }
+
+    // MARK: - 主题
 
     private var themeControl: some View {
         HStack(spacing: 0) {
@@ -124,7 +126,6 @@ struct ModernSettingsView: View {
                 .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textPrimary))
             Spacer()
-
             ForEach(SutraTheme.allCases, id: \.self) { theme in
                 let sel = selectedTheme == theme
                 let bgUIColor = theme == .light
@@ -136,13 +137,7 @@ struct ModernSettingsView: View {
                     ? UIColor(hex: "#E8DFD0") ?? .white
                     : UIColor(hex: "#33231A") ?? .black
                 let label = theme == .light ? "宣纸" : theme == .sepia ? "旧经" : "夜读"
-
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        selectedTheme = theme
-                        SutraDesignTokens.shared.setTheme(theme)
-                    }
-                }) {
+                Button(action: { changeTheme(theme) }) {
                     Text(label)
                         .font(.system(size: 12, weight: sel ? .medium : .light))
                         .foregroundColor(Color(textUIColor))
@@ -164,54 +159,59 @@ struct ModernSettingsView: View {
         .padding(.vertical, 16)
     }
 
+    private func changeTheme(_ theme: SutraTheme) {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            selectedTheme = theme
+            SutraDesignTokens.shared.setTheme(theme)
+        }
+    }
+
     // MARK: - 每日提醒
 
     private var reminderControl: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Text("每日提醒")
-                    .font(SutraTypographyBridge.uiBody(weight: .regular))
-                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                Spacer()
-                Toggle("", isOn: $isReminderOn)
-                    .labelsHidden()
-                    .tint(Color(SutraDesignTokens.shared.color(for: .primary)))
-                    .onChange(of: isReminderOn) { on in
-                        Prefers.shared.isDailyReminderOn = on
-                        if on { requestNotificationPermissionAndSchedule() }
-                        else { UNUserNotificationCenter.current().removeAllPendingNotificationRequests() }
-                    }
-            }
-
-            if isReminderOn {
-                HStack {
-                    Spacer()
-                    DatePicker(
-                        "",
-                        selection: Binding(
-                            get: {
-                                var c = DateComponents()
-                                c.hour = reminderHour; c.minute = reminderMinute
-                                return Calendar.current.date(from: c) ?? Date()
-                            },
-                            set: { d in
-                                let c = Calendar.current.dateComponents([.hour, .minute], from: d)
-                                reminderHour = c.hour ?? 7
-                                reminderMinute = c.minute ?? 0
-                                Prefers.shared.reminderHour = reminderHour
-                                Prefers.shared.reminderMinute = reminderMinute
-                                scheduleDailyReminder()
-                            }
-                        ),
-                        displayedComponents: .hourAndMinute
-                    )
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
+        HStack(spacing: 0) {
+            Text("每日提醒")
+                .font(SutraTypographyBridge.uiBody(weight: .regular))
+                .foregroundColor(SutraDesignSystem.color(.textPrimary))
+            Spacer()
+            Toggle("", isOn: $isReminderOn)
+                .labelsHidden()
+                .tint(Color(SutraDesignTokens.shared.color(for: .primary)))
+                .onChange(of: isReminderOn) { on in
+                    Prefers.shared.isDailyReminderOn = on
+                    if on { ReminderManager.shared.requestPermissionAndSchedule() }
+                    else { ReminderManager.shared.cancelAll() }
                 }
-                .padding(.top, 8)
-            }
         }
         .padding(.vertical, 16)
+    }
+
+    private var compactTimePicker: some View {
+        HStack(spacing: 12) {
+            Picker("时", selection: $reminderHour) {
+                ForEach(5..<23, id: \.self) { Text("\($0)").tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(width: 80, height: 100)
+            .clipped()
+            Text(":")
+                .font(.system(size: 20, weight: .thin))
+                .foregroundColor(SutraDesignSystem.color(.textSecondary))
+            Picker("分", selection: $reminderMinute) {
+                ForEach(0..<60, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(width: 80, height: 100)
+            .clipped()
+        }
+        .onChange(of: reminderHour) { _ in saveReminderTime() }
+        .onChange(of: reminderMinute) { _ in saveReminderTime() }
+    }
+
+    private func saveReminderTime() {
+        Prefers.shared.reminderHour = reminderHour
+        Prefers.shared.reminderMinute = reminderMinute
+        if isReminderOn { ReminderManager.shared.scheduleDaily() }
     }
 
     // MARK: - 关于
@@ -220,16 +220,13 @@ struct ModernSettingsView: View {
         Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .regular))
+                    .font(.system(size: 15, weight: .light))
                     .foregroundColor(SutraDesignSystem.color(.primary))
                     .frame(width: 24)
-
                 Text(title)
                     .font(SutraTypographyBridge.uiBody(weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
-
                 Spacer()
-
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textSecondary))
@@ -246,76 +243,25 @@ struct ModernSettingsView: View {
                 .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textPrimary))
             Spacer()
-            Text(appVersion)
+            Text(NavigationHelper.appVersion)
                 .font(.system(size: 12, weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.textSecondary))
         }
         .padding(.vertical, 16)
     }
 
-    // MARK: - Navigation
+    // MARK: - Navigation (delegates to NavigationHelper)
 
     private func openAcknowledgments() {
-        guard let nav = currentNavigationController else { return }
-        nav.setNavigationBarHidden(false, animated: false)
-        let vc = UIHostingController(rootView: SutraAcknowledgmentsView())
-        vc.title = "致谢"
-        nav.pushViewController(vc, animated: true)
+        NavigationHelper.pushSwiftUIView(SutraAcknowledgmentsView(), title: "致谢")
     }
 
     private func openFeedback() {
-        let email = "fuxuan.org@gmail.com"
-        let subject = "楞严经App反馈建议"
-        if let url = URL(string: "mailto:\(email)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
-            UIApplication.shared.open(url)
-        }
+        NavigationHelper.openEmail(to: "fuxuan.org@gmail.com", subject: "楞严经App反馈建议")
     }
 
     private func openAppStoreRating() {
-        if let url = URL(string: "https://apps.apple.com/app/id YOUR_APP_ID?action=write-review") {
-            UIApplication.shared.open(url)
-        }
-    }
-
-    private var currentNavigationController: UINavigationController? {
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = scene.windows.first,
-              let tab = window.rootViewController as? UITabBarController else { return nil }
-        return tab.selectedViewController as? UINavigationController
-    }
-
-    private func hideNavBar() {
-        currentNavigationController?.setNavigationBarHidden(true, animated: false)
-    }
-
-    // MARK: - Notifications
-
-    private func requestNotificationPermissionAndSchedule() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-            DispatchQueue.main.async {
-                if granted { self.scheduleDailyReminder() }
-                else { self.isReminderOn = false; Prefers.shared.isDailyReminderOn = false }
-            }
-        }
-    }
-
-    private func scheduleDailyReminder() {
-        let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests()
-        let content = UNMutableNotificationContent()
-        content.title = "楞严经"
-        content.body = "是时候静心诵读了"
-        content.sound = .default()
-        var dc = DateComponents()
-        dc.hour = reminderHour; dc.minute = reminderMinute
-        center.add(UNNotificationRequest(identifier: "daily_sutra_reminder", content: content,
-            trigger: UNCalendarNotificationTrigger(dateMatching: dc, repeats: true)))
-    }
-
-    private var appVersion: String {
-        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
-        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
-        return "\(v) (\(b))"
+        NavigationHelper.openAppStoreReview(appId: "YOUR_APP_ID")
     }
 }
 
