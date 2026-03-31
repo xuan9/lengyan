@@ -603,26 +603,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         homageLine.backgroundColor = decorativeGold.withAlphaComponent(0.25)
         footer.addSubview(homageLine)
 
-        // 致谢按钮 — 纤细淡雅
-        let ackButton = UIButton(type: .custom)
-        let ackY = homageLineY + 14
-        ackButton.frame = CGRect(x: 0, y: ackY, width: width, height: 44)
-        let ackAttributedString = NSAttributedString(string: "素材来源与致谢", attributes: [
-            .font: SutraTypographyManager.shared.uiFont(for: .uiCaption, weight: .light),
-            .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary),
-            .kern: 1.5
-        ])
-        ackButton.setAttributedTitle(ackAttributedString, for: .normal)
-        ackButton.addTarget(self, action: #selector(self.openAcknowledgments), for: .touchUpInside)
-        footer.addSubview(ackButton)
-
         // 莲花装饰
         let lotusLabel = UILabel()
         lotusLabel.text = "✧ ❀ ✧"
         lotusLabel.font = .systemFont(ofSize: 12)
         lotusLabel.textColor = decorativeGold.withAlphaComponent(0.4)
         lotusLabel.textAlignment = .center
-        lotusLabel.frame = CGRect(x: 0, y: ackY + 48, width: width, height: 20)
+        lotusLabel.frame = CGRect(x: 0, y: homageLineY + 14, width: width, height: 20)
         footer.addSubview(lotusLabel)
 
         self.treeView.treeFooterView = footer

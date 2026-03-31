@@ -75,8 +75,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let readingNavController = UINavigationController(rootViewController: sutraFrontVC)
         readingNavController.tabBarItem = UITabBarItem(
             title: NSLocalizedString("reading_tab_title", comment: ""),
-            image: UIImage(named: "book"),
-            selectedImage: UIImage(named: "book")
+            image: UIImage(systemName: "book")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
+            selectedImage: UIImage(systemName: "book.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
 
         // Setup Listening Tab — 听经是最高优先级的学习方式
