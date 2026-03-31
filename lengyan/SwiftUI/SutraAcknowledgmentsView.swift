@@ -15,10 +15,6 @@ struct SutraAcknowledgmentsView: View {
         Color(SutraDesignTokens.shared.color(for: .textSecondary))
     }
 
-    private var textTertiary: Color {
-        Color(SutraDesignTokens.shared.color(for: .textTertiary))
-    }
-
     var body: some View {
         ScrollView {
             VStack(spacing: SutraSpacing.Base.xxl) {
@@ -57,7 +53,7 @@ struct SutraAcknowledgmentsView: View {
                 VStack(alignment: .leading, spacing: SutraSpacing.Base.sm) {
                     Text("感恩上述来源，随喜功德！")
                         .font(SutraTypographyBridge.sutraCaption(weight: .light))
-                        .foregroundColor(textTertiary)
+                        .foregroundColor(textSecondary)
                 }
 
                 VStack(alignment: .leading, spacing: SutraSpacing.Touch.spacing) {
@@ -67,7 +63,7 @@ struct SutraAcknowledgmentsView: View {
 
                     Text("南无楞严会上佛菩萨！")
                         .font(SutraTypographyBridge.sutraCaption(weight: .light))
-                        .foregroundColor(textTertiary)
+                        .foregroundColor(textSecondary)
                         .lineSpacing(SutraSpacing.Base.sm)
                 }
                 .padding(.horizontal, SutraSpacing.Base.xl)

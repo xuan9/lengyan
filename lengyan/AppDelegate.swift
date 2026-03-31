@@ -79,19 +79,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             selectedImage: UIImage(named: "book")
         )
 
-        // Setup Listening Tab with SwiftUI
+        // Setup Listening Tab — 听经是最高优先级的学习方式
         let modernAudioPlayer = ModernAudioPlayerView()
         let audioHostingController = UIHostingController(rootView: modernAudioPlayer)
         let listeningNavController = UINavigationController(rootViewController: audioHostingController)
         listeningNavController.tabBarItem = UITabBarItem(
             title: NSLocalizedString("media_tab_title", comment: ""),
-            image: UIImage(systemName: "music.note.list")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
-            selectedImage: UIImage(systemName: "music.note.list")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+            image: UIImage(systemName: "headphones")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
+            selectedImage: UIImage(systemName: "headphones")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
-        // Hide navigation bar for cleaner SwiftUI interface
         listeningNavController.navigationBar.isHidden = true
 
-        // Setup Favorites Tab with SwiftUI
+        // Setup Favorites Tab
         let modernFavorites = ModernFavoritesView()
         let favoritesHostingController = UIHostingController(rootView: modernFavorites)
         let favoritesNavController = UINavigationController(rootViewController: favoritesHostingController)
@@ -100,10 +99,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             image: UIImage(systemName: "heart")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
             selectedImage: UIImage(systemName: "heart.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
-        // Hide navigation bar on root; show dynamically when pushing detail pages
         favoritesNavController.navigationBar.isHidden = true
 
-        tabBarController.viewControllers = [readingNavController, listeningNavController, favoritesNavController]
+        // Setup Settings Tab
+        let settingsView = ModernSettingsView()
+        let settingsHostingController = UIHostingController(rootView: settingsView)
+        let settingsNavController = UINavigationController(rootViewController: settingsHostingController)
+        settingsNavController.tabBarItem = UITabBarItem(
+            title: NSLocalizedString("settings_tab_title", comment: ""),
+            image: UIImage(systemName: "gearshape")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
+            selectedImage: UIImage(systemName: "gearshape.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        )
+        settingsNavController.navigationBar.isHidden = true
+
+        tabBarController.viewControllers = [readingNavController, listeningNavController, favoritesNavController, settingsNavController]
         tabBarController.selectedIndex = 0
     }
 
@@ -163,15 +172,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         appearance.shadowColor = designSystem.color(for: .decorativeGold).withAlphaComponent(0.15)
         appearance.shadowImage = UIImage()
 
-        // TabBar 翠竹绿选中 + 淡雅未选中
-        appearance.selectionIndicatorTintColor = designSystem.color(for: .primary)
+        // TabBar 文字 — 小巧协调，与图标同色
+        let tabBarFont = UIFont.systemFont(ofSize: 10, weight: .thin)
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .font: SutraTypographySystem().uiFont(for: .uiCaption, weight: .regular),
+            .font: tabBarFont,
             .foregroundColor: designSystem.color(for: .textTertiary)
         ]
 
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-            .font: SutraTypographySystem().uiFont(for: .uiCaption, weight: .medium),
+            .font: tabBarFont,
             .foregroundColor: designSystem.color(for: .primary)
         ]
 

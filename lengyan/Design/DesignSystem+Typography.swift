@@ -132,8 +132,20 @@ extension UIFont.Weight {
 /// 系统字体 PingFang — 细字重 + 大字号 = 典雅通透
 /// Light weight at larger sizes: the quieter the font, the louder the content
 struct ChineseFontManager {
+    /// Font size multiplier based on user preference (0.8x ~ 1.25x)
+    static var fontSizeMultiplier: CGFloat {
+        switch Prefers.shared.fontSizeLevel {
+        case 0: return 0.8
+        case 1: return 0.9
+        case 2: return 1.0
+        case 3: return 1.1
+        case 4: return 1.25
+        default: return 1.0
+        }
+    }
+
     static func appropriateUIFont(size: CGFloat, weight: UIFont.Weight, style: SutraTypographyStyle) -> UIFont {
-        return UIFont.systemFont(ofSize: size, weight: weight)
+        return UIFont.systemFont(ofSize: round(size * fontSizeMultiplier), weight: weight)
     }
 }
 
@@ -234,11 +246,11 @@ struct SutraTypographySystem: SutraTypography {
         case .sutraLarge:
             return (ios.large, weight == .regular ? .light : adjustedWeight)
 
-        // 📖 正文 — Light 通透，大号清晰
+        // 📖 正文 — Regular 通透且清晰
         case .sutraBody:
-            return (ios.heading, weight == .regular ? .light : adjustedWeight)
+            return (ios.heading, weight == .regular ? .regular : adjustedWeight)
         case .sutraCaption:
-            return (ios.base, weight == .regular ? .light : adjustedWeight)
+            return (ios.base, weight == .regular ? .regular : adjustedWeight)
 
         // 🎨 UI 元素 — 层次靠字号而非字重
         case .uiLargeTitle:
@@ -246,13 +258,13 @@ struct SutraTypographySystem: SutraTypography {
         case .uiTitle:
             return (ios.title, weight == .regular ? .regular : adjustedWeight)
         case .uiHeading:
-            return (ios.heading, weight == .regular ? .light : adjustedWeight)
+            return (ios.heading, weight == .regular ? .regular : adjustedWeight)
         case .uiBody:
-            return (ios.base, weight == .regular ? .light : adjustedWeight)
+            return (ios.base, weight == .regular ? .regular : adjustedWeight)
         case .uiCaption:
-            return (ios.caption, weight == .regular ? .light : adjustedWeight)
+            return (ios.caption, weight == .regular ? .regular : adjustedWeight)
         case .uiSmall:
-            return (ios.small, weight == .regular ? .light : adjustedWeight)
+            return (ios.small, weight == .regular ? .regular : adjustedWeight)
 
         // 📚 Index & Menu - 索引与菜单
         case .indexItem:

@@ -134,87 +134,92 @@ struct LightTheme: SutraThemeProtocol {
     }
 }
 
-// MARK: - Sepia Theme Implementation
+// MARK: - Sepia Theme Implementation — 旧经卷
+/// 灵感：百年经卷的温暖茶色，泛黄而不脏，如秋日古寺
 struct SepiaTheme: SutraThemeProtocol {
     func color(for token: ColorToken) -> UIColor {
         switch token {
-        case .background: return UIColor(hex: "#F5E6D3") ?? UIColor(red: 0.96, green: 0.90, blue: 0.83, alpha: 1.0)
-        case .surface: return UIColor(hex: "#FAF0E6") ?? UIColor(red: 0.98, green: 0.94, blue: 0.90, alpha: 1.0)
-        case .card: return .white
-        case .overlay: return UIColor.black.withAlphaComponent(0.5)
+        // 背景 — 温暖茶色，如翻开的古卷
+        case .background: return UIColor(hex: "#F2E8D5") ?? .white
+        case .surface: return UIColor(hex: "#F7F0E2") ?? .white
+        case .card: return UIColor(hex: "#FBF6ED") ?? .white
+        case .overlay: return UIColor(hex: "#3E2723")?.withAlphaComponent(0.6) ?? .black
 
-        case .textPrimary: return UIColor(hex: "#3E2723") ?? .black
-        case .textSecondary: return UIColor(hex: "#5D4037") ?? .darkGray
-        case .textTertiary: return UIColor(hex: "#795548") ?? .gray
-        case .textOnAccent: return .white
+        // 文字 — 深褐清晰，不偏红不偏灰
+        case .textPrimary: return UIColor(hex: "#33231A") ?? .black
+        case .textSecondary: return UIColor(hex: "#5C4A3A") ?? .darkGray
+        case .textTertiary: return UIColor(hex: "#8B7B6B") ?? .gray
+        case .textOnAccent: return UIColor(hex: "#FBF6ED") ?? .white
 
-        case .sutraText: return UIColor(hex: "#2E1A17") ?? .black
-        case .commentaryText: return UIColor(hex: "#4A3426") ?? .darkGray
-        case .chapterTitle: return UIColor(hex: "#8D6E63") ?? .brown
+        // 经文 — 浓墨深褐，如古卷上的墨迹
+        case .sutraText: return UIColor(hex: "#1A100A") ?? .black
+        case .commentaryText: return UIColor(hex: "#5C4A3A") ?? .darkGray
+        case .chapterTitle: return UIColor(hex: "#8B6914") ?? .brown
 
-        case .primary: return UIColor(hex: "#4A3426") ?? .darkGray
-        case .accent: return UIColor(hex: "#6B8E5A") ?? .systemGreen      // 复古模式下的竹绿
-        case .divider: return UIColor(hex: "#D7CCC8") ?? .lightGray
-        case .border: return UIColor(hex: "#BCAAA4") ?? .lightGray
-        case .shadow: return UIColor.black.withAlphaComponent(0.12)
+        // 强调 — 温暖竹绿，与茶色和谐
+        case .primary: return UIColor(hex: "#5B7A4A") ?? .systemGreen
+        case .accent: return UIColor(hex: "#6B8E5A") ?? .systemGreen
+        case .divider: return UIColor(hex: "#D9CEBC") ?? .lightGray
+        case .border: return UIColor(hex: "#C9BCA8") ?? .lightGray
+        case .shadow: return UIColor(hex: "#5C4A3A")?.withAlphaComponent(0.10) ?? .brown
 
-        case .bookmark: return UIColor(hex: "#FFB74D") ?? .orange
-        case .favorite: return UIColor(hex: "#8D6E63") ?? .brown
+        case .bookmark: return UIColor(hex: "#B8860B") ?? .systemYellow
+        case .favorite: return UIColor(hex: "#A0522D") ?? .brown
 
-        // ✨ Decorative Colors
-        case .decorativeGold: return UIColor(hex: "#A0845C") ?? .systemYellow
-        case .sacredGlow: return UIColor(hex: "#F5E6D3") ?? .systemYellow
+        // 装饰 — 温暖古金
+        case .decorativeGold: return UIColor(hex: "#B8976A") ?? .systemYellow
+        case .sacredGlow: return UIColor(hex: "#F2E8D5") ?? .systemYellow
 
-        // UI System colors - WHITE for MAXIMUM CONTRAST
-        case .navigationBar: return .white        // WHITE navbar
-        case .tabBar: return .white              // WHITE tabbar
-        case .separator: return UIColor(hex: "#D0C4BC") ?? .systemGray3     // Separator
-        case .bookmarkStar: return UIColor(hex: "#D4A017") ?? .systemYellow // Golden brown
+        // UI — 与背景协调的暖色
+        case .navigationBar: return UIColor(hex: "#F2E8D5") ?? .white
+        case .tabBar: return UIColor(hex: "#EDE4D3") ?? .white
+        case .separator: return UIColor(hex: "#D9CEBC") ?? .lightGray
+        case .bookmarkStar: return UIColor(hex: "#B8860B") ?? .systemYellow
         }
     }
 }
 
-// MARK: - Sacred Dark Theme Implementation - 深夜禅意
+// MARK: - Dark Theme — 月下禅房
+/// 灵感：深夜禅房，烛光映壁，深檀木色中透出温暖
 struct DarkTheme: SutraThemeProtocol {
     func color(for token: ColorToken) -> UIColor {
         switch token {
-        // 🌙 Sacred Night Background Colors - 神圣夜空背景色
-        case .background: return UIColor(hex: "#1A1612") ?? UIColor(red: 0.10, green: 0.09, blue: 0.07, alpha: 1.0)  // 古檀夜色
-        case .surface: return UIColor(hex: "#2A1F1A") ?? UIColor(red: 0.16, green: 0.12, blue: 0.10, alpha: 1.0)  // 深檀木色
-        case .card: return UIColor(hex: "#3A2A22") ?? UIColor(red: 0.23, green: 0.16, blue: 0.13, alpha: 1.0)  // 古经卷色
-        case .overlay: return UIColor(hex: "#0F0F0F")?.withAlphaComponent(0.8) ?? .black  // 深邃墨影
+        // 背景 — 深檀木，不纯黑，有温度
+        case .background: return UIColor(hex: "#1C1814") ?? .black
+        case .surface: return UIColor(hex: "#2C241E") ?? .black
+        case .card: return UIColor(hex: "#38302A") ?? .darkGray
+        case .overlay: return UIColor(hex: "#0A0908")?.withAlphaComponent(0.8) ?? .black
 
-        // 🌙 Sacred Night Text Colors - 神圣夜空文字色
-        case .textPrimary: return UIColor(hex: "#FFF8E7") ?? .white  // 佛光月白 - 主要文本，神圣明亮
-        case .textSecondary: return UIColor(hex: "#E8DCC4") ?? .lightGray  // 宣纸月色 - 次要文本，温暖柔和
-        case .textTertiary: return UIColor(hex: "#D4A574") ?? .gray  // 古铜月辉 - 提示文本，古典雅致
-        case .textOnAccent: return UIColor(hex: "#1A1612") ?? .black  // 深檀黑 - 强调色上的深邃对比
+        // 文字 — 暖白而非冷白，如烛光映纸
+        case .textPrimary: return UIColor(hex: "#E8DFD0") ?? .white
+        case .textSecondary: return UIColor(hex: "#C4B8A4") ?? .lightGray
+        case .textTertiary: return UIColor(hex: "#9A8E7E") ?? .gray
+        case .textOnAccent: return UIColor(hex: "#1C1814") ?? .black
 
-        // 🌙 Sutra Night Sacred Colors - 经文夜色神圣
-        case .sutraText: return UIColor(hex: "#FFFFFF") ?? .white  // 纯净月光 - 经文内容，神圣纯净
-        case .commentaryText: return UIColor(hex: "#F5E6D3") ?? .lightGray  // 月光宣纸 - 注释文字，温暖柔和
-        case .chapterTitle: return UIColor(hex: "#FFD700") ?? .systemYellow  // 月光鎏金 - 章节标题，夜间神圣
+        // 经文 — 暖白柔和，长时间阅读不刺眼
+        case .sutraText: return UIColor(hex: "#E8DFD0") ?? .white
+        case .commentaryText: return UIColor(hex: "#C4B8A4") ?? .lightGray
+        case .chapterTitle: return UIColor(hex: "#D4A84B") ?? .systemYellow
 
-        // 🌙 Night Zen Accent Colors - 夜间禅意强调色
-        case .primary: return UIColor(hex: "#32CD32") ?? .systemGreen  // 夜间竹翠 - 主要操作，夜间生机
-        case .accent: return UIColor(hex: "#FF8C00") ?? .systemOrange  // 夜间佛光 - 辅助强调，温暖活力
-        case .divider: return UIColor(hex: "#4A3A30") ?? .darkGray  // 古檀纹路 - 分隔线，夜间纹理
-        case .border: return UIColor(hex: "#8B6914") ?? .darkGray  // 古铜夜色 - 边框，夜间雅致
-        case .shadow: return UIColor(hex: "#000000")?.withAlphaComponent(0.4) ?? .black  // 深邃夜影
+        // 强调 — 暖色系，不使用荧光色
+        case .primary: return UIColor(hex: "#7A9B68") ?? .systemGreen
+        case .accent: return UIColor(hex: "#C49A4A") ?? .systemOrange
+        case .divider: return UIColor(hex: "#4A403A") ?? .darkGray
+        case .border: return UIColor(hex: "#5A504A") ?? .darkGray
+        case .shadow: return UIColor(hex: "#000000")?.withAlphaComponent(0.35) ?? .black
 
-        // ⭐ Night Sacred Status Colors - 夜间神圣状态色
-        case .bookmark: return UIColor(hex: "#FFD700") ?? .systemYellow  // 夜间鎏金 - 收藏标记，如月如金
-        case .favorite: return UIColor(hex: "#FF69B4") ?? .systemRed  // 夜间朱砂 - 喜爱标记，神圣印章
+        case .bookmark: return UIColor(hex: "#D4A84B") ?? .systemYellow
+        case .favorite: return UIColor(hex: "#C47070") ?? .systemRed
 
-        // ✨ Night Decorative Colors - 夜间装饰色
-        case .decorativeGold: return UIColor(hex: "#DAA520") ?? .systemYellow  // 夜间古金微光
-        case .sacredGlow: return UIColor(hex: "#8B6914")?.withAlphaComponent(0.3) ?? .systemYellow  // 夜间佛光柔辉
+        // 装饰 — 暗金色，不耀眼
+        case .decorativeGold: return UIColor(hex: "#B89860") ?? .systemYellow
+        case .sacredGlow: return UIColor(hex: "#D4A84B")?.withAlphaComponent(0.15) ?? .systemYellow
 
-        // 🌙 Night Sacred UI System Colors - 夜间神圣界面系统色
-        case .navigationBar: return UIColor(hex: "#2A1F1A") ?? .systemGray2  // 深檀木色 - 导航栏夜间神圣
-        case .tabBar: return UIColor(hex: "#1A1612") ?? .systemGray2         // 古檀夜色 - 标签栏夜间温润
-        case .separator: return UIColor(hex: "#4A3A30") ?? .systemGray4     // 古檀纹路 - 分隔符夜间纹理
-        case .bookmarkStar: return UIColor(hex: "#FFD700") ?? .systemYellow // 夜间鎏金 - 书签星如月如金
+        // UI — 与暗色背景协调
+        case .navigationBar: return UIColor(hex: "#2C241E") ?? .black
+        case .tabBar: return UIColor(hex: "#1C1814") ?? .black
+        case .separator: return UIColor(hex: "#4A403A") ?? .darkGray
+        case .bookmarkStar: return UIColor(hex: "#D4A84B") ?? .systemYellow
         }
     }
 }

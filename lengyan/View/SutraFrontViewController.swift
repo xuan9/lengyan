@@ -55,9 +55,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.setupFooterView(self.view.bounds.size)
         print("🔥 Footer setup complete")
 
-        // 签名时刻：竖排经题，如古卷直排
-        let verticalTitle = self.makeVerticalSutraTitle()
-        self.navigationItem.titleView = verticalTitle;
+        // 经题已移入 header 内容区，无需 navigationItem.titleView
         print("🔥 === VIEW SETUP COMPLETE ===")
     }
 
@@ -87,8 +85,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
 
         // Configure navigation bar behavior
-        self.navigationController?.setNavigationBarHidden(false, animated: true)
+        self.navigationController?.setNavigationBarHidden(true, animated: true)
         self.navigationController?.hidesBarsOnSwipe = false
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // 离开首页时恢复导航栏，供阅读页/索引页使用
+        self.navigationController?.setNavigationBarHidden(false, animated: animated)
     }
 
     // Deprecated: Floating theme switch button removed for a calmer, unified front view.
@@ -475,26 +479,47 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
-        // 🏛️ Sacred header - 适度缩减高度至 200pt，紧凑开经偈与卷章按钮，抹平不均衡的留白
-        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 200))
+        // 🏛️ Sacred header - 含经题 + 开经偈 + 卷章按钮
+        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 240))
         header.backgroundColor = backgroundColor
 
-        // 📜 开经偈 - 分为匀称的两行，调大整体宽幅与字号
+        // 📜 经题 — "大佛頂首楞嚴經"，如古卷匾额
+        let titleLabel = UILabel()
+        let sutraTitle = "大佛頂首楞嚴經"
+        let titleKern: CGFloat = 3.0
+        titleLabel.attributedText = NSAttributedString(string: sutraTitle, attributes: [
+            .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular),
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary),
+            .kern: titleKern
+        ])
+        titleLabel.textAlignment = .center
+        titleLabel.sizeToFit()
+        titleLabel.frame = CGRect(x: 0, y: 12, width: width, height: 30)
+        header.addSubview(titleLabel)
+
+        // 经题下方金线
+        let titleLineY = titleLabel.frame.maxY + 4
+        let titleLine = UIView(frame: CGRect(x: 80, y: titleLineY, width: width - 160, height: 0.5))
+        titleLine.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.3)
+        header.addSubview(titleLine)
+
+        // 📜 开经偈 - 分为匀称的两行
         let subTitle = UIButton.init(type: .custom)
-        subTitle.frame = CGRect(x: 16, y: 12, width: width - 32, height: 50)
+        let verseY = titleLineY + 6
+        subTitle.frame = CGRect(x: 16, y: verseY, width: width - 32, height: 50)
         // 使用带有特定换行符的开经偈
         let subTitleText = "无上甚深微妙法 百千万劫难遭遇\n我今见闻得受持 愿解如来真实义"
         subTitle.setTitle(subTitleText, for: .normal)
-        subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .ultraLight)
+        subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .light)
         subTitle.titleLabel?.numberOfLines = 2
-        
+
         // 设置行距
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 6
         paragraphStyle.alignment = .center
         let attributedSubTitle = NSAttributedString(string: subTitleText, attributes: [
-            .font: SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .ultraLight),
-            .foregroundColor: SutraDesignTokens.shared.color(for: .textTertiary),
+            .font: SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .light),
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary),
             .paragraphStyle: paragraphStyle
         ])
         subTitle.setAttributedTitle(attributedSubTitle, for: .normal)
@@ -509,7 +534,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let buttonHeight: CGFloat = 44 // 缩减按钮高度，减去多余空白
         let verticalSpacing: CGFloat = 4
 
-        let indexes = UIView(frame: CGRect(x: 0, y: 72, width: width, height: buttonHeight * 2 + verticalSpacing))
+        let indexes = UIView(frame: CGRect(x: 0, y: verseY + 56, width: width, height: buttonHeight * 2 + verticalSpacing))
 
         for i in 1...10 {
             let row = (i - 1) / 5
@@ -549,62 +574,57 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func setupFooterView(_ size:CGSize) {
         let width = size.width
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
-        let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
 
-        // 🏛️ 庄严尾部 - 增加高度以容纳完整内容
-        let footer:UIView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 180))
+        let footer = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 160))
         footer.backgroundColor = backgroundColor
 
-        // 顶部鎏金分割线
-        let topDivider = UIView(frame: CGRect(x: 48, y: 0, width: width - 96, height: 0.5))
-        topDivider.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.3)
-        footer.addSubview(topDivider)
+        // 顶部金线
+        let topLine = UIView(frame: CGRect(x: 80, y: 0, width: width - 160, height: 0.5))
+        topLine.backgroundColor = decorativeGold.withAlphaComponent(0.3)
+        footer.addSubview(topLine)
 
-        // 🙏 南无楞严会上佛菩萨 - 庄严顶礼文字
+        // 🙏 南无楞严会上佛菩萨 — 如经题般庄严
+        let homageText = "南无楞严会上佛菩萨"
         let homageLabel = UILabel()
-        homageLabel.text = "南无楞严会上佛菩萨！"
-        homageLabel.font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
-        homageLabel.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
+        homageLabel.attributedText = NSAttributedString(string: homageText, attributes: [
+            .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular),
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary),
+            .kern: 3.0
+        ])
         homageLabel.textAlignment = .center
-        homageLabel.numberOfLines = 0
-        homageLabel.lineBreakMode = .byWordWrapping
-        homageLabel.frame = CGRect(x: 32, y: 24, width: width - 64, height: 60)
+        homageLabel.sizeToFit()
+        homageLabel.frame = CGRect(x: 0, y: 20, width: width, height: 30)
         footer.addSubview(homageLabel)
 
-        // 🙏 精致致谢按钮 - 带图标和优雅样式
-        let acknowledgmentsButton = UIButton(type: .custom)
-        acknowledgmentsButton.frame = CGRect(x: width/2 - 60, y: 88, width: 180, height: 44)
+        // 经题下方金线
+        let homageLineY = homageLabel.frame.maxY + 6
+        let homageLine = UIView(frame: CGRect(x: 100, y: homageLineY, width: width - 200, height: 0.5))
+        homageLine.backgroundColor = decorativeGold.withAlphaComponent(0.25)
+        footer.addSubview(homageLine)
 
-        // 创建带图标的富文本
-        let iconAttachment = NSTextAttachment()
-        iconAttachment.image = UIImage(systemName: "hands.press.fill")
-        iconAttachment.bounds = CGRect(x: 0, y: -2, width: 18, height: 18)
-
-        let attributedString = NSMutableAttributedString()
-        attributedString.append(NSAttributedString(attachment: iconAttachment))
-        attributedString.append(NSAttributedString(string: "素材来源与致谢", attributes: [
-            .font: SutraTypographyManager.shared.uiFont(for: .uiCaption, weight: .medium),
+        // 致谢按钮 — 纤细淡雅
+        let ackButton = UIButton(type: .custom)
+        let ackY = homageLineY + 14
+        ackButton.frame = CGRect(x: 0, y: ackY, width: width, height: 44)
+        let ackAttributedString = NSAttributedString(string: "素材来源与致谢", attributes: [
+            .font: SutraTypographyManager.shared.uiFont(for: .uiCaption, weight: .light),
             .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary),
-            .kern: 1.0
-        ]))
+            .kern: 1.5
+        ])
+        ackButton.setAttributedTitle(ackAttributedString, for: .normal)
+        ackButton.addTarget(self, action: #selector(self.openAcknowledgments), for: .touchUpInside)
+        footer.addSubview(ackButton)
 
-        acknowledgmentsButton.setAttributedTitle(attributedString, for: .normal)
-        acknowledgmentsButton.backgroundColor = .clear
-        acknowledgmentsButton.layer.cornerRadius = 22
-        acknowledgmentsButton.addTarget(self, action: #selector(self.openAcknowledgments), for: .touchUpInside)
-        footer.addSubview(acknowledgmentsButton)
-        
-
-        // 莲花装饰分隔
+        // 莲花装饰
         let lotusLabel = UILabel()
         lotusLabel.text = "✧ ❀ ✧"
-        lotusLabel.font = .systemFont(ofSize: 14)
-        lotusLabel.textColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.6)
+        lotusLabel.font = .systemFont(ofSize: 12)
+        lotusLabel.textColor = decorativeGold.withAlphaComponent(0.4)
         lotusLabel.textAlignment = .center
-        lotusLabel.frame = CGRect(x: 0, y: 120, width: width, height: 20)
+        lotusLabel.frame = CGRect(x: 0, y: ackY + 48, width: width, height: 20)
         footer.addSubview(lotusLabel)
+
         self.treeView.treeFooterView = footer
     }
     func makeSutraChapterButton(_ chapter:Int, frame:CGRect?) ->UIButton {
@@ -634,8 +654,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     // MARK: - 古卷经题（签名时刻）
     /// 如古卷印章，经题从右至左横排，配以金线框装饰
     private func makeVerticalSutraTitle() -> UIView {
-        let sutraName = "首楞嚴經"
-        let container = UIView(frame: CGRect(x: 0, y: 0, width: 140, height: 40))
+        let sutraName = "大佛頂首楞嚴經"
+        let containerWidth: CGFloat = 240
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: containerWidth, height: 40))
 
         // 从右到左排列（传统直排方向）
         let chars = Array(sutraName).reversed()
@@ -643,24 +664,26 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         let titleLabel = UILabel()
         titleLabel.text = fullText
-        titleLabel.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .semibold)
+        titleLabel.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular)
         titleLabel.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
         titleLabel.textAlignment = .center
-        titleLabel.frame = CGRect(x: 0, y: 4, width: 140, height: 32)
-        // 增大字距，如古印疏朗
+        titleLabel.frame = CGRect(x: 0, y: 4, width: containerWidth, height: 32)
+        // 适度字距，七字疏朗有致
         titleLabel.attributedText = NSAttributedString(string: fullText, attributes: [
-            .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .semibold),
+            .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular),
             .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary),
-            .kern: 6.0
+            .kern: 4.0
         ])
         container.addSubview(titleLabel)
 
         // 金线框装饰
-        let topLine = UIView(frame: CGRect(x: 16, y: 0, width: 108, height: 0.5))
+        let linePadding: CGFloat = 20
+        let lineWidth = containerWidth - linePadding * 2
+        let topLine = UIView(frame: CGRect(x: linePadding, y: 0, width: lineWidth, height: 0.5))
         topLine.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.35)
         container.addSubview(topLine)
 
-        let bottomLine = UIView(frame: CGRect(x: 16, y: 39.5, width: 108, height: 0.5))
+        let bottomLine = UIView(frame: CGRect(x: linePadding, y: 39.5, width: lineWidth, height: 0.5))
         bottomLine.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.35)
         container.addSubview(bottomLine)
 

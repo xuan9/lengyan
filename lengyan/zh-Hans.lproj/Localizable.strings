@@ -15,6 +15,7 @@
 "reading_tab_title" = "阅读";
 "media_tab_title" = "听经";
 "star_tab_title" = "收藏";
+"settings_tab_title" = "设置";
 "favorites_subtitle" = "你喜欢的经文";
 "no_favorites" = "暂无收藏";
 "no_favorites_description" = "在阅读时点击收藏按钮，将喜欢的经文添加到这里";

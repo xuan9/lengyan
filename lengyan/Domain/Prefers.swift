@@ -12,6 +12,10 @@ protocol PrefersProtocol {
     var likes:[String]{get}
     var lastPlayFile:[String]?{get set}
     var lastPlayMode:Int?{get set}
+    var fontSizeLevel: Int { get set }
+    var isDailyReminderOn: Bool { get set }
+    var reminderHour: Int { get set }
+    var reminderMinute: Int { get set }
 
     func like(_ path:String)
     func unlike(_ path:String)
@@ -29,6 +33,10 @@ class Prefers: NSObject, PrefersProtocol {
     private static let likesKey = "likes"
     private static let playFileKey = "playFile"
     private static let playModeKey = "playMode"
+    private static let fontSizeLevelKey = "fontSizeLevel"
+    private static let dailyReminderOnKey = "dailyReminderOn"
+    private static let reminderHourKey = "reminderHour"
+    private static let reminderMinuteKey = "reminderMinute"
 
     static let shared = Prefers()
 
@@ -84,6 +92,32 @@ class Prefers: NSObject, PrefersProtocol {
         set {
             userDefaults.set(newValue ?? 0, forKey: Prefers.playModeKey)
         }
+    }
+
+    // MARK: - Settings Properties
+
+    /// Font size level: 0=特小, 1=小, 2=中(default), 3=大, 4=特大
+    var fontSizeLevel: Int {
+        get { userDefaults.integer(forKey: Prefers.fontSizeLevelKey) }
+        set { userDefaults.set(newValue, forKey: Prefers.fontSizeLevelKey) }
+    }
+
+    var isDailyReminderOn: Bool {
+        get { userDefaults.bool(forKey: Prefers.dailyReminderOnKey) }
+        set { userDefaults.set(newValue, forKey: Prefers.dailyReminderOnKey) }
+    }
+
+    var reminderHour: Int {
+        get {
+            let h = userDefaults.integer(forKey: Prefers.reminderHourKey)
+            return h == 0 ? 7 : h  // default 7:00
+        }
+        set { userDefaults.set(newValue, forKey: Prefers.reminderHourKey) }
+    }
+
+    var reminderMinute: Int {
+        get { userDefaults.integer(forKey: Prefers.reminderMinuteKey) }
+        set { userDefaults.set(newValue, forKey: Prefers.reminderMinuteKey) }
     }
 
     func persist() {

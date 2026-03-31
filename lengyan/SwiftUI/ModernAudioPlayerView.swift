@@ -130,7 +130,7 @@ struct ModernAudioPlayerView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 36, height: 36)
-                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .accent)))
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .primary)))
                 }
                 
                 // 曲目与进度
@@ -167,8 +167,12 @@ struct ModernAudioPlayerView: View {
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(.ultraThinMaterial)
-                    .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)).opacity(0.15), radius: 12, x: 0, y: 6)
+                    .fill(Color(SutraDesignTokens.shared.color(for: .card)))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.1), lineWidth: 0.5)
+                    )
+                    .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)).opacity(0.08), radius: 8, x: 0, y: 2)
             )
             .padding(.horizontal, 16) // 扩宽胶囊播放器，填满更多边缘作为稳固底座
             .padding(.bottom, 110) // 悬浮于 TabBar 之上
@@ -196,7 +200,7 @@ struct ModernAudioPlayerView: View {
 
                     // 进度
                     Rectangle()
-                        .fill(Color(SutraDesignTokens.shared.color(for: .bookmark)))
+                        .fill(Color(SutraDesignTokens.shared.color(for: .primary)))
                         .frame(width: max(0, min(geometry.size.width * progress, geometry.size.width)), height: 5)
                         .cornerRadius(2.5)
                 }
@@ -226,63 +230,118 @@ struct ModernAudioPlayerView: View {
 
     // MARK: - Media Group Section
     private func mediaGroupSection(_ group: MediaGroup) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Section Header - 极简引言：全大写/加宽字距的细小印记
-            Text(group.name)
-                .font(SutraTypographyBridge.uiCaption(weight: .semibold))
-                .tracking(2.0)
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
-                .lineLimit(1)
-                .padding(.horizontal, 48) // 增加留白，让整体列表向屏幕居中区靠拢
-                .padding(.top, 32)
-                .padding(.bottom, 12)
+        VStack(spacing: 0) {
+            ForEach(group.files.indices, id: \.self) { index in
+                let isLast = index == group.files.indices.last
+                let isMantra = group.files[index].hasPrefix("lyz")
 
-            // Media Items - Airy list
-            VStack(spacing: 0) {
-                ForEach(group.files.indices, id: \.self) { index in
-                    mediaItemRow(
-                        name: group.names[index],
-                        file: group.files[index],
-                        extension: group.fileExtension,
-                        groupName: group.name
-                    )
+                // 楞嚴咒前加分隔
+                if isMantra {
+                    Rectangle()
+                        .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.12))
+                        .frame(height: 0.5)
+                        .padding(.horizontal, 36)
+                        .padding(.vertical, 20)
+                }
+
+                mediaItemRow(
+                    name: group.names[index],
+                    file: group.files[index],
+                    extension: group.fileExtension,
+                    groupName: group.name
+                )
+
+                // 极细分隔线
+                if !isLast && !isMantra {
+                    Rectangle()
+                        .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.06))
+                        .frame(height: 0.5)
+                        .padding(.horizontal, 36)
                 }
             }
         }
+        .padding(.top, 8)
     }
 
     // MARK: - Media Item Row
     private func mediaItemRow(name: String, file: String, extension: String, groupName: String) -> some View {
         let status = downloadStatus[file] ?? .notDownloaded
         let progress = downloadProgress[file] ?? 0
+        let isCurrent = audioObserver.currentTrack == name
+        let isPlaying = isCurrent && audioObserver.isPlaying
+        let primary = Color(SutraDesignTokens.shared.color(for: .primary))
 
-        return VStack(alignment: .leading, spacing: 0) {
-            // 极简曲目行：只用文字深浅区分状态，去除虚线与图标噪音
-            Text(titleWithStatus(name: name, status: status))
-                .font(SutraTypographyBridge.sacredText(weight: .regular))
-                .foregroundColor(status == .downloaded
-                    ? Color(SutraDesignTokens.shared.color(for: .sutraText))
-                    : Color(SutraDesignTokens.shared.color(for: .textTertiary)))
-                .padding(.vertical, 16)
+        return VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                // 正在播放 — 左侧竹绿竖线
+                if isCurrent {
+                    Capsule()
+                        .fill(primary)
+                        .frame(width: 3)
+                        .padding(.vertical, 6)
+                }
 
-            // Download progress bar
+                Text(name)
+                    .font(SutraTypographyBridge.uiBody(weight: isCurrent ? .medium : .regular))
+                    .foregroundColor(isCurrent
+                        ? primary
+                        : Color(SutraDesignTokens.shared.color(for: .textPrimary)))
+                    .padding(.leading, isCurrent ? 14 : 17)
+
+                Spacer()
+
+                // 状态标记
+                if status == .downloading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .scaleEffect(0.7)
+                } else if status == .error {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
+                } else if isPlaying {
+                    Circle()
+                        .fill(primary)
+                        .frame(width: 6, height: 6)
+                } else if isCurrent {
+                    Circle()
+                        .fill(primary.opacity(0.4))
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .frame(minHeight: 52)
+
+            // 下载状态文字
+            if status == .downloading {
+                Text("正在下载...")
+                    .font(SutraTypographyBridge.auxiliaryText(weight: .light))
+                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
+                    .padding(.leading, isCurrent ? 17 : 20)
+            } else if status == .error {
+                Text("下载失败，轻触重试")
+                    .font(SutraTypographyBridge.auxiliaryText(weight: .light))
+                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
+                    .padding(.leading, isCurrent ? 17 : 20)
+            }
+
+            // 下载进度条
             if status == .downloading {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         Rectangle()
-                            .fill(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.2))
+                            .fill(primary.opacity(0.08))
                             .frame(height: 1)
-
                         Rectangle()
-                            .fill(Color(SutraDesignTokens.shared.color(for: .accent)))
+                            .fill(primary.opacity(0.5))
                             .frame(width: max(0, min(geometry.size.width * progress, geometry.size.width)), height: 1)
                     }
                 }
                 .frame(height: 1)
-                .padding(.top, 4)
+                .padding(.leading, isCurrent ? 17 : 20)
+                .padding(.trailing, 36)
             }
         }
-        .padding(.horizontal, 48)
+        .padding(.horizontal, 36)
         .contentShape(Rectangle())
         .onTapGesture {
             handleMediaItemTap(name: name, file: file, fileExtension: `extension`, groupName: groupName)

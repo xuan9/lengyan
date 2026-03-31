@@ -135,11 +135,11 @@ struct ModernFavoritesView: View {
                     VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL)) {
                         Image(systemName: "heart.text.square")
                             .font(.system(size: 72, weight: .ultraLight))
-                            .foregroundColor(SutraDesignSystem.color(.decorativeGold).opacity(0.5))
+                            .foregroundColor(SutraDesignSystem.color(.primary).opacity(0.5))
 
                         Text(NSLocalizedString("no_favorites", comment: ""))
                             .font(SutraTypographyBridge.uiTitle(weight: .medium))
-                            .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                            .foregroundColor(SutraDesignSystem.color(.textSecondary))
 
                         Text(NSLocalizedString("no_favorites_description", comment: ""))
                             .font(SutraTypographyBridge.uiBody())
@@ -150,12 +150,13 @@ struct ModernFavoritesView: View {
                     }
                     .padding(.top, 80)
                 } else {
-                    // Favorites List
-                    VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) {
+                    // 经签列表 — 卡片充分利用屏幕宽度
+                    VStack(spacing: 14) {
                         ForEach(favorites) { favorite in
                             favoriteCard(favorite)
                         }
                     }
+                    .padding(.horizontal, 10)
                 }
 
                 Spacer(minLength: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL))
@@ -176,44 +177,53 @@ struct ModernFavoritesView: View {
         }
     }
 
+    /// 翠竹经签 — 通透如玉，绿意如竹
     private func favoriteCard(_ favorite: FavoriteItem) -> some View {
-        HStack(spacing: 0) {
-            // 左侧装饰竖线 - accent 翠竹绿
-            RoundedRectangle(cornerRadius: 2)
-                .fill(SutraDesignSystem.accentColor())
+        let tabGreen = Color(SutraDesignTokens.shared.color(for: .primary))
+
+        return HStack(spacing: 0) {
+            // 左侧翠竹竖线 — TabBar 同款绿，实体如竹
+            Capsule()
+                .fill(tabGreen.opacity(0.7))
                 .frame(width: 3)
                 .padding(.vertical, 8)
 
-            VStack(alignment: .leading, spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingSM)) {
-                // 经文阅读区域 (突出显示经典原文)
+            VStack(alignment: .leading, spacing: 6) {
+                // 经文 — 同首页科判字号 (uiBody = 18pt)
                 Text(favorite.content)
-                    .font(SutraTypographyBridge.uiTitle(weight: .light)) // 使用轻量体以显清秀，字号保持如阅读正文
-                    .foregroundColor(SutraDesignSystem.sutraTextColor()) // 使用阅读页主体文字色
+                    .font(SutraTypographyBridge.uiBody(weight: .regular))
+                    .foregroundColor(SutraDesignSystem.sutraTextColor())
                     .lineLimit(4)
-                    .lineSpacing(8) // 更宽松的行距，提升如纸上阅读般的舒适感
+                    .lineSpacing(6)
                     .multilineTextAlignment(.leading)
-                    
-                // 索引出处/标题 (极其弱化地放置在底部右侧)
+
+                // 出处 — 右下角淡雅落款
                 HStack {
                     Spacer()
                     Text(favorite.title)
-                        .font(SutraTypographyBridge.uiCaption())
-                        .foregroundColor(SutraDesignSystem.color(.textTertiary).opacity(0.8))  // 弱化标题为辅助索引
+                        .font(.system(size: 11, weight: .light))
+                        .foregroundColor(SutraDesignSystem.color(.textSecondary))
                         .lineLimit(1)
                 }
             }
-            .padding(.leading, 16)
-            .padding(.vertical, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingMD)) // 收缩上下边距
-            .padding(.trailing, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
+            .padding(.leading, 14)
+            .padding(.trailing, 16)
+            .padding(.vertical, 16)
         }
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(SutraDesignSystem.color(.surface))
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.25))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(SutraDesignSystem.color(.decorativeGold).opacity(0.2), lineWidth: 0.5)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            LinearGradient(
+                                colors: [tabGreen.opacity(0.15), tabGreen.opacity(0.05)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.5
+                        )
                 )
-                .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)), radius: 6, x: 0, y: 2)
         )
         .contentShape(Rectangle())
         .onTapGesture {
