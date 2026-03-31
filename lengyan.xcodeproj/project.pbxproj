@@ -79,6 +79,7 @@
 		CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */; };
 		CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */; };
 		CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */; };
+		45AC1A09C5AC4F8399D69AC5 /* ModernSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D89740455934B739168A0A8 /* ModernSettingsView.swift */; };
 		CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */; };
 		CBC207392EBCD71300EB7A45 /* DesignSystem+Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */; };
 		CBC2073B2EBCD79A00EB7A45 /* DesignSystem+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */; };
@@ -188,6 +189,7 @@
 		CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Typography.swift"; sourceTree = "<group>"; };
 		CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
 		CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernAudioPlayerView.swift; sourceTree = "<group>"; };
+		0D89740455934B739168A0A8 /* ModernSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernSettingsView.swift; sourceTree = "<group>"; };
 		CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernFavoritesView.swift; sourceTree = "<group>"; };
 		CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Tokens.swift"; sourceTree = "<group>"; };
 		CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Layout.swift"; sourceTree = "<group>"; };
@@ -406,6 +408,7 @@
 			children = (
 				CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */,
 				CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */,
+				0D89740455934B739168A0A8 /* ModernSettingsView.swift */,
 				ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */,
 				E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */,
 			);
@@ -624,6 +627,7 @@
 				133CABAB2364DDB700B61AC0 /* RATreeNodeItem+Private.h in Sources */,
 				CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */,
 				CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */,
+				45AC1A09C5AC4F8399D69AC5 /* ModernSettingsView.swift in Sources */,
 				CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */,
 				133CABAC2364DDB700B61AC0 /* RATreeNodeItem+Private.m in Sources */,
 				133CABAD2364DDB700B61AC0 /* RATreeNodeItem.h in Sources */,
