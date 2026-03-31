@@ -281,18 +281,15 @@ struct ModernFavoritesView: View {
     }
 
     private func extractContentEfficiently(from item: [String: Any]) -> String {
-        // 获取经文内容（Book.shared.getSutra 会自动处理子节点拼接）
-        let rawContent = Book.shared.getSutra(item)
+        // 直接用 maxLength 截断，避免 get(recursive) 拼接全部经文再截取
+        let rawContent = Book.shared.getSutra(item, maxLength: 80)
 
-        // 单次遍历策略：过滤空白字符 + 限制长度
-        // 避免多次 replacingOccurrences 创建中间字符串的性能开销
         let maxCount = 50
         var result = ""
-        result.reserveCapacity(maxCount + 3) // 预分配容量，避免多次重分配
+        result.reserveCapacity(maxCount + 3)
         var charCount = 0
 
         for char in rawContent {
-            // 跳过常见空白字符，使预览更紧凑
             if char == "\n" || char == " " || char == "\t" {
                 continue
             }
