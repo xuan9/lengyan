@@ -187,25 +187,34 @@ struct ModernSettingsView: View {
     }
 
     private var compactTimePicker: some View {
-        HStack(spacing: 12) {
-            Picker("时", selection: $reminderHour) {
-                ForEach(5..<23, id: \.self) { Text("\($0)").tag($0) }
-            }
-            .pickerStyle(.wheel)
-            .frame(width: 80, height: 100)
-            .clipped()
-            Text(":")
-                .font(.system(size: 20, weight: .thin))
-                .foregroundColor(SutraDesignSystem.color(.textSecondary))
-            Picker("分", selection: $reminderMinute) {
-                ForEach(0..<60, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
-            }
-            .pickerStyle(.wheel)
-            .frame(width: 80, height: 100)
-            .clipped()
+        HStack(spacing: 14) {
+            Image(systemName: "clock")
+                .font(.system(size: 15, weight: .light))
+                .foregroundColor(SutraDesignSystem.color(.primary))
+                .frame(width: 24)
+            Text("提醒时间")
+                .font(SutraTypographyBridge.uiBody(weight: .regular))
+                .foregroundColor(SutraDesignSystem.color(.textPrimary))
+            Spacer()
+            DatePicker("", selection: Binding(
+                get: {
+                    let c = Calendar.current
+                    var d = DateComponents()
+                    d.hour = reminderHour
+                    d.minute = reminderMinute
+                    return c.date(from: d) ?? Date()
+                },
+                set: { date in
+                    let c = Calendar.current
+                    reminderHour = c.component(.hour, from: date)
+                    reminderMinute = c.component(.minute, from: date)
+                    saveReminderTime()
+                }
+            ), displayedComponents: .hourAndMinute)
+            .datePickerStyle(.compact)
+            .labelsHidden()
         }
-        .onChange(of: reminderHour) { _ in saveReminderTime() }
-        .onChange(of: reminderMinute) { _ in saveReminderTime() }
+        .padding(.vertical, 18)
     }
 
     private func saveReminderTime() {

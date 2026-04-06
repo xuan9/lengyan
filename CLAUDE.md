@@ -23,10 +23,13 @@
 
 ### Build & Run
 ```bash
-# Open in Xcode
-open lengyan.xcodeproj
+# 一键编译+安装+启动到模拟器（自动选择已启动的设备）
+./scripts/build_and_install.sh
 
-# Build: Cmd+B | Run: Cmd+R | Test: Cmd+U
+# 指定设备
+./scripts/build_and_install.sh <设备ID>
+
+# Xcode: Build: Cmd+B | Run: Cmd+R | Test: Cmd+U
 ```
 
 ### Mobile MCP Testing

@@ -22,6 +22,13 @@ struct ModernAudioPlayerView: View {
                                 mediaGroupSection(group)
                             }
                         }
+
+                        // 归属署名 — 安静低调
+                        Text("屏东能净协会读诵")
+                            .font(SutraTypographyBridge.auxiliaryText(weight: .light))
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
+                            .padding(.top, 36)
+                            .padding(.bottom, 8)
                     }
                     .padding(.bottom, audioObserver.showPlayerBar ? 220 : 120)
                 }

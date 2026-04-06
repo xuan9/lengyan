@@ -122,8 +122,7 @@ struct ModernFavoritesView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG)) {
-                // World-class Header with prominent title and helpful subtitle
+            VStack(spacing: 0) {
                 ZenTabHeaderView(titleKey: "star_tab_title", symbolName: "bookmark")
 
                 if isLoading {
