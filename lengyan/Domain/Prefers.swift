@@ -37,6 +37,8 @@ class Prefers: NSObject, PrefersProtocol {
     private static let dailyReminderOnKey = "dailyReminderOn"
     private static let reminderHourKey = "reminderHour"
     private static let reminderMinuteKey = "reminderMinute"
+    private static let lastReadPathKey = "lastReadPath"
+    private static let lastReadPageKey = "lastReadPage"
 
     static let shared = Prefers()
 
@@ -118,6 +120,18 @@ class Prefers: NSObject, PrefersProtocol {
     var reminderMinute: Int {
         get { userDefaults.integer(forKey: Prefers.reminderMinuteKey) }
         set { userDefaults.set(newValue, forKey: Prefers.reminderMinuteKey) }
+    }
+
+    // MARK: - Reading Progress
+
+    var lastReadPath: String? {
+        get { userDefaults.string(forKey: Prefers.lastReadPathKey) }
+        set { userDefaults.set(newValue, forKey: Prefers.lastReadPathKey) }
+    }
+
+    var lastReadPageIndex: Int {
+        get { userDefaults.integer(forKey: Prefers.lastReadPageKey) }
+        set { userDefaults.set(newValue, forKey: Prefers.lastReadPageKey) }
     }
 
     func persist() {

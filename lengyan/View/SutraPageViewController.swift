@@ -44,6 +44,15 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     override var prefersStatusBarHidden: Bool {
         return navigationController?.isNavigationBarHidden ?? false
     }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // 保存阅读进度（仅在有效页面时）
+        if let path = self.path, page >= 0 {
+            Prefers.shared.lastReadPath = path
+            Prefers.shared.lastReadPageIndex = page
+        }
+    }
     
     @objc func like() {
         Prefers.shared.like(self.path!)

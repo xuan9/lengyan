@@ -65,6 +65,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // Refresh design system on appearance
         applyZenTempleSerenityDesignSystem()
 
+        // Rebuild header to refresh "续读" text with latest reading progress
+        setupHeaderView(self.view.bounds.size)
+
         // Force stable navigation bar color on every appearance
         let navColor = SutraDesignTokens.shared.color(for: .navigationBar)
         if let navBar = self.navigationController?.navigationBar {
@@ -479,8 +482,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
-        // 🏛️ Sacred header - 含经题 + 开经偈 + 卷章按钮
-        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 240))
+        // 🏛️ Sacred header - 含经题 + 开经偈 + 卷章按钮 + 功能行
+        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 264))
         header.backgroundColor = backgroundColor
 
         // 📜 经题 — "大佛頂首楞嚴經"，如古卷匾额
@@ -563,10 +566,41 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         header.addSubview(lotusDividerView)
 
         // ✨ 底部边界装饰性细线 (收尾过渡到科判列表)
-        let dividerFrame = CGRect(x: 32, y: header.frame.height - 1, width: width - 64, height: 0.5)
+        let dividerFrame = CGRect(x: 32, y: header.frame.height - 25, width: width - 64, height: 0.5)
         let dividerLine = UIView(frame: dividerFrame)
         dividerLine.backgroundColor = decorativeGold.withAlphaComponent(0.2)
         header.addSubview(dividerLine)
+
+        // ── 合并功能行：续读（左）+ 搜索（右）──
+        let toolRowY = header.frame.height - 24
+        let toolRow = UIView(frame: CGRect(x: 0, y: toolRowY, width: width, height: 24))
+
+        // 续读提示（左侧，仅在有阅读进度时显示）
+        if let lastPath = Prefers.shared.lastReadPath {
+            let itemName = Book.shared.itemOfPath(lastPath)["name"] as? String ?? ""
+            if !itemName.isEmpty {
+                let continueLabel = UIButton(type: .system)
+                continueLabel.setTitle("续读·\(itemName) →", for: .normal)
+                continueLabel.titleLabel?.font = .systemFont(ofSize: 12, weight: .regular)
+                continueLabel.setTitleColor(SutraDesignTokens.shared.color(for: .textSecondary), for: .normal)
+                continueLabel.titleLabel?.textAlignment = .left
+                continueLabel.frame = CGRect(x: 20, y: 0, width: width * 0.6, height: 24)
+                continueLabel.contentHorizontalAlignment = .left
+                continueLabel.tag = 9991 // 标记：续读按钮
+                continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
+                toolRow.addSubview(continueLabel)
+            }
+        }
+
+        // 搜索图标（右侧，始终显示）
+        let searchIcon = UIButton(type: .system)
+        searchIcon.setImage(UIImage(systemName: "magnifyingglass"), for: .normal)
+        searchIcon.tintColor = SutraDesignTokens.shared.color(for: .primary)
+        searchIcon.frame = CGRect(x: width - 44, y: 0, width: 44, height: 24)
+        searchIcon.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
+        toolRow.addSubview(searchIcon)
+
+        header.addSubview(toolRow)
 
         self.treeView.treeHeaderView = header
     }
@@ -749,6 +783,34 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let hostingController = UIHostingController(rootView: SutraAcknowledgmentsView())
         hostingController.title = "致谢"
         self.navigationController?.pushViewController(hostingController, animated: true)
+    }
+
+    // MARK: - 合并行功能
+
+    @objc func continueReading() {
+        guard let lastPath = Prefers.shared.lastReadPath else { return }
+        // 查找对应的 page index
+        if let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == lastPath }) {
+            self.navigationController?.setNavigationBarHidden(false, animated: false)
+            let pageVC = SutraPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+            pageVC.page = pageIndex
+            self.navigationController?.pushViewController(pageVC, animated: true)
+        } else {
+            // path 找不到对应页，尝试按科判路径打开
+            self.navigationController?.setNavigationBarHidden(false, animated: false)
+            let sutraVC = SutraPurePageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+            sutraVC.path = lastPath
+            sutraVC.onDismiss = { [weak self] in
+                self?.navigationController?.setNavigationBarHidden(false, animated: false)
+            }
+            self.navigationController?.pushViewController(sutraVC, animated: true)
+        }
+    }
+
+    @objc func openSearch() {
+        let hostingController = UIHostingController(rootView: SearchView())
+        hostingController.modalPresentationStyle = .fullScreen
+        present(hostingController, animated: true)
     }
     
     func close(){

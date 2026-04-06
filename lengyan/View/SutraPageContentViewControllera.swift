@@ -72,6 +72,7 @@ class SutraTableViewCell: UITableViewCell {
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
         textView.isEditable = false
+        textView.isSelectable = true
         textView.isScrollEnabled = false
 
         // 经文篇章留白体系 - 无缝长轴中的段落呼吸感
