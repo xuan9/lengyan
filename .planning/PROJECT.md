@@ -24,15 +24,14 @@
 - ✓ 简繁体中文切换（`data/` + `data/simplified/`）— 现有
 - ✓ 每日提醒（`ReminderManager`）— 现有
 - ✓ 音频归属标注 — 现有
+- ✓ 阅读进度记忆：静默保存路径+页码，首页"续读"提示 — 已实现
+- ✓ 全文搜索：modal 搜索页，匹配科判标题+经文正文 — 已实现
+- ✓ 续读+搜索合并行：卷章按钮下方 24pt 行 — 已实现
+- ✓ 经文复制/分享：UITextView isSelectable，系统原生菜单 — 已实现
 
 ### Active
 
-<!-- 本次要做的功能 -->
-
-- [ ] 阅读进度记忆：离开阅读页时静默保存路径+页码，首页显示"续读"提示
-- [ ] 全文搜索：首页搜索图标 → modal 搜索页 → 输入关键词匹配科判标题+经文正文 → 点击跳转阅读
-- [ ] 续读+搜索合并行：卷章按钮下方新增 24pt 行，左续读右搜索，无进度时只显示搜索图标
-- [ ] 经文复制/分享：阅读页 UITextView 开启 `isSelectable = true`，使用系统原生文本选择+分享菜单
+(None — all features implemented)
 
 ### Out of Scope
 
@@ -66,7 +65,7 @@
 - header 高度从 240pt → 264pt
 - 搜索为 modal 覆盖首页（不 push）
 - 复制分享只需一行代码 `isSelectable = true`
-- Prefers 已有 `updateReadingProgress()` 方法（未接线）
+- Prefers 已有 `updateReadingProgress()` 方法（已接线实现）
 
 ## Constraints
 
@@ -80,10 +79,10 @@
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| 严格按 FEATURE_DESIGN.md 合并行方案 | 用户已深思熟虑设计，改动量最小且不破坏现有体验 | — Pending |
-| 搜索用 SwiftUI（SearchView.swift） | 新页面用 SwiftUI 符合现有模式 | — Pending |
-| 搜索逻辑用 Domain 层（SearchService.swift） | 遵循 View 只放 UI 的铁律 | — Pending |
-| 进度保存用 UserDefaults | 与现有 Prefers 架构一致 | — Pending |
+| 严格按 FEATURE_DESIGN.md 合并行方案 | 用户已深思熟虑设计，改动量最小且不破坏现有体验 | ✓ Good |
+| 搜索用 SwiftUI（SearchView.swift） | 新页面用 SwiftUI 符合现有模式 | ✓ Good |
+| 搜索逻辑用 Domain 层（SearchService.swift） | 遵循 View 只放 UI 的铁律 | ✓ Good |
+| 进度保存用 UserDefaults | 与现有 Prefers 架构一致 | ✓ Good |
 | 音频加载反馈不做 | 不在 FEATURE_DESIGN.md 范围内 | ✓ 确认排除 |
 
 ## Evolution
@@ -104,4 +103,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after initialization*
+*Last updated: 2026-04-06 after marking features as implemented*
