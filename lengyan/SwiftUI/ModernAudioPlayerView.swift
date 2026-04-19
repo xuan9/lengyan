@@ -62,12 +62,12 @@ struct ModernAudioPlayerView: View {
                     if audioObserver.currentTrack?.isEmpty ?? true {
                         Text("请 轻 触 上 列 卷 名 听 经")
                             .font(SutraTypographyBridge.auxiliaryText(weight: .light))
-                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
                             .lineLimit(1)
                     } else {
                         Text(audioObserver.currentTrack!)
                             .font(SutraTypographyBridge.uiBody(weight: .medium))
-                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textPrimary)))
                             .lineLimit(1)
                     }
                     progressSliderWithTime
@@ -79,7 +79,7 @@ struct ModernAudioPlayerView: View {
                     Button(action: { showPlayModeMenu() }) {
                         Image(manager.selectedPlayMode.iconName)
                             .renderingMode(.template)
-                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
                             .frame(width: 24, height: 24)
                     }
                 }
@@ -107,7 +107,7 @@ struct ModernAudioPlayerView: View {
             Text(AudioManager.formatTime(audioObserver.currentTime))
                 .font(SutraTypographyBridge.auxiliaryText(weight: .semibold))
                 .monospacedDigit()
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
 
             GeometryReader { geometry in
                 let progress = audioObserver.totalTime > 0 ? CGFloat(audioObserver.currentTime / audioObserver.totalTime) : 0
@@ -140,7 +140,7 @@ struct ModernAudioPlayerView: View {
             Text(AudioManager.formatTime(audioObserver.totalTime))
                 .font(SutraTypographyBridge.auxiliaryText(weight: .semibold))
                 .monospacedDigit()
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
+                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
         }
     }
 

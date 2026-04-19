@@ -483,7 +483,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
         // 🏛️ Sacred header - 含经题 + 开经偈 + 卷章按钮 + 功能行
-        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 264))
+        let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: 268))
         header.backgroundColor = backgroundColor
 
         // 📜 经题 — "大佛頂首楞嚴經"，如古卷匾额
@@ -572,19 +572,29 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         header.addSubview(dividerLine)
 
         // ── 合并功能行：续读（左）+ 搜索（右）──
-        let toolRowY = header.frame.height - 32
-        let toolRow = UIView(frame: CGRect(x: 0, y: toolRowY, width: width, height: 32))
+        let toolRowHeight: CGFloat = 44
+        let toolRowY = header.frame.height - toolRowHeight
+        let toolRow = UIView(frame: CGRect(x: 0, y: toolRowY, width: width, height: toolRowHeight))
 
-        // 续读提示（左侧，仅在有阅读进度时显示）
+        // 续读提示 — "续读"regular + 章节标题semibold
         if let lastPath = Prefers.shared.lastReadPath {
             let itemName = Book.shared.itemOfPath(lastPath)["name"] as? String ?? ""
             if !itemName.isEmpty {
                 let continueLabel = UIButton(type: .system)
-                continueLabel.setTitle("续读·\(itemName) →", for: .normal)
-                continueLabel.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
-                continueLabel.setTitleColor(SutraDesignTokens.shared.color(for: .textSecondary), for: .normal)
-                continueLabel.titleLabel?.textAlignment = .left
-                continueLabel.frame = CGRect(x: 20, y: 0, width: width * 0.65, height: 32)
+                let bodyColor = SutraDesignTokens.shared.color(for: .textSecondary)
+                let goldColor = SutraDesignTokens.shared.color(for: .decorativeGold)
+                let continueAttr = NSMutableAttributedString(string: "•  续读·", attributes: [
+                    .font: UIFont.systemFont(ofSize: 16, weight: .regular),
+                    .foregroundColor: bodyColor
+                ])
+                continueAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
+                let titleAttr = NSMutableAttributedString(string: "\(itemName) →", attributes: [
+                    .font: UIFont.systemFont(ofSize: 16, weight: .semibold),
+                    .foregroundColor: bodyColor
+                ])
+                continueAttr.append(titleAttr)
+                continueLabel.setAttributedTitle(continueAttr, for: .normal)
+                continueLabel.frame = CGRect(x: 20, y: 6, width: width * 0.65, height: 32)
                 continueLabel.contentHorizontalAlignment = .left
                 continueLabel.tag = 9991 // 标记：续读按钮
                 continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
@@ -592,13 +602,20 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
 
-        // 搜索图标（右侧，始终显示）
-        let searchIcon = UIButton(type: .system)
-        searchIcon.setImage(UIImage(systemName: "magnifyingglass"), for: .normal)
-        searchIcon.tintColor = SutraDesignTokens.shared.color(for: .decorativeGold)
-        searchIcon.frame = CGRect(x: width - 44, y: 0, width: 44, height: 32)
-        searchIcon.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
-        toolRow.addSubview(searchIcon)
+        // 搜索（右对齐卷十右边）
+        let lastColX = horizontalPadding + (chapterButtonWidth + buttonSpacing) * 4
+        let lastColRight = lastColX + chapterButtonWidth
+        let searchBtn = UIButton(type: .system)
+        let searchAttr = NSMutableAttributedString(string: "•  搜索", attributes: [
+            .font: UIFont.systemFont(ofSize: 14, weight: .medium),
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary)
+        ])
+        searchAttr.addAttribute(.foregroundColor, value: SutraDesignTokens.shared.color(for: .decorativeGold), range: NSRange(location: 0, length: 1))
+        searchBtn.setAttributedTitle(searchAttr, for: .normal)
+        searchBtn.frame = CGRect(x: lastColX, y: 6, width: chapterButtonWidth, height: 32)
+        searchBtn.contentHorizontalAlignment = .right
+        searchBtn.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
+        toolRow.addSubview(searchBtn)
 
         header.addSubview(toolRow)
 

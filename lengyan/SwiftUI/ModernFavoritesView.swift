@@ -211,7 +211,7 @@ struct ModernFavoritesView: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.25))
+                .fill(Color(SutraDesignTokens.shared.color(for: .card)))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(

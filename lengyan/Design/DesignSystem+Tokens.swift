@@ -142,7 +142,7 @@ struct SepiaTheme: SutraThemeProtocol {
         // 背景 — 温暖茶色，如翻开的古卷
         case .background: return UIColor(hex: "#F2E8D5") ?? .white
         case .surface: return UIColor(hex: "#F7F0E2") ?? .white
-        case .card: return UIColor(hex: "#FBF6ED") ?? .white
+        case .card: return UIColor(hex: "#EDE3D0") ?? .white
         case .overlay: return UIColor(hex: "#3E2723")?.withAlphaComponent(0.6) ?? .black
 
         // 文字 — 深褐清晰，不偏红不偏灰
@@ -276,24 +276,18 @@ public final class SutraDesignTokens {
 
     // MARK: - Theme Persistence
     public func loadSavedTheme() {
-        // Force light theme for zen design system with sacred colors
-        currentTheme = .light
-
-        // Force immediate theme application
-        applyThemeToApp()
-
-        // Post notification to ensure all views update
-        NotificationCenter.default.post(name: .themeDidChange, object: nil)
-
-        // Optional: Uncomment to enable saved theme persistence
-        /*
         if let savedTheme = UserDefaults.standard.string(forKey: "selectedTheme"),
            let theme = SutraTheme(rawValue: savedTheme) {
             currentTheme = theme
         } else {
             currentTheme = determineAutoTheme()
         }
-        */
+
+        // Force immediate theme application
+        applyThemeToApp()
+
+        // Post notification to ensure all views update
+        NotificationCenter.default.post(name: .themeDidChange, object: nil)
     }
 
     private func determineAutoTheme() -> SutraTheme {
