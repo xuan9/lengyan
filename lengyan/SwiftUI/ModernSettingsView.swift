@@ -136,7 +136,7 @@ struct ModernSettingsView: View {
                 let textUIColor = theme == .dark
                     ? UIColor(hex: "#E8DFD0") ?? .white
                     : UIColor(hex: "#33231A") ?? .black
-                let label = theme == .light ? "宣纸" : theme == .sepia ? "旧经" : "夜读"
+                let label = theme == .light ? "宣纸" : theme == .sepia ? "古籍" : "夜读"
                 Button(action: { changeTheme(theme) }) {
                     Text(label)
                         .font(.system(size: 12, weight: sel ? .medium : .light))

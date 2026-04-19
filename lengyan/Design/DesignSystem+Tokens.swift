@@ -134,7 +134,7 @@ struct LightTheme: SutraThemeProtocol {
     }
 }
 
-// MARK: - Sepia Theme Implementation — 旧经卷
+// MARK: - Sepia Theme Implementation — 古籍
 /// 灵感：百年经卷的温暖茶色，泛黄而不脏，如秋日古寺
 struct SepiaTheme: SutraThemeProtocol {
     func color(for token: ColorToken) -> UIColor {
