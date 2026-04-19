@@ -370,6 +370,7 @@ struct ModernFavoritesView: View {
         sutraVC.path = path
         sutraVC.isShowIndexButton = true
         sutraVC.title = title
+        sutraVC.hidesBottomBarWhenPushed = true
 
         sutraVC.onDismiss = {
             navigationController.setNavigationBarHidden(true, animated: false)
@@ -403,6 +404,7 @@ struct ModernFavoritesView: View {
             )
             pageVC.page = pageIndex
             pageVC.title = title
+            pageVC.hidesBottomBarWhenPushed = true
 
             navigationController.pushViewController(pageVC, animated: true)
 

@@ -76,6 +76,16 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
 
+        // 设置 UINavigationBarAppearance 确保全局外观不覆盖
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = navBarColor
+        appearance.shadowColor = .clear
+        appearance.shadowImage = UIImage()
+        self.navigationController?.navigationBar.standardAppearance = appearance
+        self.navigationController?.navigationBar.compactAppearance = appearance
+        self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
+
         self.setPageTitle()
         self.updateStarButton()
     }
@@ -107,7 +117,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             let item = Book.shared.itemOfPath(self.path!)
             if item["children"] != nil {
                 let indexButton = UIBarButtonItem(
-                    image: UIImage(systemName: "list.bullet.rectangle"),
+                    image: UIImage(systemName: "list.bullet"),
                     style: .plain,
                     target: self,
                     action: #selector(openIndex)

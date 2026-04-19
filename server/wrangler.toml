@@ -1,0 +1,8 @@
+name = "lengyan-feedback"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lengyan-feedback-db"
+database_id = "6ca59d63-8478-4e69-a93b-3d08e083f74b"
