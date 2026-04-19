@@ -62,13 +62,17 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
+        // 先隐藏导航栏，避免黄色闪现
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.navigationController?.hidesBarsOnSwipe = false
+
         // Refresh design system on appearance
         applyZenTempleSerenityDesignSystem()
 
         // Rebuild header to refresh "续读" text with latest reading progress
         setupHeaderView(self.view.bounds.size)
 
-        // Force stable navigation bar color on every appearance
+        // 设置导航栏外观（隐藏状态下设置，供子页面返回时使用）
         let navColor = SutraDesignTokens.shared.color(for: .navigationBar)
         if let navBar = self.navigationController?.navigationBar {
             navBar.isTranslucent = false
@@ -86,10 +90,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             navBar.scrollEdgeAppearance = appearance
             navBar.compactAppearance = appearance
         }
+    }
 
-        // Configure navigation bar behavior
-        self.navigationController?.setNavigationBarHidden(true, animated: true)
-        self.navigationController?.hidesBarsOnSwipe = false
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // 阅读页 hidesBarsOnSwipe 残留会导致点击弹回导航栏
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        // 禁用残留的手势识别器，防止点击/滑动弹出导航栏
+        self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = false
+        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -576,43 +585,49 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let toolRowY = header.frame.height - toolRowHeight
         let toolRow = UIView(frame: CGRect(x: 0, y: toolRowY, width: width, height: toolRowHeight))
 
-        // 续读提示 — "续读"regular + 章节标题semibold
+        // 续读 — 始终显示，有进度时显示章节名
+        let bodyColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        let goldColor = SutraDesignTokens.shared.color(for: .decorativeGold)
+        let continueLabel = UIButton(type: .system)
+        let continueAttr = NSMutableAttributedString(string: "•  续读", attributes: [
+            .font: UIFont.systemFont(ofSize: 16, weight: .medium),
+            .foregroundColor: bodyColor
+        ])
+        continueAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
+        // 有阅读进度时附加章节标题
         if let lastPath = Prefers.shared.lastReadPath {
             let itemName = Book.shared.itemOfPath(lastPath)["name"] as? String ?? ""
             if !itemName.isEmpty {
-                let continueLabel = UIButton(type: .system)
-                let bodyColor = SutraDesignTokens.shared.color(for: .textSecondary)
-                let goldColor = SutraDesignTokens.shared.color(for: .decorativeGold)
-                let continueAttr = NSMutableAttributedString(string: "•  续读·", attributes: [
+                let sepAttr = NSMutableAttributedString(string: "·", attributes: [
                     .font: UIFont.systemFont(ofSize: 16, weight: .regular),
                     .foregroundColor: bodyColor
                 ])
-                continueAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
                 let titleAttr = NSMutableAttributedString(string: "\(itemName) →", attributes: [
                     .font: UIFont.systemFont(ofSize: 16, weight: .semibold),
                     .foregroundColor: bodyColor
                 ])
+                continueAttr.append(sepAttr)
                 continueAttr.append(titleAttr)
-                continueLabel.setAttributedTitle(continueAttr, for: .normal)
-                continueLabel.frame = CGRect(x: 20, y: 6, width: width * 0.65, height: 32)
-                continueLabel.contentHorizontalAlignment = .left
-                continueLabel.tag = 9991 // 标记：续读按钮
-                continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
-                toolRow.addSubview(continueLabel)
             }
         }
+        continueLabel.setAttributedTitle(continueAttr, for: .normal)
+        continueLabel.frame = CGRect(x: 20, y: 6, width: width * 0.65, height: 32)
+        continueLabel.contentHorizontalAlignment = .left
+        continueLabel.tag = 9991
+        continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
+        toolRow.addSubview(continueLabel)
 
-        // 搜索（右对齐卷十右边）
-        let lastColX = horizontalPadding + (chapterButtonWidth + buttonSpacing) * 4
-        let lastColRight = lastColX + chapterButtonWidth
+        // 搜索 — 左对齐卷十按钮的右边缘
+        let colTenRight = horizontalPadding + (chapterButtonWidth + buttonSpacing) * 4 + chapterButtonWidth
         let searchBtn = UIButton(type: .system)
         let searchAttr = NSMutableAttributedString(string: "•  搜索", attributes: [
             .font: UIFont.systemFont(ofSize: 14, weight: .medium),
-            .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary)
+            .foregroundColor: bodyColor
         ])
-        searchAttr.addAttribute(.foregroundColor, value: SutraDesignTokens.shared.color(for: .decorativeGold), range: NSRange(location: 0, length: 1))
+        searchAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
         searchBtn.setAttributedTitle(searchAttr, for: .normal)
-        searchBtn.frame = CGRect(x: lastColX, y: 6, width: chapterButtonWidth, height: 32)
+        let searchWidth: CGFloat = 60
+        searchBtn.frame = CGRect(x: colTenRight - searchWidth, y: 6, width: searchWidth, height: 32)
         searchBtn.contentHorizontalAlignment = .right
         searchBtn.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
         toolRow.addSubview(searchBtn)
@@ -806,21 +821,34 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     @objc func continueReading() {
         guard let lastPath = Prefers.shared.lastReadPath else { return }
-        // 查找对应的 page index
-        if let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == lastPath }) {
-            self.navigationController?.setNavigationBarHidden(false, animated: false)
-            let pageVC = SutraPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
-            pageVC.page = pageIndex
-            self.navigationController?.pushViewController(pageVC, animated: true)
-        } else {
-            // path 找不到对应页，尝试按科判路径打开
-            self.navigationController?.setNavigationBarHidden(false, animated: false)
+        let mode = Prefers.shared.lastReadMode ?? "paged"
+
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+
+        if mode == "tree" {
+            // 科判式阅读
             let sutraVC = SutraPurePageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
             sutraVC.path = lastPath
             sutraVC.onDismiss = { [weak self] in
                 self?.navigationController?.setNavigationBarHidden(false, animated: false)
             }
             self.navigationController?.pushViewController(sutraVC, animated: true)
+        } else {
+            // 卷式翻页阅读
+            let pageVC = SutraPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+            if let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == lastPath }) {
+                pageVC.page = pageIndex
+            } else {
+                // path 找不到对应页，fallback 到科判式
+                let sutraVC = SutraPurePageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+                sutraVC.path = lastPath
+                sutraVC.onDismiss = { [weak self] in
+                    self?.navigationController?.setNavigationBarHidden(false, animated: false)
+                }
+                self.navigationController?.pushViewController(sutraVC, animated: true)
+                return
+            }
+            self.navigationController?.pushViewController(pageVC, animated: true)
         }
     }
 
@@ -875,8 +903,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         sutraVC.onDismiss = {
             self.navigationController?.setNavigationBarHidden(false, animated: false)
         }
-        self.navigationController?.isNavigationBarHidden = false
         self.navigationController?.pushViewController(sutraVC, animated: true)
+        // push 完成后确保 hidesBarsOnSwipe 生效
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.navigationController?.hidesBarsOnSwipe = true
+        }
     }
     func openContent(_ item: [String : Any]){
         let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl,
@@ -889,11 +920,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             return item["path"] == path
         })!;
         // TOCK()
-        
-        
+
+
         self.navigationController?.pushViewController(pageVC, animated: true)
-    }
-    
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.navigationController?.hidesBarsOnSwipe = true
+        }
+    }    
     func openIndex(_ item: [String:Any]){
         let indexVC = SutraIndexViewController();
         indexVC.tree = item;

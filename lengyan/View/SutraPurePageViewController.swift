@@ -29,8 +29,12 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         // STORYBOARD REMOVED: Using programmatic UI now
         
         self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
-        
+
         self.setTitle()
+
+        // 打开即保存初始页面进度
+        Prefers.shared.lastReadPath = self.path
+        Prefers.shared.lastReadMode = "tree"
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -38,71 +42,106 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     }
     
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if let path = self.path {
+            Prefers.shared.lastReadPath = path
+            Prefers.shared.lastReadMode = "tree"
+        }
+    }
+
     @objc func close() {
         onDismiss?();
         self.navigationController?.popViewController(animated: true);
     }
     
     func setTitle() {
+        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
+
+        // 返回按钮
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
             style: .plain,
             target: self,
             action: #selector(close)
         )
-        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        self.navigationController?.navigationBar.isTranslucent = false;
-        self.setPageTitle()
-        self.updateStarButton();
-    }
-    
-    func updateStarButton(){
-        var likeButton: UIBarButtonItem
-        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
-        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        self.navigationItem.leftBarButtonItem?.tintColor = secondaryColor
 
-        if Prefers.shared.likes.contains(path!) {
-            likeButton = UIBarButtonItem(
-                image: UIImage(systemName: "bookmark.fill"),
-                style: .plain,
-                target: self,
-                action: #selector(unlike)
-            )
-            likeButton.tintColor = bookmarkColor  // 鎏金色
-        } else {
-            likeButton = UIBarButtonItem(
-                image: UIImage(systemName: "bookmark"),
-                style: .plain,
-                target: self,
-                action: #selector(like)
-            )
-            likeButton.tintColor = secondaryColor
-        }
-        
-        if self.isShowIndexButton  {
+        // 导航栏背景统一
+        let navBarColor = SutraDesignTokens.shared.color(for: .background)
+        self.navigationController?.navigationBar.barTintColor = navBarColor
+        self.navigationController?.navigationBar.backgroundColor = navBarColor
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+
+        self.setPageTitle()
+        self.updateStarButton()
+    }
+
+    func updateStarButton(){
+        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
+
+        // 收藏按钮
+        let isLiked = Prefers.shared.likes.contains(path!)
+        let likeButton = UIBarButtonItem(
+            image: UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark"),
+            style: .plain,
+            target: self,
+            action: isLiked ? #selector(unlike) : #selector(like)
+        )
+        likeButton.tintColor = isLiked ? bookmarkColor : secondaryColor
+
+        // 分享按钮
+        let shareButton = UIBarButtonItem(
+            image: UIImage(systemName: "square.and.arrow.up"),
+            style: .plain,
+            target: self,
+            action: #selector(share)
+        )
+        shareButton.tintColor = secondaryColor
+
+        if self.isShowIndexButton {
             let item = Book.shared.itemOfPath(self.path!)
-            if(item["children"] != nil ){
+            if item["children"] != nil {
                 let indexButton = UIBarButtonItem(
                     image: UIImage(systemName: "list.bullet.rectangle"),
                     style: .plain,
                     target: self,
                     action: #selector(openIndex)
                 )
-                indexButton.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-                self.navigationItem.setRightBarButtonItems([indexButton, likeButton], animated: false)
+                indexButton.tintColor = secondaryColor
+                self.navigationItem.setRightBarButtonItems([indexButton, shareButton, likeButton], animated: false)
             } else {
-                self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
+                self.navigationItem.setRightBarButtonItems([shareButton, likeButton], animated: false)
             }
         } else {
-            self.navigationItem.setRightBarButtonItems([likeButton], animated: false)
+            self.navigationItem.setRightBarButtonItems([shareButton, likeButton], animated: false)
         }
+    }
+
+    @objc func share() {
+        UIGraphicsBeginImageContextWithOptions(self.view.frame.size, false, 0.0)
+        self.view.layer.render(in: UIGraphicsGetCurrentContext()!)
+        guard let img = UIGraphicsGetImageFromCurrentImageContext() else {
+            UIGraphicsEndImageContext()
+            return
+        }
+        UIGraphicsEndImageContext()
+
+        let activityViewController = UIActivityViewController(activityItems: [img], applicationActivities: nil)
+        if let popover = activityViewController.popoverPresentationController {
+            popover.barButtonItem = self.navigationItem.rightBarButtonItems?.last
+        }
+        self.present(activityViewController, animated: true, completion: nil)
     }
 
     @objc func openIndex(){
         let indexVC = SutraIndexViewController();
         indexVC.tree = Book.shared.itemOfPath(path!);
         indexVC.defaultExpandLevel = 2;
-        indexVC.isShowSutraButton = false;
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
@@ -184,10 +223,16 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     
     // MARK - UIPageViewControllerDelegate
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
-        
+
         let pageContent = pageViewController.viewControllers![0] as! SutraPurePageContentViewController
         self.path = pageContent.path;
         self.setTitle()
+
+        // 每次翻页完成即保存进度
+        if let path = self.path {
+            Prefers.shared.lastReadPath = path
+            Prefers.shared.lastReadMode = "tree"
+        }
     }
     
     func setPageTitle() {

@@ -22,7 +22,7 @@ class SutraPurePageContentViewController: UIViewController {
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .surface) // 无界沉浸
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
 
         if item == nil {
             item = Book.shared.itemOfPath(path!)
@@ -50,7 +50,7 @@ class SutraPurePageContentViewController: UIViewController {
 
         // 🏛️ 禅意经文排版
         sutraTextView.font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
-        sutraTextView.backgroundColor = SutraDesignTokens.shared.color(for: .surface)   // 层次感
+        sutraTextView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         sutraTextView.textColor = SutraDesignTokens.shared.color(for: .sutraText)
 
         // 增加上下呼吸空间，无缝衔接

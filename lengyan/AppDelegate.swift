@@ -130,8 +130,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let designSystem = SutraDesignTokens.shared
 
         navigationBarAppearance.configureWithOpaqueBackground()
-        navigationBarAppearance.backgroundColor = designSystem.color(for: .navigationBar)
-        navigationBarAppearance.shadowColor = designSystem.color(for: .decorativeGold).withAlphaComponent(0.15)
+        navigationBarAppearance.backgroundColor = designSystem.color(for: .background)
+        navigationBarAppearance.shadowColor = .clear
         navigationBarAppearance.shadowImage = UIImage()
 
         // Set typography for zen aesthetics
@@ -154,7 +154,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
 
         UINavigationBar.appearance().isTranslucent = false
-        UINavigationBar.appearance().backgroundColor = designSystem.color(for: .navigationBar)
+        UINavigationBar.appearance().backgroundColor = designSystem.color(for: .background)
     }
 
     private func setupZenTabBarAppearance() {

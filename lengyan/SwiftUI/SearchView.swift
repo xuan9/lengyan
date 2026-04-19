@@ -65,7 +65,7 @@ struct SearchView: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(SutraDesignTokens.shared.color(for: .card)))
+                    .stroke(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.3), lineWidth: 0.5)
             )
         }
         .padding(.horizontal, 16)

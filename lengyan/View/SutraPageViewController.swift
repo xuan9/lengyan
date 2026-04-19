@@ -15,14 +15,21 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     var path:String?
     var item:[String:String]?
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.edgesForExtendedLayout = [];
         self.automaticallyAdjustsScrollViewInsets = false;
-        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // 翻页控制器底层背景色
+        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 翻页控制器底层背景色
+
+        // 强制导航栏背景与内容同色 — 每次加载都确保生效
+        let bgColor = SutraDesignTokens.shared.color(for: .background)
+        self.navigationController?.navigationBar.barTintColor = bgColor
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         
         if page < 0 {
             self.close()
@@ -37,8 +44,13 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
         // STORYBOARD REMOVED: Using programmatic UI now
         self.setViewControllers([getViewControllerAtIndex(index: page)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
-        
+
         self.setTitle()
+
+        // 打开即保存初始页面进度
+        Prefers.shared.lastReadPath = self.path
+        Prefers.shared.lastReadPageIndex = page
+        Prefers.shared.lastReadMode = "paged"
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -51,6 +63,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         if let path = self.path, page >= 0 {
             Prefers.shared.lastReadPath = path
             Prefers.shared.lastReadPageIndex = page
+            Prefers.shared.lastReadMode = "paged"
         }
     }
     
@@ -100,25 +113,16 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let bookmarkIcon = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
         let bookmarkButton = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: isLiked ? #selector(unlike) : #selector(like))
 
-        // Apply sutra design system colors for a calm, ink-on-paper feel
-        let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
-        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
+        // 按钮文字色保持原有
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        let backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // Seamless scroll background
+        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
-        self.navigationItem.leftBarButtonItem?.tintColor = primaryTextColor
+        self.navigationItem.leftBarButtonItem?.tintColor = secondaryTextColor
         shareButton.tintColor = secondaryTextColor
         bookmarkButton.tintColor = isLiked ? bookmarkColor : secondaryTextColor
 
         // Grouping right buttons: [Share on the far right] [Bookmark]
-        // Note: rightBarButtonItems renders from right to left (index 0 is rightmost)
         self.navigationItem.rightBarButtonItems = [shareButton, bookmarkButton]
-        
-        self.navigationController?.navigationBar.backgroundColor = backgroundColor
-        self.navigationController?.navigationBar.isTranslucent = false
-        // Remove standard hairline boundary to create seamless transition with content based purely on typography weight and whitespace
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
     }
         
     public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
@@ -161,7 +165,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     // Apply Zen design enhancements to the page content
     private func enhancePageViewController(_ pageVC: SutraPageContentViewController) {
         // Apply semantic sutra background for page and table
-        let backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar) // 无界宣纸沉浸色向下透传
+        let backgroundColor = SutraDesignTokens.shared.color(for: .background) // 沉浸无缝，与内容同色
         pageVC.view.backgroundColor = backgroundColor
         pageVC.tableView.backgroundColor = backgroundColor
 
@@ -193,13 +197,20 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     // MARK - UIPageViewControllerDelegate
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
-        
+
         let pageContent = pageViewController.viewControllers![0] as! SutraPage
         self.page = pageContent.pageIndex;
         self.item = Book.shared.index![page];
         self.path = item!["path"]
         self.setPageTitle()
         self.setTitle()
+
+        // 每次翻页完成即保存进度
+        if let path = self.path, page >= 0 {
+            Prefers.shared.lastReadPath = path
+            Prefers.shared.lastReadPageIndex = page
+            Prefers.shared.lastReadMode = "paged"
+        }
     }
     
     func setPageTitle() {

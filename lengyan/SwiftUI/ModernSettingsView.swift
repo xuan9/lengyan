@@ -126,7 +126,7 @@ struct ModernSettingsView: View {
                 .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textPrimary))
             Spacer()
-            ForEach(SutraTheme.allCases, id: \.self) { theme in
+            ForEach(SutraTheme.allCases.filter { $0 != .dark }, id: \.self) { theme in
                 let sel = selectedTheme == theme
                 let bgUIColor = theme == .light
                     ? UIColor(hex: "#FAF8F3") ?? .white
@@ -266,7 +266,7 @@ struct ModernSettingsView: View {
     }
 
     private func openFeedback() {
-        NavigationHelper.openEmail(to: "fuxuan.org@gmail.com", subject: "楞严经App反馈建议")
+        NavigationHelper.pushSwiftUIView(FeedbackView(), title: "提交反馈")
     }
 
     private func openAppStoreRating() {

@@ -62,6 +62,7 @@
 		1BD14222ACCD6D4405D21CD9 /* ReminderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFA4A6A953E96638E51D2B0 /* ReminderManager.swift */; };
 		2AA448A983E8E010891A405D /* AudioPlayerObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6458481F9A0DB2ED9405E8AD /* AudioPlayerObserver.swift */; };
 		2E644A3E969ABBF1FA489817 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5745B1A33297A9705EA9BF /* SearchView.swift */; };
+		2FE84432866C4DDC420FCCB6 /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949148079D94DAE6258ED83C /* FeedbackView.swift */; };
 		3A0EFD749E944D45A68E8406 /* LXGWWenKaiTC-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0D15C20D449143D0846EE8D3 /* LXGWWenKaiTC-Medium.ttf */; };
 		3BF29E40DB63BEF90783469B /* ZenTabHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */; };
 		45AC1A09C5AC4F8399D69AC5 /* ModernSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D89740455934B739168A0A8 /* ModernSettingsView.swift */; };
@@ -82,6 +83,7 @@
 		88E94BDF895BD780748A3751 /* NavigationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B4DEA8ED2555B51E3976F /* NavigationHelper.swift */; };
 		A54C7FF4D3F14D6696855A6A /* LXGWWenKaiTC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 11D34166BFB54B879453E306 /* LXGWWenKaiTC-Regular.ttf */; };
 		A68C1C994600674BC5F7FB08 /* SutraAcknowledgmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */; };
+		B12E4D8E8D3A0321CB2E3F9E /* FeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 363F450E85F99C7CD1D01CDE /* FeedbackService.swift */; };
 		CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */; };
 		CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */; };
 		CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */; };
@@ -178,6 +180,7 @@
 		13E120FD1D27FBFC002B8B1C /* SutraFrontViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraFrontViewController.swift; sourceTree = "<group>"; };
 		13FE31F423678EFD00F632E9 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		1F5745B1A33297A9705EA9BF /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SearchView.swift; path = lengyan/SwiftUI/SearchView.swift; sourceTree = SOURCE_ROOT; };
+		363F450E85F99C7CD1D01CDE /* FeedbackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FeedbackService.swift; path = lengyan/Domain/FeedbackService.swift; sourceTree = SOURCE_ROOT; };
 		4A6C6BB11EE5A4F300B447DC /* lyz1.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = lyz1.m4a; sourceTree = "<group>"; };
 		4AD063651EA244AC00751922 /* ly01.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly01.m4a; sourceTree = "<group>"; };
 		4AD063661EA244AC00751922 /* ly07.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly07.m4a; sourceTree = "<group>"; };
@@ -194,6 +197,7 @@
 		6FB4697959414237B9CE64E8 /* LXGWWenKai-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LXGWWenKai-Medium.ttf"; sourceTree = "<group>"; };
 		722BB3048D834BBB8FC2CE90 /* LXGWWenKai-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LXGWWenKai-Regular.ttf"; sourceTree = "<group>"; };
 		76EC4C008D2B36D010BCB7E9 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SearchService.swift; path = lengyan/Domain/SearchService.swift; sourceTree = SOURCE_ROOT; };
+		949148079D94DAE6258ED83C /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FeedbackView.swift; path = lengyan/SwiftUI/FeedbackView.swift; sourceTree = SOURCE_ROOT; };
 		B09045C2B7C615CA798CD05F /* MediaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaModels.swift; path = lengyan/Domain/MediaModels.swift; sourceTree = SOURCE_ROOT; };
 		CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Accessibility.swift"; sourceTree = "<group>"; };
 		CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Spacing.swift"; sourceTree = "<group>"; };
@@ -328,6 +332,8 @@
 				1390730A1D109193003A3333 /* Products */,
 				76EC4C008D2B36D010BCB7E9 /* SearchService.swift */,
 				1F5745B1A33297A9705EA9BF /* SearchView.swift */,
+				949148079D94DAE6258ED83C /* FeedbackView.swift */,
+				363F450E85F99C7CD1D01CDE /* FeedbackService.swift */,
 			);
 			indentWidth = 4;
 			sourceTree = "<group>";
@@ -679,6 +685,8 @@
 				0D1E4CD8B4C5D928013BAF33 /* AudioManager.swift in Sources */,
 				DA1144258D9B1D9F1F494D8E /* SearchService.swift in Sources */,
 				2E644A3E969ABBF1FA489817 /* SearchView.swift in Sources */,
+				2FE84432866C4DDC420FCCB6 /* FeedbackView.swift in Sources */,
+				B12E4D8E8D3A0321CB2E3F9E /* FeedbackService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

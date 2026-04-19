@@ -39,6 +39,7 @@ class Prefers: NSObject, PrefersProtocol {
     private static let reminderMinuteKey = "reminderMinute"
     private static let lastReadPathKey = "lastReadPath"
     private static let lastReadPageKey = "lastReadPage"
+    private static let lastReadModeKey = "lastReadMode" // "paged" or "tree"
 
     static let shared = Prefers()
 
@@ -132,6 +133,11 @@ class Prefers: NSObject, PrefersProtocol {
     var lastReadPageIndex: Int {
         get { userDefaults.integer(forKey: Prefers.lastReadPageKey) }
         set { userDefaults.set(newValue, forKey: Prefers.lastReadPageKey) }
+    }
+
+    var lastReadMode: String? {
+        get { userDefaults.string(forKey: Prefers.lastReadModeKey) }
+        set { userDefaults.set(newValue, forKey: Prefers.lastReadModeKey) }
     }
 
     func persist() {

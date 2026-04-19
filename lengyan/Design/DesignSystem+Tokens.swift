@@ -291,15 +291,7 @@ public final class SutraDesignTokens {
     }
 
     private func determineAutoTheme() -> SutraTheme {
-        if #available(iOS 13.0, *) {
-            switch UITraitCollection.current.userInterfaceStyle {
-            case .dark: return .dark
-            case .light: return .light
-            default: return .light
-            }
-        } else {
-            return .light
-        }
+        return .light
     }
 
     // MARK: - Theme Management
@@ -309,23 +301,23 @@ public final class SutraDesignTokens {
 
     public func toggleTheme() {
         switch currentTheme {
-        case .light: setTheme(.dark)
+        case .light: setTheme(.sepia)
+        case .sepia: setTheme(.light)
         case .dark: setTheme(.light)
-        case .sepia: setTheme(.light)  // Fallback if somehow sepia is selected
         }
     }
 
-    /// Cycle to the next theme with animation (borrowed from SutraThemeManager)
+    /// Cycle to the next theme with animation
     public func cycleToNextTheme() {
         let nextTheme: SutraTheme
 
         switch currentTheme {
         case .light:
-            nextTheme = .dark
+            nextTheme = .sepia
+        case .sepia:
+            nextTheme = .light
         case .dark:
             nextTheme = .light
-        case .sepia:
-            nextTheme = .light  // Fallback if somehow sepia is selected
         }
 
         setTheme(nextTheme)

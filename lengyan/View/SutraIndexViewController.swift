@@ -11,8 +11,7 @@ import UIKit
 class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
     var onDismiss: (() -> Void)?
-    var isShowSutraButton = true;
-    
+
     fileprivate var treeView: RATreeView!
     
     internal var tree:[String:Any]?, path:String?
@@ -35,7 +34,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         treeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(treeView)
         treeView.rowHeight = 44.0  // iOS 最小触摸目标
-        treeView.separatorColor = SutraDesignTokens.shared.color(for: .sacredGlow)
+        treeView.separatorStyle = RATreeViewCellSeparatorStyleNone
                 
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
         self.treeView.addGestureRecognizer(longPressRecognizer)
@@ -133,8 +132,12 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(tree != nil) {
             self.title = tree?["name"] as? String ?? ""
         }
+        let navBarColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        self.navigationController?.navigationBar.backgroundColor = navBarColor
         self.navigationController?.navigationBar.isTranslucent = false;
-        
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
             style: .plain,
@@ -142,19 +145,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             action: #selector(close)
         )
         self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        
-        let listButton = UIBarButtonItem(image: UIImage(systemName: "list.bullet.rectangle"), style: .plain, target: self, action: #selector(openAsPage))
-        listButton.tintColor = SutraDesignTokens.shared.color(for: .sutraText);
-        
-        if self.isShowSutraButton {
-            let sutraButton = UIBarButtonItem(image: UIImage.init(named: "sutra"), style: .plain, target: self, action: #selector(openSutra))
-            sutraButton.tintColor = SutraDesignTokens.shared.color(for: .sutraText);
-
-            self.navigationItem.setRightBarButtonItems([listButton,sutraButton], animated: false)
-        } else {
-            self.navigationItem.setRightBarButtonItems([listButton], animated: false)
-        }
-
+        self.navigationItem.rightBarButtonItems = nil
     }
     
     
@@ -207,17 +198,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
     }
-    
-    @objc func openSutra(){
-        let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
-        sutraVC.path = self.tree!["path"] as? String
-        self.navigationController?.pushViewController(sutraVC, animated: true)
-    }
-    
-    @objc func openAsPage(){
-        openItem(self.tree!)
-    }
-    
+
     @objc func openAsPageFromCellButton(_ sender:UIButton){
         let cell:UITableViewCell = sender.superview as! UITableViewCell
         let item = self.treeView.item(for: cell)
