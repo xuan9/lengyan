@@ -572,8 +572,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         header.addSubview(dividerLine)
 
         // ── 合并功能行：续读（左）+ 搜索（右）──
-        let toolRowY = header.frame.height - 24
-        let toolRow = UIView(frame: CGRect(x: 0, y: toolRowY, width: width, height: 24))
+        let toolRowY = header.frame.height - 32
+        let toolRow = UIView(frame: CGRect(x: 0, y: toolRowY, width: width, height: 32))
 
         // 续读提示（左侧，仅在有阅读进度时显示）
         if let lastPath = Prefers.shared.lastReadPath {
@@ -581,10 +581,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             if !itemName.isEmpty {
                 let continueLabel = UIButton(type: .system)
                 continueLabel.setTitle("续读·\(itemName) →", for: .normal)
-                continueLabel.titleLabel?.font = .systemFont(ofSize: 12, weight: .regular)
+                continueLabel.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
                 continueLabel.setTitleColor(SutraDesignTokens.shared.color(for: .textSecondary), for: .normal)
                 continueLabel.titleLabel?.textAlignment = .left
-                continueLabel.frame = CGRect(x: 20, y: 0, width: width * 0.6, height: 24)
+                continueLabel.frame = CGRect(x: 20, y: 0, width: width * 0.65, height: 32)
                 continueLabel.contentHorizontalAlignment = .left
                 continueLabel.tag = 9991 // 标记：续读按钮
                 continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
@@ -595,8 +595,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // 搜索图标（右侧，始终显示）
         let searchIcon = UIButton(type: .system)
         searchIcon.setImage(UIImage(systemName: "magnifyingglass"), for: .normal)
-        searchIcon.tintColor = SutraDesignTokens.shared.color(for: .primary)
-        searchIcon.frame = CGRect(x: width - 44, y: 0, width: 44, height: 24)
+        searchIcon.tintColor = SutraDesignTokens.shared.color(for: .decorativeGold)
+        searchIcon.frame = CGRect(x: width - 44, y: 0, width: 44, height: 32)
         searchIcon.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
         toolRow.addSubview(searchIcon)
 

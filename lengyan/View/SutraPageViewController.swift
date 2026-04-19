@@ -130,14 +130,11 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             self.close();
             return nil;
         }
-        if (self.navigationController?.isNavigationBarHidden ?? false){
-            //skip the index pages if nav hiden
-            repeat{
-                index -= 1;
-            } while (!(Book.shared.isItemLeaf(index) ?? true))
-        } else {
+        // 始终跳过非叶子节点（目录页），只翻到有经文的页面
+        repeat {
             index -= 1;
-        }
+            guard index >= 0 else { self.close(); return nil }
+        } while !(Book.shared.isItemLeaf(index) ?? true)
         return getViewControllerAtIndex(index: index)
     }
     
@@ -176,7 +173,6 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
-        
     {
         let pageContent: SutraPage = viewController as! SutraPage
         var index = pageContent.pageIndex
@@ -185,15 +181,13 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
             self.close();
             return nil;
         }
-        
-        if (self.navigationController?.isNavigationBarHidden ?? false){
-            //skip the index pages if nav hiden
-            repeat{
-                index += 1;
-            } while (!(Book.shared.isItemLeaf(index) ?? true))
-        } else {
+
+        // 始终跳过非叶子节点（目录页），只翻到有经文的页面
+        let totalCount = Book.shared.index?.count ?? 0
+        repeat {
             index += 1;
-        }
+            guard index < totalCount else { self.close(); return nil }
+        } while !(Book.shared.isItemLeaf(index) ?? true)
         return getViewControllerAtIndex(index: index)
     }
     

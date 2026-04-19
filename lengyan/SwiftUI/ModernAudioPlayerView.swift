@@ -18,9 +18,7 @@ struct ModernAudioPlayerView: View {
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
                         } else {
-                            ForEach(manager.mediaGroups) { group in
-                                mediaGroupSection(group)
-                            }
+                            flatTrackList
                         }
 
                         // 归属署名 — 安静低调
@@ -90,12 +88,11 @@ struct ModernAudioPlayerView: View {
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(Color(SutraDesignTokens.shared.color(for: .card)))
+                    .fill(Color(SutraDesignTokens.shared.color(for: .background)))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
                             .stroke(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.1), lineWidth: 0.5)
                     )
-                    .shadow(color: Color(SutraDesignTokens.shared.color(for: .shadow)).opacity(0.08), radius: 8, x: 0, y: 2)
             )
             .padding(.horizontal, 16)
             .padding(.bottom, 110)
@@ -116,7 +113,7 @@ struct ModernAudioPlayerView: View {
                 let progress = audioObserver.totalTime > 0 ? CGFloat(audioObserver.currentTime / audioObserver.totalTime) : 0
                 ZStack(alignment: .leading) {
                     Rectangle()
-                        .fill(Color(SutraDesignTokens.shared.color(for: .textTertiary)).opacity(0.15))
+                        .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.12))
                         .frame(height: 5)
                         .cornerRadius(2.5)
 
@@ -147,41 +144,44 @@ struct ModernAudioPlayerView: View {
         }
     }
 
-    // MARK: - Media Group Section
-    private func mediaGroupSection(_ group: MediaGroup) -> some View {
+    // MARK: - Flat Track List (经卷目录)
+    private var flatTrackList: some View {
         VStack(spacing: 0) {
-            ForEach(group.files.indices, id: \.self) { index in
-                let isLast = index == group.files.indices.last
-                let isMantra = group.files[index].hasPrefix("lyz")
+            ForEach(manager.mediaGroups) { group in
+                ForEach(group.files.indices, id: \.self) { index in
+                    let isLast = index == group.files.indices.last
+                    let isMantra = group.files[index].hasPrefix("lyz")
 
-                if isMantra {
-                    Rectangle()
-                        .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.12))
-                        .frame(height: 0.5)
-                        .padding(.horizontal, 36)
-                        .padding(.vertical, 20)
-                }
+                    // 楞嚴咒前加分隔 — 区分经文与咒
+                    if isMantra {
+                        Rectangle()
+                            .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.12))
+                            .frame(height: 0.5)
+                            .padding(.horizontal, 36)
+                            .padding(.vertical, 20)
+                    }
 
-                mediaItemRow(
-                    name: group.names[index],
-                    file: group.files[index],
-                    extension: group.fileExtension,
-                    groupName: group.name
-                )
+                    trackRow(
+                        name: group.names[index],
+                        file: group.files[index],
+                        fileExtension: group.fileExtension
+                    )
 
-                if !isLast && !isMantra {
-                    Rectangle()
-                        .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.06))
-                        .frame(height: 0.5)
-                        .padding(.horizontal, 36)
+                    // 曲目间极细线
+                    if !isLast && !isMantra {
+                        Rectangle()
+                            .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.06))
+                            .frame(height: 0.5)
+                            .padding(.horizontal, 36)
+                    }
                 }
             }
         }
         .padding(.top, 8)
     }
 
-    // MARK: - Media Item Row
-    private func mediaItemRow(name: String, file: String, extension: String, groupName: String) -> some View {
+    // MARK: - Track Row
+    private func trackRow(name: String, file: String, fileExtension ext: String) -> some View {
         let status = manager.downloadStatus[file] ?? .notDownloaded
         let progress = manager.downloadProgress[file] ?? 0
         let isCurrent = audioObserver.currentTrack == name
@@ -190,6 +190,7 @@ struct ModernAudioPlayerView: View {
 
         return VStack(spacing: 0) {
             HStack(spacing: 0) {
+                // 正在播放 — 左侧竹绿竖线
                 if isCurrent {
                     Capsule()
                         .fill(primary)
@@ -206,6 +207,7 @@ struct ModernAudioPlayerView: View {
 
                 Spacer()
 
+                // 右侧状态指示
                 if status == .downloading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())
@@ -222,18 +224,7 @@ struct ModernAudioPlayerView: View {
             }
             .frame(minHeight: 52)
 
-            if status == .downloading {
-                Text("正在下载...")
-                    .font(SutraTypographyBridge.auxiliaryText(weight: .light))
-                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
-                    .padding(.leading, isCurrent ? 17 : 20)
-            } else if status == .error {
-                Text("下载失败，轻触重试")
-                    .font(SutraTypographyBridge.auxiliaryText(weight: .light))
-                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
-                    .padding(.leading, isCurrent ? 17 : 20)
-            }
-
+            // 下载进度条（静默，无文字）
             if status == .downloading {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
@@ -253,7 +244,7 @@ struct ModernAudioPlayerView: View {
         .padding(.horizontal, 36)
         .contentShape(Rectangle())
         .onTapGesture {
-            manager.handleMediaItemTap(name: name, file: file, fileExtension: `extension`)
+            manager.handleMediaItemTap(name: name, file: file, fileExtension: ext)
         }
     }
 
