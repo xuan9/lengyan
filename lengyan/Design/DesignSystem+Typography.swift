@@ -78,6 +78,17 @@ public enum SutraTypographyStyle: String, CaseIterable {
     case buttonLarge
     case buttonMedium
     case label
+
+    /// UI 骨架样式不跟随字号缩放（同 iOS Dynamic Type 行为）
+    var isFixedUI: Bool {
+        switch self {
+        case .navigationTitle, .uiLargeTitle, .uiTitle, .uiHeading,
+             .uiBody, .uiCaption, .uiSmall, .label, .buttonLarge, .buttonMedium:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 // MARK: - Typography Protocol
@@ -144,8 +155,35 @@ struct ChineseFontManager {
         }
     }
 
+    /// Optical Sizing — 字号越大字重越轻，字号越小字重越重
+    /// 保证小字号可读性，大字号不笨重
+    static func adjustedWeight(_ base: UIFont.Weight) -> UIFont.Weight {
+        let weights: [UIFont.Weight] = [.ultraLight, .thin, .light, .regular, .medium, .semibold, .bold, .heavy, .black]
+        guard let idx = weights.firstIndex(of: base) else { return base }
+
+        let shift: Int
+        switch Prefers.shared.fontSizeLevel {
+        case 0: shift = 0      // 特小：基准，字重正好
+        case 1: shift = 0      // 小：不变
+        case 2: shift = -1     // 中：减轻 1 档
+        case 3: shift = -1     // 大：减轻 1 档
+        case 4: shift = -2     // 特大：减轻 2 档
+        default: shift = 0
+        }
+        let newIdx = max(0, min(weights.count - 1, idx + shift))
+        return weights[newIdx]
+    }
+
     static func appropriateUIFont(size: CGFloat, weight: UIFont.Weight, style: SutraTypographyStyle) -> UIFont {
-        return UIFont.systemFont(ofSize: round(size * fontSizeMultiplier), weight: weight)
+        // UI 骨架样式：固定大小和字重
+        // 内容样式：跟随字号缩放 + optical sizing 字重调整
+        if style.isFixedUI {
+            return UIFont.systemFont(ofSize: size, weight: weight)
+        } else {
+            let finalSize = round(size * fontSizeMultiplier)
+            let finalWeight = Self.adjustedWeight(weight)
+            return UIFont.systemFont(ofSize: finalSize, weight: finalWeight)
+        }
     }
 }
 

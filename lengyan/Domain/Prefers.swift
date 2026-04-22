@@ -40,6 +40,7 @@ class Prefers: NSObject, PrefersProtocol {
     private static let lastReadPathKey = "lastReadPath"
     private static let lastReadPageKey = "lastReadPage"
     private static let lastReadModeKey = "lastReadMode" // "paged" or "tree"
+    private static let userLikesKey = "userLikes"
 
     static let shared = Prefers()
 
@@ -53,16 +54,35 @@ class Prefers: NSObject, PrefersProtocol {
         return likesCache
     }
 
+    /// 用户个人收藏（不含系统精选）
+    var userLikes: [String] {
+        return userDefaults.stringArray(forKey: Prefers.userLikesKey) ?? []
+    }
+
     func like(_ path: String) {
         guard !likesCache.contains(path) else { return }
         likesCache.insert(path, at: 0)
         userDefaults.set(likesCache, forKey: Prefers.likesKey)
+
+        // 同步到用户个人收藏
+        var ul = userDefaults.stringArray(forKey: Prefers.userLikesKey) ?? []
+        if !ul.contains(path) {
+            ul.insert(path, at: 0)
+            userDefaults.set(ul, forKey: Prefers.userLikesKey)
+        }
     }
 
     func unlike(_ path: String) {
         if let index = likesCache.firstIndex(of: path) {
             likesCache.remove(at: index)
             userDefaults.set(likesCache, forKey: Prefers.likesKey)
+        }
+
+        // 从用户个人收藏移除
+        var ul = userDefaults.stringArray(forKey: Prefers.userLikesKey) ?? []
+        if let idx = ul.firstIndex(of: path) {
+            ul.remove(at: idx)
+            userDefaults.set(ul, forKey: Prefers.userLikesKey)
         }
     }
 

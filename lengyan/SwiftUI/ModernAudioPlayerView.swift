@@ -23,7 +23,7 @@ struct ModernAudioPlayerView: View {
 
                         // 归属署名 — 安静低调
                         Text("屏东能净协会读诵")
-                            .font(SutraTypographyBridge.auxiliaryText(weight: .light))
+                            .font(SutraTypographyBridge.uiCaption(weight: .light))
                             .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
                             .padding(.top, 36)
                             .padding(.bottom, 8)
@@ -61,7 +61,7 @@ struct ModernAudioPlayerView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     if audioObserver.currentTrack?.isEmpty ?? true {
                         Text("请 轻 触 上 列 卷 名 听 经")
-                            .font(SutraTypographyBridge.auxiliaryText(weight: .light))
+                            .font(SutraTypographyBridge.uiCaption(weight: .light))
                             .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
                             .lineLimit(1)
                     } else {
@@ -105,7 +105,7 @@ struct ModernAudioPlayerView: View {
     private var progressSliderWithTime: some View {
         HStack(spacing: 8) {
             Text(AudioManager.formatTime(audioObserver.currentTime))
-                .font(SutraTypographyBridge.auxiliaryText(weight: .semibold))
+                .font(SutraTypographyBridge.uiCaption(weight: .semibold))
                 .monospacedDigit()
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
 
@@ -138,7 +138,7 @@ struct ModernAudioPlayerView: View {
             .frame(height: 24)
 
             Text(AudioManager.formatTime(audioObserver.totalTime))
-                .font(SutraTypographyBridge.auxiliaryText(weight: .semibold))
+                .font(SutraTypographyBridge.uiCaption(weight: .semibold))
                 .monospacedDigit()
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
         }

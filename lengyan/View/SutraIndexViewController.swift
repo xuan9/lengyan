@@ -42,7 +42,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if tree == nil {
             self.isRootIndex = true;
             self.loadRootTree();
-            
+
             NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(SutraIndexViewController.onApplicationWillTerminate),
@@ -53,6 +53,13 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.treeView.reloadData()
         }
         self.updateHeader()
+
+        // 监听主题变化，即时刷新颜色
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(themeDidChange),
+            name: .themeDidChange,
+            object: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -153,6 +160,15 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         onDismiss?();
         self.navigationController?.isNavigationBarHidden = false
         self.navigationController?.popViewController(animated: true)
+    }
+
+    // MARK: - 主题变化即时刷新
+    @objc private func themeDidChange() {
+        treeView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        updateHeader()
+        // 强制所有 cell 重新渲染以应用新颜色
+        treeView.reloadData()
     }
     
     func menu(){
@@ -352,34 +368,35 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let isLeaf = item["children"] == nil
         let identifier = isLeaf ? "leafCell" : "indexCell"
         var newCell = treeView.dequeueReusableCell(withIdentifier: identifier) as? UITableViewCell;
-        
+
         if (newCell == nil) {
             newCell = UITableViewCell.init(style:.value1,reuseIdentifier:identifier)
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true
             newCell!.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
 
-            // 🏛️ 禅意单元格背景
-            newCell!.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-            let selectedBg = UIView()
-            selectedBg.backgroundColor = SutraDesignTokens.shared.color(for: .sacredGlow)
-            newCell!.selectedBackgroundView = selectedBg
-            
             if (!isLeaf) {
                 let chevronImage = UIImage(systemName: "chevron.right")?
                     .withConfiguration(UIImage.SymbolConfiguration(pointSize: 12, weight: .medium))
                 let bookBtn = UIButton.init(type: .custom)
                 bookBtn.frame = CGRect(x: 0, y: 0.0, width: 38, height: treeView.rowHeight)
                 bookBtn.setImage(chevronImage, for: .normal)
-                bookBtn.tintColor = SutraDesignTokens.shared.color(for: .textTertiary)
                 bookBtn.accessibilityLabel = "chevron"
                 bookBtn.isAccessibilityElement = true
                 bookBtn.addTarget(self, action: #selector(openAsPageFromCellButton(_:)) , for: .touchUpInside)
                 newCell!.accessoryView = bookBtn
             }
-            
         }
-        
+
+        // 每次渲染都刷新颜色（新建 + 复用），确保主题切换即时生效
         let cell = newCell!;
+        cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        let selectedBg = UIView()
+        selectedBg.backgroundColor = SutraDesignTokens.shared.color(for: .sacredGlow)
+        cell.selectedBackgroundView = selectedBg
+        if let btn = cell.accessoryView as? UIButton {
+            btn.tintColor = SutraDesignTokens.shared.color(for: .textTertiary)
+        }
+
         let name = item["name"]! as? String ?? ""
         let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)

@@ -15,96 +15,67 @@ extension Notification.Name {
 }
 
 // MARK: - Favorites Cache
-/// A caching mechanism for favorite items that improves performance by avoiding
-/// repeated data processing when switching to the favorites tab.
-///
-/// The cache:
-/// - Stores processed FavoriteItem objects for 5 minutes
-/// - Automatically invalidates when the favorites list changes
-/// - Provides helper methods for adding/removing favorites with cache management
-/// - Uses notifications to notify other parts of the app about favorites changes
 class FavoritesCache {
     static let shared = FavoritesCache()
 
     private var cachedFavorites: [FavoriteItem] = []
+    private var cachedCurated: [FavoriteItem] = []
     private var lastCachedPaths: Set<String> = []
+    private var lastCachedCuratedPaths: Set<String> = []
     private var lastUpdateTime: Date?
-    private let cacheValidityInterval: TimeInterval = 300 // 5 minutes
+    private var lastCuratedUpdateTime: Date?
+    private let cacheValidityInterval: TimeInterval = 300
 
     private init() {}
 
-    /// Retrieve cached favorites if available and valid
-    /// - Returns: Cached favorites array or nil if cache is invalid/expired
     func getCachedFavorites() -> [FavoriteItem]? {
-        // Check if cache is still valid
         guard let lastUpdate = lastUpdateTime,
-              Date().timeIntervalSince(lastUpdate) < cacheValidityInterval else {
-            return nil
-        }
-
-        // Check if favorites list hasn't changed
-        let currentPaths = Set(Prefers.shared.likes)
-        guard currentPaths == lastCachedPaths else {
-            return nil
-        }
-
+              Date().timeIntervalSince(lastUpdate) < cacheValidityInterval else { return nil }
+        let currentPaths = Set(Prefers.shared.userLikes)
+        guard currentPaths == lastCachedPaths else { return nil }
         return cachedFavorites
     }
 
-    /// Store favorites in cache
-    /// - Parameters:
-    ///   - favorites: Array of processed FavoriteItem objects
-    ///   - paths: Array of favorite paths for validation
+    func getCachedCurated() -> [FavoriteItem]? {
+        guard let lastUpdate = lastCuratedUpdateTime,
+              Date().timeIntervalSince(lastUpdate) < cacheValidityInterval else { return nil }
+        // 系统精选不变，只检查时间
+        return cachedCurated
+    }
+
     func cacheFavorites(_ favorites: [FavoriteItem], paths: [String]) {
         cachedFavorites = favorites
         lastCachedPaths = Set(paths)
         lastUpdateTime = Date()
     }
 
-    /// Invalidate the cache (use when favorites change)
+    func cacheCurated(_ items: [FavoriteItem]) {
+        cachedCurated = items
+        lastCuratedUpdateTime = Date()
+    }
+
     func invalidate() {
         cachedFavorites = []
         lastCachedPaths = []
         lastUpdateTime = nil
     }
 
-    /// Check if cache needs to be refreshed
-    /// - Returns: true if cache is invalid or expired
-    func shouldRefresh() -> Bool {
-        return getCachedFavorites() == nil
-    }
-
-    /// Public method to invalidate cache when favorites are modified externally
-    /// Call this after Prefers.shared.like() or Prefers.shared.unlike()
     static func invalidateOnFavoriteChange() {
         shared.invalidate()
-        print("🔄 Cache invalidated due to favorite change")
     }
 
-    /// Helper method to add a favorite and notify cache
-    /// Use this from other parts of the app when adding favorites
-    /// - Parameter path: The path of the item to favorite
     static func addFavorite(path: String) {
         Prefers.shared.like(path)
         Prefers.shared.persist()
         shared.invalidate()
-
-        // Post notification for other views
         NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
-        print("⭐ Added favorite and invalidated cache: \(path)")
     }
 
-    /// Helper method to remove a favorite and notify cache
-    /// Use this from other parts of the app when removing favorites
-    /// - Parameter path: The path of the item to unfavorite
     static func removeFavorite(path: String) {
         Prefers.shared.unlike(path)
         Prefers.shared.persist()
         shared.invalidate()
-
-        // Post notification for other views
         NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
-        print("🗑️ Removed favorite and invalidated cache: \(path)")
     }
 }
 
@@ -116,43 +87,58 @@ struct FavoriteItem: Identifiable {
     let hasChildren: Bool
 }
 
+// MARK: - Tab 枚举
+private enum FavoritesTab: String, CaseIterable {
+    case personal = "收藏"
+    case curated = "精选"
+}
+
 struct ModernFavoritesView: View {
+    @State private var selectedTab: FavoritesTab = .personal
     @State private var favorites: [FavoriteItem] = []
+    @State private var curatedItems: [FavoriteItem] = []
     @State private var isLoading = true
+    @State private var themeVersion: Int = 0
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                ZenTabHeaderView(titleKey: "star_tab_title", symbolName: "bookmark")
+        VStack(spacing: 0) {
+            ZenTabHeaderView(titleKey: "star_tab_title", symbolName: "bookmark")
 
+            // 顶部 Tab 切换 — 轻盈透气
+            HStack(spacing: 0) {
+                ForEach(FavoritesTab.allCases, id: \.self) { tab in
+                    Button(action: { selectedTab = tab }) {
+                        VStack(spacing: 4) {
+                            Text(tab.rawValue)
+                                .font(.system(size: 14, weight: selectedTab == tab ? .regular : .light))
+                                .foregroundColor(selectedTab == tab
+                                    ? SutraDesignSystem.color(.primary)
+                                    : SutraDesignSystem.color(.textSecondary))
+                            Rectangle()
+                                .fill(selectedTab == tab
+                                    ? SutraDesignSystem.color(.primary).opacity(0.5)
+                                    : Color.clear)
+                                .frame(width: 24, height: 0.8)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.horizontal, 40)
+            .padding(.bottom, 6)
+
+            // 内容
+            ScrollView {
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())
-                        .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
-                } else if favorites.isEmpty {
-                    // 🌺 禅意空状态 - 莲花图标 + 脉动动画
-                    VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL)) {
-                        Image(systemName: "heart.text.square")
-                            .font(.system(size: 72, weight: .ultraLight))
-                            .foregroundColor(SutraDesignSystem.color(.primary).opacity(0.5))
-
-                        Text(NSLocalizedString("no_favorites", comment: ""))
-                            .font(SutraTypographyBridge.uiTitle(weight: .medium))
-                            .foregroundColor(SutraDesignSystem.color(.textSecondary))
-
-                        Text(NSLocalizedString("no_favorites_description", comment: ""))
-                            .font(SutraTypographyBridge.uiBody())
-                            .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.6))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(6)
-                            .padding(.horizontal, 40)
-                    }
-                    .padding(.top, 80)
+                        .padding(.top, 60)
+                } else if currentItems.isEmpty {
+                    emptyView
                 } else {
-                    // 经签列表 — 卡片充分利用屏幕宽度
                     VStack(spacing: 14) {
-                        ForEach(favorites) { favorite in
-                            favoriteCard(favorite)
+                        ForEach(currentItems) { item in
+                            favoriteCard(item)
                         }
                     }
                     .padding(.horizontal, 10)
@@ -160,35 +146,69 @@ struct ModernFavoritesView: View {
 
                 Spacer(minLength: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL))
             }
-            .padding(SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingLG))
         }
         .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
         .onAppear {
-            loadFavorites()
-            // Hide nav bar when returning to favorites root
+            loadAll()
             hideNavBar()
         }
         .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
-            // Refresh cache when favorites change from other views
             FavoritesCache.invalidateOnFavoriteChange()
-            loadFavorites()
+            loadAll()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
+            themeVersion += 1
         }
     }
 
-    /// 翠竹经签 — 通透如玉，绿意如竹
+    private var currentItems: [FavoriteItem] {
+        selectedTab == .personal ? favorites : curatedItems
+    }
+
+    private var emptyView: some View {
+        VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL)) {
+            Image(systemName: selectedTab == .personal ? "heart.text.square" : "text.page.slash")
+                .font(.system(size: 72, weight: .ultraLight))
+                .foregroundColor(SutraDesignSystem.color(.primary).opacity(0.5))
+
+            Text(selectedTab == .personal
+                ? NSLocalizedString("no_favorites", comment: "")
+                : "暂无精选内容")
+                .font(.system(size: 14, weight: .light))
+                .foregroundColor(SutraDesignSystem.color(.textSecondary))
+
+            Text(selectedTab == .personal
+                ? "阅读时轻触收藏按钮即可收藏"
+                : "经典段落由编者精选")
+                .font(.system(size: 13, weight: .light))
+                .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.5))
+
+            if selectedTab == .personal {
+                Button(action: { selectedTab = .curated }) {
+                    Text("先看看精选 →")
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(SutraDesignSystem.color(.primary).opacity(0.7))
+                }
+                .padding(.top, 4)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 40)
+        .padding(.top, 60)
+    }
+
+    // MARK: - 卡片
     private func favoriteCard(_ favorite: FavoriteItem) -> some View {
         let tabGreen = Color(SutraDesignTokens.shared.color(for: .primary))
 
         return HStack(spacing: 0) {
-            // 左侧翠竹竖线 — TabBar 同款绿，实体如竹
             Capsule()
                 .fill(tabGreen.opacity(0.7))
                 .frame(width: 3)
                 .padding(.vertical, 8)
 
             VStack(alignment: .leading, spacing: 6) {
-                // 经文 — 同首页科判字号 (uiBody = 18pt)
                 Text(favorite.content)
                     .font(SutraTypographyBridge.uiBody(weight: .regular))
                     .foregroundColor(SutraDesignSystem.sutraTextColor())
@@ -196,7 +216,6 @@ struct ModernFavoritesView: View {
                     .lineSpacing(6)
                     .multilineTextAlignment(.leading)
 
-                // 出处 — 右下角淡雅落款
                 HStack {
                     Spacer()
                     Text(favorite.title)
@@ -230,136 +249,92 @@ struct ModernFavoritesView: View {
         }
     }
 
-    private func loadFavorites() {
+    // MARK: - 数据加载
+    private func loadAll() {
         isLoading = true
 
-        // Check cache first
         if let cached = FavoritesCache.shared.getCachedFavorites() {
-            print("📦 Using cached favorites (count: \(cached.count))")
-            self.favorites = cached
-            self.isLoading = false
-            return
+            favorites = cached
+        } else {
+            DispatchQueue.global(qos: .userInitiated).async {
+                let paths = Prefers.shared.userLikes
+                let items = self.loadItems(from: paths)
+                FavoritesCache.shared.cacheFavorites(items, paths: paths)
+                DispatchQueue.main.async {
+                    self.favorites = items
+                }
+            }
         }
 
-        print("🔄 Cache miss or invalid, loading favorites...")
-        // Move heavy processing to background queue
-        DispatchQueue.global(qos: .userInitiated).async {
-            // Load favorites from Prefers.shared.likes
-            let likedPaths = Prefers.shared.likes
-            var loadedFavorites: [FavoriteItem] = []
-
-            for path in likedPaths {
-                let item = Book.shared.itemOfPath(path)
-                let title = item["name"] as? String ?? NSLocalizedString("unknown_sutra", comment: "")
-                let hasChildren = item["children"] != nil
-
-                // Extract content more efficiently
-                let content = self.extractContentEfficiently(from: item)
-
-                let favorite = FavoriteItem(
-                    path: path,
-                    title: title,
-                    content: content,
-                    hasChildren: hasChildren
-                )
-                loadedFavorites.append(favorite)
+        if let cached = FavoritesCache.shared.getCachedCurated() {
+            curatedItems = cached
+        } else {
+            DispatchQueue.global(qos: .userInitiated).async {
+                let items = self.loadItems(from: DEFAULT_STARTS)
+                FavoritesCache.shared.cacheCurated(items)
+                DispatchQueue.main.async {
+                    self.curatedItems = items
+                }
             }
+        }
 
-            // Sort favorites by title for better organization
-            loadedFavorites.sort { $0.title < $1.title }
-
-            // Cache the results
-            FavoritesCache.shared.cacheFavorites(loadedFavorites, paths: likedPaths)
-            print("💾 Cached \(loadedFavorites.count) favorites")
-
-            DispatchQueue.main.async {
-                self.favorites = loadedFavorites
-                self.isLoading = false
-            }
+        // 简单判断加载完成
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.isLoading = false
         }
     }
 
-    private func extractContentEfficiently(from item: [String: Any]) -> String {
-        // 直接用 maxLength 截断，避免 get(recursive) 拼接全部经文再截取
-        let rawContent = Book.shared.getSutra(item, maxLength: 80)
+    private func loadItems(from paths: [String]) -> [FavoriteItem] {
+        var items: [FavoriteItem] = []
+        for path in paths {
+            let item = Book.shared.itemOfPath(path)
+            let title = item["name"] as? String ?? NSLocalizedString("unknown_sutra", comment: "")
+            let hasChildren = item["children"] != nil
+            let content = extractContentEfficiently(from: item)
+            items.append(FavoriteItem(path: path, title: title, content: content, hasChildren: hasChildren))
+        }
+        items.sort { $0.title < $1.title }
+        return items
+    }
 
+    private func extractContentEfficiently(from item: [String: Any]) -> String {
+        let rawContent = Book.shared.getSutra(item, maxLength: 80)
         let maxCount = 50
         var result = ""
         result.reserveCapacity(maxCount + 3)
         var charCount = 0
 
         for char in rawContent {
-            if char == "\n" || char == " " || char == "\t" {
-                continue
-            }
-
+            if char == "\n" || char == " " || char == "\t" { continue }
             result.append(char)
             charCount += 1
-
-            // 达到目标长度立即停止，避免处理无用字符
-            if charCount >= maxCount {
-                break
-            }
+            if charCount >= maxCount { break }
         }
-
-        // 添加省略号指示（仅在截断时）
         if charCount >= maxCount && rawContent.count > maxCount {
             result.append("...")
         }
-
         return result.isEmpty ? NSLocalizedString("no_content_preview", comment: "") : result
     }
 
-
-    private func formatDate(from path: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy年MM月dd日"
-        return formatter.string(from: Date())
-    }
-
-    private func removeFavorite(_ favorite: FavoriteItem) {
-        Prefers.shared.unlike(favorite.path)
-        Prefers.shared.persist()
-
-        // Remove from local array and update UI
-        favorites.removeAll { $0.path == favorite.path }
-
-        // Invalidate cache since favorites list changed
-        FavoritesCache.shared.invalidate()
-
-        // Post notification so other views can update
-        NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
-
-        print("🗑️ Removed favorite, invalidated cache, and notified other views")
-    }
-
+    // MARK: - 导航
     private func navigateToReading(_ favorite: FavoriteItem) {
-        print("Navigate to reading: \(favorite.path)")
-
-        // Find the navigation controller from the UIKit hierarchy
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let window = windowScene.windows.first,
            let tabBarController = window.rootViewController as? UITabBarController,
            let navigationController = tabBarController.selectedViewController as? UINavigationController {
 
             if favorite.hasChildren {
-                print("Open sutra with chapters: \(favorite.title)")
                 openSutra(favorite.path, navigationController: navigationController)
             } else {
-                print("Open specific page: \(favorite.title)")
                 openSpecificPage(favorite.path, navigationController: navigationController)
             }
-        } else {
-            print("Error: Could not find navigation controller")
         }
     }
 
     private func openSutra(_ path: String, navigationController: UINavigationController) {
-        // Get the title for this sutra item
         let item = Book.shared.itemOfPath(path)
         let title = item["name"] as? String ?? NSLocalizedString("sutra", comment: "")
 
-        // Force navigation bar to be visible
         navigationController.setNavigationBarHidden(false, animated: false)
 
         let sutraVC = SutraPurePageViewController(
@@ -377,8 +352,6 @@ struct ModernFavoritesView: View {
         }
 
         navigationController.pushViewController(sutraVC, animated: true)
-
-        // Force navigation bar visibility after push
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             navigationController.setNavigationBarHidden(false, animated: false)
             sutraVC.navigationController?.setNavigationBarHidden(false, animated: false)
@@ -386,15 +359,12 @@ struct ModernFavoritesView: View {
     }
 
     private func openSpecificPage(_ path: String, navigationController: UINavigationController) {
-        // Find the page index for this path
         if let pageIndex = Book.shared.index?.firstIndex(where: { item in
             item["path"] as? String == path
         }) {
-            // Get the title for this page
             let item = Book.shared.index?[pageIndex]
             let title = item?["name"] as? String ?? NSLocalizedString("sutra", comment: "")
 
-            // Force navigation bar to be visible
             navigationController.setNavigationBarHidden(false, animated: false)
 
             let pageVC = SutraPageViewController(
@@ -407,14 +377,10 @@ struct ModernFavoritesView: View {
             pageVC.hidesBottomBarWhenPushed = true
 
             navigationController.pushViewController(pageVC, animated: true)
-
-            // Force navigation bar visibility after push
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 navigationController.setNavigationBarHidden(false, animated: false)
                 pageVC.navigationController?.setNavigationBarHidden(false, animated: false)
             }
-        } else {
-            print("Error: Could not find page index for path: \(path)")
         }
     }
 

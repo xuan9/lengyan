@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct ModernSettingsView: View {
     @State private var fontSizeLevel: Int = Prefers.shared.fontSizeLevel
@@ -41,7 +42,7 @@ struct ModernSettingsView: View {
                     zenDivider
                     aboutItem("提交反馈", icon: "envelope", action: openFeedback)
                     zenDivider
-                    aboutItem("评价 App", icon: "star", action: openAppStoreRating)
+                    aboutItem("评价 App", icon: "star.bubble", action: openAppStoreRating)
                     zenDivider
                     versionRow
                 }
@@ -270,7 +271,8 @@ struct ModernSettingsView: View {
     }
 
     private func openAppStoreRating() {
-        NavigationHelper.openAppStoreReview(appId: "YOUR_APP_ID")
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+        SKStoreReviewController.requestReview(in: scene)
     }
 }
 

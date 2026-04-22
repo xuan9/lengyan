@@ -259,7 +259,7 @@ class Book: NSObject {
         
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.alignment = .center
+        stackView.alignment = .fill
         stackView.spacing = 2
         
         if parent != nil && !parentTitle.isEmpty {
@@ -305,6 +305,12 @@ class Book: NSObject {
         titleLabel.attributedText = attr
         
         stackView.addArrangedSubview(titleLabel)
+
+        // 让标题填满左右按钮之间的可用空间：大宽度 + flexibleWidth
+        // 导航栏会自动裁剪到实际可用宽度
+        stackView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44)
+        stackView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
         return stackView
     }
     

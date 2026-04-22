@@ -33,7 +33,7 @@ class ReminderManager {
         let content = UNMutableNotificationContent()
         content.title = "楞严经"
         content.body = "是时候静心诵读了"
-        content.sound = .default()
+        content.sound = nil  // 默认静音
         var dc = DateComponents()
         dc.hour = Prefers.shared.reminderHour
         dc.minute = Prefers.shared.reminderMinute

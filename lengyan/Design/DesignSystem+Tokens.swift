@@ -266,7 +266,7 @@ public final class SutraDesignTokens {
     private init() {}
 
     // MARK: - Current Theme
-    public var currentTheme: SutraTheme = .light {
+    public var currentTheme: SutraTheme = .sepia {
         didSet {
             UserDefaults.standard.set(currentTheme.rawValue, forKey: "selectedTheme")
             applyTheme(currentTheme)
@@ -291,7 +291,7 @@ public final class SutraDesignTokens {
     }
 
     private func determineAutoTheme() -> SutraTheme {
-        return .light
+        return .sepia
     }
 
     // MARK: - Theme Management
@@ -439,6 +439,23 @@ public final class SutraDesignTokens {
         case .spacingLG, .spacingXL, .spacingXXL, .spacingComponentLG, .spacingComponentXL, .spacingComponentXXL:
             return SutraSpacing.Base.lg
         }
+    }
+
+    // MARK: - Responsive Spacing — 5档手动调校
+    /// 根据用户字号档位缩放间距，每档人工验证过视觉平衡
+    /// - Parameter base: 基准间距值（中等字号时的值）
+    /// - Returns: 缩放后的间距值
+    public func responsiveSpacing(_ base: CGFloat) -> CGFloat {
+        let scale: CGFloat
+        switch Prefers.shared.fontSizeLevel {
+        case 0: scale = 0.88   // 特小
+        case 1: scale = 0.94   // 小
+        case 2: scale = 1.0    // 中（基准）
+        case 3: scale = 1.08   // 大
+        case 4: scale = 1.15   // 特大
+        default: scale = 1.0
+        }
+        return round(base * scale)
     }
 
     // MARK: - Shape Access
