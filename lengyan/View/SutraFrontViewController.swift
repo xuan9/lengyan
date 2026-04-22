@@ -908,10 +908,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(sutraVC, animated: true)
-        // push 完成后确保 hidesBarsOnSwipe 生效
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.navigationController?.hidesBarsOnSwipe = true
-        }
     }
     func openContent(_ item: [String : Any]){
         let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl,
@@ -928,9 +924,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(pageVC, animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.navigationController?.hidesBarsOnSwipe = true
-        }
     }
     func openIndex(_ item: [String:Any]){
         let indexVC = SutraIndexViewController();

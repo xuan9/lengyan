@@ -25,11 +25,41 @@ final class ReaderViewController: UIViewController {
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         
+        // 返回按钮
+        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.left"), style: .plain, target: self, action: #selector(close))
-        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
+        self.navigationItem.leftBarButtonItem?.tintColor = secondaryColor
         
+        // 导航栏外观 — 与内容同色，按钮无背景色块
+        let navColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = navColor
+        appearance.shadowColor = .clear
+        let btnAppearance = UIBarButtonItemAppearance(style: .plain)
+        btnAppearance.normal.titleTextAttributes = [.foregroundColor: secondaryColor]
+        appearance.buttonAppearance = btnAppearance
+        appearance.doneButtonAppearance = btnAppearance
+        self.navigationController?.navigationBar.standardAppearance = appearance
+        self.navigationController?.navigationBar.compactAppearance = appearance
+        self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        self.navigationController?.navigationBar.isTranslucent = false
 
         setupContentView()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tabBarController?.tabBar.isHidden = true
+        // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+        self.navigationController?.hidesBarsOnSwipe = true
+        self.navigationController?.hidesBarsWhenVerticallyCompact = true
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.tabBarController?.tabBar.isHidden = false
     }
     
     override func viewDidLayoutSubviews() {

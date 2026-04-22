@@ -45,6 +45,10 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = true
+        // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+        self.navigationController?.hidesBarsOnSwipe = true
+        self.navigationController?.hidesBarsWhenVerticallyCompact = true
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -73,24 +77,22 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             action: #selector(close)
         )
         self.navigationItem.leftBarButtonItem?.tintColor = secondaryColor
-        self.navigationItem.leftBarButtonItem?.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
 
-        // 导航栏背景统一
+        // 导航栏背景统一 — 使用 UINavigationBarAppearance 确保按钮无背景色块
         let navBarColor = SutraDesignTokens.shared.color(for: .background)
-        self.navigationController?.navigationBar.barTintColor = navBarColor
-        self.navigationController?.navigationBar.backgroundColor = navBarColor
-        self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
-
-        // 设置 UINavigationBarAppearance — 透明背景，按钮无色块
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = navBarColor
         appearance.shadowColor = .clear
+        // 按钮外观：plain 样式，无背景色块
+        let btnAppearance = UIBarButtonItemAppearance(style: .plain)
+        btnAppearance.normal.titleTextAttributes = [.foregroundColor: secondaryColor]
+        appearance.buttonAppearance = btnAppearance
+        appearance.doneButtonAppearance = btnAppearance
         self.navigationController?.navigationBar.standardAppearance = appearance
         self.navigationController?.navigationBar.compactAppearance = appearance
         self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        self.navigationController?.navigationBar.isTranslucent = false
 
         self.setPageTitle()
         self.updateStarButton()
@@ -109,7 +111,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             action: isLiked ? #selector(unlike) : #selector(like)
         )
         likeButton.tintColor = isLiked ? bookmarkColor : secondaryColor
-        likeButton.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
 
         // 分享按钮
         let shareButton = UIBarButtonItem(
@@ -119,7 +120,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             action: #selector(share)
         )
         shareButton.tintColor = secondaryColor
-        shareButton.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
 
         if self.isShowIndexButton {
             let item = Book.shared.itemOfPath(self.path!)
@@ -131,7 +131,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
                     action: #selector(openIndex)
                 )
                 indexButton.tintColor = secondaryColor
-                indexButton.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
                 self.navigationItem.setRightBarButtonItems([indexButton, shareButton, likeButton], animated: false)
             } else {
                 self.navigationItem.setRightBarButtonItems([shareButton, likeButton], animated: false)

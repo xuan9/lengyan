@@ -29,6 +29,12 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = bgColor
         appearance.shadowColor = .clear
+        // 按钮外观：plain 样式，无背景色块
+        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        let btnAppearance = UIBarButtonItemAppearance(style: .plain)
+        btnAppearance.normal.titleTextAttributes = [.foregroundColor: secondaryColor]
+        appearance.buttonAppearance = btnAppearance
+        appearance.doneButtonAppearance = btnAppearance
         self.navigationController?.navigationBar.standardAppearance = appearance
         self.navigationController?.navigationBar.compactAppearance = appearance
         self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
@@ -58,6 +64,15 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     override var prefersStatusBarHidden: Bool {
         return navigationController?.isNavigationBarHidden ?? false
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tabBarController?.tabBar.isHidden = true
+        // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+        self.navigationController?.hidesBarsOnSwipe = true
+        self.navigationController?.hidesBarsWhenVerticallyCompact = true
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -122,11 +137,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
         self.navigationItem.leftBarButtonItem?.tintColor = secondaryTextColor
-        self.navigationItem.leftBarButtonItem?.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
         shareButton.tintColor = secondaryTextColor
-        shareButton.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
         bookmarkButton.tintColor = isLiked ? bookmarkColor : secondaryTextColor
-        bookmarkButton.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
 
         // Grouping right buttons: [Share on the far right] [Bookmark]
         self.navigationItem.rightBarButtonItems = [shareButton, bookmarkButton]
