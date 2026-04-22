@@ -12,7 +12,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     // STORYBOARD REMOVED: Using programmatic UI now
     var onDismiss: (() -> Void)?
     var page:Int = 0
-    
+
     var path:String?
     var item:[String:String]?
 
@@ -20,16 +20,19 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        self.edgesForExtendedLayout = [];
         self.automaticallyAdjustsScrollViewInsets = false;
         self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 翻页控制器底层背景色
 
-        // 强制导航栏背景与内容同色 — 每次加载都确保生效
+        // 导航栏 — 与内容同色，无边界，按钮无背景色块
         let bgColor = SutraDesignTokens.shared.color(for: .background)
-        self.navigationController?.navigationBar.barTintColor = bgColor
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = bgColor
+        appearance.shadowColor = .clear
+        self.navigationController?.navigationBar.standardAppearance = appearance
+        self.navigationController?.navigationBar.compactAppearance = appearance
+        self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
         self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         
         if page < 0 {
             self.close()
@@ -59,6 +62,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        self.tabBarController?.tabBar.isHidden = false
         // 保存阅读进度（仅在有效页面时）
         if let path = self.path, page >= 0 {
             Prefers.shared.lastReadPath = path
@@ -113,13 +117,16 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let bookmarkIcon = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
         let bookmarkButton = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: isLiked ? #selector(unlike) : #selector(like))
 
-        // 按钮文字色保持原有
+        // 按钮颜色
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
         self.navigationItem.leftBarButtonItem?.tintColor = secondaryTextColor
+        self.navigationItem.leftBarButtonItem?.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
         shareButton.tintColor = secondaryTextColor
+        shareButton.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
         bookmarkButton.tintColor = isLiked ? bookmarkColor : secondaryTextColor
+        bookmarkButton.setBackgroundImage(UIImage(), for: .normal, barMetrics: .default)
 
         // Grouping right buttons: [Share on the far right] [Bookmark]
         self.navigationItem.rightBarButtonItems = [shareButton, bookmarkButton]

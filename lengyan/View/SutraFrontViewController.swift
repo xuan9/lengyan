@@ -828,6 +828,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             // 科判式阅读
             let sutraVC = SutraPurePageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
             sutraVC.path = lastPath
+            sutraVC.hidesBottomBarWhenPushed = true
             sutraVC.onDismiss = { [weak self] in
                 self?.navigationController?.setNavigationBarHidden(false, animated: false)
             }
@@ -835,12 +836,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         } else {
             // 卷式翻页阅读
             let pageVC = SutraPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+            pageVC.hidesBottomBarWhenPushed = true
             if let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == lastPath }) {
                 pageVC.page = pageIndex
             } else {
                 // path 找不到对应页，fallback 到科判式
                 let sutraVC = SutraPurePageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
                 sutraVC.path = lastPath
+                sutraVC.hidesBottomBarWhenPushed = true
                 sutraVC.onDismiss = { [weak self] in
                     self?.navigationController?.setNavigationBarHidden(false, animated: false)
                 }
@@ -899,9 +902,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func openSutraOfPath(path:String){
         let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
         sutraVC.path = path
+        sutraVC.hidesBottomBarWhenPushed = true
         sutraVC.onDismiss = {
             self.navigationController?.setNavigationBarHidden(false, animated: false)
         }
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(sutraVC, animated: true)
         // push 完成后确保 hidesBarsOnSwipe 生效
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -913,6 +918,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                                                    navigationOrientation:.horizontal,
                                                    options: .none)
         let path:String = item["path"] as! String
+        pageVC.hidesBottomBarWhenPushed = true
         // TICK()
         pageVC.page=Book.shared.index!.index(where: { (
             item) -> Bool in
@@ -920,12 +926,12 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         })!;
         // TOCK()
 
-
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(pageVC, animated: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.navigationController?.hidesBarsOnSwipe = true
         }
-    }    
+    }
     func openIndex(_ item: [String:Any]){
         let indexVC = SutraIndexViewController();
         indexVC.tree = item;
@@ -933,6 +939,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         indexVC.onDismiss = {
             } as (() -> Void)
         
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
@@ -940,6 +947,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let content = Book.shared.getSutraAttributeString(text: Book.shared.getChapterSutra(chapter: chapter))
         let title = NSLocalizedString("chapter_\(chapter + 1)", comment: "chapter_name");
         let pageVC = ReaderViewController.init(title: title, content: content)
+        pageVC.hidesBottomBarWhenPushed = true
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(pageVC, animated: true)
     }
 

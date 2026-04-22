@@ -25,9 +25,8 @@ final class ReaderViewController: UIViewController {
         self.navigationController?.hidesBarsOnSwipe = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: " ❬   ", style: .plain, target: self, action: #selector(close))
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.left"), style: .plain, target: self, action: #selector(close))
         self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        self.navigationItem.leftBarButtonItem?.setBackButtonBackgroundImage(UIImage(systemName: "chevron.left"), for: .normal, barMetrics: .default)
         
 
         setupContentView()

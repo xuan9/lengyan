@@ -151,7 +151,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             target: self,
             action: #selector(close)
         )
-        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textPrimary)
+        self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textSecondary)
         self.navigationItem.rightBarButtonItems = nil
     }
     
@@ -267,6 +267,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
 
+        pageVC.hidesBottomBarWhenPushed = true
         self.navigationController?.pushViewController(pageVC, animated: true)
     }
     
@@ -288,6 +289,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
 
+        indexVC.hidesBottomBarWhenPushed = true
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     

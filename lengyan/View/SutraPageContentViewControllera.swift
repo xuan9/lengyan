@@ -403,7 +403,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         navigationController.navigationBar.isTranslucent = false
 
         let appearance = UINavigationBarAppearance()
-        // 不调用 configureWithOpaqueBackground，避免给按钮加白色背景
+        appearance.configureWithTransparentBackground()
         appearance.backgroundColor = SutraDesignTokens.shared.color(for: .background)
 
         appearance.shadowColor = .clear

@@ -92,7 +92,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Setup Favorites Tab
         let modernFavorites = ModernFavoritesView()
-        let favoritesHostingController = UIHostingController(rootView: modernFavorites)
+        let favoritesHostingController = FavoritesHostingController(rootView: modernFavorites)
         let favoritesNavController = UINavigationController(rootViewController: favoritesHostingController)
         favoritesNavController.tabBarItem = UITabBarItem(
             title: NSLocalizedString("star_tab_title", comment: ""),

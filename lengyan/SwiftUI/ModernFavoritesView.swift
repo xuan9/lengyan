@@ -251,9 +251,20 @@ struct ModernFavoritesView: View {
 
     // MARK: - 数据加载
     private func loadAll() {
+        // 缓存全部命中时直接显示，不闪 loading
+        let cachedPersonal = FavoritesCache.shared.getCachedFavorites()
+        let cachedCurated = FavoritesCache.shared.getCachedCurated()
+
+        if cachedPersonal != nil && cachedCurated != nil {
+            favorites = cachedPersonal!
+            curatedItems = cachedCurated!
+            isLoading = false
+            return
+        }
+
         isLoading = true
 
-        if let cached = FavoritesCache.shared.getCachedFavorites() {
+        if let cached = cachedPersonal {
             favorites = cached
         } else {
             DispatchQueue.global(qos: .userInitiated).async {
@@ -266,7 +277,7 @@ struct ModernFavoritesView: View {
             }
         }
 
-        if let cached = FavoritesCache.shared.getCachedCurated() {
+        if let cached = cachedCurated {
             curatedItems = cached
         } else {
             DispatchQueue.global(qos: .userInitiated).async {
@@ -274,13 +285,9 @@ struct ModernFavoritesView: View {
                 FavoritesCache.shared.cacheCurated(items)
                 DispatchQueue.main.async {
                     self.curatedItems = items
+                    self.isLoading = false
                 }
             }
-        }
-
-        // 简单判断加载完成
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.isLoading = false
         }
     }
 
@@ -345,17 +352,13 @@ struct ModernFavoritesView: View {
         sutraVC.path = path
         sutraVC.isShowIndexButton = true
         sutraVC.title = title
-        sutraVC.hidesBottomBarWhenPushed = true
 
         sutraVC.onDismiss = {
             navigationController.setNavigationBarHidden(true, animated: false)
         }
 
+        navigationController.setNavigationBarHidden(false, animated: false)
         navigationController.pushViewController(sutraVC, animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            navigationController.setNavigationBarHidden(false, animated: false)
-            sutraVC.navigationController?.setNavigationBarHidden(false, animated: false)
-        }
     }
 
     private func openSpecificPage(_ path: String, navigationController: UINavigationController) {
@@ -374,13 +377,8 @@ struct ModernFavoritesView: View {
             )
             pageVC.page = pageIndex
             pageVC.title = title
-            pageVC.hidesBottomBarWhenPushed = true
 
             navigationController.pushViewController(pageVC, animated: true)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                navigationController.setNavigationBarHidden(false, animated: false)
-                pageVC.navigationController?.setNavigationBarHidden(false, animated: false)
-            }
         }
     }
 
@@ -391,5 +389,13 @@ struct ModernFavoritesView: View {
            let navigationController = tabBarController.selectedViewController as? UINavigationController {
             navigationController.setNavigationBarHidden(true, animated: false)
         }
+    }
+}
+
+// MARK: - HostingController — viewWillAppear 时立即隐藏导航栏，避免返回时闪烁
+class FavoritesHostingController: UIHostingController<ModernFavoritesView> {
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
     }
 }

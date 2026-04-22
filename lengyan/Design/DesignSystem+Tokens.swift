@@ -126,7 +126,7 @@ struct LightTheme: SutraThemeProtocol {
         case .sacredGlow: return UIColor(hex: "#FFE4B5") ?? .systemYellow     // 佛光柔辉 - 选中状态柔光
 
         // 🏛️ Sacred UI System Colors - 神圣界面系统色
-        case .navigationBar: return UIColor(hex: "#FFF8E7") ?? .white      // 佛光暖黄 - 导航栏神圣光辉
+        case .navigationBar: return UIColor(hex: "#FAF8F3") ?? .white      // 同背景色 - 无边界沉浸
         case .tabBar: return UIColor(hex: "#FAF7F0") ?? .white            // 宣纸米色 - 标签栏温润如玉
         case .separator: return UIColor(hex: "#E8DCC4") ?? .lightGray     // 宣纸纹 - 分隔符自然纹理
         case .bookmarkStar: return UIColor(hex: "#B8860B") ?? .systemYellow // 鎏金星 - 书签星如金子般珍贵
@@ -373,8 +373,11 @@ public final class SutraDesignTokens {
                 .font: UIFont.systemFont(ofSize: 34, weight: .bold)
             ]
 
-            // Subtle shadow for depth
-            navBarAppearance.shadowColor = colors.textPrimary.withAlphaComponent(0.1)
+            // 按钮背景透明 — 沉浸感，无色块感
+            let buttonAppearance = UIBarButtonItemAppearance(style: .plain)
+            buttonAppearance.normal.titleTextAttributes = [.foregroundColor: self.color(for: .textSecondary)]
+            navBarAppearance.buttonAppearance = buttonAppearance
+            navBarAppearance.doneButtonAppearance = buttonAppearance
 
             UINavigationBar.appearance().standardAppearance = navBarAppearance
             UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
