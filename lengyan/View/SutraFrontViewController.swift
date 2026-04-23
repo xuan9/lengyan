@@ -94,9 +94,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // 阅读页 hidesBarsOnSwipe 残留会导致点击弹回导航栏
+        // 确保首页导航栏完全隐藏
         self.navigationController?.setNavigationBarHidden(true, animated: false)
-        // 禁用残留的手势识别器，防止点击/滑动弹出导航栏
+        // 禁用残留的手势识别器，防止点击/滑动弹出空白导航栏吞掉首次点击事件。
+        // 子页面（阅读页）会在各自的 viewWillAppear 中重新启用。
         self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = false
         self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
     }

@@ -22,7 +22,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.edgesForExtendedLayout = UIRectEdge();
         self.extendedLayoutIncludesOpaqueBars = false;
         self.automaticallyAdjustsScrollViewInsets = false;
-        
+        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 底层背景与阅读内容同色，防止翻页时闪白
 
         self.dataSource = self;
         self.delegate = self;
@@ -49,6 +49,9 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = true
         self.navigationController?.hidesBarsWhenVerticallyCompact = true
+        // 显式重新启用手势识别器（防止被其他页面禁用）
+        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = true
+        self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = true
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -70,29 +73,50 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
         // 返回按钮
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(
+        let backButton = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
             style: .plain,
             target: self,
             action: #selector(close)
         )
-        self.navigationItem.leftBarButtonItem?.tintColor = secondaryColor
+        backButton.tintColor = secondaryColor
+        if #available(iOS 26.0, *) {
+            backButton.hidesSharedBackground = true  // 移除 iOS 26 Liquid Glass 按钮背景
+        }
+        self.navigationItem.leftBarButtonItem = backButton
 
-        // 导航栏背景统一 — 使用 UINavigationBarAppearance 确保按钮无背景色块
+        // 导航栏背景统一 — 与阅读内容同色，按钮完全无背景色块
         let navBarColor = SutraDesignTokens.shared.color(for: .background)
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = navBarColor
         appearance.shadowColor = .clear
-        // 按钮外观：plain 样式，无背景色块
+        appearance.shadowImage = UIImage()
+        // 按钮外观：显式清除所有状态的背景
         let btnAppearance = UIBarButtonItemAppearance(style: .plain)
+        btnAppearance.normal.backgroundImage = UIImage()
         btnAppearance.normal.titleTextAttributes = [.foregroundColor: secondaryColor]
+        btnAppearance.highlighted.backgroundImage = UIImage()
+        btnAppearance.highlighted.titleTextAttributes = [.foregroundColor: secondaryColor.withAlphaComponent(0.5)]
+        btnAppearance.disabled.backgroundImage = UIImage()
+        btnAppearance.focused.backgroundImage = UIImage()
         appearance.buttonAppearance = btnAppearance
         appearance.doneButtonAppearance = btnAppearance
-        self.navigationController?.navigationBar.standardAppearance = appearance
-        self.navigationController?.navigationBar.compactAppearance = appearance
-        self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        self.navigationController?.navigationBar.isTranslucent = false
+        // 隐藏默认返回按钮指示器
+        appearance.setBackIndicatorImage(UIImage(), transitionMaskImage: UIImage())
+        
+        if let navBar = self.navigationController?.navigationBar {
+            navBar.standardAppearance = appearance
+            navBar.compactAppearance = appearance
+            navBar.scrollEdgeAppearance = appearance
+            navBar.isTranslucent = false
+            navBar.tintColor = secondaryColor
+            // 清除导航栏的背景视图层级中的模糊效果
+            navBar.setBackgroundImage(UIImage(), for: .default)
+            navBar.shadowImage = UIImage()
+            navBar.barTintColor = navBarColor
+            navBar.backgroundColor = navBarColor
+        }
 
         self.setPageTitle()
         self.updateStarButton()
@@ -121,6 +145,12 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         )
         shareButton.tintColor = secondaryColor
 
+        // 移除 iOS 26 Liquid Glass 按钮背景
+        if #available(iOS 26.0, *) {
+            likeButton.hidesSharedBackground = true
+            shareButton.hidesSharedBackground = true
+        }
+
         if self.isShowIndexButton {
             let item = Book.shared.itemOfPath(self.path!)
             if item["children"] != nil {
@@ -131,6 +161,9 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
                     action: #selector(openIndex)
                 )
                 indexButton.tintColor = secondaryColor
+                if #available(iOS 26.0, *) {
+                    indexButton.hidesSharedBackground = true
+                }
                 self.navigationItem.setRightBarButtonItems([indexButton, shareButton, likeButton], animated: false)
             } else {
                 self.navigationItem.setRightBarButtonItems([shareButton, likeButton], animated: false)

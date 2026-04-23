@@ -20,30 +20,48 @@ final class ReaderViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         
-        self.navigationController?.hidesBarsOnSwipe = true;
-        self.navigationController?.hidesBarsWhenVerticallyCompact = true;
+        self.navigationController?.hidesBarsOnTap = true;
         
         // 返回按钮
         let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.left"), style: .plain, target: self, action: #selector(close))
-        self.navigationItem.leftBarButtonItem?.tintColor = secondaryColor
+        let backButton = UIBarButtonItem(image: UIImage(systemName: "chevron.left"), style: .plain, target: self, action: #selector(close))
+        backButton.tintColor = secondaryColor
+        if #available(iOS 26.0, *) {
+            backButton.hidesSharedBackground = true  // 移除 iOS 26 Liquid Glass 按钮背景
+        }
+        self.navigationItem.leftBarButtonItem = backButton
         
-        // 导航栏外观 — 与内容同色，按钮无背景色块
-        let navColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        // 导航栏外观 — 与内容同色，按钮完全无背景色块
+        let navColor = SutraDesignTokens.shared.color(for: .background)
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = navColor
         appearance.shadowColor = .clear
+        appearance.shadowImage = UIImage()
         let btnAppearance = UIBarButtonItemAppearance(style: .plain)
+        btnAppearance.normal.backgroundImage = UIImage()
         btnAppearance.normal.titleTextAttributes = [.foregroundColor: secondaryColor]
+        btnAppearance.highlighted.backgroundImage = UIImage()
+        btnAppearance.highlighted.titleTextAttributes = [.foregroundColor: secondaryColor.withAlphaComponent(0.5)]
+        btnAppearance.disabled.backgroundImage = UIImage()
+        btnAppearance.focused.backgroundImage = UIImage()
         appearance.buttonAppearance = btnAppearance
         appearance.doneButtonAppearance = btnAppearance
-        self.navigationController?.navigationBar.standardAppearance = appearance
-        self.navigationController?.navigationBar.compactAppearance = appearance
-        self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        self.navigationController?.navigationBar.isTranslucent = false
+        appearance.setBackIndicatorImage(UIImage(), transitionMaskImage: UIImage())
+        
+        if let navBar = self.navigationController?.navigationBar {
+            navBar.standardAppearance = appearance
+            navBar.compactAppearance = appearance
+            navBar.scrollEdgeAppearance = appearance
+            navBar.isTranslucent = false
+            navBar.tintColor = secondaryColor
+            navBar.setBackgroundImage(UIImage(), for: .default)
+            navBar.shadowImage = UIImage()
+            navBar.barTintColor = navColor
+            navBar.backgroundColor = navColor
+        }
 
         setupContentView()
     }
@@ -51,15 +69,32 @@ final class ReaderViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = true
-        // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
+        // 每次出现时先显示导航栏（让用户看到返回按钮）
         self.navigationController?.setNavigationBarHidden(false, animated: false)
-        self.navigationController?.hidesBarsOnSwipe = true
-        self.navigationController?.hidesBarsWhenVerticallyCompact = true
+        // 水平翻页阅读器没有垂直滚动，hidesBarsOnSwipe 无法触发，
+        // 改用 hidesBarsOnTap 实现点击切换导航栏
+        self.navigationController?.hidesBarsOnSwipe = false
+        self.navigationController?.hidesBarsOnTap = true
+        // 显式重新启用手势识别器（防止被其他页面禁用）
+        self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = true
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // 进入阅读 2 秒后自动隐藏导航栏，沉浸阅读
+        // 用户随时可点击屏幕重新呼出
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            guard let self = self,
+                  self.navigationController?.isNavigationBarHidden == false else { return }
+            self.navigationController?.setNavigationBarHidden(true, animated: true)
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
+        // 离开时重置，避免影响其他页面
+        self.navigationController?.hidesBarsOnTap = false
     }
     
     override func viewDidLayoutSubviews() {
@@ -77,7 +112,7 @@ final class ReaderViewController: UIViewController {
     //  }
     //
     private func setupContentView() {
-        contentView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+        contentView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentView.showsVerticalScrollIndicator = false
         contentView.showsHorizontalScrollIndicator = false
@@ -133,7 +168,7 @@ final class ReaderViewController: UIViewController {
             )
             
             // 5
-            textView.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
+            textView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
             textView.isEditable = false
             textView.isSelectable = false
             textView.textContainerInset = textInsets

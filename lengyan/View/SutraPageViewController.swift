@@ -23,22 +23,37 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.automaticallyAdjustsScrollViewInsets = false;
         self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 翻页控制器底层背景色
 
-        // 导航栏 — 与内容同色，无边界，按钮无背景色块
+        // 导航栏 — 与内容同色，无边界，按钮完全无背景色块
         let bgColor = SutraDesignTokens.shared.color(for: .background)
+        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = bgColor
         appearance.shadowColor = .clear
-        // 按钮外观：plain 样式，无背景色块
-        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        appearance.shadowImage = UIImage()
+        // 按钮外观：显式清除所有状态的背景
         let btnAppearance = UIBarButtonItemAppearance(style: .plain)
+        btnAppearance.normal.backgroundImage = UIImage()
         btnAppearance.normal.titleTextAttributes = [.foregroundColor: secondaryColor]
+        btnAppearance.highlighted.backgroundImage = UIImage()
+        btnAppearance.highlighted.titleTextAttributes = [.foregroundColor: secondaryColor.withAlphaComponent(0.5)]
+        btnAppearance.disabled.backgroundImage = UIImage()
+        btnAppearance.focused.backgroundImage = UIImage()
         appearance.buttonAppearance = btnAppearance
         appearance.doneButtonAppearance = btnAppearance
-        self.navigationController?.navigationBar.standardAppearance = appearance
-        self.navigationController?.navigationBar.compactAppearance = appearance
-        self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        self.navigationController?.navigationBar.isTranslucent = false
+        appearance.setBackIndicatorImage(UIImage(), transitionMaskImage: UIImage())
+        
+        if let navBar = self.navigationController?.navigationBar {
+            navBar.standardAppearance = appearance
+            navBar.compactAppearance = appearance
+            navBar.scrollEdgeAppearance = appearance
+            navBar.isTranslucent = false
+            navBar.tintColor = secondaryColor
+            navBar.setBackgroundImage(UIImage(), for: .default)
+            navBar.shadowImage = UIImage()
+            navBar.barTintColor = bgColor
+            navBar.backgroundColor = bgColor
+        }
         
         if page < 0 {
             self.close()
@@ -73,6 +88,9 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = true
         self.navigationController?.hidesBarsWhenVerticallyCompact = true
+        // 显式重新启用手势识别器（防止被其他页面禁用）
+        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = true
+        self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = true
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -139,6 +157,13 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationItem.leftBarButtonItem?.tintColor = secondaryTextColor
         shareButton.tintColor = secondaryTextColor
         bookmarkButton.tintColor = isLiked ? bookmarkColor : secondaryTextColor
+
+        // 移除 iOS 26 Liquid Glass 按钮背景，与导航栏完全融合
+        if #available(iOS 26.0, *) {
+            backBarButton.hidesSharedBackground = true
+            shareButton.hidesSharedBackground = true
+            bookmarkButton.hidesSharedBackground = true
+        }
 
         // Grouping right buttons: [Share on the far right] [Bookmark]
         self.navigationItem.rightBarButtonItems = [shareButton, bookmarkButton]
