@@ -1,0 +1,28 @@
+{
+  "images" : [
+    {
+      "filename" : "cloud_ornament.png",
+      "idiom" : "universal",
+      "rendering-mode" : "template",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "rendering-mode" : "template",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "rendering-mode" : "template",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "template-rendering-intent" : "template",
+    "preserves-vector-representation" : true
+  }
+}

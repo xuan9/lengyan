@@ -15,86 +15,111 @@ struct SutraAcknowledgmentsView: View {
         Color(SutraDesignTokens.shared.color(for: .textSecondary))
     }
 
+    private var textTertiary: Color {
+        Color(SutraDesignTokens.shared.color(for: .textTertiary))
+    }
+
     var body: some View {
         ScrollView {
-            VStack(spacing: SutraSpacing.Base.xxl) {
-                // 顶端留白
-                Spacer(minLength: SutraSpacing.Base.xl)
+            VStack(spacing: 0) {
 
-                VStack(alignment: .leading, spacing: SutraSpacing.Base.xl) {
-                    // 文字来源
-                    sourceSection(
-                        icon: "doc.text.fill",
-                        title: "文字来源",
-                        text: "经文和科判来自法界佛教总会网站《大佛顶首楞严经浅释》。感恩法界佛教总会编辑整理！其经文援用《龙藏》及交光法师之《大佛顶首楞严经正脉疏》等，并以圆锳法师简要科判为主。"
-                    )
-
-                    // 音频来源
-                    sourceSection(
-                        icon: "waveform.circle.fill",
-                        title: "音频来源",
-                        text: "音频内容来源于佛学多媒体资料库，感恩屏东能净协会读诵录制。"
-                    )
-
-                    // 图片来源
-                    sourceSection(
-                        icon: "photo.circle.fill",
-                        title: "图片来源",
-                        text: "程序图标和启动画面来自明代画家吳彬画作"
-                    )
-                }
-                .padding(.horizontal, SutraSpacing.Base.xl)
-
-                Divider()
-                    .background(goldColor.opacity(0.3))
-                    .padding(.vertical, SutraSpacing.Base.xs)
-
-                // 感恩
-                VStack(alignment: .leading, spacing: SutraSpacing.Base.sm) {
-                    Text("感恩上述来源，随喜功德！")
-                        .font(SutraTypographyBridge.sutraCaption(weight: .light))
+                // MARK: 开篇 — 缘起
+                VStack(spacing: 12) {
+                    Text("此应用得以与你相遇")
+                        .font(SutraTypographyBridge.uiBody(weight: .medium))
                         .foregroundColor(textSecondary)
+
+                    Text("仰仗诸多因缘")
+                        .font(SutraTypographyBridge.uiCaption(weight: .light))
+                        .foregroundColor(textTertiary)
                 }
+                .padding(.top, 36)
+                .padding(.bottom, 32)
 
-                VStack(alignment: .leading, spacing: SutraSpacing.Touch.spacing) {
-                    Image(systemName: "hands.press.fill")
-                        .font(SutraTypographyBridge.uiLargeTitle(weight: .regular))
-                        .foregroundColor(goldColor)
+                // MARK: 来源 — 逐一致敬
 
-                    Text("南无楞严会上佛菩萨！")
-                        .font(SutraTypographyBridge.sutraCaption(weight: .light))
-                        .foregroundColor(textSecondary)
-                        .lineSpacing(SutraSpacing.Base.sm)
+                sourceCard(
+                    icon: "doc.text",
+                    title: "文字",
+                    text: "《大佛顶首楞严经》源自佛陀于舍卫国祇园精舍宣说，又名《中印度那烂陀大道场经》。相传龙树菩萨自龙宫默记传出。天台智者大师为求此经，面向西方礼拜十八年而未得见。后般剌蜜谛法师割臂藏经，历尽艰险带至广州，于唐神龙元年（705）在制止道场（今光孝寺）译出。般剌蜜谛法师任译主，弥伽释迦法师译语，怀迪法师证译，房融笔受润饰。译毕，法师即回国承当罪责。此后历经千年，无数大德传持、注释、流通。本应用经文与科判取材于法界佛教总会编辑之《大佛顶首楞严经浅释》，其经文援用《龙藏》，科判以圆瑛法师简要科判为主，参照交光法师《正脉疏》等。感恩一切为此经流传付出心血者。"
+                )
+
+                goldDivider
+
+                sourceCard(
+                    icon: "waveform",
+                    title: "音频",
+                    text: "音频内容来源于佛学多媒体资料库，感恩屏东能净协会读诵录制。"
+                )
+
+                goldDivider
+
+                sourceCard(
+                    icon: "photo",
+                    title: "图像",
+                    text: "图标和启动画面取自明代画家吴彬画作。"
+                )
+
+                // MARK: 感恩
+
+                Text("随喜功德")
+                    .font(SutraTypographyBridge.uiCaption(weight: .light))
+                    .foregroundColor(textTertiary)
+                    .padding(.top, 32)
+                    .padding(.bottom, 24)
+
+                // MARK: 收束 — 致敬
+
+                VStack(spacing: 16) {
+                    Rectangle()
+                        .fill(goldColor.opacity(0.4))
+                        .frame(width: 32, height: 0.5)
+                        .padding(.vertical, 4)
+
+                    Text("南无楞严会上佛菩萨")
+                        .font(SutraTypographyBridge.uiCaption(weight: .medium))
+                        .foregroundColor(goldColor.opacity(0.7))
                 }
-                .padding(.horizontal, SutraSpacing.Base.xl)
-
-                Spacer(minLength: SutraSpacing.Base.xxl)
-
-                Text("✧ ❀ ✧")
-                    .font(SutraTypographyBridge.uiBody(weight: .regular))
-                    .foregroundColor(goldColor.opacity(0.6))
+                .padding(.top, 8)
+                .padding(.bottom, 48)
             }
+            .padding(.horizontal, 28)
         }
         .background(Color(SutraDesignTokens.shared.color(for: .background)).edgesIgnoringSafeArea(.all))
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func sourceSection(icon: String, title: String, text: String) -> some View {
-        VStack(alignment: .leading, spacing: SutraSpacing.Touch.spacing) {
-            HStack(spacing: SutraSpacing.Base.sm) {
+    // MARK: - 来源卡片
+
+    private func sourceCard(icon: String, title: String, text: String) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(SutraTypographyBridge.uiBody(weight: .medium))
-                    .foregroundColor(goldColor)
+                    .font(.system(size: 16, weight: .light))
+                    .foregroundColor(goldColor.opacity(0.6))
 
                 Text(title)
-                    .font(Font(SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .medium)))
+                    .font(SutraTypographyBridge.uiCaption(weight: .medium))
                     .foregroundColor(textSecondary)
+                    .tracking(2)
             }
 
             Text(text)
-                .font(Font(SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .regular)))
+                .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(textPrimary)
-                .lineSpacing(SutraSpacing.Base.sm + 2)
+                .lineSpacing(6)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 20)
+    }
+
+    // MARK: - 金色分隔线
+
+    private var goldDivider: some View {
+        Rectangle()
+            .fill(goldColor.opacity(0.15))
+            .frame(height: 0.5)
+            .padding(.horizontal, 40)
     }
 }

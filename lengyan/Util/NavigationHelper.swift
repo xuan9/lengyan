@@ -8,6 +8,32 @@
 import UIKit
 import SwiftUI
 
+// MARK: - 自动管理导航栏显隐的 HostingController
+
+class NavBarHostingController<T: View>: UIHostingController<T> {
+    let showsNavBar: Bool
+
+    init(rootView: T, showsNavBar: Bool = true) {
+        self.showsNavBar = showsNavBar
+        super.init(rootView: rootView)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) is not supported")
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if showsNavBar {
+            navigationController?.navigationBar.isHidden = false
+            navigationController?.setNavigationBarHidden(false, animated: animated)
+        } else {
+            navigationController?.setNavigationBarHidden(true, animated: animated)
+            navigationController?.navigationBar.isHidden = true
+        }
+    }
+}
+
 struct NavigationHelper {
 
     // MARK: - Navigation Controller
@@ -29,8 +55,10 @@ struct NavigationHelper {
 
     static func pushSwiftUIView<T: View>(_ view: T, title: String) {
         guard let nav = currentNavigationController else { return }
+        // 临时取消 isHidden，让子页面导航栏正常工作
+        nav.navigationBar.isHidden = false
         nav.setNavigationBarHidden(false, animated: false)
-        let vc = UIHostingController(rootView: view)
+        let vc = NavBarHostingController(rootView: view, showsNavBar: true)
         vc.title = title
         nav.pushViewController(vc, animated: true)
     }

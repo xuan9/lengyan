@@ -104,7 +104,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Setup Settings Tab
         let settingsView = ModernSettingsView()
-        let settingsHostingController = UIHostingController(rootView: settingsView)
+        let settingsHostingController = NavBarHostingController(rootView: settingsView, showsNavBar: false)
         let settingsNavController = UINavigationController(rootViewController: settingsHostingController)
         settingsNavController.tabBarItem = UITabBarItem(
             title: NSLocalizedString("settings_tab_title", comment: ""),

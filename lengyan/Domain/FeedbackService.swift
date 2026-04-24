@@ -11,31 +11,8 @@ struct FeedbackService {
     private static let endpoint = "https://lengyan-feedback.dhyana9.workers.dev"
     private static let apiKey = "7e6c1216eb9a61b9de68ae86d07de92836dec07a33a256ee"
 
-    enum FeedbackType: String, CaseIterable {
-        case feedback = "feedback"
-        case bug = "bug"
-        case suggestion = "suggestion"
-
-        var label: String {
-            switch self {
-            case .feedback: return "反馈"
-            case .bug: return "Bug"
-            case .suggestion: return "建议"
-            }
-        }
-
-        var icon: String {
-            switch self {
-            case .feedback: return "🪷"
-            case .bug: return "🐛"
-            case .suggestion: return "💡"
-            }
-        }
-    }
-
     struct FeedbackRequest {
         let content: String
-        let type: FeedbackType
     }
 
     static func submit(_ request: FeedbackRequest, completion: @escaping (Result<Void, Error>) -> Void) {
@@ -53,7 +30,7 @@ struct FeedbackService {
         let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? ""
         let body: [String: String] = [
             "content": request.content,
-            "type": request.type.rawValue,
+            "type": "feedback",
             "device": deviceModel(),
             "os": "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)",
             "appVersion": appVersion(),

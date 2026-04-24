@@ -38,6 +38,29 @@ struct ModernAudioPlayerView: View {
                 mediaPlayerBar
             }
         }
+        .overlay(alignment: .top) {
+            Group {
+                if let msg = manager.downloadErrorMessage {
+                    Text(msg)
+                        .font(SutraTypographyBridge.uiCaption(weight: .regular))
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textPrimary)))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(SutraDesignTokens.shared.color(for: .surface)).opacity(0.95))
+                        )
+                        .padding(.top, 60)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                manager.downloadErrorMessage = nil
+                            }
+                        }
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: manager.downloadErrorMessage)
+        }
         .onAppear {
             manager.setupAudioSession()
             manager.loadMediaData()  // loadMediaData 内部已调用 resumeLastPlayback
@@ -59,8 +82,9 @@ struct ModernAudioPlayerView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     if audioObserver.currentTrack?.isEmpty ?? true {
-                        Text("请 轻 触 上 列 卷 名 听 经")
+                        Text("请轻触卷名听经")
                             .font(SutraTypographyBridge.uiCaption(weight: .light))
+                            .tracking(2)
                             .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
                             .lineLimit(1)
                     } else {

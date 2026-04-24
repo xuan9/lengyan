@@ -21,6 +21,7 @@ class AudioManager: ObservableObject {
     // Download state
     @Published var downloadProgress: [String: Double] = [:]
     @Published var downloadStatus: [String: MediaItem.MediaStatus] = [:]
+    @Published var downloadErrorMessage: String?
     var resourceRequests: [String: NSBundleResourceRequest] = [:]
 
     private init() {}
@@ -145,7 +146,9 @@ class AudioManager: ObservableObject {
                     self.resourceRequests[file]?.endAccessingResources()
                     self.resourceRequests[file] = nil
                     self.downloadProgress.removeValue(forKey: file)
-                    print("❌ ODR Error details: \(self.getODRErrorMessage(error as NSError))")
+                    let msg = self.getODRErrorMessage(error as NSError)
+                    print("❌ ODR Error details: \(msg)")
+                    self.downloadErrorMessage = msg
                 } else {
                     print("✅ Successfully downloaded ODR: \(file)")
                     self.downloadStatus[file] = .downloaded
@@ -306,13 +309,13 @@ class AudioManager: ObservableObject {
     private func getODRErrorMessage(_ error: NSError) -> String {
         switch error.code {
         case NSBundleOnDemandResourceOutOfSpaceError:
-            return "Not enough space to download audio file"
+            return "存储空间不足，无法下载音频"
         case NSBundleOnDemandResourceExceededMaximumSizeError:
-            return "Audio file is too large"
+            return "音频文件过大"
         case NSBundleOnDemandResourceInvalidTagError:
-            return "Invalid audio file tag"
+            return "音频资源无效"
         default:
-            return "Download failed: \(error.localizedDescription)"
+            return "下载失败，请检查网络后重试"
         }
     }
 }

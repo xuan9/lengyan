@@ -56,7 +56,6 @@ struct ModernSettingsView: View {
         }
         .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
-        .onAppear { NavigationHelper.hideNavBar() }
     }
 
     // MARK: - Section
