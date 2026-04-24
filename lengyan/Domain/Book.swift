@@ -298,9 +298,9 @@ class Book: NSObject {
         
         let titleLabel = UILabel()
         let isTwoLines = parent != nil && !parentTitle.isEmpty
-        // 两行标题时，底部的主标题字号从巨大的默认值(30)缩小到24
+        // 无论单行还是双行，正标题最大字号统一限制在 24pt
         let baseFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .regular)
-        titleLabel.font = isTwoLines ? baseFont.withSize(24) : baseFont
+        titleLabel.font = baseFont.withSize(24)
         
         titleLabel.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
         titleLabel.textAlignment = .center

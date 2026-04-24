@@ -45,6 +45,12 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         appearance.backgroundColor = navColor
         appearance.shadowColor = .clear
         appearance.shadowImage = UIImage()
+        
+        // 设置标题为 24pt
+        appearance.titleTextAttributes = [
+            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary),
+            .font: SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .regular).withSize(24)
+        ]
         let btnAppearance = UIBarButtonItemAppearance(style: .plain)
         btnAppearance.normal.backgroundImage = UIImage()
         btnAppearance.normal.titleTextAttributes = [.foregroundColor: secondaryColor]
@@ -201,7 +207,7 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
             // 5
             textView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
             textView.isEditable = false
-            textView.isSelectable = false
+            textView.isSelectable = true
             textView.textContainerInset = textInsets
             textView.showsVerticalScrollIndicator = false
             textView.showsHorizontalScrollIndicator = false

@@ -52,6 +52,9 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
         // 增加上下呼吸空间，无缝衔接
         sutraTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 24, right: 12)
 
+        // 阻止 iOS 自动调整 insets，防止在翻页动画中出现偏移跳动
+        sutraTextView.contentInsetAdjustmentBehavior = .never
+
         let text = Book.shared.getSutraAttributeString(meta)
         sutraTextView.attributedText = text
         view.addSubview(sutraTextView)
@@ -61,7 +64,7 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
             NSLayoutConstraint.activate([
                 sutraTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 44),
                 sutraTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -44),
-                sutraTextView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+                sutraTextView.topAnchor.constraint(equalTo: view.topAnchor, constant: 10),
                 sutraTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -10)
             ])
         } else {
@@ -69,7 +72,7 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
             NSLayoutConstraint.activate([
                 sutraTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
                 sutraTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                sutraTextView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                sutraTextView.topAnchor.constraint(equalTo: view.topAnchor),
                 sutraTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
             ])
         }
@@ -96,8 +99,10 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
         }
     }
 
-    override func viewDidLayoutSubviews() {
-        self.sutraView?.setContentOffset(.zero, animated:false);
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // 在页面即将出现时将滚动位置重置为顶部，避免在 viewDidLayoutSubviews 中频繁触发导致跳动
+        self.sutraView?.setContentOffset(.zero, animated: false)
     }
 
     func updateHeader(_ item:[String:Any]){
