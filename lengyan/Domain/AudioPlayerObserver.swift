@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Combine
+import MediaPlayer
 
 class AudioPlayerObserver: NSObject, ObservableObject {
     static let shared = AudioPlayerObserver()
@@ -20,12 +21,21 @@ class AudioPlayerObserver: NSObject, ObservableObject {
     var queuePlayer: AVQueuePlayer?
     var playerTimer: Timer?
     var lastPlayFile: (String, String, String)?
-    private var cancellables = Set<AnyCancellable>()
+    private var playerCancellables = Set<AnyCancellable>()
     private var timeObserver: Any?
     private var isObservationSetup = false
+    private var lastNowPlayingUpdateTime: Double = 0
+    private var trackSubscription: AnyCancellable?
 
     private override init() {
         super.init()
+
+        trackSubscription = $currentTrack
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.lastNowPlayingUpdateTime = 0
+                self?.updateNowPlayingInfo()
+            }
     }
 
     func cleanup() {
@@ -34,7 +44,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             timeObserver = nil
         }
 
-        cancellables.removeAll()
+        playerCancellables.removeAll()
 
         playerTimer?.invalidate()
         playerTimer = nil
@@ -42,6 +52,13 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         queuePlayer = nil
 
         isObservationSetup = false
+
+        trackSubscription?.cancel()
+        trackSubscription = nil
+
+        removeRemoteCommands()
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
     func initializePlayerIfNeeded() {
@@ -69,14 +86,15 @@ class AudioPlayerObserver: NSObject, ObservableObject {
                     self?.totalTime = CMTimeGetSeconds(item.duration)
                 }
             }
-            .store(in: &cancellables)
+            .store(in: &playerCancellables)
 
         queuePlayer?.publisher(for: \.rate)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newRate in
                 self?.isPlaying = newRate > 0
+                self?.updateNowPlayingInfo()
             }
-            .store(in: &cancellables)
+            .store(in: &playerCancellables)
 
         guard let player = queuePlayer else { return }
 
@@ -96,9 +114,17 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             if (self.totalTime.isNaN || self.totalTime == 0) && durationSeconds.isFinite && durationSeconds > 0 {
                 self.totalTime = durationSeconds
             }
+
+            // 每5秒更新一次锁屏进度
+            if currentTimeSeconds - self.lastNowPlayingUpdateTime >= 5.0 {
+                self.lastNowPlayingUpdateTime = currentTimeSeconds
+                self.updateNowPlayingInfo()
+            }
         }
 
         isObservationSetup = true
+
+        setupRemoteCommands()
     }
 
     private func setupAudioSessionIfNeeded() {
@@ -110,6 +136,86 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             }
         } catch {
             print("⚠️ Audio session setup failed: \(error)")
+        }
+    }
+
+    // MARK: - Now Playing Info
+
+    func updateNowPlayingInfo() {
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: currentTrack ?? "楞嚴經",
+            MPMediaItemPropertyArtist: "屏東能淨協會讀誦",
+            MPMediaItemPropertyPlaybackDuration: totalTime,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
+            MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
+        ]
+
+        if let icon = UIImage(named: "AppIcon60x60") ?? UIImage(named: "Icon-60@2x") {
+            let artwork = MPMediaItemArtwork(boundsSize: icon.size) { _ in icon }
+            info[MPMediaItemPropertyArtwork] = artwork
+        }
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+    }
+
+    // MARK: - Remote Commands
+
+    private func setupRemoteCommands() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        commandCenter.playCommand.addTarget(self, action: #selector(handlePlay))
+        commandCenter.pauseCommand.addTarget(self, action: #selector(handlePause))
+        commandCenter.togglePlayPauseCommand.addTarget(self, action: #selector(handleTogglePlayPause))
+        commandCenter.changePlaybackPositionCommand.addTarget(self, action: #selector(handleSeek(_:)))
+    }
+
+    private func removeRemoteCommands() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        commandCenter.playCommand.removeTarget(self)
+        commandCenter.pauseCommand.removeTarget(self)
+        commandCenter.togglePlayPauseCommand.removeTarget(self)
+        commandCenter.changePlaybackPositionCommand.removeTarget(self)
+    }
+
+    @objc private func handlePlay() {
+        DispatchQueue.main.async { [weak self] in
+            self?.queuePlayer?.play()
+            self?.isPlaying = true
+            self?.updateNowPlayingInfo()
+        }
+    }
+
+    @objc private func handlePause() {
+        DispatchQueue.main.async { [weak self] in
+            self?.queuePlayer?.pause()
+            self?.isPlaying = false
+            self?.updateNowPlayingInfo()
+        }
+    }
+
+    @objc private func handleTogglePlayPause() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if self.queuePlayer?.rate ?? 0 > 0 {
+                self.queuePlayer?.pause()
+                self.isPlaying = false
+            } else {
+                self.queuePlayer?.play()
+                self.isPlaying = true
+            }
+            self.updateNowPlayingInfo()
+        }
+    }
+
+    @objc private func handleSeek(_ event: MPChangePlaybackPositionCommandEvent) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            let time = CMTime(seconds: event.positionTime, preferredTimescale: 600)
+            self.queuePlayer?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+            self.currentTime = event.positionTime
+            self.lastNowPlayingUpdateTime = event.positionTime
+            self.updateNowPlayingInfo()
         }
     }
 }

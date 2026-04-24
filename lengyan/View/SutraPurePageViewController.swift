@@ -123,11 +123,12 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     }
 
     func updateStarButton(){
+        guard let path = self.path else { return }
         let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
         // 收藏按钮
-        let isLiked = Prefers.shared.likes.contains(path!)
+        let isLiked = Prefers.shared.likes.contains(path)
         let likeButton = UIBarButtonItem(
             image: UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark"),
             style: .plain,
@@ -136,24 +137,16 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         )
         likeButton.tintColor = isLiked ? bookmarkColor : secondaryColor
 
-        // 分享按钮
-        let shareButton = UIBarButtonItem(
-            image: UIImage(systemName: "square.and.arrow.up"),
-            style: .plain,
-            target: self,
-            action: #selector(share)
-        )
-        shareButton.tintColor = secondaryColor
-
-        // 移除 iOS 26 Liquid Glass 按钮背景
         if #available(iOS 26.0, *) {
             likeButton.hidesSharedBackground = true
-            shareButton.hidesSharedBackground = true
         }
 
+        let rightButtons: [UIBarButtonItem]
+
         if self.isShowIndexButton {
-            let item = Book.shared.itemOfPath(self.path!)
+            let item = Book.shared.itemOfPath(path)
             if item["children"] != nil {
+                // 有目录时：[目录] [收藏]
                 let indexButton = UIBarButtonItem(
                     image: UIImage(systemName: "list.bullet"),
                     style: .plain,
@@ -164,25 +157,50 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
                 if #available(iOS 26.0, *) {
                     indexButton.hidesSharedBackground = true
                 }
-                self.navigationItem.setRightBarButtonItems([indexButton, shareButton, likeButton], animated: false)
+                rightButtons = [indexButton, likeButton]
             } else {
-                self.navigationItem.setRightBarButtonItems([shareButton, likeButton], animated: false)
+                // 无目录时：[分享] [收藏]
+                rightButtons = [makeShareButton(color: secondaryColor), likeButton]
             }
         } else {
-            self.navigationItem.setRightBarButtonItems([shareButton, likeButton], animated: false)
+            // 无目录时：[分享] [收藏]
+            rightButtons = [makeShareButton(color: secondaryColor), likeButton]
         }
+
+        self.navigationItem.setRightBarButtonItems(rightButtons, animated: false)
+    }
+
+    private func makeShareButton(color: UIColor) -> UIBarButtonItem {
+        let button = UIBarButtonItem(
+            image: UIImage(systemName: "square.and.arrow.up"),
+            style: .plain,
+            target: self,
+            action: #selector(share)
+        )
+        button.tintColor = color
+        if #available(iOS 26.0, *) {
+            button.hidesSharedBackground = true
+        }
+        return button
     }
 
     @objc func share() {
-        UIGraphicsBeginImageContextWithOptions(self.view.frame.size, false, 0.0)
-        self.view.layer.render(in: UIGraphicsGetCurrentContext()!)
-        guard let img = UIGraphicsGetImageFromCurrentImageContext() else {
-            UIGraphicsEndImageContext()
-            return
-        }
-        UIGraphicsEndImageContext()
+        guard let path = self.path else { return }
+        let item = Book.shared.itemOfPath(path)
+        let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
 
-        let activityViewController = UIActivityViewController(activityItems: [img], applicationActivities: nil)
+        var shareText: String
+        if item["children"] == nil {
+            // 叶子节点：直接取经文
+            shareText = bookTitle + "\n" + Book.shared.getSutra(item)
+        } else if let name = item["name"] as? String {
+            // 有子节点：取章节名 + 该章节全部经文
+            shareText = bookTitle + "之「" + name + "」\n" + Book.shared.getSutra(item)
+        } else {
+            shareText = bookTitle
+        }
+
+        let activityViewController = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
         if let popover = activityViewController.popoverPresentationController {
             popover.barButtonItem = self.navigationItem.rightBarButtonItems?.last
         }
@@ -262,12 +280,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         
         pageContent.path = path
         
-        let frame = self.view.frame;
-        let navigationBarHeight = (self.navigationController?.navigationBar.frame.size.height)!;
-        
-        pageContent.view.frame = CGRect(
-            origin: CGPoint(x:frame.origin.x,y:frame.origin.y + navigationBarHeight),
-            size:   CGSize(width: frame.size.width, height:frame.size.height - navigationBarHeight))
+        pageContent.view.frame = self.view.bounds
         
         return pageContent
     }

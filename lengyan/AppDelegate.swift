@@ -73,6 +73,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Setup Reading Tab
         let sutraFrontVC = SutraFrontViewController()
         let readingNavController = UINavigationController(rootViewController: sutraFrontVC)
+        readingNavController.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 消除 push 转场白色闪现
         readingNavController.tabBarItem = UITabBarItem(
             title: NSLocalizedString("reading_tab_title", comment: ""),
             image: UIImage(systemName: "book")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
@@ -129,7 +130,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Create zen-inspired colors
         let designSystem = SutraDesignTokens.shared
 
-        navigationBarAppearance.configureWithOpaqueBackground()
+        navigationBarAppearance.configureWithTransparentBackground()
         navigationBarAppearance.backgroundColor = designSystem.color(for: .background)
         navigationBarAppearance.shadowColor = .clear
         navigationBarAppearance.shadowImage = UIImage()

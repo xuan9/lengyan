@@ -38,7 +38,6 @@ struct ModernAudioPlayerView: View {
                 mediaPlayerBar
             }
         }
-        .edgesIgnoringSafeArea(.bottom)
         .onAppear {
             manager.setupAudioSession()
             manager.loadMediaData()  // loadMediaData 内部已调用 resumeLastPlayback
@@ -95,7 +94,7 @@ struct ModernAudioPlayerView: View {
                     )
             )
             .padding(.horizontal, 16)
-            .padding(.bottom, 110)
+            .padding(.bottom, 8)
         }
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: audioObserver.showPlayerBar)

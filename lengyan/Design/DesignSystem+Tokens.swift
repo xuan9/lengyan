@@ -375,7 +375,11 @@ public final class SutraDesignTokens {
 
             // 按钮背景透明 — 沉浸感，无色块感
             let buttonAppearance = UIBarButtonItemAppearance(style: .plain)
+            buttonAppearance.normal.backgroundImage = UIImage()
             buttonAppearance.normal.titleTextAttributes = [.foregroundColor: self.color(for: .textSecondary)]
+            buttonAppearance.highlighted.backgroundImage = UIImage()
+            buttonAppearance.disabled.backgroundImage = UIImage()
+            buttonAppearance.focused.backgroundImage = UIImage()
             navBarAppearance.buttonAppearance = buttonAppearance
             navBarAppearance.doneButtonAppearance = buttonAppearance
 

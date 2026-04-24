@@ -120,16 +120,20 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     @objc func share() {
-        // Take a beautiful snapshot of the zen paper page for sharing
-        UIGraphicsBeginImageContextWithOptions(self.view.frame.size, false, 0.0)
-        self.view.layer.render(in: UIGraphicsGetCurrentContext()!)
-        guard let img = UIGraphicsGetImageFromCurrentImageContext() else {
-            UIGraphicsEndImageContext()
-            return
+        guard let path = self.path else { return }
+        let item = Book.shared.itemOfPath(path)
+        let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
+
+        var shareText: String
+        if item["children"] == nil {
+            shareText = bookTitle + "\n" + Book.shared.getSutra(item)
+        } else if let name = item["name"] as? String {
+            shareText = bookTitle + "之「" + name + "」\n" + Book.shared.getSutra(item)
+        } else {
+            shareText = bookTitle
         }
-        UIGraphicsEndImageContext()
-        
-        let activityViewController = UIActivityViewController(activityItems: [img], applicationActivities: nil)
+
+        let activityViewController = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
         if let popover = activityViewController.popoverPresentationController {
             popover.barButtonItem = self.navigationItem.rightBarButtonItems?.last
         }
@@ -194,11 +198,13 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         pageContent.pageIndex = index
 
         let frame = self.view.frame;
-        let navigationBarHeight = (self.navigationController?.navigationBar.frame.size.height)!;
+        // 使用 safeAreaInsets 而非 navigationBar 高度，
+        // 这样无论导航栏是否隐藏（hidesBarsOnSwipe），内容都不会被灵动岛遮挡
+        let topInset = self.view.safeAreaInsets.top
 
         pageContent.view.frame = CGRect(
-            origin: CGPoint(x:frame.origin.x,y:frame.origin.y + navigationBarHeight),
-            size:   CGSize(width: frame.size.width, height:frame.size.height - navigationBarHeight))
+            origin: CGPoint(x: frame.origin.x, y: frame.origin.y + topInset),
+            size: CGSize(width: frame.size.width, height: frame.size.height - topInset))
 
         // Apply Zen Temple Serenity design enhancement
         enhancePageViewController(pageContent)
