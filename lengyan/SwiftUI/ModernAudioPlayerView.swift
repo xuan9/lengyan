@@ -126,12 +126,7 @@ struct ModernAudioPlayerView: View {
 
     // MARK: - Progress Slider
     private var progressSliderWithTime: some View {
-        HStack(spacing: 8) {
-            Text(AudioManager.formatTime(audioObserver.currentTime))
-                .font(SutraTypographyBridge.uiCaption(weight: .semibold))
-                .monospacedDigit()
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
-
+        VStack(spacing: 6) {
             GeometryReader { geometry in
                 let progress = audioObserver.totalTime > 0 ? CGFloat(audioObserver.currentTime / audioObserver.totalTime) : 0
                 ZStack(alignment: .leading) {
@@ -160,10 +155,14 @@ struct ModernAudioPlayerView: View {
             }
             .frame(height: 24)
 
-            Text(AudioManager.formatTime(audioObserver.totalTime))
-                .font(SutraTypographyBridge.uiCaption(weight: .semibold))
-                .monospacedDigit()
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
+            HStack {
+                Text(AudioManager.formatTime(audioObserver.currentTime))
+                Spacer()
+                Text(AudioManager.formatTime(audioObserver.totalTime))
+            }
+            .font(SutraTypographyBridge.uiSmall(weight: .regular))
+            .monospacedDigit()
+            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
         }
     }
 
