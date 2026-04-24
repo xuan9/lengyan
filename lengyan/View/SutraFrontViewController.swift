@@ -704,10 +704,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             weight: isCurrentChapter ? .bold : .regular
         )
 
-        // 长按从第一页开始
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(chapterLongPress(_:)))
-        btn.addGestureRecognizer(longPress)
-
         // 去除原本的强边框与阴影，仅留极细微的底边暗示
         btn.layer.borderWidth = 0
         btn.layer.shadowOpacity = 0
@@ -814,12 +810,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.openChapter(chapter: chapter, restoreOffset: offset)
     }
 
-    @objc func chapterLongPress(_ gesture: UILongPressGestureRecognizer) {
-        guard gesture.state == .began else { return }
-        let chapter = gesture.view!.tag
-        self.openChapter(chapter: chapter, restoreOffset: nil)
-    }
-    
     
     @objc func openRootIndex() {
         self.openIndex(Book.shared.itemOfPath(""))
