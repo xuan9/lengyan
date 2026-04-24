@@ -109,7 +109,12 @@ class AudioManager: ObservableObject {
         let status = downloadStatus[file] ?? .notDownloaded
         switch status {
         case .downloaded:
-            playMedia(name: name, file: file, fileExtension: fileExtension)
+            // 如果点击的是当前正在播放的卷，切换暂停/播放
+            if audioObserver.currentTrack == name {
+                togglePlayPause()
+            } else {
+                playMedia(name: name, file: file, fileExtension: fileExtension)
+            }
         case .notDownloaded, .error:
             downloadMedia(name: name, file: file, fileExtension: fileExtension)
         case .downloading:

@@ -9,6 +9,13 @@
 import UIKit
 import SwiftUI
 
+class SutraTitleContainerView: UIView {
+    override var intrinsicContentSize: CGSize {
+        // 要求水平方向尽可能宽，垂直方向自适应，从而强制利用所有可用空间
+        return CGSize(width: UILayoutFittingExpandedSize.width, height: UIViewNoIntrinsicMetric)
+    }
+}
+
 class Book: NSObject {
     static let shared:Book = Book()
     
@@ -270,7 +277,6 @@ class Book: NSObject {
             parentLabel.lineBreakMode = .byTruncatingTail // 强制单行截掉长尾
             parentLabel.adjustsFontSizeToFitWidth = true
             parentLabel.minimumScaleFactor = 0.7 // 允许在截断前适度缩小文字
-            parentLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal) // 给左右按钮让位
             
             let pText = parentTitle + " 之"
             let pAttr = NSMutableAttributedString(string: pText)
@@ -291,27 +297,42 @@ class Book: NSObject {
         }
         
         let titleLabel = UILabel()
-        let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .regular)
-        titleLabel.font = titleFont
+        let isTwoLines = parent != nil && !parentTitle.isEmpty
+        // 两行标题时，底部的主标题字号从巨大的默认值(30)缩小到24
+        let baseFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .regular)
+        titleLabel.font = isTwoLines ? baseFont.withSize(24) : baseFont
+        
         titleLabel.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
         titleLabel.textAlignment = .center
         titleLabel.lineBreakMode = .byTruncatingTail // 强制单行截掉长尾避免三行坍塌
         titleLabel.adjustsFontSizeToFitWidth = true
-        titleLabel.minimumScaleFactor = 0.6 // 对于正标题允许更大程度缩放
-        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        titleLabel.minimumScaleFactor = 0.5 // 允许更大程度缩放
         
-        let attr = NSMutableAttributedString(string: title)
-        attr.addAttribute(NSAttributedStringKey.kern, value: 3.0, range: NSRange(location: 0, length: attr.length))
-        titleLabel.attributedText = attr
+        // 核心修复：固定的字间距(kern: 3.0)在字体缩小时不会按比例缩小。
+        // 对于长标题，字间距反而会占据大量宽度，导致文字无法有效缩小。
+        // 因此对于超过 6 个字的长标题，我们舍弃 kern，让系统完美执行文字缩小。
+        if title.count <= 6 {
+            let attr = NSMutableAttributedString(string: title)
+            attr.addAttribute(NSAttributedStringKey.kern, value: 3.0, range: NSRange(location: 0, length: attr.length))
+            titleLabel.attributedText = attr
+        } else {
+            titleLabel.text = title
+        }
         
         stackView.addArrangedSubview(titleLabel)
 
-        // 让标题填满左右按钮之间的可用空间：大宽度 + flexibleWidth
-        // 导航栏会自动裁剪到实际可用宽度
-        stackView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44)
-        stackView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        // 让标题填满左右按钮之间的可用空间：放弃 iOS 默认的绝对居中
+        let container = SutraTitleContainerView()
+        container.addSubview(stackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stackView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            stackView.topAnchor.constraint(equalTo: container.topAnchor),
+            stackView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        ])
 
-        return stackView
+        return container
     }
     
     @MainActor
