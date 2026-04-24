@@ -52,26 +52,29 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
         // 增加上下呼吸空间，无缝衔接
         sutraTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 24, right: 12)
 
-        // 阻止 iOS 自动调整 insets，防止在翻页动画中出现偏移跳动
-        sutraTextView.contentInsetAdjustmentBehavior = .never
+        // 移除 iOS 自动调整 insets 的限制，因为我们现在使用了 .scroll 翻页，不再有 pageCurl 的跳动 bug
+        // 让系统帮我们处理刘海/灵动岛的距离
+        sutraTextView.contentInsetAdjustmentBehavior = .always
 
         let text = Book.shared.getSutraAttributeString(meta)
         sutraTextView.attributedText = text
         view.addSubview(sutraTextView)
 
+        sutraTextView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let guide = view.safeAreaLayoutGuide
+        
         if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
-            sutraTextView.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                sutraTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 44),
-                sutraTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -44),
-                sutraTextView.topAnchor.constraint(equalTo: view.topAnchor, constant: 10),
-                sutraTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -10)
+                sutraTextView.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 44),
+                sutraTextView.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -44),
+                sutraTextView.topAnchor.constraint(equalTo: view.topAnchor),
+                sutraTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
             ])
         } else {
-            sutraTextView.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                sutraTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                sutraTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                sutraTextView.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
+                sutraTextView.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
                 sutraTextView.topAnchor.constraint(equalTo: view.topAnchor),
                 sutraTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
             ])
@@ -79,25 +82,9 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
         self.sutraView = sutraTextView
     }
 
-    // MARK: - UITextViewDelegate — 手动跟踪滚动方向控制导航栏
-
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        lastContentOffset = scrollView.contentOffset.y
-    }
-
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let currentOffset = scrollView.contentOffset.y
-        let delta = currentOffset - lastContentOffset
-
-        // 下拉 → 显示导航栏
-        if delta < -30 {
-            navigationController?.setNavigationBarHidden(false, animated: true)
-        }
-        // 上滑 → 隐藏导航栏
-        else if delta > 30 {
-            navigationController?.setNavigationBarHidden(true, animated: true)
-        }
-    }
+    // 移除手动计算偏移量来隐藏标题栏的逻辑，
+    // 因为这会和 iOS 系统底层的 contentInsetAdjustmentBehavior = .always 发生无限循环冲突，导致剧烈晃动。
+    // 我们依赖 SutraPurePageViewController 中开启的系统级 hidesBarsOnSwipe = true 来完成丝滑隐藏。
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)

@@ -202,13 +202,13 @@ struct SearchView: View {
             if let pageIndex = Book.shared.index?.firstIndex(where: { item in
                 item["path"] == result.path
             }) {
-                let pageVC = SutraPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+                let pageVC = SutraPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
                 pageVC.page = pageIndex
                 navigationController.setNavigationBarHidden(false, animated: false)
                 navigationController.pushViewController(pageVC, animated: true)
             } else {
                 // 按科判路径打开
-                let sutraVC = SutraPurePageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+                let sutraVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
                 sutraVC.path = result.path
                 sutraVC.onDismiss = {
                     navigationController.setNavigationBarHidden(false, animated: false)

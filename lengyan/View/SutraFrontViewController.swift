@@ -837,7 +837,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         if mode == "tree" {
             // 科判式阅读
-            let sutraVC = SutraPurePageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+            let sutraVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
             sutraVC.path = lastPath
             sutraVC.hidesBottomBarWhenPushed = true
             sutraVC.onDismiss = { [weak self] in
@@ -846,13 +846,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.navigationController?.pushViewController(sutraVC, animated: true)
         } else {
             // 卷式翻页阅读
-            let pageVC = SutraPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+            let pageVC = SutraPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
             pageVC.hidesBottomBarWhenPushed = true
             if let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == lastPath }) {
                 pageVC.page = pageIndex
             } else {
                 // path 找不到对应页，fallback 到科判式
-                let sutraVC = SutraPurePageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+                let sutraVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
                 sutraVC.path = lastPath
                 sutraVC.hidesBottomBarWhenPushed = true
                 sutraVC.onDismiss = { [weak self] in
@@ -911,7 +911,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func openSutraOfPath(path:String){
-        let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
+        let sutraVC = SutraPurePageViewController.init( transitionStyle:.scroll, navigationOrientation:.horizontal, options: .none)
         sutraVC.path = path
         sutraVC.hidesBottomBarWhenPushed = true
         sutraVC.onDismiss = {
@@ -921,7 +921,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.pushViewController(sutraVC, animated: true)
     }
     func openContent(_ item: [String : Any]){
-        let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl,
+        let pageVC = SutraPageViewController.init( transitionStyle:.scroll,
                                                    navigationOrientation:.horizontal,
                                                    options: .none)
         let path:String = item["path"] as! String

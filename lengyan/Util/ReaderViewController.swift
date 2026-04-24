@@ -8,6 +8,10 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     private let chapter: Int
     private let restoreOffset: CGFloat?
     private var hasRestoredOffset = false
+    
+    // 极简页码指示器
+    private let pageIndicator = UILabel()
+    private var hidePageIndicatorTimer: Timer?
 
 
     init(title:String, content:NSAttributedString, chapter: Int, restoreOffset: CGFloat? = nil) {
@@ -141,6 +145,29 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         saveProgress()
     }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let total = textViews.count
+        guard total > 0, scrollView.bounds.width > 0 else { return }
+        
+        let page = Int(round(scrollView.contentOffset.x / scrollView.bounds.width)) + 1
+        pageIndicator.text = "\(page) / \(total)"
+        
+        // 滑动时淡入显示
+        if pageIndicator.alpha < 1 {
+            UIView.animate(withDuration: 0.2) {
+                self.pageIndicator.alpha = 1
+            }
+        }
+        
+        // 停止滑动 1.5 秒后自动淡出消失（极简沉浸）
+        hidePageIndicatorTimer?.invalidate()
+        hidePageIndicatorTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
+            UIView.animate(withDuration: 0.5) {
+                self?.pageIndicator.alpha = 0
+            }
+        }
+    }
 
     // MARK: - Progress
 
@@ -170,6 +197,20 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         } else {
             // Fallback on earlier versions
         }
+        
+        // 配置极简页码指示器
+        pageIndicator.font = SutraTypographyManager.shared.uiFont(for: .uiSmall, weight: .light).withSize(10)
+        pageIndicator.textColor = SutraDesignTokens.shared.color(for: .textSecondary).withAlphaComponent(0.6)
+        pageIndicator.textAlignment = .center
+        pageIndicator.alpha = 0 // 初始状态隐藏
+        pageIndicator.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(pageIndicator)
+        
+        NSLayoutConstraint.activate([
+            pageIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            // 将指示器放入底部安全区（Home Bar 区域）内，距离物理屏幕底部 12pt，彻底脱离文本区域
+            pageIndicator.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -12)
+        ])
     }
 
     private func setupReader() {
@@ -182,8 +223,9 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         textStorage.addLayoutManager(textLayout)
 
         let viewSize = contentView.bounds.size
+        // 既然页码指示器已经下放到安全区，这里的文本排版可以恢复为紧凑优美的 16pt 间距
         let textInsets = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-
+        
         // 1
         var index: Int = 0
         var glyphRange: Int = 0
@@ -240,8 +282,15 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     // MARK: - Toast
 
     private func showResumeToast() {
+        let total = textViews.count
+        var pageText = ""
+        if total > 0, contentView.bounds.width > 0 {
+            let page = Int(round(contentView.contentOffset.x / contentView.bounds.width)) + 1
+            pageText = " [\(page)/\(total)]"
+        }
+        
         let toast = UILabel()
-        toast.text = "已恢复阅读进度"
+        toast.text = "已恢复进度" + pageText
         toast.font = SutraTypographyManager.shared.uiFont(for: .uiSmall, weight: .regular)
         toast.textColor = SutraDesignTokens.shared.color(for: .textSecondary)
         toast.textAlignment = .center
@@ -250,10 +299,14 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         toast.clipsToBounds = true
 
         let toastHeight: CGFloat = 36
-        let toastWidth: CGFloat = 160
+        // 稍微加宽一点以容纳页码文字
+        let toastWidth: CGFloat = 180
+        
+        // 沉入底部安全区：如果是全面屏，放入 34pt 的安全区内；非全面屏则距离底部 24pt
+        let bottomPadding: CGFloat = view.safeAreaInsets.bottom > 0 ? 12 : 24
         toast.frame = CGRect(
             x: (view.bounds.width - toastWidth) / 2,
-            y: view.bounds.height - view.safeAreaInsets.bottom - toastHeight - 24,
+            y: view.bounds.height - toastHeight - bottomPadding,
             width: toastWidth,
             height: toastHeight
         )

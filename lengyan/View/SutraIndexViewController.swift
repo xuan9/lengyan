@@ -234,7 +234,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             return
         }
 
-        let pageVC = SutraPageViewController.init( transitionStyle:.pageCurl,
+        let pageVC = SutraPageViewController.init( transitionStyle:.scroll,
                                                    navigationOrientation:.horizontal,
                                                    options: .none)
 

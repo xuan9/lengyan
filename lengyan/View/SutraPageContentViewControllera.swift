@@ -667,7 +667,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     
     @objc func pureSutra(){
         
-        let sutraVC = SutraPurePageViewController.init( transitionStyle:.pageCurl, navigationOrientation:.horizontal, options: .none)
+        let sutraVC = SutraPurePageViewController.init( transitionStyle:.scroll, navigationOrientation:.horizontal, options: .none)
         sutraVC.path = path;
         
         self.navigationController?.pushViewController(sutraVC, animated: true)

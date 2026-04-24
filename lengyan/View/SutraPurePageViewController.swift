@@ -26,6 +26,9 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
         self.dataSource = self;
         self.delegate = self;
+
+        // 递归将 UIPageViewController 内部所有子视图背景设为经文底色，消除翻页动画白色闪烁
+        recursivelySetBackground(view)
         // STORYBOARD REMOVED: Using programmatic UI now
         
         self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
@@ -304,5 +307,21 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let item = Book.shared.itemOfPath(path!);
         self.navigationItem.titleView = Book.shared.getTitleView(item);
     }
-    
+
+    // MARK: - 修复翻页白色背景
+
+    private func recursivelySetBackground(_ view: UIView) {
+        let bgColor = SutraDesignTokens.shared.color(for: .background)
+        view.subviews.forEach { sub in
+            sub.backgroundColor = bgColor
+            recursivelySetBackground(sub)
+        }
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // 每次布局后刷新内部视图背景，确保翻页动画全程无白色
+        recursivelySetBackground(view)
+    }
+
 }

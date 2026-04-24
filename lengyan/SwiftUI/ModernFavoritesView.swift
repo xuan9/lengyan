@@ -345,7 +345,7 @@ struct ModernFavoritesView: View {
         navigationController.setNavigationBarHidden(false, animated: false)
 
         let sutraVC = SutraPurePageViewController(
-            transitionStyle: .pageCurl,
+            transitionStyle: .scroll,
             navigationOrientation: .horizontal,
             options: nil
         )
@@ -371,7 +371,7 @@ struct ModernFavoritesView: View {
             navigationController.setNavigationBarHidden(false, animated: false)
 
             let pageVC = SutraPageViewController(
-                transitionStyle: .pageCurl,
+                transitionStyle: .scroll,
                 navigationOrientation: .horizontal,
                 options: nil
             )
