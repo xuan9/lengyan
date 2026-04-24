@@ -178,23 +178,25 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         commandCenter.changePlaybackPositionCommand.removeTarget(self)
     }
 
-    @objc private func handlePlay() {
+    @objc private func handlePlay() -> MPRemoteCommandHandlerStatus {
         DispatchQueue.main.async { [weak self] in
             self?.queuePlayer?.play()
             self?.isPlaying = true
             self?.updateNowPlayingInfo()
         }
+        return .success
     }
 
-    @objc private func handlePause() {
+    @objc private func handlePause() -> MPRemoteCommandHandlerStatus {
         DispatchQueue.main.async { [weak self] in
             self?.queuePlayer?.pause()
             self?.isPlaying = false
             self?.updateNowPlayingInfo()
         }
+        return .success
     }
 
-    @objc private func handleTogglePlayPause() {
+    @objc private func handleTogglePlayPause() -> MPRemoteCommandHandlerStatus {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             if self.queuePlayer?.rate ?? 0 > 0 {
@@ -206,9 +208,10 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             }
             self.updateNowPlayingInfo()
         }
+        return .success
     }
 
-    @objc private func handleSeek(_ event: MPChangePlaybackPositionCommandEvent) {
+    @objc private func handleSeek(_ event: MPChangePlaybackPositionCommandEvent) -> MPRemoteCommandHandlerStatus {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             let time = CMTime(seconds: event.positionTime, preferredTimescale: 600)
@@ -217,5 +220,6 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             self.lastNowPlayingUpdateTime = event.positionTime
             self.updateNowPlayingInfo()
         }
+        return .success
     }
 }
