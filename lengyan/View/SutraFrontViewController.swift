@@ -692,10 +692,21 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         btn.addTarget(self, action: #selector(chapterTouchUp(_:)), for: [.touchUpOutside, .touchCancel])
         btn.titleLabel?.adjustsFontSizeToFitWidth = true
 
-        // 📜 古雅经卷文字按钮，摒弃红尘卡片相
+        // 当前正在阅读的卷用 bold 字重突出
+        let isCurrentChapter = Prefers.shared.lastReadChapter == chapter
         btn.backgroundColor = .clear
-        btn.setTitleColor(SutraDesignTokens.shared.color(for: .textPrimary), for: .normal)
-        btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .regular) // 换用更纤细平和的字重
+        btn.setTitleColor(
+            SutraDesignTokens.shared.color(for: isCurrentChapter ? .textSecondary : .textPrimary),
+            for: .normal
+        )
+        btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(
+            for: .buttonMedium,
+            weight: isCurrentChapter ? .bold : .regular
+        )
+
+        // 长按从第一页开始
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(chapterLongPress(_:)))
+        btn.addGestureRecognizer(longPress)
 
         // 去除原本的强边框与阴影，仅留极细微的底边暗示
         btn.layer.borderWidth = 0
@@ -797,7 +808,16 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     @objc func onSutraChapterButtonTouchUp(_ sender:UIButton){
         let chapter = sender.tag
-        self.openChapter(chapter: chapter);
+        // 有进度且是同一卷时恢复位置，否则从第一页开始
+        let offset: CGFloat? = (Prefers.shared.lastReadChapter == chapter && Prefers.shared.lastReadChapterOffset > 0)
+            ? Prefers.shared.lastReadChapterOffset : nil
+        self.openChapter(chapter: chapter, restoreOffset: offset)
+    }
+
+    @objc func chapterLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+        let chapter = gesture.view!.tag
+        self.openChapter(chapter: chapter, restoreOffset: nil)
     }
     
     
@@ -937,10 +957,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
-    func openChapter(chapter:Int){
+    func openChapter(chapter:Int, restoreOffset: CGFloat? = nil){
         let content = Book.shared.getSutraAttributeString(text: Book.shared.getChapterSutra(chapter: chapter))
         let title = NSLocalizedString("chapter_\(chapter + 1)", comment: "chapter_name");
-        let pageVC = ReaderViewController.init(title: title, content: content)
+        let pageVC = ReaderViewController(title: title, content: content, chapter: chapter, restoreOffset: restoreOffset)
         pageVC.hidesBottomBarWhenPushed = true
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(pageVC, animated: true)

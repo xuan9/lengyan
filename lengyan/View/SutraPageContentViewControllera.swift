@@ -79,13 +79,13 @@ class SutraTableViewCell: UITableViewCell {
         textView.layer.shadowColor = UIColor.clear.cgColor  // 移除文本无用阴影
         textView.textContainerInset = UIEdgeInsets(
             top: 12,
-            left: 12,
+            left: 16,
             bottom: 24, // 下留白更大，产生自然的段落间隔
-            right: 12
+            right: 16
         )
 
-        // Traditional Chinese paragraph indentation (2 characters for sutra text)
-        textView.textContainer.lineFragmentPadding = 16.0
+        // 与 ReaderViewController 保持一致，使用系统默认值
+        textView.textContainer.lineFragmentPadding = 5.0
         textView.showsVerticalScrollIndicator = false
 
         containerView.addSubview(textView)
@@ -93,8 +93,8 @@ class SutraTableViewCell: UITableViewCell {
         // Seamless scroll structure - no borders or horizontal gaps
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: SutraSpacing.Zen.contentMargin),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -SutraSpacing.Zen.contentMargin),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 0),
 
             textView.topAnchor.constraint(equalTo: containerView.topAnchor),

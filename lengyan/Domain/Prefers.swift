@@ -40,6 +40,8 @@ class Prefers: NSObject, PrefersProtocol {
     private static let lastReadPathKey = "lastReadPath"
     private static let lastReadPageKey = "lastReadPage"
     private static let lastReadModeKey = "lastReadMode" // "paged" or "tree"
+    private static let lastReadChapterKey = "lastReadChapter"
+    private static let lastReadChapterOffsetKey = "lastReadChapterOffset"
     private static let userLikesKey = "userLikes"
 
     static let shared = Prefers()
@@ -158,6 +160,23 @@ class Prefers: NSObject, PrefersProtocol {
     var lastReadMode: String? {
         get { userDefaults.string(forKey: Prefers.lastReadModeKey) }
         set { userDefaults.set(newValue, forKey: Prefers.lastReadModeKey) }
+    }
+
+    /// 按卷阅读：上次阅读的卷号 (0-9)，-1 表示无记录
+    var lastReadChapter: Int {
+        get {
+            let v = userDefaults.integer(forKey: Prefers.lastReadChapterKey)
+            return v == 0 ? -1 : v - 1  // 存储 1-10，避免 0 与"未设置"混淆
+        }
+        set {
+            userDefaults.set(newValue + 1, forKey: Prefers.lastReadChapterKey)
+        }
+    }
+
+    /// 按卷阅读：上次阅读的水平偏移量
+    var lastReadChapterOffset: CGFloat {
+        get { CGFloat(userDefaults.double(forKey: Prefers.lastReadChapterOffsetKey)) }
+        set { userDefaults.set(Double(newValue), forKey: Prefers.lastReadChapterOffsetKey) }
     }
 
     func persist() {

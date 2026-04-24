@@ -61,7 +61,7 @@ struct ContentView: View {
             FavoritesView()
                 .tabItem {
                     VStack(spacing: 2) {
-                        Image(systemName: "star")
+                        Image(systemName: "heart")
                             .font(.system(size: 20))
                         Text(NSLocalizedString("star_tab_title", comment: ""))
                             .font(.caption)
