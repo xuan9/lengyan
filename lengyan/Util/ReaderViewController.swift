@@ -99,6 +99,8 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         self.navigationController?.hidesBarsOnSwipe = false
         self.navigationController?.hidesBarsOnTap = true
         self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = true
+        // 核心修复1：防止点击隐藏标题栏的手势吞噬长按事件
+        self.navigationController?.barHideOnTapGestureRecognizer.cancelsTouchesInView = false
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -153,6 +155,8 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         contentView.showsVerticalScrollIndicator = false
         contentView.showsHorizontalScrollIndicator = false
         contentView.isPagingEnabled = true
+        // 核心修复2：取消 ScrollView 对触摸事件的延迟拦截，让长按能瞬间传递到 UITextView
+        contentView.delaysContentTouches = false
         contentView.delegate = self
         view.addSubview(contentView)
 
@@ -211,9 +215,11 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
             textView.textContainerInset = textInsets
             textView.showsVerticalScrollIndicator = false
             textView.showsHorizontalScrollIndicator = false
-            textView.isScrollEnabled = false
+            // 核心修复3：必须开启 isScrollEnabled！这是击败外部手势拦截、激活原生文本选择引擎的唯一钥匙
+            textView.isScrollEnabled = true
             textView.bounces = false
             textView.bouncesZoom = false
+            textView.isUserInteractionEnabled = true
 
             // 6
             textViews.append(textView)
