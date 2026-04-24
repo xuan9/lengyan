@@ -891,22 +891,17 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     
-    //Called, when long press occurred
+    // 长按科判行 → 打开该条目的下级科判列表（与纯阅读页右上角 index 一致）
     @objc func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
         if longPressGestureRecognizer.state == UIGestureRecognizerState.began {
             let touchPoint = longPressGestureRecognizer.location(in: self.treeView.scrollView)
-            if let item = treeView.itemForRow(at: touchPoint) as? [String : Any] {
-                openItem(item)
+            if let rowItem = treeView.itemForRow(at: touchPoint) as? [String] {
+                let path = rowItem[0]
+                let item = Book.shared.itemOfPath(path)
+                if item["children"] != nil {
+                    openIndex(item)
+                }
             }
-        }
-    }
-    func openItem(_ item: [String : Any]){
-        if(item["children"] == nil){
-            if item["header"] == nil {
-                openContent(item)
-            }
-        } else {
-            openIndex(item);
         }
     }
     
