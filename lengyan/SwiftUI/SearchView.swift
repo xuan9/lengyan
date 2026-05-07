@@ -2,22 +2,136 @@
 //  SearchView.swift
 //  lengyan
 //
-//  全文搜索界面 — 与科判行同风格
+//  全文搜索界面 — 合并结果 + 搜索历史 + 关键词建议
 //
 
 import SwiftUI
 
+// MARK: - 搜索关键词分类
+
+enum SearchSuggestionCategory: String, CaseIterable {
+    case core = "核心"
+    case doctrine = "义理"
+    case practice = "修证"
+    case terms = "名相"
+
+    var keywords: [String] {
+        switch self {
+        case .core:     return ["七处征心", "十番显见", "五十阴魔", "如来藏", "常住真心"]
+        case .doctrine: return ["二种妄见", "四科七大", "三种相续", "三如来藏", "十八界"]
+        case .practice: return ["耳根圆通", "楞严咒", "二十五圆通", "三渐次", "乾慧地"]
+        case .terms:    return ["妄想", "根尘", "菩提", "涅槃", "无明", "五蕴", "六入"]
+        }
+    }
+}
+
+// MARK: - FlowLayout（iOS 15 兼容的标签流布局）
+
+struct FlowLayout: View {
+    var spacing: CGFloat = 8
+    var items: [String]
+    var onTap: (String) -> Void
+
+    var body: some View {
+        GeometryReader { geo in
+            let layout = computeLayout(maxWidth: geo.size.width)
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(layout.positions.enumerated()), id: \.offset) { index, pos in
+                    tagView(items[index])
+                        .position(x: pos.x, y: pos.y)
+                }
+            }
+            .frame(height: layout.height)
+        }
+    }
+
+    private func tagView(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 13, weight: .light))
+            .foregroundColor(SutraDesignSystem.color(.textSecondary))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .stroke(
+                        Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.3),
+                        lineWidth: 0.5
+                    )
+            )
+            .contentShape(Capsule())
+            .onTapGesture { onTap(text) }
+    }
+
+    private func computeLayout(maxWidth: CGFloat) -> (positions: [CGPoint], height: CGFloat) {
+        var positions: [CGPoint] = []
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+
+        // 用固定字体大小估算标签宽度
+        let font = UIFont.systemFont(ofSize: 13, weight: .light)
+        let tagHPadding: CGFloat = 24 // 12 * 2
+        let tagVPadding: CGFloat = 12 // 6 * 2
+
+        for text in items {
+            let textWidth = (text as NSString).size(withAttributes: [.font: font]).width
+            let itemWidth = textWidth + tagHPadding
+            let itemHeight = font.lineHeight + tagVPadding
+
+            if x + itemWidth > maxWidth, x > 0 {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            positions.append(CGPoint(x: x + itemWidth / 2, y: y + itemHeight / 2))
+            rowHeight = max(rowHeight, itemHeight)
+            x += itemWidth + spacing
+        }
+
+        return (positions, y + rowHeight)
+    }
+}
+
+// MARK: - SearchHostingController
+
+class SearchHostingController: UIHostingController<SearchView> {
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+}
+
+// MARK: - iOS 15 兼容键盘收起
+
+extension View {
+    @ViewBuilder
+    func dismissKeyboardOnScroll() -> some View {
+        if #available(iOS 16.0, *) {
+            self.scrollDismissesKeyboard(.interactively)
+        } else {
+            self.onTapGesture {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+        }
+    }
+}
+
+// MARK: - SearchView
+
 struct SearchView: View {
     @State private var query = ""
-    @State private var results: [SearchResult] = []
-    @Environment(\.dismiss) private var dismiss
+    @State private var results: [MergedSearchResult] = []
+    @State private var recentSearches: [String] = []
+    @State private var searchTask: Task<Void, Never>?
+    @FocusState private var isSearchFieldFocused: Bool
+
+    var onDismiss: (() -> Void)?
+    var onNavigate: ((MergedSearchResult) -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
-            // 搜索栏
             searchBar
 
-            // 结果列表 / 空状态
             if query.isEmpty {
                 emptyState
             } else if results.isEmpty {
@@ -27,8 +141,17 @@ struct SearchView: View {
             }
         }
         .background(SutraDesignSystem.backgroundColor())
+        .onAppear {
+            isSearchFieldFocused = true
+            recentSearches = Prefers.shared.searchHistory
+        }
         .onChange(of: query) { newValue in
-            performSearch(newValue)
+            searchTask?.cancel()
+            searchTask = Task {
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                guard !Task.isCancelled else { return }
+                performSearch(newValue)
+            }
         }
     }
 
@@ -36,8 +159,8 @@ struct SearchView: View {
 
     private var searchBar: some View {
         HStack(spacing: 12) {
-            // 返回按钮 — 与阅读页返回一致
-            Button(action: { dismiss() }) {
+            // 返回按钮 — dismiss 整个 modal
+            Button(action: { dismissModal() }) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 18, weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
@@ -52,6 +175,11 @@ struct SearchView: View {
                 TextField("搜索经文...", text: $query)
                     .font(SutraTypographyBridge.uiBody(weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                    .focused($isSearchFieldFocused)
+                    .submitLabel(.search)
+                    .onSubmit {
+                        isSearchFieldFocused = false
+                    }
 
                 if !query.isEmpty {
                     Button(action: { query = "" }) {
@@ -73,19 +201,55 @@ struct SearchView: View {
         .background(SutraDesignSystem.color(.navigationBar))
     }
 
-    // MARK: - 空状态
+    // MARK: - 空状态（搜索历史 + 关键词建议）
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Text("❀")
-                .font(.system(size: 36))
-                .foregroundColor(SutraDesignSystem.color(.textSecondary).opacity(0.5))
-            Text("输入关键词搜索科判与经文")
-                .font(SutraTypographyBridge.uiCaption(weight: .regular))
-                .foregroundColor(SutraDesignSystem.color(.textSecondary))
-            Spacer()
+        ScrollView {
+            VStack(spacing: 28) {
+                // 最近搜索
+                if !recentSearches.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("最近搜索")
+                                .font(SutraTypographyBridge.uiCaption(weight: .regular))
+                                .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                            Spacer()
+                            Button(action: {
+                                Prefers.shared.clearSearchHistory()
+                                recentSearches = []
+                            }) {
+                                Text("清除")
+                                    .font(.system(size: 13, weight: .light))
+                                    .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                            }
+                        }
+                        FlowLayout(spacing: 8, items: recentSearches) { term in
+                            query = term
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+
+                // 楞严关键词建议
+                VStack(alignment: .leading, spacing: 20) {
+                    ForEach(SearchSuggestionCategory.allCases, id: \.self) { category in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(category.rawValue)
+                                .font(.system(size: 12, weight: .light))
+                                .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                            FlowLayout(spacing: 8, items: category.keywords) { keyword in
+                                query = keyword
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+
+                Spacer(minLength: 40)
+            }
+            .padding(.top, 24)
         }
+        .dismissKeyboardOnScroll()
     }
 
     // MARK: - 无结果
@@ -104,39 +268,81 @@ struct SearchView: View {
 
     private var resultList: some View {
         ScrollView {
-            LazyVStack(spacing: 0) {
+            LazyVStack(spacing: 8) {
                 ForEach(results) { result in
-                    resultRow(result)
+                    resultCard(result)
                 }
             }
+            .padding(.horizontal, 10)
             .padding(.top, 8)
+            .padding(.bottom, 20)
         }
+        .dismissKeyboardOnScroll()
     }
 
-    private func resultRow(_ result: SearchResult) -> some View {
-        let primary = SutraDesignSystem.color(.primary)
+    // MARK: - 结果卡片（收藏风格，左侧竖条 + 内容 + 出处）
 
-        return VStack(alignment: .leading, spacing: 4) {
-            // 匹配文本（高亮关键词）
-            HStack(spacing: 0) {
-                Text("• ")
-                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)))
+    private func resultCard(_ result: MergedSearchResult) -> some View {
+        // 竖条颜色：纯科判用金色，其余用绿色
+        let isOutlineOnly = result.hasOutline && !result.hasSutra
+        let capsuleColor = isOutlineOnly
+            ? Color(SutraDesignTokens.shared.color(for: .decorativeGold))
+            : Color(SutraDesignTokens.shared.color(for: .primary))
 
-                highlightedText(result.matchedText, query: query, highlightColor: primary)
+        return HStack(spacing: 0) {
+            Capsule()
+                .fill(capsuleColor.opacity(0.7))
+                .frame(width: 3)
+                .padding(.vertical, 6)
+
+            VStack(alignment: .leading, spacing: 4) {
+                // 科判命中（合并卡片中的次要信息 / 纯科判卡片的主要内容）
+                if let outlineText = result.outlineMatch {
+                    highlightedText(outlineText, query: query, highlightColor: capsuleColor)
+                        .font(.system(size: isOutlineOnly ? 15 : 12, weight: isOutlineOnly ? .regular : .light))
+                        .foregroundColor(isOutlineOnly
+                            ? Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.85)
+                            : SutraDesignSystem.color(.textSecondary))
+                        .lineLimit(1)
+                }
+
+                // 经文命中片段（主内容）
+                if let sutraText = result.sutraMatch {
+                    highlightedText(sutraText, query: query, highlightColor: SutraDesignSystem.color(.primary))
+                        .font(SutraTypographyBridge.uiBody(weight: .regular))
+                        .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                        .lineLimit(2)
+                        .lineSpacing(4)
+                }
+
+                // 出处
+                HStack {
+                    Spacer()
+                    Text(result.chapterName)
+                        .font(.system(size: 11, weight: .light))
+                        .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                        .lineLimit(1)
+                }
             }
-            .font(SutraTypographyBridge.uiBody(weight: .regular))
-            .foregroundColor(SutraDesignSystem.color(.textPrimary))
-
-            // 出处
-            HStack {
-                Spacer()
-                Text(result.chapterName)
-                    .font(.system(size: 11, weight: .light))
-                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
-            }
+            .padding(.leading, 14)
+            .padding(.trailing, 16)
+            .padding(.vertical, 12)
         }
-        .padding(.horizontal, 36)
-        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(SutraDesignTokens.shared.color(for: .card)))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            LinearGradient(
+                                colors: [capsuleColor.opacity(0.15), capsuleColor.opacity(0.05)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.5
+                        )
+                )
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             navigateToResult(result)
@@ -151,15 +357,12 @@ struct SearchView: View {
         var result = Text("")
         var remaining = text
         while let range = remaining.range(of: query) {
-            // 前段
             let before = String(remaining[remaining.startIndex..<range.lowerBound])
             if !before.isEmpty {
                 result = result + Text(before)
             }
-            // 高亮段
             let match = String(remaining[range])
             result = result + Text(match).foregroundColor(highlightColor)
-            // 继续搜
             remaining = String(remaining[range.upperBound...])
         }
         if !remaining.isEmpty {
@@ -175,47 +378,33 @@ struct SearchView: View {
             results = []
             return
         }
-        results = SearchService.shared.search(query: query)
+        results = SearchService.shared.mergedSearch(query: query)
+        isSearchFieldFocused = false
+        Prefers.shared.addSearchQuery(query)
+        recentSearches = Prefers.shared.searchHistory
     }
 
     // MARK: - 导航
 
-    private func navigateToResult(_ result: SearchResult) {
-        // dismiss 完成后再导航，避免时序问题
-        guard let presentingVC = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .flatMap({ $0.windows })
-            .first(where: { $0.isKeyWindow })?
-            .rootViewController?
-            .presentedViewController else { return }
+    private func dismissModal() {
+        isSearchFieldFocused = false
+        searchTask?.cancel()
+        if let onDismiss {
+            onDismiss()
+        } else {
+            assertionFailure("SearchView.onDismiss not set — caller should provide it")
+            // 兜底：直接 dismiss presenting VC
+            (UIApplication.shared.connectedScenes.first as? UIWindowScene)?
+                .windows.first?.rootViewController?.dismiss(animated: true)
+        }
+    }
 
-        presentingVC.dismiss(animated: true) {
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let window = windowScene.windows.first,
-                  let tabBarController = window.rootViewController as? UITabBarController,
-                  let navigationController = tabBarController.selectedViewController as? UINavigationController else { return }
-
-            // 切到阅读 tab
-            tabBarController.selectedIndex = 0
-
-            // 查找 path 对应的 page index
-            if let pageIndex = Book.shared.index?.firstIndex(where: { item in
-                item["path"] == result.path
-            }) {
-                let pageVC = SutraPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-                pageVC.page = pageIndex
-                navigationController.setNavigationBarHidden(false, animated: false)
-                navigationController.pushViewController(pageVC, animated: true)
-            } else {
-                // 按科判路径打开
-                let sutraVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-                sutraVC.path = result.path
-                sutraVC.onDismiss = {
-                    navigationController.setNavigationBarHidden(false, animated: false)
-                }
-                navigationController.setNavigationBarHidden(false, animated: false)
-                navigationController.pushViewController(sutraVC, animated: true)
-            }
+    private func navigateToResult(_ result: MergedSearchResult) {
+        isSearchFieldFocused = false
+        if let onNavigate {
+            onNavigate(result)
+        } else {
+            assertionFailure("SearchView.onNavigate not set — caller should provide it")
         }
     }
 }

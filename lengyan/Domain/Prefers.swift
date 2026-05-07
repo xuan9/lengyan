@@ -43,6 +43,7 @@ class Prefers: NSObject, PrefersProtocol {
     private static let lastReadChapterKey = "lastReadChapter"
     private static let lastReadChapterOffsetKey = "lastReadChapterOffset"
     private static let userLikesKey = "userLikes"
+    private static let searchHistoryKey = "searchHistory"
 
     static let shared = Prefers()
 
@@ -177,6 +178,26 @@ class Prefers: NSObject, PrefersProtocol {
     var lastReadChapterOffset: CGFloat {
         get { CGFloat(userDefaults.double(forKey: Prefers.lastReadChapterOffsetKey)) }
         set { userDefaults.set(Double(newValue), forKey: Prefers.lastReadChapterOffsetKey) }
+    }
+
+    // MARK: - Search History
+
+    var searchHistory: [String] {
+        get { userDefaults.stringArray(forKey: Prefers.searchHistoryKey) ?? [] }
+        set { userDefaults.set(Array(newValue.prefix(10)), forKey: Prefers.searchHistoryKey) }
+    }
+
+    func addSearchQuery(_ query: String) {
+        let trimmed = String(query.trimmingCharacters(in: .whitespaces).prefix(20))
+        guard !trimmed.isEmpty else { return }
+        var history = searchHistory
+        history.removeAll { $0 == trimmed }
+        history.insert(trimmed, at: 0)
+        searchHistory = history
+    }
+
+    func clearSearchHistory() {
+        searchHistory = []
     }
 
     func persist() {

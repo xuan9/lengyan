@@ -866,9 +866,31 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     @objc func openSearch() {
-        let hostingController = UIHostingController(rootView: SearchView())
-        hostingController.modalPresentationStyle = .fullScreen
-        present(hostingController, animated: true)
+        let nav = UINavigationController()
+        nav.setNavigationBarHidden(true, animated: false)
+        nav.modalPresentationStyle = .fullScreen
+
+        let searchView = SearchView(
+            onDismiss: { [weak nav] in
+                nav?.dismiss(animated: true)
+            },
+            onNavigate: { [weak nav] result in
+                guard let nav = nav else { return }
+                if let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == result.path }) {
+                    let pageVC = SutraPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+                    pageVC.page = pageIndex
+                    nav.pushViewController(pageVC, animated: true)
+                } else {
+                    let sutraVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+                    sutraVC.path = result.path
+                    nav.pushViewController(sutraVC, animated: true)
+                }
+            }
+        )
+
+        let hostingController = SearchHostingController(rootView: searchView)
+        nav.setViewControllers([hostingController], animated: false)
+        present(nav, animated: true)
     }
     
     func close(){

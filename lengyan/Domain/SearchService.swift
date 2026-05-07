@@ -7,17 +7,15 @@
 
 import Foundation
 
-enum SearchResultType {
-    case outline   // 科判标题命中
-    case content   // 经文正文命中
-}
-
-struct SearchResult: Identifiable {
+/// 合并结果：同一 path 的科判+经文命中合并为一条
+struct MergedSearchResult: Identifiable {
     let id = UUID()
     let path: String
     let chapterName: String
-    let matchedText: String
-    let type: SearchResultType
+    let outlineMatch: String?   // 科判命中片段
+    let sutraMatch: String?     // 经文命中片段
+    var hasOutline: Bool { outlineMatch != nil }
+    var hasSutra: Bool { sutraMatch != nil }
 }
 
 class SearchService {
@@ -25,25 +23,19 @@ class SearchService {
     static let shared = SearchService()
     private init() {}
 
-    /// 搜索科判标题 + 经文正文，科判结果优先
-    func search(query: String) -> [SearchResult] {
+    /// 合并搜索：同一 path 的科判+经文合并为 MergedSearchResult
+    func mergedSearch(query: String) -> [MergedSearchResult] {
         guard !query.isEmpty, Book.shared.loaded else { return [] }
 
-        var outlineResults: [SearchResult] = []
-        var contentResults: [SearchResult] = []
+        var outlineByPath: [String: String] = [:]
+        var sutraByPath: [String: String] = [:]
 
         // 域 1：科判标题
         if let index = Book.shared.index {
             for item in index {
                 guard let name = item["name"], let path = item["path"] else { continue }
                 if name.contains(query) {
-                    let snippet = snippet(from: name, query: query, maxLen: 50)
-                    outlineResults.append(SearchResult(
-                        path: path,
-                        chapterName: parentName(for: path),
-                        matchedText: snippet,
-                        type: .outline
-                    ))
+                    outlineByPath[path] = snippet(from: name, query: query, maxLen: 50)
                 }
             }
         }
@@ -54,23 +46,34 @@ class SearchService {
                 for section in sections {
                     guard section["type"] == "sutra", let text = section["content"] else { continue }
                     if text.contains(query) {
-                        // 同一个 path 只取第一个命中的段落
-                        let snippet = snippet(from: text, query: query, maxLen: 50)
-                        contentResults.append(SearchResult(
-                            path: path,
-                            chapterName: parentName(for: path),
-                            matchedText: snippet,
-                            type: .content
-                        ))
+                        sutraByPath[path] = snippet(from: text, query: query, maxLen: 50)
                         break
                     }
                 }
             }
         }
 
-        // 科判优先，正文在后；各域内最多 25 条，总计 50
-        let maxPerCategory = 25
-        return Array(outlineResults.prefix(maxPerCategory)) + Array(contentResults.prefix(maxPerCategory))
+        // 合并所有 path
+        var allPaths = Set(outlineByPath.keys)
+        allPaths.formUnion(sutraByPath.keys)
+
+        let results = allPaths.map { path -> MergedSearchResult in
+            MergedSearchResult(
+                path: path,
+                chapterName: parentName(for: path),
+                outlineMatch: outlineByPath[path],
+                sutraMatch: sutraByPath[path]
+            )
+        }
+
+        // 排序：合并命中 > 纯科判 > 纯经文
+        return results.sorted { a, b in
+            let aMerged = a.hasOutline && a.hasSutra
+            let bMerged = b.hasOutline && b.hasSutra
+            if aMerged != bMerged { return aMerged }
+            if a.hasOutline != b.hasOutline { return a.hasOutline }
+            return a.path < b.path
+        }
     }
 
     // MARK: - Helpers
