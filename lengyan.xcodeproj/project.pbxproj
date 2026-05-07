@@ -83,6 +83,7 @@
 		88E94BDF895BD780748A3751 /* NavigationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B4DEA8ED2555B51E3976F /* NavigationHelper.swift */; };
 		A54C7FF4D3F14D6696855A6A /* LXGWWenKaiTC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 11D34166BFB54B879453E306 /* LXGWWenKaiTC-Regular.ttf */; };
 		A68C1C994600674BC5F7FB08 /* SutraAcknowledgmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */; };
+		ADD297E8BFA3460927DBAC9C /* ReadingStayTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67420AAD4331AD62D8214EFA /* ReadingStayTimer.swift */; };
 		B12E4D8E8D3A0321CB2E3F9E /* FeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 363F450E85F99C7CD1D01CDE /* FeedbackService.swift */; };
 		CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */; };
 		CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */; };
@@ -193,6 +194,7 @@
 		4AD0636D1EA244AC00751922 /* ly10.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly10.m4a; sourceTree = "<group>"; };
 		4AD0636E1EA244AC00751922 /* ly04.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ly04.m4a; sourceTree = "<group>"; };
 		6458481F9A0DB2ED9405E8AD /* AudioPlayerObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioPlayerObserver.swift; path = lengyan/Domain/AudioPlayerObserver.swift; sourceTree = SOURCE_ROOT; };
+		67420AAD4331AD62D8214EFA /* ReadingStayTimer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadingStayTimer.swift; sourceTree = "<group>"; };
 		6AFA4A6A953E96638E51D2B0 /* ReminderManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReminderManager.swift; path = lengyan/Domain/ReminderManager.swift; sourceTree = SOURCE_ROOT; };
 		6FB4697959414237B9CE64E8 /* LXGWWenKai-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LXGWWenKai-Medium.ttf"; sourceTree = "<group>"; };
 		722BB3048D834BBB8FC2CE90 /* LXGWWenKai-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LXGWWenKai-Regular.ttf"; sourceTree = "<group>"; };
@@ -247,6 +249,7 @@
 				B09045C2B7C615CA798CD05F /* MediaModels.swift */,
 				6458481F9A0DB2ED9405E8AD /* AudioPlayerObserver.swift */,
 				0D284D40A58BBA43F939040A /* AudioManager.swift */,
+				67420AAD4331AD62D8214EFA /* ReadingStayTimer.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -687,6 +690,7 @@
 				2E644A3E969ABBF1FA489817 /* SearchView.swift in Sources */,
 				2FE84432866C4DDC420FCCB6 /* FeedbackView.swift in Sources */,
 				B12E4D8E8D3A0321CB2E3F9E /* FeedbackService.swift in Sources */,
+				ADD297E8BFA3460927DBAC9C /* ReadingStayTimer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -876,13 +880,13 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -902,13 +906,13 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";

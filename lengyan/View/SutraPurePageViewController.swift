@@ -14,6 +14,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     var path:String?
     var _paths:[String] = [];
     var isShowIndexButton = true;
+    private var stayTimer = ReadingStayTimer()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,10 +33,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
 
         self.setTitle()
-
-        // 打开即保存初始页面进度
-        Prefers.shared.lastReadPath = self.path
-        Prefers.shared.lastReadMode = "tree"
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -45,6 +42,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        stayTimer.start()
         self.tabBarController?.tabBar.isHidden = true
         // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
         self.navigationController?.setNavigationBarHidden(false, animated: false)
@@ -58,7 +56,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
-        if let path = self.path {
+        if let path = self.path, stayTimer.isValidReading {
             Prefers.shared.lastReadPath = path
             Prefers.shared.lastReadMode = "tree"
         }

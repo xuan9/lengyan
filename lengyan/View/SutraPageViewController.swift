@@ -11,6 +11,7 @@ import UIKit
 class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
     // STORYBOARD REMOVED: Using programmatic UI now
     var onDismiss: (() -> Void)?
+    private var stayTimer = ReadingStayTimer()
     var page:Int = 0
 
     var path:String?
@@ -70,19 +71,15 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.setViewControllers([getViewControllerAtIndex(index: page)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
 
         self.setTitle()
-
-        // 打开即保存初始页面进度
-        Prefers.shared.lastReadPath = self.path
-        Prefers.shared.lastReadPageIndex = page
-        Prefers.shared.lastReadMode = "paged"
     }
-    
+
     override var prefersStatusBarHidden: Bool {
         return navigationController?.isNavigationBarHidden ?? false
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        stayTimer.start()
         self.tabBarController?.tabBar.isHidden = true
         // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
         self.navigationController?.setNavigationBarHidden(false, animated: false)
@@ -96,8 +93,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
-        // 保存阅读进度（仅在有效页面时）
-        if let path = self.path, page >= 0 {
+        // 保存阅读进度（停留超过10秒才视为有效阅读）
+        if let path = self.path, page >= 0, stayTimer.isValidReading {
             Prefers.shared.lastReadPath = path
             Prefers.shared.lastReadPageIndex = page
             Prefers.shared.lastReadMode = "paged"
