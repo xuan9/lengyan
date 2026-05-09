@@ -41,6 +41,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             ReminderManager.shared.scheduleDaily()
         }
 
+        // 同步每日经文到 Widget 小组件
+        DailyVerseProvider.shared.syncWidgetData()
+
         return true
     }
 
@@ -230,6 +233,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         guard let nav = root.selectedViewController as? UINavigationController else { return }
         nav.popToRootViewController(animated: false)
         (nav.topViewController as? SutraFrontViewController)?.openSutraOfPath(path: path)
+    }
+
+    // MARK: - Widget Deep Link
+
+    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+        // 处理 Widget 深链：lengyan://verse?path=/A2/B1/...
+        guard url.scheme == "lengyan", url.host == "verse" else { return false }
+
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           let pathItem = components.queryItems?.first(where: { $0.name == "path" }),
+           let path = pathItem.value, !path.isEmpty {
+            openNotificationItem(path: path)
+            return true
+        }
+        return false
     }
 
 }

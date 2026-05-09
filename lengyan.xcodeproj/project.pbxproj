@@ -94,6 +94,20 @@
 		CBC207392EBCD71300EB7A45 /* DesignSystem+Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC207382EBCD71300EB7A45 /* DesignSystem+Tokens.swift */; };
 		CBC2073B2EBCD79A00EB7A45 /* DesignSystem+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */; };
 		DA1144258D9B1D9F1F494D8E /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76EC4C008D2B36D010BCB7E9 /* SearchService.swift */; };
+		927EE1F0882A4B54BD07EC6A /* DailyVerseProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C71E0A9097A94FEB961AE65F /* DailyVerseProvider.swift */; };
+		0EF37E68574D4E54B045E5F3 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FAE489C5AC4CCBB3066315 /* HapticManager.swift */; };
+		AC0AD1957DE54E5A8579DA52 /* SutraCardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4022B9FDC584D739E1402D4 /* SutraCardRenderer.swift */; };
+		DA693579DBDB4BE1A515D099 /* DailyVerseCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C58F932A85A4413B9FABE8D /* DailyVerseCardView.swift */; };
+		81087998413F437A88554F80 /* SutraShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F2AB5239634E76892FCE47 /* SutraShareCardView.swift */; };
+		F84996CF47F64470BEEEF12B /* SharedVerseData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C610B94F2962439384250E92 /* SharedVerseData.swift */; };
+		CAD2B727243645C398434379 /* LengyanWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD07E0DA1ED64DA785C0ED85 /* LengyanWidgetBundle.swift */; };
+		87D1ECE90E034EB3906ECCB0 /* DailyVerseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61446741A3764C48A56C80B4 /* DailyVerseWidget.swift */; };
+		85A2373A9BA144E2BE43792D /* WidgetDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */; };
+		DF295F665CF84003BE3C9258 /* SharedVerseData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3092BA60DE2421295F0CD61 /* SharedVerseData.swift */; };
+		E8EC0AE8385E41F18E1DB992 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FC6B7D88C924C55AF90EB80 /* WidgetKit.framework */; };
+		C2F6DDAEA66E499B8A17217C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D0653490A0146489495DE29 /* SwiftUI.framework */; };
+		79B350D0AB4F410EA57A6BB0 /* LengyanWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2D1FA1B8FB3A4F9FA9BB2367 /* ModernWisdomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062F8B58456A40C09C663C10 /* ModernWisdomView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,7 +125,30 @@
 			remoteGlobalIDString = 139073081D109193003A3333;
 			remoteInfo = lengyan;
 		};
+
+		504C9DCBEA7C484980BAA61A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 139073001D109193003A3333;
+			proxyType = 1;
+			remoteGlobalIDString = 3DD228B411D644A7BDFB77B4;
+			remoteInfo = LengyanWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+/* Begin PBXCopyFilesBuildPhase section */
+
+		A895C447F80A481EB73932C7 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				79B350D0AB4F410EA57A6BB0 /* LengyanWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 
 /* Begin PBXFileReference section */
 		0D15C20D449143D0846EE8D3 /* LXGWWenKaiTC-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LXGWWenKaiTC-Medium.ttf"; sourceTree = "<group>"; };
@@ -212,6 +249,22 @@
 		CBC2073A2EBCD79A00EB7A45 /* DesignSystem+Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Layout.swift"; sourceTree = "<group>"; };
 		E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SutraAcknowledgmentsView.swift; sourceTree = "<group>"; };
 		ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZenTabHeaderView.swift; sourceTree = "<group>"; };
+		C71E0A9097A94FEB961AE65F /* DailyVerseProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyVerseProvider.swift; sourceTree = "<group>"; };
+		20FAE489C5AC4CCBB3066315 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		B4022B9FDC584D739E1402D4 /* SutraCardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraCardRenderer.swift; sourceTree = "<group>"; };
+		1C58F932A85A4413B9FABE8D /* DailyVerseCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyVerseCardView.swift; sourceTree = "<group>"; };
+		23F2AB5239634E76892FCE47 /* SutraShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraShareCardView.swift; sourceTree = "<group>"; };
+		C610B94F2962439384250E92 /* SharedVerseData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedVerseData.swift; sourceTree = "<group>"; };
+		DD07E0DA1ED64DA785C0ED85 /* LengyanWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LengyanWidgetBundle.swift; sourceTree = "<group>"; };
+		61446741A3764C48A56C80B4 /* DailyVerseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyVerseWidget.swift; sourceTree = "<group>"; };
+		FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDesignTokens.swift; sourceTree = "<group>"; };
+		E3092BA60DE2421295F0CD61 /* SharedVerseData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedVerseData.swift; sourceTree = "<group>"; };
+		FBDCAC2906D74E67A86FDF14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EF6B6B533C8E41C5B905D48A /* LengyanWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LengyanWidget.entitlements; sourceTree = "<group>"; };
+		ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LengyanWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FC6B7D88C924C55AF90EB80 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		3D0653490A0146489495DE29 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		062F8B58456A40C09C663C10 /* ModernWisdomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lengyan/View/Modern/ModernWisdomView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -236,6 +289,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		9B0372A8F1EC4DE081B00C2D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8EC0AE8385E41F18E1DB992 /* WidgetKit.framework in Frameworks */,
+				C2F6DDAEA66E499B8A17217C /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -246,6 +309,10 @@
 				135D60621D173B1B00029090 /* Book.swift */,
 				13FE31F423678EFD00F632E9 /* Constants.swift */,
 				6AFA4A6A953E96638E51D2B0 /* ReminderManager.swift */,
+				C610B94F2962439384250E92 /* SharedVerseData.swift */,
+				C71E0A9097A94FEB961AE65F /* DailyVerseProvider.swift */,
+				20FAE489C5AC4CCBB3066315 /* HapticManager.swift */,
+				B4022B9FDC584D739E1402D4 /* SutraCardRenderer.swift */,
 				B09045C2B7C615CA798CD05F /* MediaModels.swift */,
 				6458481F9A0DB2ED9405E8AD /* AudioPlayerObserver.swift */,
 				0D284D40A58BBA43F939040A /* AudioManager.swift */,
@@ -337,6 +404,8 @@
 				1F5745B1A33297A9705EA9BF /* SearchView.swift */,
 				949148079D94DAE6258ED83C /* FeedbackView.swift */,
 				363F450E85F99C7CD1D01CDE /* FeedbackService.swift */,
+				062F8B58456A40C09C663C10 /* ModernWisdomView.swift */,
+				5085E659DC29408B8C8A7E68 /* LengyanWidget */,
 			);
 			indentWidth = 4;
 			sourceTree = "<group>";
@@ -442,9 +511,25 @@
 				CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */,
 				0D89740455934B739168A0A8 /* ModernSettingsView.swift */,
 				ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */,
+				1C58F932A85A4413B9FABE8D /* DailyVerseCardView.swift */,
+				23F2AB5239634E76892FCE47 /* SutraShareCardView.swift */,
 				E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */,
 			);
 			path = SwiftUI;
+			sourceTree = "<group>";
+		};
+
+		5085E659DC29408B8C8A7E68 /* LengyanWidget */ = {
+			isa = PBXGroup;
+			children = (
+				DD07E0DA1ED64DA785C0ED85 /* LengyanWidgetBundle.swift */,
+				61446741A3764C48A56C80B4 /* DailyVerseWidget.swift */,
+				FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */,
+				E3092BA60DE2421295F0CD61 /* SharedVerseData.swift */,
+				FBDCAC2906D74E67A86FDF14 /* Info.plist */,
+				EF6B6B533C8E41C5B905D48A /* LengyanWidget.entitlements */,
+			);
+			path = LengyanWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -502,6 +587,24 @@
 			productName = lengyanUITests;
 			productReference = 1390732A1D109194003A3333 /* lengyanUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+
+		3DD228B411D644A7BDFB77B4 /* LengyanWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E65ECA9CF6FC40F2872ED9F4 /* Build configuration list for PBXNativeTarget "LengyanWidgetExtension" */;
+			buildPhases = (
+				6651964D3F824D788891BF03 /* Sources */,
+				9B0372A8F1EC4DE081B00C2D /* Frameworks */,
+				5BAAC674738C4BF2B8BBBE88 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LengyanWidgetExtension;
+			productName = LengyanWidgetExtension;
+			productReference = ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -573,7 +676,8 @@
 				139073081D109193003A3333 /* lengyan */,
 				1390731E1D109194003A3333 /* lengyanTests */,
 				139073291D109194003A3333 /* lengyanUITests */,
-			);
+			
+				3DD228B411D644A7BDFB77B4 /* LengyanWidgetExtension */,);
 		};
 /* End PBXProject section */
 
@@ -619,6 +723,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		5BAAC674738C4BF2B8BBBE88 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -626,6 +738,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D1FA1B8FB3A4F9FA9BB2367 /* ModernWisdomView.swift in Sources */,
 				133CAB9D2364DDB700B61AC0 /* RABatchChangeEntity.h in Sources */,
 				133CAB9E2364DDB700B61AC0 /* RABatchChangeEntity.m in Sources */,
 				CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */,
@@ -691,7 +804,13 @@
 				2FE84432866C4DDC420FCCB6 /* FeedbackView.swift in Sources */,
 				B12E4D8E8D3A0321CB2E3F9E /* FeedbackService.swift in Sources */,
 				ADD297E8BFA3460927DBAC9C /* ReadingStayTimer.swift in Sources */,
-			);
+			
+				927EE1F0882A4B54BD07EC6A /* DailyVerseProvider.swift in Sources */,
+				0EF37E68574D4E54B045E5F3 /* HapticManager.swift in Sources */,
+				AC0AD1957DE54E5A8579DA52 /* SutraCardRenderer.swift in Sources */,
+				DA693579DBDB4BE1A515D099 /* DailyVerseCardView.swift in Sources */,
+				81087998413F437A88554F80 /* SutraShareCardView.swift in Sources */,
+				F84996CF47F64470BEEEF12B /* SharedVerseData.swift in Sources */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1390731B1D109194003A3333 /* Sources */ = {
@@ -710,6 +829,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		6651964D3F824D788891BF03 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CAD2B727243645C398434379 /* LengyanWidgetBundle.swift in Sources */,
+				87D1ECE90E034EB3906ECCB0 /* DailyVerseWidget.swift in Sources */,
+				85A2373A9BA144E2BE43792D /* WidgetDesignTokens.swift in Sources */,
+				DF295F665CF84003BE3C9258 /* SharedVerseData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -722,6 +853,12 @@
 			isa = PBXTargetDependency;
 			target = 139073081D109193003A3333 /* lengyan */;
 			targetProxy = 1390732B1D109194003A3333 /* PBXContainerItemProxy */;
+		};
+
+		55AC1521C93F4DEA9674F321 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3DD228B411D644A7BDFB77B4 /* LengyanWidgetExtension */;
+			targetProxy = 504C9DCBEA7C484980BAA61A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1004,6 +1141,68 @@
 			};
 			name = Release;
 		};
+
+		6BAF1A356A4B47FC96D45A58 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSTCALLOG = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = LengyanWidget/LengyanWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LengyanWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "楞严 每日一偈";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+
+		DA03CBD0F8534812815DF4D3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSTCALLOG = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = LengyanWidget/LengyanWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LengyanWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "楞严 每日一偈";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1039,6 +1238,16 @@
 			buildConfigurations = (
 				1390733A1D109194003A3333 /* Debug */,
 				1390733B1D109194003A3333 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+
+		E65ECA9CF6FC40F2872ED9F4 /* Build configuration list for PBXNativeTarget "LengyanWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6BAF1A356A4B47FC96D45A58 /* Debug */,
+				DA03CBD0F8534812815DF4D3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

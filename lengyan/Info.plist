@@ -26,6 +26,17 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>lengyan</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>org.fuxuan.lengyan</string>
+		</dict>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -67,6 +78,7 @@
 		<string>LXGWWenKai-Medium.ttf</string>
 		<string>LXGWWenKaiTC-Regular.ttf</string>
 		<string>LXGWWenKaiTC-Medium.ttf</string>
+		<string>Kaiti.ttf</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
