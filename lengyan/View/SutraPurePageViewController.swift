@@ -80,9 +80,28 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         )
         backButton.tintColor = secondaryColor
         if #available(iOS 26.0, *) {
-            backButton.hidesSharedBackground = true  // 移除 iOS 26 Liquid Glass 按钮背景
+            backButton.hidesSharedBackground = true
         }
-        self.navigationItem.leftBarButtonItem = backButton
+
+        // 目录按钮移到左边
+        var leftButtons: [UIBarButtonItem] = [backButton]
+        if self.isShowIndexButton {
+            let item = Book.shared.itemOfPath(path ?? "")
+            if item["children"] != nil {
+                let indexButton = UIBarButtonItem(
+                    image: UIImage(systemName: "list.bullet"),
+                    style: .plain,
+                    target: self,
+                    action: #selector(openIndex)
+                )
+                indexButton.tintColor = secondaryColor
+                if #available(iOS 26.0, *) {
+                    indexButton.hidesSharedBackground = true
+                }
+                leftButtons.append(indexButton)
+            }
+        }
+        self.navigationItem.leftBarButtonItems = leftButtons
 
         // 导航栏背景统一 — 与阅读内容同色，按钮完全无背景色块
         let navBarColor = SutraDesignTokens.shared.color(for: .background)
@@ -140,31 +159,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             likeButton.hidesSharedBackground = true
         }
 
-        let rightButtons: [UIBarButtonItem]
-
-        if self.isShowIndexButton {
-            let item = Book.shared.itemOfPath(path)
-            if item["children"] != nil {
-                // 有目录时：[目录] [收藏]
-                let indexButton = UIBarButtonItem(
-                    image: UIImage(systemName: "list.bullet"),
-                    style: .plain,
-                    target: self,
-                    action: #selector(openIndex)
-                )
-                indexButton.tintColor = secondaryColor
-                if #available(iOS 26.0, *) {
-                    indexButton.hidesSharedBackground = true
-                }
-                rightButtons = [indexButton, likeButton]
-            } else {
-                // 无目录时：[分享] [收藏]
-                rightButtons = [makeShareButton(color: secondaryColor), likeButton]
-            }
-        } else {
-            // 无目录时：[分享] [收藏]
-            rightButtons = [makeShareButton(color: secondaryColor), likeButton]
-        }
+        // 右边统一：[分享] [收藏]
+        let rightButtons: [UIBarButtonItem] = [makeShareButton(color: secondaryColor), likeButton]
 
         self.navigationItem.setRightBarButtonItems(rightButtons, animated: false)
     }
@@ -188,22 +184,18 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let item = Book.shared.itemOfPath(path)
         let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
 
-        var shareText: String
-        if item["children"] == nil {
-            // 叶子节点：直接取经文
-            shareText = bookTitle + "\n" + Book.shared.getSutra(item)
-        } else if let name = item["name"] as? String {
-            // 有子节点：取章节名 + 该章节全部经文
-            shareText = bookTitle + "之「" + name + "」\n" + Book.shared.getSutra(item)
-        } else {
-            shareText = bookTitle
-        }
+        // 获取经文和来源
+        let sutraText = Book.shared.getSutra(item, maxLength: 40)
+        let name = item["name"] as? String ?? ""
+        let source = name.isEmpty ? bookTitle : "\(bookTitle) · \(name)"
 
-        let activityViewController = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
-        if let popover = activityViewController.popoverPresentationController {
-            popover.barButtonItem = self.navigationItem.rightBarButtonItems?.last
-        }
-        self.present(activityViewController, animated: true, completion: nil)
+        // 零摩擦分享：默认竖版美图卡片
+        SutraCardRenderer.shareCard(
+            text: sutraText,
+            source: source,
+            from: self,
+            barButtonItem: self.navigationItem.rightBarButtonItems?.first
+        )
     }
 
     @objc func openIndex(){

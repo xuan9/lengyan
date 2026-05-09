@@ -121,20 +121,18 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let item = Book.shared.itemOfPath(path)
         let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
 
-        var shareText: String
-        if item["children"] == nil {
-            shareText = bookTitle + "\n" + Book.shared.getSutra(item)
-        } else if let name = item["name"] as? String {
-            shareText = bookTitle + "之「" + name + "」\n" + Book.shared.getSutra(item)
-        } else {
-            shareText = bookTitle
-        }
+        // 获取经文和来源
+        let sutraText = Book.shared.getSutra(item, maxLength: 40)
+        let name = item["name"] as? String ?? ""
+        let source = name.isEmpty ? bookTitle : "\(bookTitle) · \(name)"
 
-        let activityViewController = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
-        if let popover = activityViewController.popoverPresentationController {
-            popover.barButtonItem = self.navigationItem.rightBarButtonItems?.last
-        }
-        self.present(activityViewController, animated: true, completion: nil)
+        // 零摩擦分享：默认竖版美图卡片
+        SutraCardRenderer.shareCard(
+            text: sutraText,
+            source: source,
+            from: self,
+            barButtonItem: self.navigationItem.rightBarButtonItems?.first
+        )
     }
     
     func setTitle() {
