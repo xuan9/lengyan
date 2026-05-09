@@ -493,19 +493,19 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
-        // 🏛️ Sacred header - 含经题 + 开经偈 + 卷章按钮 + 功能行
-        // Header 高度 = 经题 + 开经偈 + 按钮网格 + 工具行
+        // 🏛️ Sacred header - 含经题 + 开经偈 + 每日一偈 + 卷章按钮 + 功能行
         let titleTopPadding: CGFloat = rs(14)
         let titleHeight: CGFloat = rs(28)
         let titleLineGap: CGFloat = rs(4)
         let verseHeight: CGFloat = rs(44)
         let verseGap: CGFloat = rs(12)       // 开经偈上方呼吸空间
-        let verseButtonGap: CGFloat = rs(10) // 开经偈到卷按钮，紧凑不断层
-        let buttonHeight: CGFloat = max(44, rs(44))  // 触控目标不低于 44
+        let buttonSectionTopGap: CGFloat = rs(10) // 开经偈到卷章按钮间距
+        let buttonHeight: CGFloat = max(44, rs(44))
         let verticalSpacing: CGFloat = rs(4)
-        let toolRowPadding: CGFloat = rs(18)  // 续读行上方呼吸空间（卷按钮底到续读行）
+        let toolRowPadding: CGFloat = rs(18)
         let toolRowHeight: CGFloat = max(44, rs(44))
-        let headerHeight = titleTopPadding + titleHeight + titleLineGap + verseGap + verseHeight + verseButtonGap + buttonHeight * 2 + verticalSpacing + toolRowPadding + toolRowHeight
+
+        let headerHeight = titleTopPadding + titleHeight + titleLineGap + verseGap + verseHeight + buttonSectionTopGap + buttonHeight * 2 + verticalSpacing + toolRowPadding + toolRowHeight
 
         let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: headerHeight))
         header.backgroundColor = backgroundColor
@@ -534,13 +534,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let subTitle = UIButton.init(type: .custom)
         let verseY = titleLineY + verseGap
         subTitle.frame = CGRect(x: rs(16), y: verseY, width: width - rs(32), height: verseHeight)
-        // 使用带有特定换行符的开经偈
         let subTitleText = "无上甚深微妙法 百千万劫难遭遇\n我今见闻得受持 愿解如来真实义"
         subTitle.setTitle(subTitleText, for: .normal)
         subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .light)
         subTitle.titleLabel?.numberOfLines = 2
 
-        // 设置行距
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = rs(6)
         paragraphStyle.alignment = .center
@@ -553,13 +551,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         subTitle.addTarget(self, action: #selector(self.openRootIndex), for: .touchUpInside)
         header.addSubview(subTitle)
 
-        // 🏋️ 卷章按钮网格 (褪去卡片后的字样)
+        var nextY = verseY + verseHeight + buttonSectionTopGap
+
+        // 🏋️ 卷章按钮网格
         let horizontalPadding: CGFloat = rs(20)
         let buttonSpacing: CGFloat = rs(10)
         let totalSpacing = horizontalPadding * 2 + buttonSpacing * 4
         let chapterButtonWidth = (width - totalSpacing) / 5
 
-        let indexes = UIView(frame: CGRect(x: 0, y: verseY + verseHeight + verseButtonGap, width: width, height: buttonHeight * 2 + verticalSpacing))
+        let indexes = UIView(frame: CGRect(x: 0, y: nextY, width: width, height: buttonHeight * 2 + verticalSpacing))
 
         for i in 1...10 {
             let row = (i - 1) / 5
@@ -572,7 +572,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
         header.addSubview(indexes)
 
-        // ✨ 底部边界装饰性细线 (收尾过渡到科判列表)
+        // ✨ 底部边界装饰性细线
         let dividerFrame = CGRect(x: rs(32), y: header.frame.height - rs(25), width: width - rs(64), height: 0.5)
         let dividerLine = UIView(frame: dividerFrame)
         dividerLine.backgroundColor = decorativeGold.withAlphaComponent(0.2)
@@ -592,7 +592,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             .foregroundColor: bodyColor
         ])
         continueAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
-        // 有阅读进度时附加章节标题
         if let lastPath = Prefers.shared.lastReadPath {
             let itemName = Book.shared.itemOfPath(lastPath)["name"] as? String ?? ""
             if !itemName.isEmpty {
@@ -876,15 +875,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             },
             onNavigate: { [weak nav] result in
                 guard let nav = nav else { return }
-                if let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == result.path }) {
-                    let pageVC = SutraPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-                    pageVC.page = pageIndex
-                    nav.pushViewController(pageVC, animated: true)
-                } else {
-                    let sutraVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-                    sutraVC.path = result.path
-                    nav.pushViewController(sutraVC, animated: true)
-                }
+                let sutraVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+                sutraVC.path = result.path
+                nav.pushViewController(sutraVC, animated: true)
             }
         )
 

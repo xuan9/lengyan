@@ -524,69 +524,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
     
     func zenActionRow() -> UITableViewCell{
-        // 修正预加载漏洞：如果 navigationController 暂时为空，绝不能认定它处于隐藏状态
-        if (navigationController?.isNavigationBarHidden == true){
-            let emptyCell = UITableViewCell()
-            emptyCell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-            emptyCell.contentView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-            emptyCell.selectionStyle = .none
-            return emptyCell
-        }
-
         let cell = UITableViewCell()
         cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         cell.selectionStyle = .none
-
-        // Zen card container for action buttons - 极简扁平
-        let actionContainer = UIView()
-        actionContainer.backgroundColor = .clear
-        actionContainer.translatesAutoresizingMaskIntoConstraints = false
-        cell.addSubview(actionContainer)
-
-        // 极简改版：收藏与分享已上移至 NavigationBar
-        // 底部仅保留“原典”按钮（如果支持的话）
-        if meta["children"] == nil {
-            let emptyCell = UITableViewCell()
-            emptyCell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-            emptyCell.contentView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-            emptyCell.selectionStyle = .none
-            return emptyCell
-        }
-
-        let pureSutraButton = createZenActionButton(
-            iconName: "book",
-            action: #selector(SutraPageContentViewController.pureSutra),
-            title: NSLocalizedString("original_text", comment: "")
-        )
-
-        // Stack view for button arrangement
-        let buttonStack = UIStackView()
-        buttonStack.axis = .horizontal
-        buttonStack.distribution = .fillEqually
-        buttonStack.alignment = .center
-        buttonStack.spacing = 20
-        buttonStack.translatesAutoresizingMaskIntoConstraints = false
-
-        buttonStack.addArrangedSubview(pureSutraButton)
-
-        actionContainer.addSubview(buttonStack)
-
-        NSLayoutConstraint.activate([
-            // Action container constraints
-            actionContainer.topAnchor.constraint(equalTo: cell.topAnchor, constant: 16),
-            actionContainer.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 20),
-            actionContainer.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -20),
-            actionContainer.bottomAnchor.constraint(equalTo: cell.bottomAnchor, constant: -16),
-
-            // Button stack constraints
-            buttonStack.topAnchor.constraint(equalTo: actionContainer.topAnchor, constant: 20),
-            buttonStack.leadingAnchor.constraint(equalTo: actionContainer.leadingAnchor, constant: 20),
-            buttonStack.trailingAnchor.constraint(equalTo: actionContainer.trailingAnchor, constant: -20),
-            buttonStack.bottomAnchor.constraint(equalTo: actionContainer.bottomAnchor, constant: -20),
-
-            pureSutraButton.heightAnchor.constraint(equalToConstant: 60)
-        ])
-
         return cell
     }
 
