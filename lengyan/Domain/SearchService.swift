@@ -12,8 +12,9 @@ struct MergedSearchResult: Identifiable {
     let id = UUID()
     let path: String
     let chapterName: String
-    let outlineMatch: String?   // 科判命中片段
-    let sutraMatch: String?     // 经文命中片段
+    let outlineMatch: String?       // 科判命中片段
+    let sutraMatch: String?         // 经文片段（命中或补充上下文）
+    let sutraHit: Bool              // 经文是否真正命中关键词
     var hasOutline: Bool { outlineMatch != nil }
     var hasSutra: Bool { sutraMatch != nil }
 }
@@ -58,25 +59,34 @@ class SearchService {
         allPaths.formUnion(sutraByPath.keys)
 
         let results = allPaths.map { path -> MergedSearchResult in
-            MergedSearchResult(
+            let hit = sutraByPath[path]
+            let sutraMatch = hit ?? firstSutraSnippet(for: path, maxLen: 50)
+            return MergedSearchResult(
                 path: path,
                 chapterName: parentName(for: path),
                 outlineMatch: outlineByPath[path],
-                sutraMatch: sutraByPath[path]
+                sutraMatch: sutraMatch,
+                sutraHit: hit != nil
             )
         }
 
-        // 排序：合并命中 > 纯科判 > 纯经文
-        return results.sorted { a, b in
-            let aMerged = a.hasOutline && a.hasSutra
-            let bMerged = b.hasOutline && b.hasSutra
-            if aMerged != bMerged { return aMerged }
-            if a.hasOutline != b.hasOutline { return a.hasOutline }
-            return a.path < b.path
-        }
+        // 按经文自然顺序排列（path 字典序 = 从经首到经尾）
+        return results.sorted { $0.path < $1.path }
     }
 
     // MARK: - Helpers
+
+    /// 获取某 path 下第一段经文的开头片段（用于纯科判命中时补充经文上下文）
+    private func firstSutraSnippet(for path: String, maxLen: Int) -> String? {
+        guard let sections = Book.shared.contents?[path] else { return nil }
+        for section in sections {
+            guard section["type"] == "sutra", let text = section["content"] else { continue }
+            let cleaned = text.replacingOccurrences(of: "\n", with: " ")
+            let snippet = String(cleaned.prefix(maxLen))
+            return snippet.isEmpty ? nil : snippet + "..."
+        }
+        return nil
+    }
 
     /// 截取匹配关键词周围的文本片段
     private func snippet(from text: String, query: String, maxLen: Int) -> String {

@@ -283,8 +283,8 @@ struct SearchView: View {
     // MARK: - 结果卡片（收藏风格，左侧竖条 + 内容 + 出处）
 
     private func resultCard(_ result: MergedSearchResult) -> some View {
-        // 竖条颜色：纯科判用金色，其余用绿色
-        let isOutlineOnly = result.hasOutline && !result.hasSutra
+        // 竖条颜色：纯科判命中用金色，其余用绿色
+        let isOutlineOnly = result.hasOutline && !result.sutraHit
         let capsuleColor = isOutlineOnly
             ? Color(SutraDesignTokens.shared.color(for: .decorativeGold))
             : Color(SutraDesignTokens.shared.color(for: .primary))
@@ -306,13 +306,19 @@ struct SearchView: View {
                         .lineLimit(1)
                 }
 
-                // 经文命中片段（主内容）
+                // 经文片段（命中时高亮，补充上下文时不高亮）
                 if let sutraText = result.sutraMatch {
-                    highlightedText(sutraText, query: query, highlightColor: SutraDesignSystem.color(.primary))
-                        .font(SutraTypographyBridge.uiBody(weight: .regular))
-                        .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                        .lineLimit(2)
-                        .lineSpacing(4)
+                    Group {
+                        if result.sutraHit {
+                            highlightedText(sutraText, query: query, highlightColor: SutraDesignSystem.color(.primary))
+                        } else {
+                            Text(sutraText)
+                        }
+                    }
+                    .font(SutraTypographyBridge.uiBody(weight: .regular))
+                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                    .lineLimit(2)
+                    .lineSpacing(4)
                 }
 
                 // 出处
@@ -379,7 +385,6 @@ struct SearchView: View {
             return
         }
         results = SearchService.shared.mergedSearch(query: query)
-        isSearchFieldFocused = false
         Prefers.shared.addSearchQuery(query)
         recentSearches = Prefers.shared.searchHistory
     }
