@@ -94,7 +94,7 @@ private enum FavoritesTab: String, CaseIterable {
 }
 
 struct ModernFavoritesView: View {
-    @State private var selectedTab: FavoritesTab = .personal
+    @AppStorage("favoritesSelectedTab") private var selectedTab: FavoritesTab = .personal
     @State private var favorites: [FavoriteItem] = []
     @State private var curatedItems: [FavoriteItem] = []
     @State private var isLoading = true
@@ -168,10 +168,6 @@ struct ModernFavoritesView: View {
 
     private var emptyView: some View {
         VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL)) {
-            Image(systemName: selectedTab == .personal ? "heart.text.square" : "text.page.slash")
-                .font(.system(size: 72, weight: .ultraLight))
-                .foregroundColor(SutraDesignSystem.color(.primary).opacity(0.5))
-
             Text(selectedTab == .personal
                 ? NSLocalizedString("no_favorites", comment: "")
                 : "暂无精选内容")

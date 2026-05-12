@@ -28,67 +28,72 @@ enum SearchSuggestionCategory: String, CaseIterable {
 // MARK: - FlowLayout（iOS 15 兼容的标签流布局）
 
 struct FlowLayout: View {
-    var spacing: CGFloat = 8
+    var spacing: CGFloat = 10
     var items: [String]
     var onTap: (String) -> Void
 
     var body: some View {
-        GeometryReader { geo in
-            let layout = computeLayout(maxWidth: geo.size.width)
-            ZStack(alignment: .topLeading) {
-                ForEach(Array(layout.positions.enumerated()), id: \.offset) { index, pos in
-                    tagView(items[index])
-                        .position(x: pos.x, y: pos.y)
+        VStack(alignment: .leading, spacing: spacing) {
+            ForEach(computeRows(), id: \.self) { row in
+                HStack(spacing: spacing) {
+                    ForEach(row, id: \.self) { text in
+                        tagView(text)
+                    }
                 }
             }
-            .frame(height: layout.height)
         }
     }
 
     private func tagView(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 13, weight: .light))
+            .font(.system(size: 14))
             .foregroundColor(SutraDesignSystem.color(.textSecondary))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
             .background(
-                Capsule()
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(
+                        Color(SutraDesignTokens.shared.color(for: .decorativeGold))
+                            .opacity(0.08)
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
                     .stroke(
-                        Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.3),
+                        Color(SutraDesignTokens.shared.color(for: .decorativeGold))
+                            .opacity(0.15),
                         lineWidth: 0.5
                     )
             )
-            .contentShape(Capsule())
+            .contentShape(RoundedRectangle(cornerRadius: 10))
             .onTapGesture { onTap(text) }
     }
 
-    private func computeLayout(maxWidth: CGFloat) -> (positions: [CGPoint], height: CGFloat) {
-        var positions: [CGPoint] = []
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var rowHeight: CGFloat = 0
+    private func computeRows() -> [[String]] {
+        let font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        let tagHPadding: CGFloat = 28
+        let screenWidth = UIScreen.main.bounds.width - 32 // 减去左右 padding 16*2
 
-        // 用固定字体大小估算标签宽度
-        let font = UIFont.systemFont(ofSize: 13, weight: .light)
-        let tagHPadding: CGFloat = 24 // 12 * 2
-        let tagVPadding: CGFloat = 12 // 6 * 2
+        var rows: [[String]] = []
+        var currentRow: [String] = []
+        var currentWidth: CGFloat = 0
 
         for text in items {
             let textWidth = (text as NSString).size(withAttributes: [.font: font]).width
             let itemWidth = textWidth + tagHPadding
-            let itemHeight = font.lineHeight + tagVPadding
 
-            if x + itemWidth > maxWidth, x > 0 {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
+            if currentWidth + itemWidth > screenWidth, !currentRow.isEmpty {
+                rows.append(currentRow)
+                currentRow = []
+                currentWidth = 0
             }
-            positions.append(CGPoint(x: x + itemWidth / 2, y: y + itemHeight / 2))
-            rowHeight = max(rowHeight, itemHeight)
-            x += itemWidth + spacing
+            currentRow.append(text)
+            currentWidth += itemWidth + spacing
         }
-
-        return (positions, y + rowHeight)
+        if !currentRow.isEmpty {
+            rows.append(currentRow)
+        }
+        return rows
     }
 }
 
@@ -123,6 +128,7 @@ struct SearchView: View {
     @State private var results: [MergedSearchResult] = []
     @State private var recentSearches: [String] = []
     @State private var searchTask: Task<Void, Never>?
+    @State private var searchCompleted = false
     @FocusState private var isSearchFieldFocused: Bool
 
     var onDismiss: (() -> Void)?
@@ -132,7 +138,7 @@ struct SearchView: View {
         VStack(spacing: 0) {
             searchBar
 
-            if query.isEmpty {
+            if query.isEmpty || !searchCompleted {
                 emptyState
             } else if results.isEmpty {
                 noResultsState
@@ -146,6 +152,7 @@ struct SearchView: View {
             recentSearches = Prefers.shared.searchHistory
         }
         .onChange(of: query) { newValue in
+            searchCompleted = false
             searchTask?.cancel()
             searchTask = Task {
                 try? await Task.sleep(nanoseconds: 300_000_000)
@@ -231,13 +238,13 @@ struct SearchView: View {
                 }
 
                 // 楞严关键词建议
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 28) {
                     ForEach(SearchSuggestionCategory.allCases, id: \.self) { category in
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 12) {
                             Text(category.rawValue)
-                                .font(.system(size: 12, weight: .light))
-                                .foregroundColor(SutraDesignSystem.color(.textTertiary))
-                            FlowLayout(spacing: 8, items: category.keywords) { keyword in
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                            FlowLayout(spacing: 10, items: category.keywords) { keyword in
                                 query = keyword
                             }
                         }
@@ -298,10 +305,10 @@ struct SearchView: View {
             VStack(alignment: .leading, spacing: 4) {
                 // 科判命中（合并卡片中的次要信息 / 纯科判卡片的主要内容）
                 if let outlineText = result.outlineMatch {
-                    highlightedText(outlineText, query: query, highlightColor: capsuleColor)
+                    highlightedText(outlineText, query: query, highlightColor: SutraDesignSystem.color(.primary))
                         .font(.system(size: isOutlineOnly ? 15 : 12, weight: isOutlineOnly ? .regular : .light))
                         .foregroundColor(isOutlineOnly
-                            ? Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.85)
+                            ? SutraDesignSystem.color(.textPrimary)
                             : SutraDesignSystem.color(.textSecondary))
                         .lineLimit(1)
                 }
@@ -368,7 +375,7 @@ struct SearchView: View {
                 result = result + Text(before)
             }
             let match = String(remaining[range])
-            result = result + Text(match).foregroundColor(highlightColor)
+            result = result + Text(match).foregroundColor(highlightColor).fontWeight(.semibold)
             remaining = String(remaining[range.upperBound...])
         }
         if !remaining.isEmpty {
@@ -385,6 +392,7 @@ struct SearchView: View {
             return
         }
         results = SearchService.shared.mergedSearch(query: query)
+        searchCompleted = true
         Prefers.shared.addSearchQuery(query)
         recentSearches = Prefers.shared.searchHistory
     }

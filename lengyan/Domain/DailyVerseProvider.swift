@@ -2,7 +2,7 @@
 //  DailyVerseProvider.swift
 //  lengyan
 //
-//  每日一偈数据提供者 — 增长飞轮的内容引擎
+//  今日读经数据提供者 — 增长飞轮的内容引擎
 //  从 ReminderManager 提取共享的选偈逻辑
 //  确保同一天返回同一句，支持近7天回溯
 //
@@ -14,6 +14,7 @@ import WidgetKit
 struct DailyVerse {
     let path: String           // 科判路径，用于深读导航
     let text: String           // 经文片段 (≤40字)
+    let fullText: String       // 经文段落 (~300字，供 Widget 长阅读)
     let source: String         // 来源标注，如"卷二 · 十番显见"
     let isBookmarked: Bool     // 当前收藏状态
     let date: Date             // 对应日期
@@ -64,9 +65,11 @@ final class DailyVerseProvider {
 
         let shared = SharedVerseData(
             text: verse.text,
+            fullText: verse.fullText,
             source: verse.source,
             path: verse.path,
-            dateString: formatter.string(from: verse.date)
+            dateString: formatter.string(from: verse.date),
+            theme: SutraDesignTokens.shared.currentTheme.rawValue
         )
         shared.save()
 
@@ -93,12 +96,15 @@ final class DailyVerseProvider {
         let item = Book.shared.itemOfPath(path)
         let rawText = Book.shared.getSutra(item, maxLength: 40)
         let text = cleanVerse(rawText)
+        let rawFullText = Book.shared.getSutra(item, maxLength: 300)
+        let fullText = cleanVerse(rawFullText)
         let source = buildSource(for: item, path: path)
         let isBookmarked = Prefers.shared.likes.contains(path)
 
         return DailyVerse(
             path: path,
             text: text,
+            fullText: fullText,
             source: source,
             isBookmarked: isBookmarked,
             date: date

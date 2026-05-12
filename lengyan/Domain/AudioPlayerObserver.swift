@@ -56,6 +56,8 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         trackSubscription?.cancel()
         trackSubscription = nil
 
+        NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
+
         removeRemoteCommands()
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
@@ -125,6 +127,14 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         isObservationSetup = true
 
         setupRemoteCommands()
+
+        // 监听播放完成，通知AudioManager处理PlayMode逻辑
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playerItemDidPlayToEndTime),
+            name: .AVPlayerItemDidPlayToEndTime,
+            object: nil
+        )
     }
 
     private func setupAudioSessionIfNeeded() {
@@ -221,5 +231,17 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             self.updateNowPlayingInfo()
         }
         return .success
+    }
+
+    @objc private func playerItemDidPlayToEndTime(_ notification: Notification) {
+        guard notification.object is AVPlayerItem else { return }
+
+        // AVQueuePlayer 在 didPlayToEndTime 后会移除已完成的 item，
+        // 导致 currentItem 变为 nil，不能依赖 === currentItem 判断。
+        // App 内只有一个 AVQueuePlayer，所以该通知必然属于当前播放的曲目。
+        DispatchQueue.main.async {
+            self.isPlaying = false
+            AudioManager.shared.handlePlaybackCompletion()
+        }
     }
 }

@@ -2,7 +2,7 @@
 //  ReminderManager.swift
 //  lengyan
 //
-//  每日提醒通知管理 — 每日推送经文偈语
+//  每日提醒通知管理 — 每日推送经文金句
 //  绝对防重复：identifier = daily_sutra_yyyyMMdd，每天唯一
 //  调度60天，kill/打开/多天不用都不会重复
 //
@@ -60,7 +60,7 @@ class ReminderManager {
             let identifier = "\(ReminderManager.idPrefix)\(dateStr)"
 
             let item = Book.shared.itemOfPath(verse)
-            let title = item["name"] as? String ?? "楞严经"
+            let title = "今日读经"
             let body = Book.shared.getSutra(item, maxLength: 80)
             let cleanBody = cleanNotificationBody(body)
 

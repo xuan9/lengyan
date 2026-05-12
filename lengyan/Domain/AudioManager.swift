@@ -18,13 +18,21 @@ class AudioManager: ObservableObject {
     @Published var isLoading = true
     @Published var selectedPlayMode: PlayMode = .repeatAll
 
+    // PlayMode计数器
+    private var playCount = 0
+
     // Download state
     @Published var downloadProgress: [String: Double] = [:]
     @Published var downloadStatus: [String: MediaItem.MediaStatus] = [:]
     @Published var downloadErrorMessage: String?
     var resourceRequests: [String: NSBundleResourceRequest] = [:]
 
-    private init() {}
+    private init() {
+        if let raw = Prefers.shared.lastPlayMode,
+           let mode = PlayMode(rawValue: raw) {
+            selectedPlayMode = mode
+        }
+    }
 
     // MARK: - Data Loading
 
@@ -96,7 +104,8 @@ class AudioManager: ObservableObject {
                 guard index < group.names.count && index < group.files.count else { continue }
                 let name = group.names[index]
                 audioObserver.currentTrack = name
-                downloadStatus[lastFileName] = .downloaded
+                // 不覆盖 downloadStatus — 让 checkMediaStatus 的异步回调决定真实状态
+                // 如果文件未下载，用户点击时会自动走下载流程
                 print("📝 Resumed playback UI: \(name)")
                 break
             }
@@ -109,8 +118,9 @@ class AudioManager: ObservableObject {
         let status = downloadStatus[file] ?? .notDownloaded
         switch status {
         case .downloaded:
-            // 如果点击的是当前正在播放的卷，切换暂停/播放
-            if audioObserver.currentTrack == name {
+            // 播放器已加载该曲目 → 暂停/播放切换
+            // 播放器未就绪（如恢复上次曲目）→ 走 playMedia 初始化
+            if audioObserver.currentTrack == name && audioObserver.queuePlayer?.currentItem != nil {
                 togglePlayPause()
             } else {
                 playMedia(name: name, file: file, fileExtension: fileExtension)
@@ -128,17 +138,48 @@ class AudioManager: ObservableObject {
         downloadStatus[file] = .downloading
         downloadProgress[file] = 0
 
-        let resourceRequest = NSBundleResourceRequest(tags: [file])
-        resourceRequest.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+        // 复用已有的 prefetch 请求，避免重复下载
+        let resourceRequest: NSBundleResourceRequest
+        let isPrefetchInProgress: Bool
+        if let existing = resourceRequests[file] {
+            resourceRequest = existing
+            // prefetch 已调用 beginAccessingResources，不能重复调用
+            // 挂上进度 UI，等 prefetch 完成后自动播放
+            isPrefetchInProgress = true
+        } else {
+            let req = NSBundleResourceRequest(tags: [file])
+            req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+            resourceRequest = req
+            isPrefetchInProgress = false
+        }
         resourceRequests[file] = resourceRequest
 
         let progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-            let currentProgress = self.downloadProgress[file] ?? 0
             if self.downloadStatus[file] == .downloaded || self.downloadStatus[file] == .error {
                 timer.invalidate()
-            } else if currentProgress < 0.9 {
-                self.downloadProgress[file] = min(0.9, currentProgress + 0.05)
+            } else {
+                let realProgress = resourceRequest.progress.fractionCompleted
+                self.downloadProgress[file] = realProgress > 0 ? realProgress : 0.01
             }
+        }
+
+        // prefetch 已在下载中，只需挂上完成回调，不能重复调用 beginAccessingResources
+        if isPrefetchInProgress {
+            // 轮询等待 prefetch 完成，然后自动播放
+            let _ = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { timer in
+                if self.downloadStatus[file] == .downloaded || self.downloadStatus[file] == .error {
+                    timer.invalidate()
+                    progressTimer.invalidate()
+                    if self.downloadStatus[file] == .downloaded {
+                        self.downloadProgress[file] = 1.0
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            self.downloadProgress.removeValue(forKey: file)
+                            self.playMedia(name: name, file: file, fileExtension: fileExtension)
+                        }
+                    }
+                }
+            }
+            return
         }
 
         resourceRequest.beginAccessingResources { (error: Error?) in
@@ -174,6 +215,11 @@ class AudioManager: ObservableObject {
         guard !name.isEmpty && !file.isEmpty && !fileExtension.isEmpty else {
             print("❌ Invalid parameters for playMedia")
             return
+        }
+
+        // 新曲目，重置播放计数（必须在设置 currentTrack 之前判断）
+        if audioObserver.currentTrack != name {
+            playCount = 0
         }
 
         audioObserver.currentTrack = name
@@ -260,12 +306,21 @@ class AudioManager: ObservableObject {
         } else {
             audioObserver.isPlaying = false
         }
+
+        // 循环模式：静默预下载下一首，确保无缝衔接
+        if selectedPlayMode == .repeatAll {
+            prefetchNextTrack()
+        }
     }
 
     // MARK: - Playback Controls
 
     func togglePlayPause() {
-        guard let player = audioObserver.queuePlayer else { return }
+        // 播放器未初始化（如恢复上次曲目后首次点击）→ 找到当前曲目并播放
+        guard let player = audioObserver.queuePlayer else {
+            startCurrentTrack()
+            return
+        }
 
         if audioObserver.isPlaying {
             player.pause()
@@ -274,8 +329,20 @@ class AudioManager: ObservableObject {
             if player.currentItem != nil {
                 player.play()
                 audioObserver.isPlaying = true
-            } else if let lastFile = audioObserver.lastPlayFile {
-                playMedia(name: lastFile.0, file: lastFile.1, fileExtension: lastFile.2)
+            } else {
+                startCurrentTrack()
+            }
+        }
+    }
+
+    /// 根据 currentTrack 名称找到对应文件，走完整的点击流程（自动处理下载）
+    private func startCurrentTrack() {
+        guard let trackName = audioObserver.currentTrack else { return }
+        for group in mediaGroups {
+            if let index = group.names.firstIndex(of: trackName) {
+                let file = group.files[index]
+                handleMediaItemTap(name: trackName, file: file, fileExtension: group.fileExtension)
+                return
             }
         }
     }
@@ -284,7 +351,81 @@ class AudioManager: ObservableObject {
 
     func selectMode(_ mode: PlayMode) {
         selectedPlayMode = mode
+        playCount = 0
         Prefers.shared.lastPlayMode = mode.rawValue
+    }
+
+    // MARK: - Playback Completion
+
+    func handlePlaybackCompletion() {
+        playCount += 1
+        let mode = selectedPlayMode
+
+        switch mode {
+        case .repeatAll:
+            playNextTrack()
+        case .repeatOne:
+            replayCurrentTrack()
+        default:
+            // playOnce / playNTimes
+            let targetCount = mode.rawValue
+            if playCount < targetCount {
+                replayCurrentTrack()
+            }
+            // 达到次数则停止，不做任何操作
+        }
+    }
+
+    private func replayCurrentTrack() {
+        guard let last = audioObserver.lastPlayFile else { return }
+        playMedia(name: last.0, file: last.1, fileExtension: last.2)
+    }
+
+    private func playNextTrack() {
+        guard let last = audioObserver.lastPlayFile else { return }
+        let currentFile = last.1
+
+        // 在当前组中查找下一首，未下载的自动下载播放
+        for group in mediaGroups {
+            if let index = group.files.firstIndex(of: currentFile) {
+                let nextIndex = (index + 1) % group.files.count
+                let nextFile = group.files[nextIndex]
+                let nextName = group.names[nextIndex]
+                handleMediaItemTap(name: nextName, file: nextFile, fileExtension: group.fileExtension)
+                return
+            }
+        }
+    }
+
+    /// 静默预下载下一首曲目，确保循环播放无缝衔接
+    private func prefetchNextTrack() {
+        guard let last = audioObserver.lastPlayFile else { return }
+        let currentFile = last.1
+
+        for group in mediaGroups {
+            if let index = group.files.firstIndex(of: currentFile) {
+                let nextIndex = (index + 1) % group.files.count
+                let nextFile = group.files[nextIndex]
+
+                // 已下载、正在下载、或已有请求（用户手动触发），无需预取
+                guard downloadStatus[nextFile] != .downloaded
+                      && downloadStatus[nextFile] != .downloading
+                      && resourceRequests[nextFile] == nil else { return }
+
+                let request = NSBundleResourceRequest(tags: [nextFile])
+                resourceRequests[nextFile] = request
+
+                request.beginAccessingResources { error in
+                    DispatchQueue.main.async {
+                        if error == nil {
+                            self.downloadStatus[nextFile] = .downloaded
+                        }
+                        // 预取静默完成，不影响 UI
+                    }
+                }
+                return
+            }
+        }
     }
 
     // MARK: - Audio Session

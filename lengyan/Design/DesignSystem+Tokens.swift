@@ -102,7 +102,7 @@ struct LightTheme: SutraThemeProtocol {
         // 🖋️ Sacred Text Colors - 神圣文字色
         case .textPrimary: return UIColor(hex: "#262626") ?? .black        // 传统墨黑 - 主要文本，庄重深邃
         case .textSecondary: return UIColor(hex: "#4A3728") ?? .darkGray   // 古檀褐 - 次要文本，沉稳厚重
-        case .textTertiary: return UIColor(hex: "#8B7355") ?? .gray       // 沉香木 - 提示文本，温暖淡雅
+        case .textTertiary: return UIColor(hex: "#7E6548") ?? .gray       // 沉香木 - 提示文本，WCAG AA 达标
         case .textOnAccent: return UIColor(hex: "#FFF8E7") ?? .white      // 佛光白 - 强调色上的神圣光辉
 
         // 📜 Sutra-specific Sacred Colors - 经文专用神圣色
@@ -271,6 +271,8 @@ public final class SutraDesignTokens {
             UserDefaults.standard.set(currentTheme.rawValue, forKey: "selectedTheme")
             applyTheme(currentTheme)
             NotificationCenter.default.post(name: .themeDidChange, object: currentTheme)
+            // 同步主题到 Widget（Widget 从 SharedVerseData 读取主题）
+            DailyVerseProvider.shared.syncWidgetData()
         }
     }
 

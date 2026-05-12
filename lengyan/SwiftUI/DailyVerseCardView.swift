@@ -2,14 +2,14 @@
 //  DailyVerseCardView.swift
 //  lengyan
 //
-//  每日一偈卡片 — 增长飞轮的入口
+//  今日读经卡片 — 增长飞轮的入口
 //  隐喻：早课诵经，每日一句金言
 //  交互：左右滑动切换近7天经文
 //
 
 import SwiftUI
 
-/// 每日一偈卡片视图
+/// 今日读经卡片视图
 /// 设计：宣纸质感 + 金色引号 + 禅意留白
 struct DailyVerseCardView: View {
     /// 点击「阅读」回调，传递 path

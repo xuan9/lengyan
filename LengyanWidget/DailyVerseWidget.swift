@@ -2,11 +2,11 @@
 //  DailyVerseWidget.swift
 //  LengyanWidget
 //
-//  每日一偈桌面小组件 — YouVersion 式留存引擎
+//  今日读经桌面小组件 — 可读经文 + 主题感知
 //  支持三种尺寸：
 //    小：经文金句（≤20字）+ 出处
-//    中：经文 + 宣纸纹理背景 + 装饰
-//    大：经文 + 白话引导 + "点击阅读" 提示
+//    中：经文段落 + 装饰线 + 出处
+//    大：完整经文段落（~300字）+ 出处 + "点击阅读" 提示
 //
 //  数据源：主App通过 App Group UserDefaults 写入
 //  更新频率：每日凌晨刷新
@@ -20,23 +20,29 @@ import SwiftUI
 struct DailyVerseEntry: TimelineEntry {
     let date: Date
     let text: String
+    let fullText: String
     let source: String
     let path: String
+    let theme: String
     let isPlaceholder: Bool
 
     static let placeholder = DailyVerseEntry(
         date: Date(),
-        text: "一切众生从无始来\n生死相续皆由不知\n常住真心性净明体",
+        text: "一切众生从无始来生死相续皆由不知常住真心性净明体",
+        fullText: "一切众生从无始来，生死相续，皆由不知常住真心性净明体，用诸妄想，此想不真，故有轮转。",
         source: "卷一 · 七处征心",
         path: "",
+        theme: "sepia",
         isPlaceholder: true
     )
 
     static let fallback = DailyVerseEntry(
         date: Date(),
         text: "狂心若歇 歇即菩提",
+        fullText: "狂心若歇，歇即菩提。一切众生从无始来，生死相续，皆由不知常住真心性净明体，用诸妄想，此想不真，故有轮转。",
         source: "楞严经",
         path: "/A2/B1/C2/D1/E2/F1/G1/H1/I1/J2",
+        theme: "sepia",
         isPlaceholder: false
     )
 }
@@ -68,11 +74,14 @@ struct DailyVerseProvider: TimelineProvider {
     /// 从 App Group UserDefaults 加载今日经文
     private func loadEntry() -> DailyVerseEntry? {
         guard let data = SharedVerseData.load() else { return nil }
+        WidgetTokens.resolveTheme(from: data.theme)
         return DailyVerseEntry(
             date: Date(),
             text: data.text,
+            fullText: data.effectiveFullText,
             source: data.source,
             path: data.path,
+            theme: data.effectiveTheme,
             isPlaceholder: false
         )
     }
@@ -85,7 +94,6 @@ struct SmallVerseView: View {
 
     var body: some View {
         ZStack {
-            // 背景
             WidgetTokens.background
 
             VStack(spacing: 6) {
@@ -131,7 +139,6 @@ struct MediumVerseView: View {
 
     var body: some View {
         ZStack {
-            // 宣纸纹理背景
             WidgetTokens.background
 
             HStack(spacing: 0) {
@@ -150,18 +157,18 @@ struct MediumVerseView: View {
                         Text("✧")
                             .font(.system(size: 8))
                             .foregroundColor(WidgetTokens.decorativeGold.opacity(0.6))
-                        Text("每日一偈")
+                        Text("今日读经")
                             .font(WidgetTokens.bodyFont(size: 10, weight: .medium))
                             .foregroundColor(WidgetTokens.textTertiary)
                             .tracking(2)
                     }
 
-                    // 经文
+                    // 经文段落
                     Text(entry.text.replacingOccurrences(of: "\n", with: ""))
-                        .font(WidgetTokens.sutraFont(size: 16))
+                        .font(WidgetTokens.sutraFont(size: 15))
                         .foregroundColor(WidgetTokens.sutraText)
                         .lineSpacing(6)
-                        .lineLimit(3)
+                        .lineLimit(4)
                         .minimumScaleFactor(0.75)
 
                     Spacer(minLength: 2)
@@ -196,70 +203,41 @@ struct MediumVerseView: View {
     }
 }
 
-// MARK: - Large Widget View
+// MARK: - Large Widget View — 可读经文
 
 struct LargeVerseView: View {
     let entry: DailyVerseEntry
 
     var body: some View {
         ZStack {
-            // 背景
             WidgetTokens.background
 
-            // 微妙渐变
-            LinearGradient(
-                colors: [
-                    WidgetTokens.surface.opacity(0.3),
-                    .clear,
-                    WidgetTokens.decorativeGold.opacity(0.03)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
             VStack(spacing: 0) {
-                Spacer(minLength: 16)
+                Spacer(minLength: 14)
 
                 // 顶部装饰
                 HStack(spacing: 6) {
                     topLine
-                    Text("✧ 每日一偈 ✧")
+                    Text("✧ 今日读经 ✧")
                         .font(WidgetTokens.bodyFont(size: 11, weight: .medium))
                         .foregroundColor(WidgetTokens.textTertiary)
                         .tracking(3)
                     topLine
                 }
 
-                Spacer(minLength: 16)
-
-                // 开引号
-                HStack {
-                    Text("「")
-                        .font(.system(size: 24, weight: .ultraLight))
-                        .foregroundColor(WidgetTokens.decorativeGold.opacity(0.5))
-                        .padding(.leading, 24)
-                    Spacer()
-                }
-
-                // 经文正文
-                Text(entry.text.replacingOccurrences(of: "\n", with: ""))
-                    .font(WidgetTokens.sutraFont(size: 20))
-                    .foregroundColor(WidgetTokens.sutraText)
-                    .lineSpacing(10)
-                    .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.7)
-                    .padding(.horizontal, 28)
-
-                // 闭引号
-                HStack {
-                    Spacer()
-                    Text("」")
-                        .font(.system(size: 24, weight: .ultraLight))
-                        .foregroundColor(WidgetTokens.decorativeGold.opacity(0.5))
-                        .padding(.trailing, 24)
-                }
-
                 Spacer(minLength: 12)
+
+                // 经文正文 — 使用长文本，真正可读
+                Text(entry.fullText.replacingOccurrences(of: "\n", with: ""))
+                    .font(WidgetTokens.sutraFont(size: 15))
+                    .foregroundColor(WidgetTokens.sutraText)
+                    .lineSpacing(7)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(12)
+                    .minimumScaleFactor(0.6)
+                    .padding(.horizontal, 24)
+
+                Spacer(minLength: 10)
 
                 // 来源标注
                 HStack(spacing: 6) {
@@ -271,7 +249,7 @@ struct LargeVerseView: View {
                     bottomLine
                 }
 
-                Spacer(minLength: 16)
+                Spacer(minLength: 12)
 
                 // 底部引导
                 HStack {
@@ -282,7 +260,7 @@ struct LargeVerseView: View {
                     Spacer()
                 }
 
-                Spacer(minLength: 12)
+                Spacer(minLength: 10)
             }
         }
         .widgetURL(url)
@@ -321,7 +299,7 @@ struct DailyVerseWidget: Widget {
                 WidgetEntryView(entry: entry)
             }
         }
-        .configurationDisplayName("每日一偈")
+        .configurationDisplayName("今日读经")
         .description("每天一句楞严经文金句，如晨钟暮鼓。")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

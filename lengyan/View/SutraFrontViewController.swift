@@ -173,6 +173,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     @objc private func themeDidChangeForFrontViewController() {
         applyThemeColorsToView()
         configureTreeViewWithDesignSystem()
+        setupHeaderView(self.view.bounds.size)
+        setupFooterView(self.view.bounds.size)
     }
 
     deinit {
@@ -493,7 +495,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
-        // 🏛️ Sacred header - 含经题 + 开经偈 + 每日一偈 + 卷章按钮 + 功能行
+        // 🏛️ Sacred header - 含经题 + 开经偈 + 今日读经 + 卷章按钮 + 功能行
         let titleTopPadding: CGFloat = rs(14)
         let titleHeight: CGFloat = rs(28)
         let titleLineGap: CGFloat = rs(4)
@@ -582,12 +584,15 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let toolRowY = indexes.frame.maxY + toolRowPadding
         let toolRow = UIView(frame: CGRect(x: 0, y: toolRowY, width: width, height: toolRowHeight))
 
-        // 续读 — 始终显示，有进度时显示章节名
+        // 续读 — 始终显示，有进度时显示章节名，无进度时引导开始读经
         let bodyColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        let primaryColor = SutraDesignTokens.shared.color(for: .textPrimary)
         let goldColor = SutraDesignTokens.shared.color(for: .decorativeGold)
         let continueLabel = UIButton(type: .system)
         let toolFont = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
-        let continueAttr = NSMutableAttributedString(string: "•  续读", attributes: [
+        let hasProgress = Prefers.shared.lastReadPath != nil
+        let buttonText = hasProgress ? "•  续读" : "•  开始读经"
+        let continueAttr = NSMutableAttributedString(string: buttonText, attributes: [
             .font: toolFont,
             .foregroundColor: bodyColor
         ])
@@ -608,7 +613,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
         continueLabel.setAttributedTitle(continueAttr, for: .normal)
-        continueLabel.frame = CGRect(x: rs(20), y: rs(6), width: width * 0.65, height: rs(32))
+        let btnHeight = max(44, rs(32))
+        let btnY = (toolRowHeight - btnHeight) / 2
+        continueLabel.frame = CGRect(x: rs(20), y: btnY, width: width * 0.65, height: btnHeight)
         continueLabel.contentHorizontalAlignment = .left
         continueLabel.tag = 9991
         continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
@@ -624,7 +631,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         searchAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
         searchBtn.setAttributedTitle(searchAttr, for: .normal)
         let searchWidth: CGFloat = rs(60)
-        searchBtn.frame = CGRect(x: colTenRight - searchWidth, y: rs(6), width: searchWidth, height: rs(32))
+        searchBtn.frame = CGRect(x: colTenRight - searchWidth, y: btnY, width: searchWidth, height: btnHeight)
         searchBtn.contentHorizontalAlignment = .right
         searchBtn.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
         toolRow.addSubview(searchBtn)
@@ -829,7 +836,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     // MARK: - 合并行功能
 
     @objc func continueReading() {
-        guard let lastPath = Prefers.shared.lastReadPath else { return }
+        guard let lastPath = Prefers.shared.lastReadPath else {
+            // 首次用户：打开卷一开始读经
+            openChapter(chapter: 0)
+            return
+        }
         let mode = Prefers.shared.lastReadMode ?? "paged"
 
         self.navigationController?.setNavigationBarHidden(false, animated: false)

@@ -88,19 +88,67 @@ class SearchService {
         return nil
     }
 
-    /// 截取匹配关键词周围的文本片段
+    /// 截取匹配关键词周围的文本片段，智能断句
     private func snippet(from text: String, query: String, maxLen: Int) -> String {
         guard let range = text.range(of: query) else {
             return String(text.prefix(maxLen))
         }
         let start = text.index(range.lowerBound, offsetBy: -maxLen/3, limitedBy: text.startIndex) ?? text.startIndex
         let end = text.index(range.upperBound, offsetBy: maxLen * 2/3, limitedBy: text.endIndex) ?? text.endIndex
-        let snippet = String(text[start..<end])
-        let cleaned = snippet.replacingOccurrences(of: "\n", with: " ")
-        if cleaned.count > maxLen {
-            return String(cleaned.prefix(maxLen)) + "..."
+        let raw = String(text[start..<end])
+        let cleaned = raw.replacingOccurrences(of: "\n", with: " ")
+
+        // 智能断句：如果截取开头不是原文开头，找到最近的自然断点
+        var adjusted: String
+        if start > text.startIndex {
+            adjusted = smartTruncateFront(cleaned, query: query)
+        } else {
+            adjusted = cleaned
         }
-        return cleaned
+
+        // 兜底：去掉开头残留的标点符号
+        adjusted = trimLeadingPunctuation(adjusted)
+
+        if adjusted.count > maxLen {
+            return String(adjusted.prefix(maxLen)) + "..."
+        }
+        return adjusted
+    }
+
+    /// 在匹配词之前找到最近的自然断句点（中文标点后），从标点后开始截取
+    private func smartTruncateFront(_ text: String, query: String) -> String {
+        // 中文断句标点
+        let breakChars: Set<Character> = ["，", "。", "、", "；", "：", "！", "？", "…", "—", "（", "《", "」", "』", "\\", " "]
+
+        guard let matchRange = text.range(of: query) else { return text }
+        let beforeMatch = text[text.startIndex..<matchRange.lowerBound]
+
+        // 在匹配词之前，找最后一个标点位置作为截断点
+        var lastPunctuation: String.Index?
+        for idx in beforeMatch.indices {
+            if breakChars.contains(beforeMatch[idx]) {
+                let afterPunct = text.index(after: idx)
+                if afterPunct <= matchRange.lowerBound {
+                    lastPunctuation = afterPunct
+                }
+            }
+        }
+
+        if let cut = lastPunctuation, cut < matchRange.lowerBound {
+            return String(text[cut...])
+        }
+        // 没找到合适的标点，保留原始截断
+        return text
+    }
+
+    /// 去掉字符串开头的标点符号和空格
+    private func trimLeadingPunctuation(_ text: String) -> String {
+        let punctuation: Set<Character> = ["，", "。", "、", "；", "：", "！", "？", "…", "—", "）", "」", "』", "》", " ", ","]
+        var idx = text.startIndex
+        while idx < text.endIndex, punctuation.contains(text[idx]) {
+            idx = text.index(after: idx)
+        }
+        return String(text[idx...])
     }
 
     /// 获取父级科判名称作为出处

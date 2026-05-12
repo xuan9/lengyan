@@ -12,10 +12,12 @@ import Foundation
 /// Widget 与 App 共享的经文数据
 /// 编码为 JSON 存入 App Group UserDefaults
 struct SharedVerseData: Codable {
-    let text: String         // 经文片段（≤40字）
+    let text: String         // 短文本 ~40字（小/中 Widget）
+    let fullText: String?    // 长文本 ~300字（大 Widget 可读段落）
     let source: String       // 来源标注 "卷二 · 十番显见"
     let path: String         // 科判路径，用于深链
     let dateString: String   // "2026-05-08"，用于判断是否过期
+    let theme: String?       // "light" | "sepia" | "dark"
 
     /// App Group identifier
     static let appGroupID = "group.org.fuxuan.lengyan"
@@ -45,5 +47,18 @@ struct SharedVerseData: Codable {
         formatter.dateFormat = "yyyy-MM-dd"
         let todayStr = formatter.string(from: Date())
         return dateString == todayStr
+    }
+
+    /// 可读长文本，fallback 到短文本
+    var effectiveFullText: String {
+        if let full = fullText, !full.isEmpty {
+            return full
+        }
+        return text
+    }
+
+    /// 有效主题，fallback 到 sepia（App 默认）
+    var effectiveTheme: String {
+        theme ?? "sepia"
     }
 }

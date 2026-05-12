@@ -88,8 +88,31 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // 在页面即将出现时将滚动位置重置为顶部，避免在 viewDidLayoutSubviews 中频繁触发导致跳动
+        // 重置滚动位置时保留导航栏状态，防止 setContentOffset 触发 hidesBarsOnSwipe 导致导航栏跳出
+        let wasNavBarHidden = navigationController?.isNavigationBarHidden ?? false
         self.sutraView?.setContentOffset(.zero, animated: false)
+        if wasNavBarHidden {
+            navigationController?.setNavigationBarHidden(true, animated: false)
+        }
+
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(themeDidChangeEvent),
+            name: .themeDidChange, object: nil
+        )
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        NotificationCenter.default.removeObserver(self, name: .themeDidChange, object: nil)
+    }
+
+    @objc private func themeDidChangeEvent() {
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        sutraView?.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        // attributedText的foregroundColor优先级高于textColor，需重建整段文字
+        if let item = item {
+            sutraView?.attributedText = Book.shared.getSutraAttributeString(item)
+        }
     }
 
     func updateHeader(_ item:[String:Any]){
