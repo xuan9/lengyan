@@ -52,31 +52,85 @@ final class DailyVerseProvider {
 
     /// 主动同步到 Widget（AppDelegate 启动时调用）
     func syncWidgetData() {
-        guard let v = verse(for: Date()) else { return }
-        syncToWidget(v)
-    }
-
-    // MARK: - Widget Sync
-
-    /// 将经文数据写入 App Group UserDefaults 供 Widget 读取
-    private func syncToWidget(_ verse: DailyVerse) {
+        var verses: [SharedVerseData] = []
+        let calendar = Calendar.current
+        let today = Date()
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-
-        let shared = SharedVerseData(
-            text: verse.text,
-            fullText: verse.fullText,
-            source: verse.source,
-            path: verse.path,
-            dateString: formatter.string(from: verse.date),
-            theme: SutraDesignTokens.shared.currentTheme.rawValue
-        )
-        shared.save()
-
+        let currentTheme = SutraDesignTokens.shared.currentTheme.rawValue
+        
+        for offset in 0..<14 {
+            guard let date = calendar.date(byAdding: .day, value: offset, to: today),
+                  let v = verse(for: date) else { continue }
+            
+            let shared = SharedVerseData(
+                text: v.text,
+                fullText: v.fullText,
+                source: v.source,
+                path: v.path,
+                dateString: formatter.string(from: date),
+                theme: currentTheme
+            )
+            verses.append(shared)
+        }
+        
+        SharedVerseData.save(verses: verses)
+        
         // 通知 WidgetKit 刷新时间线
         if #available(iOS 14.0, *) {
             WidgetCenter.shared.reloadAllTimelines()
         }
+    }
+
+    // MARK: - Widget Sync
+
+    /// (弃用)
+    private func syncToWidget(_ verse: DailyVerse) {
+        // No-op
+    }
+
+    // MARK: - Persistent Schedule
+    private let scheduleKey = "DailyVerseSchedule"
+    private var scheduledVerses: [String: String] {
+        get { UserDefaults.standard.dictionary(forKey: scheduleKey) as? [String: String] ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: scheduleKey) }
+    }
+
+    /// 获取特定日期的锁定路径，供内部和 ReminderManager 使用
+    func getPath(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateStr = formatter.string(from: date)
+        
+        var schedule = self.scheduledVerses
+        if let savedPath = schedule[dateStr] {
+            return savedPath
+        }
+        
+        var pool = buildPool()
+        if let lastRead = Prefers.shared.lastReadPath {
+            pool.removeAll { $0 == lastRead }
+        }
+        if pool.isEmpty {
+            pool = [DEFAULT_STARTS.first ?? "/A1/B1/C1"]
+        }
+        
+        // 使用自 Unix 纪元以来的天数，无缝跨越月份
+        let epochDays = Int(date.timeIntervalSince1970 / 86400)
+        let idx = epochDays % pool.count
+        let path = pool[idx]
+        
+        schedule[dateStr] = path
+        
+        // 清理过期的记录防止无限增长
+        if schedule.count > 100 {
+            let sortedKeys = schedule.keys.sorted()
+            let oldKeys = sortedKeys.dropLast(80)
+            for k in oldKeys { schedule.removeValue(forKey: k) }
+        }
+        self.scheduledVerses = schedule
+        
+        return path
     }
 
     // MARK: - Core Selection Logic
@@ -85,13 +139,8 @@ final class DailyVerseProvider {
     private func verse(for date: Date) -> DailyVerse? {
         guard Book.shared.loaded else { return nil }
 
-        let pool = buildPool()
-        guard !pool.isEmpty else { return nil }
-
-        // 确定性选取：基于日期的稳定 hash
-        let daysSinceEpoch = dayIndex(for: date)
-        let idx = daysSinceEpoch % pool.count
-        let path = pool[idx]
+        // 获取确定性的路径
+        let path = getPath(for: date)
 
         let item = Book.shared.itemOfPath(path)
         let rawText = Book.shared.getSutra(item, maxLength: 40)

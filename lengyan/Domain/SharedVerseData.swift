@@ -1,6 +1,6 @@
 //
 //  SharedVerseData.swift
-//  lengyan
+//  LengyanWidget
 //
 //  主App ↔ Widget 共享的每日经文数据
 //  通过 App Group UserDefaults 传递
@@ -25,20 +25,26 @@ struct SharedVerseData: Codable {
     /// UserDefaults key
     static let defaultsKey = "widget_daily_verse"
 
-    /// 从 App Group UserDefaults 读取
-    static func load() -> SharedVerseData? {
+    /// 从 App Group 读取特定日期的经文
+    static func load(for date: Date = Date()) -> SharedVerseData? {
         guard let defaults = UserDefaults(suiteName: appGroupID),
-              let data = defaults.data(forKey: defaultsKey) else {
+              let data = defaults.data(forKey: defaultsKey),
+              let array = try? JSONDecoder().decode([SharedVerseData].self, from: data) else {
             return nil
         }
-        return try? JSONDecoder().decode(SharedVerseData.self, from: data)
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let targetStr = formatter.string(from: date)
+        
+        return array.first { $0.dateString == targetStr }
     }
 
-    /// 写入 App Group UserDefaults
-    func save() {
-        guard let defaults = UserDefaults(suiteName: SharedVerseData.appGroupID),
-              let data = try? JSONEncoder().encode(self) else { return }
-        defaults.set(data, forKey: SharedVerseData.defaultsKey)
+    /// 批量写入未来多天的经文到 App Group
+    static func save(verses: [SharedVerseData]) {
+        guard let defaults = UserDefaults(suiteName: appGroupID),
+              let data = try? JSONEncoder().encode(verses) else { return }
+        defaults.set(data, forKey: defaultsKey)
     }
 
     /// 判断是否今日数据

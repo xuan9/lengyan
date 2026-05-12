@@ -45,21 +45,20 @@ class ReminderManager {
 
         guard Book.shared.loaded else { return }
 
-        let verses = selectVersesForNextDays(count: ReminderManager.maxScheduleDays)
         let baseHour = Prefers.shared.reminderHour
         let baseMinute = Prefers.shared.reminderMinute
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 
-        for (index, verse) in verses.enumerated() {
-            guard index < ReminderManager.maxScheduleDays else { break }
+        for index in 0..<ReminderManager.maxScheduleDays {
             guard let triggerDate = calendar.date(byAdding: .day, value: index, to: today) else { continue }
 
             // identifier包含日期，绝对唯一，同一天不会产生两条
             let dateStr = stringFromDate(triggerDate)
             let identifier = "\(ReminderManager.idPrefix)\(dateStr)"
 
-            let item = Book.shared.itemOfPath(verse)
+            let path = DailyVerseProvider.shared.getPath(for: triggerDate)
+            let item = Book.shared.itemOfPath(path)
             let title = "今日读经"
             let body = Book.shared.getSutra(item, maxLength: 80)
             let cleanBody = cleanNotificationBody(body)
@@ -68,7 +67,7 @@ class ReminderManager {
             content.title = title
             content.body = cleanBody
             content.sound = nil
-            content.userInfo = ["path": verse]
+            content.userInfo = ["path": path]
 
             var dc = DateComponents()
             dc.hour = baseHour
@@ -93,38 +92,6 @@ class ReminderManager {
         let f = DateFormatter()
         f.dateFormat = "yyyyMMdd"
         return f.string(from: date)
-    }
-
-    // MARK: - 经文选择：精选 + 收藏合并轮换
-
-    private func selectVersesForNextDays(count: Int) -> [String] {
-        var pool = DEFAULT_STARTS
-        let userBookmarks = Prefers.shared.userLikes
-        for bookmark in userBookmarks {
-            if !pool.contains(bookmark) {
-                pool.append(bookmark)
-            }
-        }
-
-        // 排除最近读过的经文，避免推送刚读过的内容
-        if let lastRead = Prefers.shared.lastReadPath {
-            pool.removeAll { $0 == lastRead }
-        }
-
-        // 兜底：池子清空了就用默认第一条
-        if pool.isEmpty {
-            pool = [DEFAULT_STARTS.first ?? "/A1/B1/C1"]
-        }
-
-        let dayIndex = Calendar.current.component(.day, from: Date())
-        let startIndex = dayIndex % pool.count
-
-        var result: [String] = []
-        for i in 0..<count {
-            let idx = (startIndex + i) % pool.count
-            result.append(pool[idx])
-        }
-        return result
     }
 
     // MARK: - 清理通知文本

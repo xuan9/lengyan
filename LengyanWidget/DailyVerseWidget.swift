@@ -55,28 +55,48 @@ struct DailyVerseProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (DailyVerseEntry) -> Void) {
-        let entry = loadEntry() ?? .fallback
+        let entry = loadEntry(for: Date()) ?? .fallback
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<DailyVerseEntry>) -> Void) {
-        let entry = loadEntry() ?? .fallback
-
-        // 下一次更新：明天凌晨 0:05
+        var entries: [DailyVerseEntry] = []
         let calendar = Calendar.current
-        let tomorrow = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: Date())!)
-        let nextUpdate = calendar.date(byAdding: .minute, value: 5, to: tomorrow)!
+        let today = Date()
 
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+        for offset in 0..<7 {
+            guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { continue }
+            let entryDate = offset == 0 ? today : calendar.startOfDay(for: date)
+            
+            if let entry = loadEntry(for: date, entryDate: entryDate) {
+                entries.append(entry)
+            } else if offset == 0 {
+                var fallbackEntry = DailyVerseEntry.fallback
+                fallbackEntry = DailyVerseEntry(
+                    date: entryDate,
+                    text: fallbackEntry.text,
+                    fullText: fallbackEntry.fullText,
+                    source: fallbackEntry.source,
+                    path: fallbackEntry.path,
+                    theme: fallbackEntry.theme,
+                    isPlaceholder: false
+                )
+                entries.append(fallbackEntry)
+            }
+        }
+
+        // 下一次大更新：7天后，但 iOS 会在 App 被打开调用 reloadAllTimelines 时刷新
+        let nextUpdate = calendar.date(byAdding: .day, value: 7, to: today)!
+        let timeline = Timeline(entries: entries, policy: .after(nextUpdate))
         completion(timeline)
     }
 
-    /// 从 App Group UserDefaults 加载今日经文
-    private func loadEntry() -> DailyVerseEntry? {
-        guard let data = SharedVerseData.load() else { return nil }
+    /// 从 App Group UserDefaults 加载特定日期的经文
+    private func loadEntry(for lookupDate: Date, entryDate: Date? = nil) -> DailyVerseEntry? {
+        guard let data = SharedVerseData.load(for: lookupDate) else { return nil }
         WidgetTokens.resolveTheme(from: data.theme)
         return DailyVerseEntry(
-            date: Date(),
+            date: entryDate ?? lookupDate,
             text: data.text,
             fullText: data.effectiveFullText,
             source: data.source,
@@ -96,17 +116,18 @@ struct SmallVerseView: View {
         ZStack {
             WidgetTokens.background
 
-            VStack(spacing: 6) {
-                Spacer(minLength: 4)
+            VStack(spacing: 4) {
+                Spacer(minLength: 2)
 
-                // 经文 — 紧凑金句
-                Text(truncatedText(max: 20))
+                // 经文 — 尽量多放
+                Text(entry.fullText.replacingOccurrences(of: "\n", with: ""))
                     .font(WidgetTokens.sutraFont(size: 14))
                     .foregroundColor(WidgetTokens.sutraText)
-                    .lineSpacing(5)
+                    .lineSpacing(4)
                     .multilineTextAlignment(.center)
+                    .lineLimit(4)
                     .minimumScaleFactor(0.8)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 10)
 
                 Spacer(minLength: 2)
 
@@ -119,12 +140,6 @@ struct SmallVerseView: View {
             }
         }
         .widgetURL(url)
-    }
-
-    private func truncatedText(max: Int) -> String {
-        let clean = entry.text.replacingOccurrences(of: "\n", with: "")
-        if clean.count <= max { return clean }
-        return String(clean.prefix(max - 1)) + "…"
     }
 
     private var url: URL? {
@@ -141,53 +156,44 @@ struct MediumVerseView: View {
         ZStack {
             WidgetTokens.background
 
-            HStack(spacing: 0) {
-                // 左侧装饰线
-                Rectangle()
-                    .fill(WidgetTokens.decorativeGold.opacity(0.3))
-                    .frame(width: 2)
-                    .padding(.vertical, 16)
-                    .padding(.leading, 16)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Spacer(minLength: 4)
-
-                    // 顶部标签
-                    HStack(spacing: 4) {
-                        Text("✧")
-                            .font(.system(size: 8))
-                            .foregroundColor(WidgetTokens.decorativeGold.opacity(0.6))
-                        Text("今日读经")
-                            .font(WidgetTokens.bodyFont(size: 10, weight: .medium))
-                            .foregroundColor(WidgetTokens.textTertiary)
-                            .tracking(2)
-                    }
-
-                    // 经文段落
-                    Text(entry.text.replacingOccurrences(of: "\n", with: ""))
-                        .font(WidgetTokens.sutraFont(size: 15))
-                        .foregroundColor(WidgetTokens.sutraText)
-                        .lineSpacing(6)
-                        .lineLimit(4)
-                        .minimumScaleFactor(0.75)
-
-                    Spacer(minLength: 2)
-
-                    // 底部来源
-                    HStack {
-                        decorativeLine
-                        Text(entry.source)
-                            .font(WidgetTokens.bodyFont(size: 10, weight: .regular))
-                            .foregroundColor(WidgetTokens.textTertiary)
-                            .tracking(1)
-                        decorativeLine
-                    }
-
-                    Spacer(minLength: 4)
+            VStack(alignment: .leading, spacing: 6) {
+                // 顶部标签
+                HStack(spacing: 4) {
+                    Text("✧")
+                        .font(.system(size: 8))
+                        .foregroundColor(WidgetTokens.decorativeGold.opacity(0.6))
+                    Text("今日读经")
+                        .font(WidgetTokens.bodyFont(size: 10, weight: .medium))
+                        .foregroundColor(WidgetTokens.textTertiary)
+                        .tracking(2)
+                    Spacer()
                 }
-                .padding(.leading, 12)
-                .padding(.trailing, 16)
+                .padding(.top, 14)
+
+                // 经文段落 — 充分利用空间
+                Text(entry.fullText.replacingOccurrences(of: "\n", with: ""))
+                    .font(WidgetTokens.sutraFont(size: 15))
+                    .foregroundColor(WidgetTokens.sutraText)
+                    .lineSpacing(6)
+                    .lineLimit(5)
+                    .minimumScaleFactor(0.85)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Spacer(minLength: 2)
+
+                // 底部来源
+                HStack {
+                    Spacer()
+                    decorativeLine
+                    Text(entry.source)
+                        .font(WidgetTokens.bodyFont(size: 10, weight: .regular))
+                        .foregroundColor(WidgetTokens.textTertiary)
+                        .tracking(1)
+                    decorativeLine
+                }
+                .padding(.bottom, 12)
             }
+            .padding(.horizontal, 16)
         }
         .widgetURL(url)
     }
@@ -213,7 +219,7 @@ struct LargeVerseView: View {
             WidgetTokens.background
 
             VStack(spacing: 0) {
-                Spacer(minLength: 14)
+                Spacer(minLength: 12)
 
                 // 顶部装饰
                 HStack(spacing: 6) {
@@ -225,19 +231,19 @@ struct LargeVerseView: View {
                     topLine
                 }
 
-                Spacer(minLength: 12)
+                Spacer(minLength: 10)
 
-                // 经文正文 — 使用长文本，真正可读
+                // 经文正文 — 最大化空间利用
                 Text(entry.fullText.replacingOccurrences(of: "\n", with: ""))
                     .font(WidgetTokens.sutraFont(size: 15))
                     .foregroundColor(WidgetTokens.sutraText)
-                    .lineSpacing(7)
+                    .lineSpacing(6)
                     .multilineTextAlignment(.leading)
-                    .lineLimit(12)
-                    .minimumScaleFactor(0.6)
-                    .padding(.horizontal, 24)
+                    .lineLimit(14)
+                    .minimumScaleFactor(0.7)
+                    .padding(.horizontal, 16)
 
-                Spacer(minLength: 10)
+                Spacer(minLength: 8)
 
                 // 来源标注
                 HStack(spacing: 6) {
@@ -249,7 +255,7 @@ struct LargeVerseView: View {
                     bottomLine
                 }
 
-                Spacer(minLength: 12)
+                Spacer(minLength: 8)
 
                 // 底部引导
                 HStack {
