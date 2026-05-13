@@ -193,7 +193,7 @@ struct FeedbackView: View {
     // MARK: - 底部文字
 
     private var footerText: some View {
-        Text("阿弥陀佛 · 随缘随喜")
+        Text("随缘随喜")
             .font(SutraTypographyBridge.uiSmall(weight: .light))
             .foregroundColor(SutraDesignSystem.color(.textTertiary))
             .frame(maxWidth: .infinity)
