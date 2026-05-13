@@ -57,7 +57,7 @@ struct SutraAcknowledgmentsView: View {
                 sourceCard(
                     icon: "photo",
                     title: "图像",
-                    text: "启动画面取自明代画家吴彬佛画。吴彬，字文中，莆田人，以奇崛画法著称，其佛画庄严古逸，为晚明独步。"
+                    text: "图标和启动画面取自明代画家吴彬佛画。吴彬，字文中，莆田人，以奇崛画法著称，其佛画庄严古逸，为晚明独步。"
                 )
 
                 // MARK: 感恩
