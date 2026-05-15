@@ -19,6 +19,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = true;
+        self.navigationController?.hidesBarsOnTap = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.edgesForExtendedLayout = UIRectEdge();
         self.extendedLayoutIncludesOpaqueBars = false;
@@ -47,15 +48,18 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = true
+        self.navigationController?.hidesBarsOnTap = true
         self.navigationController?.hidesBarsWhenVerticallyCompact = true
         // 显式重新启用手势识别器（防止被其他页面禁用）
         self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = true
         self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = true
+        self.navigationController?.barHideOnTapGestureRecognizer.cancelsTouchesInView = false
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
+        self.navigationController?.hidesBarsOnTap = false
         if let path = self.path, stayTimer.isValidReading {
             Prefers.shared.lastReadPath = path
             Prefers.shared.lastReadMode = "tree"
