@@ -19,7 +19,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationController?.hidesBarsOnSwipe = true;
+        self.navigationController?.hidesBarsOnSwipe = false;
         self.navigationController?.hidesBarsOnTap = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.automaticallyAdjustsScrollViewInsets = false;
@@ -84,11 +84,11 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.tabBarController?.tabBar.isHidden = true
         // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
         self.navigationController?.setNavigationBarHidden(false, animated: false)
-        self.navigationController?.hidesBarsOnSwipe = true
+        self.navigationController?.hidesBarsOnSwipe = false
         self.navigationController?.hidesBarsOnTap = true
         self.navigationController?.hidesBarsWhenVerticallyCompact = true
         // 显式重新启用手势识别器（防止被其他页面禁用）
-        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = true
+        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
         self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = true
         self.navigationController?.barHideOnTapGestureRecognizer.cancelsTouchesInView = false
     }
