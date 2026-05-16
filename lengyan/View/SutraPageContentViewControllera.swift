@@ -376,6 +376,29 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         configureZenNavigationBar()
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        // iPad: 居中阅读宽度并自动让滚动条贴近屏幕边缘
+        let horizontalInset = SutraAdaptiveLayout.readingHorizontalInsets(
+            containerWidth: view.bounds.width
+        )
+        tableView.contentInset = UIEdgeInsets(
+            top: 24,
+            left: horizontalInset,
+            bottom: 40,
+            right: horizontalInset
+        )
+        
+        // 抵消内容缩进对滚动条的影响，让滚动条始终贴靠屏幕边缘，呈现顶级 iPad 应用体验
+        tableView.verticalScrollIndicatorInsets = UIEdgeInsets(
+            top: 24,
+            left: -horizontalInset,
+            bottom: 40,
+            right: -horizontalInset
+        )
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         tableView.scrollsToTop = false

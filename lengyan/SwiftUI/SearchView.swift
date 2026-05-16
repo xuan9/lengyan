@@ -25,11 +25,12 @@ enum SearchSuggestionCategory: String, CaseIterable {
     }
 }
 
-// MARK: - FlowLayout（iOS 15 兼容的标签流布局）
+// MARK: - FlowLayout
 
 struct FlowLayout: View {
     var spacing: CGFloat = 10
     var items: [String]
+    var availableWidth: CGFloat
     var onTap: (String) -> Void
 
     var body: some View {
@@ -72,7 +73,7 @@ struct FlowLayout: View {
     private func computeRows() -> [[String]] {
         let font = UIFont.systemFont(ofSize: 14, weight: .regular)
         let tagHPadding: CGFloat = 28
-        let screenWidth = UIScreen.main.bounds.width - 32 // 减去左右 padding 16*2
+        let screenWidth = availableWidth - 32 // 减去左右 padding 16*2
 
         var rows: [[String]] = []
         var currentRow: [String] = []
@@ -106,18 +107,11 @@ class SearchHostingController: UIHostingController<SearchView> {
     }
 }
 
-// MARK: - iOS 15 兼容键盘收起
+// MARK: - 键盘收起
 
 extension View {
-    @ViewBuilder
     func dismissKeyboardOnScroll() -> some View {
-        if #available(iOS 16.0, *) {
-            self.scrollDismissesKeyboard(.interactively)
-        } else {
-            self.onTapGesture {
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            }
-        }
+        self.scrollDismissesKeyboard(.interactively)
     }
 }
 
@@ -211,52 +205,54 @@ struct SearchView: View {
     // MARK: - 空状态（搜索历史 + 关键词建议）
 
     private var emptyState: some View {
-        ScrollView {
-            VStack(spacing: 28) {
-                // 最近搜索
-                if !recentSearches.isEmpty {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text("最近搜索")
-                                .font(SutraTypographyBridge.uiCaption(weight: .regular))
-                                .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                            Spacer()
-                            Button(action: {
-                                Prefers.shared.clearSearchHistory()
-                                recentSearches = []
-                            }) {
-                                Text("清除")
-                                    .font(.system(size: 13, weight: .light))
-                                    .foregroundColor(SutraDesignSystem.color(.textTertiary))
+        GeometryReader { geo in
+            ScrollView {
+                VStack(spacing: 28) {
+                    // 最近搜索
+                    if !recentSearches.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text("最近搜索")
+                                    .font(SutraTypographyBridge.uiCaption(weight: .regular))
+                                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                                Spacer()
+                                Button(action: {
+                                    Prefers.shared.clearSearchHistory()
+                                    recentSearches = []
+                                }) {
+                                    Text("清除")
+                                        .font(.system(size: 13, weight: .light))
+                                        .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                                }
+                            }
+                            FlowLayout(spacing: 8, items: recentSearches, availableWidth: geo.size.width) { term in
+                                query = term
                             }
                         }
-                        FlowLayout(spacing: 8, items: recentSearches) { term in
-                            query = term
+                        .padding(.horizontal, 16)
+                    }
+
+                    // 楞严关键词建议
+                    VStack(alignment: .leading, spacing: 28) {
+                        ForEach(SearchSuggestionCategory.allCases, id: \.self) { category in
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text(category.rawValue)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                                FlowLayout(spacing: 10, items: category.keywords, availableWidth: geo.size.width) { keyword in
+                                    query = keyword
+                                }
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
-                }
 
-                // 楞严关键词建议
-                VStack(alignment: .leading, spacing: 28) {
-                    ForEach(SearchSuggestionCategory.allCases, id: \.self) { category in
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(category.rawValue)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                            FlowLayout(spacing: 10, items: category.keywords) { keyword in
-                                query = keyword
-                            }
-                        }
-                    }
+                    Spacer(minLength: 40)
                 }
-                .padding(.horizontal, 16)
-
-                Spacer(minLength: 40)
+                .padding(.top, 24)
             }
-            .padding(.top, 24)
+            .dismissKeyboardOnScroll()
         }
-        .dismissKeyboardOnScroll()
     }
 
     // MARK: - 无结果
@@ -283,6 +279,7 @@ struct SearchView: View {
             .padding(.horizontal, 10)
             .padding(.top, 8)
             .padding(.bottom, 20)
+            .readingContentWidth()
         }
         .dismissKeyboardOnScroll()
     }

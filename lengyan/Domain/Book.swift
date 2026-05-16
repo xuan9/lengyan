@@ -321,18 +321,7 @@ class Book: NSObject {
         
         stackView.addArrangedSubview(titleLabel)
 
-        // 让标题填满左右按钮之间的可用空间：放弃 iOS 默认的绝对居中
-        let container = SutraTitleContainerView()
-        container.addSubview(stackView)
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            stackView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            stackView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            stackView.topAnchor.constraint(equalTo: container.topAnchor),
-            stackView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-        ])
-
-        return container
+        return stackView
     }
     
     @MainActor

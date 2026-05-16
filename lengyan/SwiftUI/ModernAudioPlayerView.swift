@@ -31,6 +31,7 @@ struct ModernAudioPlayerView: View {
                             .padding(.bottom, 8)
                     }
                     .padding(.bottom, audioObserver.showPlayerBar ? 220 : 120)
+                    .readingContentWidth()
                 }
                 .background(Color(SutraDesignTokens.shared.color(for: .background)))
             }

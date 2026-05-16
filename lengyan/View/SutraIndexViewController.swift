@@ -196,7 +196,18 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         alert.addAction(firstAction)
         alert.addAction(secondAction)
         alert.addAction(cancelAction)
-        present(alert, animated: true, completion:nil) // 6
+
+        // iPad: Action Sheet 需要 popover 配置，否则崩溃
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = self.view
+            popover.sourceRect = CGRect(
+                x: self.view.bounds.midX, y: self.view.bounds.midY,
+                width: 0, height: 0
+            )
+            popover.permittedArrowDirections = []
+        }
+
+        present(alert, animated: true, completion:nil)
         
     }
     //Called, when long press occurred

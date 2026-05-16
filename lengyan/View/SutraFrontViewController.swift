@@ -495,6 +495,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
+        // iPad: 限制内容宽度并居中
+        let cx = SutraAdaptiveLayout.readingHorizontalInsets(
+            containerWidth: width,
+            maxWidth: SutraAdaptiveLayout.homeContentWidth,
+            minMargin: 0
+        )
+        let cw = width - (cx * 2)
+
         // 🏛️ Sacred header - 含经题 + 开经偈 + 今日读经 + 卷章按钮 + 功能行
         let titleTopPadding: CGFloat = rs(14)
         let titleHeight: CGFloat = rs(28)
@@ -528,14 +536,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         // 经题下方金线
         let titleLineY = titleLabel.frame.maxY + titleLineGap
-        let titleLine = UIView(frame: CGRect(x: rs(80), y: titleLineY, width: width - rs(160), height: 0.5))
+        let titleLine = UIView(frame: CGRect(x: cx + rs(80), y: titleLineY, width: cw - rs(160), height: 0.5))
         titleLine.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.3)
         header.addSubview(titleLine)
 
         // 📜 开经偈 - 分为匀称的两行
         let subTitle = UIButton.init(type: .custom)
         let verseY = titleLineY + verseGap
-        subTitle.frame = CGRect(x: rs(16), y: verseY, width: width - rs(32), height: verseHeight)
+        subTitle.frame = CGRect(x: cx + rs(16), y: verseY, width: cw - rs(32), height: verseHeight)
         let subTitleText = "无上甚深微妙法 百千万劫难遭遇\n我今见闻得受持 愿解如来真实义"
         subTitle.setTitle(subTitleText, for: .normal)
         subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .light)
@@ -559,9 +567,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let horizontalPadding: CGFloat = rs(20)
         let buttonSpacing: CGFloat = rs(10)
         let totalSpacing = horizontalPadding * 2 + buttonSpacing * 4
-        let chapterButtonWidth = (width - totalSpacing) / 5
+        let chapterButtonWidth = (cw - totalSpacing) / 5
 
-        let indexes = UIView(frame: CGRect(x: 0, y: nextY, width: width, height: buttonHeight * 2 + verticalSpacing))
+        let indexes = UIView(frame: CGRect(x: cx, y: nextY, width: cw, height: buttonHeight * 2 + verticalSpacing))
 
         for i in 1...10 {
             let row = (i - 1) / 5
@@ -575,14 +583,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         header.addSubview(indexes)
 
         // ✨ 底部边界装饰性细线
-        let dividerFrame = CGRect(x: rs(32), y: header.frame.height - rs(25), width: width - rs(64), height: 0.5)
+        let dividerFrame = CGRect(x: cx + rs(32), y: header.frame.height - rs(25), width: cw - rs(64), height: 0.5)
         let dividerLine = UIView(frame: dividerFrame)
         dividerLine.backgroundColor = decorativeGold.withAlphaComponent(0.2)
         header.addSubview(dividerLine)
 
         // ── 合并功能行：续读（左）+ 搜索（右）──
         let toolRowY = indexes.frame.maxY + toolRowPadding
-        let toolRow = UIView(frame: CGRect(x: 0, y: toolRowY, width: width, height: toolRowHeight))
+        let toolRow = UIView(frame: CGRect(x: cx, y: toolRowY, width: cw, height: toolRowHeight))
 
         // 续读 — 始终显示，有进度时显示章节名，无进度时引导开始读经
         let bodyColor = SutraDesignTokens.shared.color(for: .textSecondary)
@@ -615,7 +623,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         continueLabel.setAttributedTitle(continueAttr, for: .normal)
         let btnHeight = max(44, rs(32))
         let btnY = (toolRowHeight - btnHeight) / 2
-        continueLabel.frame = CGRect(x: rs(20), y: btnY, width: width * 0.65, height: btnHeight)
+        continueLabel.frame = CGRect(x: rs(20), y: btnY, width: cw * 0.65, height: btnHeight)
         continueLabel.contentHorizontalAlignment = .left
         continueLabel.tag = 9991
         continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
@@ -647,12 +655,20 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
+        // iPad: 限制内容宽度并居中
+        let cx = SutraAdaptiveLayout.readingHorizontalInsets(
+            containerWidth: width,
+            maxWidth: SutraAdaptiveLayout.homeContentWidth,
+            minMargin: 0
+        )
+        let cw = width - (cx * 2)
+
         let footerHeight = rs(20) + rs(30) + rs(6) + rs(14) + rs(20) + rs(40)
         let footer = UIView(frame: CGRect(x: 0, y: 0, width: width, height: footerHeight))
         footer.backgroundColor = backgroundColor
 
         // 顶部金线
-        let topLine = UIView(frame: CGRect(x: rs(80), y: 0, width: width - rs(160), height: 0.5))
+        let topLine = UIView(frame: CGRect(x: cx + rs(80), y: 0, width: cw - rs(160), height: 0.5))
         topLine.backgroundColor = decorativeGold.withAlphaComponent(0.3)
         footer.addSubview(topLine)
 
@@ -671,7 +687,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         // 经题下方金线
         let homageLineY = homageLabel.frame.maxY + rs(6)
-        let homageLine = UIView(frame: CGRect(x: rs(100), y: homageLineY, width: width - rs(200), height: 0.5))
+        let homageLine = UIView(frame: CGRect(x: cx + rs(100), y: homageLineY, width: cw - rs(200), height: 0.5))
         homageLine.backgroundColor = decorativeGold.withAlphaComponent(0.25)
         footer.addSubview(homageLine)
 
@@ -777,9 +793,16 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let titleText = btn.title(for: .normal) ?? ""
         if titleText.count > 0 {
             // 给导航栏文字上方增加一条细金线装饰 (贴近文字顶端，减小悬空感)
-            let topBorder = UIView(frame: CGRect(x: 30, y: -2, width: UIScreen.main.bounds.width - 66, height: 0.5))
+            let topBorder = UIView()
             topBorder.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.4)
+            topBorder.translatesAutoresizingMaskIntoConstraints = false
             btn.addSubview(topBorder)
+            NSLayoutConstraint.activate([
+                topBorder.leadingAnchor.constraint(equalTo: btn.leadingAnchor, constant: 6),
+                topBorder.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -6),
+                topBorder.topAnchor.constraint(equalTo: btn.topAnchor, constant: -2),
+                topBorder.heightAnchor.constraint(equalToConstant: 0.5)
+            ])
         }
 
         sutraIndexButtons.append(path)
@@ -878,7 +901,12 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     @objc func openSearch() {
         let nav = UINavigationController()
         nav.setNavigationBarHidden(true, animated: false)
-        nav.modalPresentationStyle = .fullScreen
+        nav.modalPresentationStyle = SutraAdaptiveLayout.shouldUseSheetModal(for: traitCollection)
+            ? .pageSheet : .fullScreen
+        if nav.modalPresentationStyle == .pageSheet,
+           let sheet = nav.sheetPresentationController {
+            sheet.detents = [.large()]
+        }
 
         let searchView = SearchView(
             onDismiss: { [weak nav] in

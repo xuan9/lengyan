@@ -99,6 +99,9 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = true
+        if #available(iOS 18.0, *) {
+            self.tabBarController?.setTabBarHidden(true, animated: false)
+        }
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = false
         self.navigationController?.hidesBarsOnTap = true
@@ -114,6 +117,9 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
+        if #available(iOS 18.0, *) {
+            self.tabBarController?.setTabBarHidden(false, animated: false)
+        }
         self.navigationController?.hidesBarsOnTap = false
         saveProgress()
     }
@@ -187,16 +193,12 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         contentView.delegate = self
         view.addSubview(contentView)
 
-        if #available(iOS 11.0, *) {
-            NSLayoutConstraint.activate([
-                contentView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-                contentView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-                contentView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-                contentView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
-            ])
-        } else {
-            // Fallback on earlier versions
-        }
+        NSLayoutConstraint.activate([
+            contentView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            contentView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
+        ])
         
         // 配置极简页码指示器
         pageIndicator.font = SutraTypographyManager.shared.uiFont(for: .uiSmall, weight: .light).withSize(10)
@@ -223,8 +225,10 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         textStorage.addLayoutManager(textLayout)
 
         let viewSize = contentView.bounds.size
-        // 既然页码指示器已经下放到安全区，这里的文本排版可以恢复为紧凑优美的 16pt 间距
-        let textInsets = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        // 自适应 margins：iPad 上留出更宽的呼吸空间
+        let margin = SutraAdaptiveLayout.readingHorizontalInsets(containerWidth: viewSize.width)
+        // 核心修复：顶部和底部不要使用水平宽 margin，否则在 iPad 上顶部会出现几百像素的巨大留白！
+        let textInsets = UIEdgeInsets(top: 32, left: margin, bottom: 32, right: margin)
         
         // 1
         var index: Int = 0

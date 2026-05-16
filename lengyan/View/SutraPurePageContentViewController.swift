@@ -43,17 +43,21 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
         sutraTextView.isScrollEnabled = true
         sutraTextView.isEditable = false
         sutraTextView.delegate = self
+        
+        // 彻底禁用水平滚动，解决左右滑动和翻页手势冲突的问题
+        sutraTextView.showsHorizontalScrollIndicator = false
+        sutraTextView.alwaysBounceHorizontal = false
+        sutraTextView.isDirectionalLockEnabled = true
 
         // 🏛️ 禅意经文排版
         sutraTextView.font = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
         sutraTextView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         sutraTextView.textColor = SutraDesignTokens.shared.color(for: .sutraText)
 
-        // 增加上下呼吸空间，无缝衔接
+        // 增加基础上下呼吸空间，左右边距将在 viewDidLayoutSubviews 中动态计算
         sutraTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 24, right: 12)
 
-        // 移除 iOS 自动调整 insets 的限制，因为我们现在使用了 .scroll 翻页，不再有 pageCurl 的跳动 bug
-        // 让系统帮我们处理刘海/灵动岛的距离
+        // 恢复系统默认的 safeArea 适配机制，保护灵动岛和底部 Home Indicator 不被文字遮挡
         sutraTextView.contentInsetAdjustmentBehavior = .always
 
         let text = Book.shared.getSutraAttributeString(meta)
@@ -61,25 +65,24 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
         view.addSubview(sutraTextView)
 
         sutraTextView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let guide = view.safeAreaLayoutGuide
-        
-        if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
-            NSLayoutConstraint.activate([
-                sutraTextView.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 44),
-                sutraTextView.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -44),
-                sutraTextView.topAnchor.constraint(equalTo: view.topAnchor),
-                sutraTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-            ])
-        } else {
-            NSLayoutConstraint.activate([
-                sutraTextView.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-                sutraTextView.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-                sutraTextView.topAnchor.constraint(equalTo: view.topAnchor),
-                sutraTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-            ])
-        }
+
+        // 核心：让 textView 撑满屏幕边缘，以确保手势滑动和滚动条都在屏幕边缘
+        NSLayoutConstraint.activate([
+            sutraTextView.topAnchor.constraint(equalTo: view.topAnchor),
+            sutraTextView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            sutraTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            sutraTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
         self.sutraView = sutraTextView
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // 核心：让文字内容优雅地居中在 optimalReadingWidth 内，同时保持外层 textView 满屏
+        let horizontalInset = SutraAdaptiveLayout.readingHorizontalInsets(
+            containerWidth: view.bounds.width
+        )
+        sutraView?.textContainerInset = UIEdgeInsets(top: 12, left: horizontalInset, bottom: 24, right: horizontalInset)
     }
 
     // 移除手动计算偏移量来隐藏标题栏的逻辑，
@@ -90,7 +93,6 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
         super.viewWillAppear(animated)
         // 重置滚动位置时保留导航栏状态，防止 setContentOffset 触发 hidesBarsOnSwipe 导致导航栏跳出
         let wasNavBarHidden = navigationController?.isNavigationBarHidden ?? false
-        self.sutraView?.setContentOffset(.zero, animated: false)
         if wasNavBarHidden {
             navigationController?.setNavigationBarHidden(true, animated: false)
         }

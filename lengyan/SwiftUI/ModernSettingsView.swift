@@ -53,6 +53,7 @@ struct ModernSettingsView: View {
                     .padding(.top, 48)
                     .padding(.bottom, 120)
             }
+            .readingContentWidth()
         }
         .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)

@@ -3,7 +3,7 @@
 //  lengyan
 //
 //  分享卡片渲染引擎 — SwiftUI View → UIImage
-//  支持 iOS 16+ ImageRenderer，iOS 15 fallback
+//  SwiftUI View → UIImage 渲染引擎
 //
 
 import SwiftUI
@@ -31,11 +31,7 @@ struct SutraCardRenderer {
         let view = SutraShareCardView(text: text, source: source, template: template)
             .frame(width: size.width, height: size.height)
 
-        if #available(iOS 16.0, *) {
-            return renderWithImageRenderer(view: view, size: size)
-        } else {
-            return renderWithUIGraphics(view: view, size: size)
-        }
+        return renderWithImageRenderer(view: view, size: size)
     }
 
     /// 使用默认竖版模板快速渲染（零摩擦分享路径）
@@ -44,9 +40,8 @@ struct SutraCardRenderer {
         return render(text: text, source: source, template: .portrait)
     }
 
-    // MARK: - iOS 16+ Renderer
+    // MARK: - ImageRenderer
 
-    @available(iOS 16.0, *)
     @MainActor
     private static func renderWithImageRenderer<V: View>(view: V, size: CGSize) -> UIImage? {
         let renderer = ImageRenderer(content: view)
@@ -55,23 +50,6 @@ struct SutraCardRenderer {
         return renderer.uiImage
     }
 
-    // MARK: - iOS 15 Fallback
-
-    @MainActor
-    private static func renderWithUIGraphics<V: View>(view: V, size: CGSize) -> UIImage? {
-        let hostingController = UIHostingController(rootView: view)
-        hostingController.view.frame = CGRect(origin: .zero, size: size)
-        hostingController.view.backgroundColor = .clear
-
-        // Force layout
-        hostingController.view.setNeedsLayout()
-        hostingController.view.layoutIfNeeded()
-
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { context in
-            hostingController.view.drawHierarchy(in: CGRect(origin: .zero, size: size), afterScreenUpdates: true)
-        }
-    }
 }
 
 // MARK: - Share Helper

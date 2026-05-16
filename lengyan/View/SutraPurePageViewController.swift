@@ -21,9 +21,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationController?.hidesBarsOnSwipe = false;
         self.navigationController?.hidesBarsOnTap = true;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        self.edgesForExtendedLayout = UIRectEdge();
-        self.extendedLayoutIncludesOpaqueBars = false;
-        self.automaticallyAdjustsScrollViewInsets = false;
         self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 底层背景与阅读内容同色，防止翻页时闪白
 
         self.dataSource = self;
@@ -45,6 +42,9 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         super.viewWillAppear(animated)
         stayTimer.start()
         self.tabBarController?.tabBar.isHidden = true
+        if #available(iOS 18.0, *) {
+            self.tabBarController?.setTabBarHidden(true, animated: false)
+        }
         // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = false
@@ -59,6 +59,9 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
+        if #available(iOS 18.0, *) {
+            self.tabBarController?.setTabBarHidden(false, animated: false)
+        }
         self.navigationController?.hidesBarsOnTap = false
         if let path = self.path, stayTimer.isValidReading {
             Prefers.shared.lastReadPath = path

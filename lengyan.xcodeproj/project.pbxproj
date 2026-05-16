@@ -62,7 +62,7 @@
 		13FE31F523678EFD00F632E9 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FE31F423678EFD00F632E9 /* Constants.swift */; };
 		1BD14222ACCD6D4405D21CD9 /* ReminderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFA4A6A953E96638E51D2B0 /* ReminderManager.swift */; };
 		2AA448A983E8E010891A405D /* AudioPlayerObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6458481F9A0DB2ED9405E8AD /* AudioPlayerObserver.swift */; };
-		2D1FA1B8FB3A4F9FA9BB2367 /* lengyan/View/Modern/ModernWisdomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062F8B58456A40C09C663C10 /* lengyan/View/Modern/ModernWisdomView.swift */; };
+		2D1FA1B8FB3A4F9FA9BB2367 /* ModernWisdomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062F8B58456A40C09C663C10 /* ModernWisdomView.swift */; };
 		2E644A3E969ABBF1FA489817 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5745B1A33297A9705EA9BF /* SearchView.swift */; };
 		2FE84432866C4DDC420FCCB6 /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949148079D94DAE6258ED83C /* FeedbackView.swift */; };
 		3A0EFD749E944D45A68E8406 /* LXGWWenKaiTC-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0D15C20D449143D0846EE8D3 /* LXGWWenKaiTC-Medium.ttf */; };
@@ -93,6 +93,7 @@
 		AC0AD1957DE54E5A8579DA52 /* SutraCardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4022B9FDC584D739E1402D4 /* SutraCardRenderer.swift */; };
 		ADD297E8BFA3460927DBAC9C /* ReadingStayTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67420AAD4331AD62D8214EFA /* ReadingStayTimer.swift */; };
 		B12E4D8E8D3A0321CB2E3F9E /* FeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 363F450E85F99C7CD1D01CDE /* FeedbackService.swift */; };
+		B2B041098A20C3FC9D2594D4 /* SutraAdaptiveLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907A22FA1F1E31ABD4FF6C6B /* SutraAdaptiveLayout.swift */; };
 		C2F6DDAEA66E499B8A17217C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D0653490A0146489495DE29 /* SwiftUI.framework */; };
 		CAD2B727243645C398434379 /* LengyanWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD07E0DA1ED64DA785C0ED85 /* LengyanWidgetBundle.swift */; };
 		CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */; };
@@ -142,7 +143,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		062F8B58456A40C09C663C10 /* lengyan/View/Modern/ModernWisdomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lengyan/View/Modern/ModernWisdomView.swift; sourceTree = "<group>"; };
+		062F8B58456A40C09C663C10 /* ModernWisdomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lengyan/View/Modern/ModernWisdomView.swift; sourceTree = "<group>"; };
 		0D15C20D449143D0846EE8D3 /* LXGWWenKaiTC-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LXGWWenKaiTC-Medium.ttf"; sourceTree = "<group>"; };
 		0D284D40A58BBA43F939040A /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioManager.swift; path = lengyan/Domain/AudioManager.swift; sourceTree = SOURCE_ROOT; };
 		0D89740455934B739168A0A8 /* ModernSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernSettingsView.swift; sourceTree = "<group>"; };
@@ -234,6 +235,7 @@
 		6FB4697959414237B9CE64E8 /* LXGWWenKai-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LXGWWenKai-Medium.ttf"; sourceTree = "<group>"; };
 		722BB3048D834BBB8FC2CE90 /* LXGWWenKai-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LXGWWenKai-Regular.ttf"; sourceTree = "<group>"; };
 		76EC4C008D2B36D010BCB7E9 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SearchService.swift; path = lengyan/Domain/SearchService.swift; sourceTree = SOURCE_ROOT; };
+		907A22FA1F1E31ABD4FF6C6B /* SutraAdaptiveLayout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SutraAdaptiveLayout.swift; sourceTree = "<group>"; };
 		949148079D94DAE6258ED83C /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FeedbackView.swift; path = lengyan/SwiftUI/FeedbackView.swift; sourceTree = SOURCE_ROOT; };
 		ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LengyanWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B09045C2B7C615CA798CD05F /* MediaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaModels.swift; path = lengyan/Domain/MediaModels.swift; sourceTree = SOURCE_ROOT; };
@@ -394,7 +396,7 @@
 				1F5745B1A33297A9705EA9BF /* SearchView.swift */,
 				949148079D94DAE6258ED83C /* FeedbackView.swift */,
 				363F450E85F99C7CD1D01CDE /* FeedbackService.swift */,
-				062F8B58456A40C09C663C10 /* lengyan/View/Modern/ModernWisdomView.swift */,
+				062F8B58456A40C09C663C10 /* ModernWisdomView.swift */,
 				5085E659DC29408B8C8A7E68 /* LengyanWidget */,
 				CB2BD3EB2FAFC4EB001BCF3B /* Recovered References */,
 			);
@@ -504,6 +506,7 @@
 				CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */,
 				CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */,
 				CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */,
+				907A22FA1F1E31ABD4FF6C6B /* SutraAdaptiveLayout.swift */,
 			);
 			path = Design;
 			sourceTree = "<group>";
@@ -737,7 +740,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2D1FA1B8FB3A4F9FA9BB2367 /* lengyan/View/Modern/ModernWisdomView.swift in Sources */,
+				2D1FA1B8FB3A4F9FA9BB2367 /* ModernWisdomView.swift in Sources */,
 				133CAB9D2364DDB700B61AC0 /* RABatchChangeEntity.h in Sources */,
 				133CAB9E2364DDB700B61AC0 /* RABatchChangeEntity.m in Sources */,
 				CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */,
@@ -809,6 +812,7 @@
 				DA693579DBDB4BE1A515D099 /* DailyVerseCardView.swift in Sources */,
 				81087998413F437A88554F80 /* SutraShareCardView.swift in Sources */,
 				F84996CF47F64470BEEEF12B /* SharedVerseData.swift in Sources */,
+				B2B041098A20C3FC9D2594D4 /* SutraAdaptiveLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -937,7 +941,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -991,7 +995,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -1010,7 +1014,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				INFOPLIST_FILE = lengyan/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1036,7 +1040,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				INFOPLIST_FILE = lengyan/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1057,7 +1061,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyanTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1078,7 +1082,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyanTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1097,7 +1101,7 @@
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyanUITests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1118,7 +1122,7 @@
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = lengyanUITests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1147,7 +1151,7 @@
 				INFOPLIST_FILE = LengyanWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "楞严 今日读经";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1178,7 +1182,7 @@
 				INFOPLIST_FILE = LengyanWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "楞严 今日读经";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

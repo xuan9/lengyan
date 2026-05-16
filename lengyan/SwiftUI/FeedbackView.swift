@@ -106,6 +106,7 @@ struct FeedbackView: View {
 
                 footerText
             }
+            .readingContentWidth()
             .background(SutraDesignSystem.backgroundColor())
         }
     }
@@ -223,13 +224,8 @@ struct FeedbackView: View {
     }
 }
 
-// MARK: - iOS 16+ TextEditor 背景隐藏
+// MARK: - TextEditor 背景隐藏
 
-@ViewBuilder
 private func hideTextEditorBackground(_ editor: TextEditor) -> some View {
-    if #available(iOS 16.0, *) {
-        editor.scrollContentBackground(.hidden)
-    } else {
-        editor
-    }
+    editor.scrollContentBackground(.hidden)
 }

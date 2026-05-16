@@ -54,6 +54,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         // Create and setup the main tab bar controller
         let tabBarController = UITabBarController()
+        
+        // 强制禁用 iOS 18 iPadOS 顶部悬浮 TabBar
+        // 通过重写 horizontalSizeClass 为 compact，系统会回退使用经典的底部 TabBar
+        if #available(iOS 18.0, *) {
+            tabBarController.traitOverrides.horizontalSizeClass = .compact
+        }
+        
+        // Set global tint color to affect system controls like iOS 18 floating Tab Bar
+        window.tintColor = SutraDesignTokens.shared.color(for: .primary)
+        tabBarController.tabBar.tintColor = SutraDesignTokens.shared.color(for: .primary)
+        
         setupTabs(for: tabBarController)
         configureAppearance()
 

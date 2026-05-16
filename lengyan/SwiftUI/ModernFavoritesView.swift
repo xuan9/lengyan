@@ -142,6 +142,7 @@ struct ModernFavoritesView: View {
                         }
                     }
                     .padding(.horizontal, 10)
+                    .readingContentWidth()
                 }
 
                 Spacer(minLength: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL))

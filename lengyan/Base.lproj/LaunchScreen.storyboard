@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
-    <device id="retina6_1" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -23,23 +21,30 @@
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="sutra_splash" translatesAutoresizingMaskIntoConstraints="NO" id="9zb-pf-ooq">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
-                                <color key="backgroundColor" red="0.85098039215686272" green="0.74901960784313726" blue="0.5490196078431373" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="大&#10;佛&#10;頂&#10;首&#10;楞&#10;嚴&#10;經" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lbl-sutra-title">
-                                <rect key="frame" x="334" y="90" width="44" height="400"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lbl-sutra-title">
+                                <rect key="frame" x="326.5" y="146" width="38" height="334.5"/>
+                                <string key="text">大
+佛
+頂
+首
+楞
+嚴
+經</string>
                                 <fontDescription key="fontDescription" type="system" weight="thin" pointSize="40"/>
-                                <color key="textColor" red="0.45" green="0.12" blue="0.10" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="textColor" red="0.45000000000000001" green="0.12" blue="0.10000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.85098039215686272" green="0.74901960784313726" blue="0.5490196078431373" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="9zb-pf-ooq" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="8jR-Vn-knQ"/>
                             <constraint firstAttribute="bottom" secondItem="9zb-pf-ooq" secondAttribute="bottom" id="Nm6-ll-32S"/>
                             <constraint firstItem="9zb-pf-ooq" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="SXQ-SI-C5b"/>
                             <constraint firstAttribute="trailing" secondItem="9zb-pf-ooq" secondAttribute="trailing" id="Vdo-4b-tNR"/>
                             <constraint firstItem="lbl-sutra-title" firstAttribute="top" secondItem="Llm-lL-Icb" secondAttribute="bottom" constant="50" id="lbl-top"/>
-                            <constraint firstAttribute="trailing" secondItem="lbl-sutra-title" secondAttribute="trailing" constant="40" id="lbl-trl"/>
+                            <constraint firstItem="lbl-sutra-title" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" multiplier="0.88" id="lbl-trl"/>
                         </constraints>
                     </view>
                     <nil key="simulatedStatusBarMetrics"/>
@@ -52,6 +57,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="sutra_splash" width="510" height="1200"/>
+        <image name="sutra_splash" width="2832" height="1888"/>
     </resources>
 </document>
