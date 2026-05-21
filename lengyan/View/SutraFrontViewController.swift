@@ -638,7 +638,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         ])
         searchAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
         searchBtn.setAttributedTitle(searchAttr, for: .normal)
-        let searchWidth: CGFloat = rs(60)
+        let searchWidth: CGFloat = rs(72)
         searchBtn.frame = CGRect(x: colTenRight - searchWidth, y: btnY, width: searchWidth, height: btnHeight)
         searchBtn.contentHorizontalAlignment = .right
         searchBtn.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
@@ -940,8 +940,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
 
         print("🔥 Reloading treeView...")
-        self.treeView.reloadData()
-        print("🔥 TreeView has \(treeView.visibleCells()?.count ?? 0) visible cells")
+        DispatchQueue.main.async {
+            self.treeView.reloadData()
+            print("🔥 TreeView has \(self.treeView.visibleCells()?.count ?? 0) visible cells")
+        }
     }
     
     

@@ -138,14 +138,16 @@ class AudioPlayerObserver: NSObject, ObservableObject {
     }
 
     private func setupAudioSessionIfNeeded() {
-        do {
-            let session = AVAudioSession.sharedInstance()
-            if session.category != AVAudioSessionCategoryPlayback {
-                try session.setCategory(AVAudioSessionCategoryPlayback, mode: AVAudioSessionModeDefault)
-                try session.setActive(true, with: .notifyOthersOnDeactivation)
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let session = AVAudioSession.sharedInstance()
+                if session.category != AVAudioSessionCategoryPlayback {
+                    try session.setCategory(AVAudioSessionCategoryPlayback, mode: AVAudioSessionModeDefault)
+                    try session.setActive(true, with: .notifyOthersOnDeactivation)
+                }
+            } catch {
+                print("⚠️ Audio session setup failed: \(error)")
             }
-        } catch {
-            print("⚠️ Audio session setup failed: \(error)")
         }
     }
 

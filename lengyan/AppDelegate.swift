@@ -36,13 +36,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Set notification delegate
         UNUserNotificationCenter.current().delegate = self
 
-        // 启动时调度每日提醒（60天，绝对防重复）
-        if Prefers.shared.isDailyReminderOn {
-            ReminderManager.shared.scheduleDaily()
-        }
+        // 将所有可能涉及 IO 或底层 IPC 通信的非 UI 任务放到后台，坚决不阻塞启动
+        DispatchQueue.global(qos: .utility).async {
+            // 启动时调度每日提醒（60天，绝对防重复）
+            if Prefers.shared.isDailyReminderOn {
+                ReminderManager.shared.scheduleDaily()
+            }
 
-        // 同步每日经文到 Widget 小组件
-        DailyVerseProvider.shared.syncWidgetData()
+            // 同步每日经文到 Widget 小组件
+            DailyVerseProvider.shared.syncWidgetData()
+        }
 
         return true
     }
@@ -70,6 +73,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         window.rootViewController = tabBarController
         window.makeKeyAndVisible()
+
+        // 监听沉浸模式的 TabBar 隐藏请求
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("ToggleTabBar"), object: nil, queue: .main) { notification in
+            if let isHidden = notification.userInfo?["isHidden"] as? Bool {
+                UIView.animate(withDuration: 0.6) {
+                    if #available(iOS 18.0, *) {
+                        tabBarController.setTabBarHidden(isHidden, animated: true)
+                    } else {
+                        tabBarController.tabBar.isHidden = isHidden
+                        tabBarController.view.setNeedsLayout()
+                    }
+                }
+            }
+        }
     }
 
     private func setupTabs(for tabBarController: UITabBarController) {

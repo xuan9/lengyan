@@ -32,11 +32,17 @@ class AudioManager: ObservableObject {
            let mode = PlayMode(rawValue: raw) {
             selectedPlayMode = mode
         }
+        // 主动加载：避免 TabBar 非首屏 tab 的 onAppear 不触发导致列表为空
+        if Book.shared.loaded {
+            loadMediaData()
+        }
     }
 
     // MARK: - Data Loading
 
     func loadMediaData() {
+        // 已加载过则跳过
+        guard mediaGroups.isEmpty else { return }
         guard let mediaData = Book.shared.media else {
             isLoading = false
             return
@@ -53,42 +59,11 @@ class AudioManager: ObservableObject {
         }
 
         mediaGroups = groups
-        checkMediaStatus()
+        // 我们不再启动时检查所有文件状态 (checkMediaStatus)。
+        // ODR (按需资源) 的最佳实践是「按需检查」。
+        // 当用户点击播放某个曲目时，系统会瞬间判断资源是否存在。
         isLoading = false
         resumeLastPlayback()
-    }
-
-    private func checkMediaStatus() {
-        for group in mediaGroups {
-            for file in group.files {
-                if downloadStatus[file] != .downloaded {
-                    checkFileStatus(file: file, fileExtension: group.fileExtension)
-                }
-            }
-        }
-    }
-
-    private func checkFileStatus(file: String, fileExtension: String) {
-        let resourceRequest = NSBundleResourceRequest(tags: [file])
-        resourceRequest.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
-
-        resourceRequest.conditionallyBeginAccessingResources { (available: Bool) in
-            DispatchQueue.main.async {
-                if available {
-                    if resourceRequest.bundle.url(forResource: file, withExtension: fileExtension) != nil {
-                        print("📦 ODR already available: \(file).\(fileExtension)")
-                        self.downloadStatus[file] = .downloaded
-                        self.resourceRequests[file] = resourceRequest
-                    } else {
-                        print("⏳ ODR not available: \(file).\(fileExtension) - needs download")
-                        self.downloadStatus[file] = .notDownloaded
-                    }
-                } else {
-                    print("⏳ ODR not downloaded: \(file).\(fileExtension) - Tap to download")
-                    self.downloadStatus[file] = .notDownloaded
-                }
-            }
-        }
     }
 
     // MARK: - Resume
@@ -118,10 +93,14 @@ class AudioManager: ObservableObject {
         let status = downloadStatus[file] ?? .notDownloaded
         switch status {
         case .downloaded:
-            // 播放器已加载该曲目 → 暂停/播放切换
-            // 播放器未就绪（如恢复上次曲目）→ 走 playMedia 初始化
+            // 播放器已加载该曲目
             if audioObserver.currentTrack == name && audioObserver.queuePlayer?.currentItem != nil {
-                togglePlayPause()
+                // 如果再次点击正在播放的项目，则从头重新播放
+                let cmTime = CMTime(seconds: 0, preferredTimescale: 600)
+                audioObserver.queuePlayer?.seek(to: cmTime, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+                if !audioObserver.isPlaying {
+                    audioObserver.queuePlayer?.play()
+                }
             } else {
                 playMedia(name: name, file: file, fileExtension: fileExtension)
             }
@@ -139,20 +118,24 @@ class AudioManager: ObservableObject {
         downloadProgress[file] = 0
 
         // 复用已有的 prefetch 请求，避免重复下载
-        let resourceRequest: NSBundleResourceRequest
-        let isPrefetchInProgress: Bool
         if let existing = resourceRequests[file] {
-            resourceRequest = existing
             // prefetch 已调用 beginAccessingResources，不能重复调用
             // 挂上进度 UI，等 prefetch 完成后自动播放
-            isPrefetchInProgress = true
+            setupDownloadTimerAndFetch(resourceRequest: existing, file: file, isPrefetchInProgress: true, name: name, fileExtension: fileExtension)
         } else {
-            let req = NSBundleResourceRequest(tags: [file])
-            req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
-            resourceRequest = req
-            isPrefetchInProgress = false
+            DispatchQueue.global(qos: .userInitiated).async {
+                let req = NSBundleResourceRequest(tags: [file])
+                req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+                
+                DispatchQueue.main.async {
+                    self.resourceRequests[file] = req
+                    self.setupDownloadTimerAndFetch(resourceRequest: req, file: file, isPrefetchInProgress: false, name: name, fileExtension: fileExtension)
+                }
+            }
         }
-        resourceRequests[file] = resourceRequest
+    }
+    
+    private func setupDownloadTimerAndFetch(resourceRequest: NSBundleResourceRequest, file: String, isPrefetchInProgress: Bool, name: String, fileExtension: String) {
 
         let progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
             if self.downloadStatus[file] == .downloaded || self.downloadStatus[file] == .error {
@@ -227,10 +210,14 @@ class AudioManager: ObservableObject {
         audioObserver.initializePlayerIfNeeded()
 
         guard let resourceRequest = resourceRequests[file] else {
-            let newRequest = NSBundleResourceRequest(tags: [file])
-            newRequest.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
-            resourceRequests[file] = newRequest
-            playMediaUsingRequest(request: newRequest, name: name, file: file, fileExtension: fileExtension, autoplay: autoplay)
+            DispatchQueue.global(qos: .userInitiated).async {
+                let newRequest = NSBundleResourceRequest(tags: [file])
+                newRequest.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+                DispatchQueue.main.async {
+                    self.resourceRequests[file] = newRequest
+                    self.playMediaUsingRequest(request: newRequest, name: name, file: file, fileExtension: fileExtension, autoplay: autoplay)
+                }
+            }
             return
         }
 
@@ -241,16 +228,17 @@ class AudioManager: ObservableObject {
         if let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
             playAudio(url: url, name: name, autoplay: autoplay)
         } else {
-            guard !resourceRequests.keys.contains(file) else { return }
-            resourceRequests[file] = request
-
+            // 获取不到 URL 说明尚未持有访问权限，需正式申请资源访问
             request.conditionallyBeginAccessingResources { available in
-                if available, let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
-                    self.playAudio(url: url, name: name, autoplay: autoplay)
-                } else {
-                    print("❌ Resource not available: \(file)")
+                DispatchQueue.main.async {
+                    if available, let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
+                        self.playAudio(url: url, name: name, autoplay: autoplay)
+                    } else {
+                        print("❌ Resource not immediately available, triggering download: \(file)")
+                        // 如果状态有误，回退到标准下载流程
+                        self.downloadMedia(name: name, file: file, fileExtension: fileExtension)
+                    }
                 }
-                self.resourceRequests.removeValue(forKey: file)
             }
         }
     }
@@ -412,15 +400,19 @@ class AudioManager: ObservableObject {
                       && downloadStatus[nextFile] != .downloading
                       && resourceRequests[nextFile] == nil else { return }
 
-                let request = NSBundleResourceRequest(tags: [nextFile])
-                resourceRequests[nextFile] = request
-
-                request.beginAccessingResources { error in
+                DispatchQueue.global(qos: .utility).async {
+                    let request = NSBundleResourceRequest(tags: [nextFile])
                     DispatchQueue.main.async {
-                        if error == nil {
-                            self.downloadStatus[nextFile] = .downloaded
+                        self.resourceRequests[nextFile] = request
+
+                        request.beginAccessingResources { error in
+                            DispatchQueue.main.async {
+                                if error == nil {
+                                    self.downloadStatus[nextFile] = .downloaded
+                                }
+                                // 预取静默完成，不影响 UI
+                            }
                         }
-                        // 预取静默完成，不影响 UI
                     }
                 }
                 return
@@ -431,12 +423,14 @@ class AudioManager: ObservableObject {
     // MARK: - Audio Session
 
     func setupAudioSession() {
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(AVAudioSessionCategoryPlayback, mode: AVAudioSessionModeDefault)
-            try session.setActive(true, with: .notifyOthersOnDeactivation)
-        } catch {
-            print("❌ Failed to setup audio session: \(error)")
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(AVAudioSessionCategoryPlayback, mode: AVAudioSessionModeDefault)
+                try session.setActive(true, with: .notifyOthersOnDeactivation)
+            } catch {
+                print("❌ Failed to setup audio session: \(error)")
+            }
         }
     }
 

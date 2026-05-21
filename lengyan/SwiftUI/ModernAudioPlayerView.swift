@@ -7,9 +7,52 @@ struct ModernAudioPlayerView: View {
     @ObservedObject var audioObserver = AudioPlayerObserver.shared
     @State private var showModeMenu = false
     @State private var modeButtonFrame: CGRect = .zero
+    @State private var showTrackList = true
+    @State private var isListInteractive = true // 防止过渡动画期间误触
+    @State private var titleHeight: CGFloat = 0 // 标题实际高度，约束卧香
+
+    private var tabBarHeight: CGFloat {
+        let bottomInset = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }?.safeAreaInsets.bottom ?? 0
+        return 49 + bottomInset + 8
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            // 1. 全景沉浸式动态古画背景 + 启动画面风格的竖向书法标题
+            ZStack(alignment: .topTrailing) {
+                GeometryReader { geo in
+                    Image("sutra_splash")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .scaleEffect(audioObserver.isPlaying ? 1.03 : 1.0)
+                        .animation(.easeInOut(duration: 30).repeatForever(autoreverses: true), value: audioObserver.isPlaying)
+                        .clipped()
+                }
+
+                // 竖向排版已移至 immersivePlayerControls，这里只保留背景图片
+            }
+            .ignoresSafeArea()
+            .opacity(showTrackList ? 0.0 : 1.0) // 当列表出现时，佛画和文字一起彻底淡出消失
+            .animation(.easeInOut(duration: 0.8), value: showTrackList)
+            .onTapGesture {
+                // 点击佛画区域，立刻切回列表模式
+                if !showTrackList {
+                    withAnimation(.easeInOut(duration: 0.6)) {
+                        showTrackList = true
+                    }
+                }
+            }
+
+            // 2. 纯净背景色，列表模式下的绝对底色
+            Color(SutraDesignTokens.shared.color(for: .background))
+                .opacity(showTrackList ? 1.0 : 0.0)
+                .animation(.easeInOut(duration: 0.8), value: showTrackList)
+                .ignoresSafeArea()
+
             VStack(spacing: 0) {
                 ZenTabHeaderView(titleKey: "media_tab_title", symbolName: "headphones")
 
@@ -30,17 +73,30 @@ struct ModernAudioPlayerView: View {
                             .padding(.top, 36)
                             .padding(.bottom, 8)
                     }
-                    .padding(.bottom, audioObserver.showPlayerBar ? 220 : 120)
+                    .padding(.bottom, audioObserver.showPlayerBar ? 260 : 120)
                     .readingContentWidth()
                 }
-                .background(Color(SutraDesignTokens.shared.color(for: .background)))
             }
-            .background(Color(SutraDesignTokens.shared.color(for: .background)))
+            .opacity(showTrackList ? 1.0 : 0.0)
+            .animation(.easeInOut(duration: 0.8), value: showTrackList)
+            .allowsHitTesting(isListInteractive)
 
             if audioObserver.showPlayerBar {
-                mediaPlayerBar
+                Group {
+                    if showTrackList {
+                        listModePlayerBar
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else {
+                        immersivePlayerControls
+                            .contentShape(Rectangle())
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: audioObserver.showPlayerBar)
             }
         }
+        // 彻底无视底部安全区，防止 UIKit 隐藏 TabBar 时导致的 Layout 瞬间跳动
+        .ignoresSafeArea(.all, edges: .bottom)
         .overlay(alignment: .top) {
             Group {
                 if let msg = manager.downloadErrorMessage {
@@ -114,83 +170,241 @@ struct ModernAudioPlayerView: View {
             .ignoresSafeArea()
         }
         .animation(.easeInOut(duration: 0.2), value: showModeMenu)
-    }
-
-    // MARK: - Media Player Bar
-    private var mediaPlayerBar: some View {
-        HStack(alignment: .center, spacing: 0) {
-            // 左列：播放按钮
-            Button(action: manager.togglePlayPause) {
-                Image(audioObserver.isPlaying ? "ic_pause_circle_outline_48pt" : "ic_play_circle_outline_48pt")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 36, height: 36)
-                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .primary)))
-            }
-            .padding(.leading, 16)
-
-            // 中列：标题 + 进度条 + 时间
-            VStack(alignment: .leading, spacing: 8) {
-                if audioObserver.currentTrack?.isEmpty ?? true {
-                    Text("请轻触卷名听经")
-                        .font(SutraTypographyBridge.uiCaption(weight: .light))
-                        .tracking(2)
-                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
-                        .lineLimit(1)
-                } else {
-                    Text(audioObserver.currentTrack!)
-                        .font(SutraTypographyBridge.uiBody(weight: .regular))
-                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textPrimary)))
-                        .lineLimit(1)
+        .onChange(of: showTrackList) { isVisible in
+            NotificationCenter.default.post(name: NSNotification.Name("ToggleTabBar"), object: nil, userInfo: ["isHidden": !isVisible])
+            
+            if isVisible {
+                // 等待 0.6 秒佛画消散后再允许点击，彻底防止误触
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    if showTrackList { isListInteractive = true }
                 }
-
-                progressBar
-
-                HStack {
-                    Text(AudioManager.formatTime(audioObserver.currentTime))
-                    Spacer()
-                    Text(AudioManager.formatTime(audioObserver.totalTime))
-                }
-                .font(SutraTypographyBridge.uiSmall(weight: .regular))
-                .monospacedDigit()
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textTertiary)))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 12)
-
-            // 右列：播放模式按钮
-            Button(action: { showModeMenu.toggle() }) {
-                Image(manager.selectedPlayMode.iconName)
-                    .renderingMode(.template)
-                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
-                    .frame(width: 24, height: 24)
-                    .background(
-                        GeometryReader { geo in
-                            Color.clear.preference(
-                                key: ButtonFramePreferenceKey.self,
-                                value: geo.frame(in: .global)
-                            )
-                        }
-                    )
-            }
-            .padding(.trailing, 16)
-            .onPreferenceChange(ButtonFramePreferenceKey.self) { frame in
-                modeButtonFrame = frame
+            } else {
+                isListInteractive = false
             }
         }
-        .padding(.vertical, 14)
+        .onAppear {
+            if !showTrackList {
+                NotificationCenter.default.post(name: NSNotification.Name("ToggleTabBar"), object: nil, userInfo: ["isHidden": true])
+            }
+        }
+        .onDisappear {
+            NotificationCenter.default.post(name: NSNotification.Name("ToggleTabBar"), object: nil, userInfo: ["isHidden": false])
+        }
+    }
+
+    // MARK: - Reusable Player Controls
+    private var playButton: some View {
+        Button(action: manager.togglePlayPause) {
+            Image(systemName: audioObserver.isPlaying ? "pause.fill" : "play.fill")
+                .font(.system(size: 20))
+                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .background)))
+                .frame(width: 44, height: 44)
+                .background(Color(SutraDesignTokens.shared.color(for: .primary)))
+                .clipShape(Circle())
+                .shadow(color: showTrackList ? Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+        }
+    }
+
+    private var modeButton: some View {
+        Button(action: { showModeMenu.toggle() }) {
+            Image(manager.selectedPlayMode.iconName)
+                .renderingMode(.template)
+        }
         .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color(SutraDesignTokens.shared.color(for: .background)))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.1), lineWidth: 0.5)
+            GeometryReader { geo in
+                Color.clear.preference(
+                    key: ButtonFramePreferenceKey.self,
+                    value: geo.frame(in: .global)
                 )
+            }
         )
+        .onPreferenceChange(ButtonFramePreferenceKey.self) { frame in
+            modeButtonFrame = frame
+        }
+    }
+
+    private var listButton: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.6)) {
+                showTrackList.toggle()
+            }
+        }) {
+            Image(systemName: "list.bullet")
+        }
+    }
+
+    private var timeDisplay: some View {
+        HStack(spacing: 4) {
+            Text(AudioManager.formatTime(audioObserver.currentTime))
+            Text("/")
+            Text(AudioManager.formatTime(audioObserver.totalTime))
+        }
+        .font(.system(size: 11, weight: .medium, design: .monospaced))
+    }
+
+    // MARK: - Layout 1: List Mode Player Bar (Glassmorphism Pill)
+    private var listModePlayerBar: some View {
+        VStack(spacing: 0) {
+            progressBar
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+
+            HStack(alignment: .center, spacing: 16) {
+                playButton
+
+                VStack(alignment: .leading, spacing: 4) {
+                    if audioObserver.currentTrack?.isEmpty ?? true {
+                        Text("请轻触卷名听经")
+                            .font(SutraTypographyBridge.uiCaption(weight: .light))
+                            .tracking(2)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                    } else {
+                        Text(audioObserver.currentTrack!)
+                            .font(SutraTypographyBridge.uiBody(weight: .medium))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                    }
+
+                    timeDisplay
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                HStack(spacing: 20) {
+                    modeButton
+                }
+                .font(.system(size: 18))
+                .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 16)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.ultraThinMaterial)
+        )
+        .shadow(color: Color.black.opacity(0.12), radius: 24, x: 0, y: 12)
         .padding(.horizontal, 16)
-        .padding(.bottom, 0)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: audioObserver.showPlayerBar)
+        .padding(.bottom, tabBarHeight)
+    }
+
+    // MARK: - Layout 2: Immersive Buddha Mode Controls (Zen Single Column)
+    private var immersivePlayerControls: some View {
+        VStack(alignment: .center, spacing: 0) {
+            // 标题 + 卧香左右并排，负间距贴合
+            HStack(alignment: .top, spacing: -12) {
+                // 竖排标题
+                Group {
+                    if let track = audioObserver.currentTrack, !track.isEmpty {
+                        Text(track.map { String($0) }.joined(separator: "\n"))
+                            .font(.system(size: 20, weight: .light))
+                            .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
+                            .lineSpacing(4)
+                    } else {
+                        Text("听\n经")
+                            .font(.system(size: 20, weight: .light))
+                            .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
+                            .lineSpacing(4)
+                    }
+                }
+                .fixedSize()
+                .background(GeometryReader { geo in
+                    Color.clear.preference(key: TitleHeightPreferenceKey.self, value: geo.size.height)
+                })
+                .onPreferenceChange(TitleHeightPreferenceKey.self) { height in
+                    titleHeight = height
+                }
+
+                // 竖向卧香紧贴标题右侧，高度匹配标题，裁剪溢出
+                verticalIncenseProgressBar
+                    .frame(width: 44, height: max(1, titleHeight))
+                    .clipped()
+            }
+
+            // 时间圈：静态细线圈，仅显示时间，进度由卧香表达
+            ZStack {
+                Circle()
+                    .stroke(Color(red: 0.45, green: 0.12, blue: 0.10).opacity(0.25), lineWidth: 0.5)
+                    .frame(width: 48, height: 48)
+
+                VStack(spacing: 2) {
+                    Text(AudioManager.formatTime(audioObserver.currentTime))
+                        .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
+                    Text(AudioManager.formatTime(audioObserver.totalTime))
+                        .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
+                }
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+            }
+            .padding(.top, 12)
+            .offset(x: -14)
+
+            // 控制按钮竖排，对齐标题视觉中心
+            VStack(spacing: 24) {
+                playButton
+                listButton
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10).opacity(0.8))
+            }
+            .padding(.top, 24)
+            .offset(x: -14)
+        }
+        .fixedSize()
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.trailing, 24)
+        .padding(.top, 94)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .ignoresSafeArea()
+        .gesture(
+            DragGesture(minimumDistance: 30, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.height > 60 && abs(value.translation.height) > abs(value.translation.width) * 1.5 {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            showTrackList = true
+                        }
+                    }
+                }
+        )
+    }
+
+    // MARK: - Incense Progress Bar (Zen Vertical Floating Incense)
+    private var verticalIncenseProgressBar: some View {
+        GeometryReader { geometry in
+            let progress = audioObserver.totalTime > 0 ? CGFloat(audioObserver.currentTime / audioObserver.totalTime) : 0
+            let burntHeight = geometry.size.height * progress
+            let unburntHeight = geometry.size.height - burntHeight
+            
+            ZStack(alignment: .top) {
+                // 香灰痕迹
+                Capsule()
+                    .fill(Color(red: 0.45, green: 0.12, blue: 0.10).opacity(0.15))
+                    .frame(width: 1, height: geometry.size.height)
+                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+
+                // 剩下的竖香（从上向下燃烧）
+                VStack(spacing: 0) {
+                    Spacer(minLength: burntHeight)
+                    Capsule()
+                        .fill(Color(red: 0.45, green: 0.12, blue: 0.10).opacity(0.35))
+                        .frame(width: 1, height: unburntHeight)
+                }
+                .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+            }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        guard audioObserver.totalTime > 0 else { return }
+                        let percent = min(max(value.location.y / geometry.size.height, 0), 1)
+                        let seekTime = audioObserver.totalTime * Double(percent)
+                        audioObserver.currentTime = seekTime
+                        let cmTime = CMTime(seconds: seekTime, preferredTimescale: 600)
+                        audioObserver.queuePlayer?.seek(to: cmTime, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+                    }
+            )
+        }
     }
 
     private func playModeRow(_ mode: PlayMode, title: String, icon: String) -> some View {
@@ -248,20 +462,19 @@ struct ModernAudioPlayerView: View {
         }
     }
 
-    // MARK: - Progress Bar (without time labels)
+    // MARK: - Progress Bar
     private var progressBar: some View {
         GeometryReader { geometry in
             let progress = audioObserver.totalTime > 0 ? CGFloat(audioObserver.currentTime / audioObserver.totalTime) : 0
             ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.12))
-                    .frame(height: 5)
-                    .cornerRadius(2.5)
+                // 进度槽背景：在佛画模式下使用专属暗红色，避免深色模式下的白色因为太浅而看不清
+                Capsule()
+                    .fill(showTrackList ? Color.primary.opacity(0.12) : Color(red: 0.45, green: 0.12, blue: 0.10).opacity(0.15))
+                    .frame(height: 3)
 
-                Rectangle()
-                    .fill(Color(SutraDesignTokens.shared.color(for: .primary)))
-                    .frame(width: max(0, min(geometry.size.width * progress, geometry.size.width)), height: 5)
-                    .cornerRadius(2.5)
+                Capsule()
+                    .fill(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.85))
+                    .frame(width: max(0, min(geometry.size.width * progress, geometry.size.width)), height: 3)
             }
             .contentShape(Rectangle())
             .gesture(
@@ -276,7 +489,7 @@ struct ModernAudioPlayerView: View {
                     }
             )
         }
-        .frame(height: 5)
+        .frame(height: 4)
         .contentShape(Rectangle())
     }
 
@@ -389,6 +602,13 @@ struct ModernAudioPlayerView: View {
 private struct ButtonFramePreferenceKey: PreferenceKey {
     static var defaultValue: CGRect = .zero
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        value = nextValue()
+    }
+}
+
+private struct TitleHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
     }
 }
