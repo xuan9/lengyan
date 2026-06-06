@@ -13,6 +13,11 @@
       "size" : "20x20"
     },
     {
+      "idiom" : "iphone",
+      "scale" : "2x",
+      "size" : "29x29"
+    },
+    {
       "filename" : "Icon-29@3x.png",
       "idiom" : "iphone",
       "scale" : "3x",

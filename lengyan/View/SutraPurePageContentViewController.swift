@@ -12,6 +12,7 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
 
     var onDismiss: (() -> Void)?
     var isShowIndexButton = false;
+    weak var parentReader: SutraPurePageViewController?
 
     var item:[String:Any]? = nil;
     var path:String? = nil;
@@ -34,7 +35,8 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
     }
 
     override var prefersStatusBarHidden: Bool {
-        return navigationController?.isNavigationBarHidden ?? false
+        let targetNavController = self.navigationController ?? self.parentReader?.navigationController ?? self.parent?.navigationController
+        return targetNavController?.isNavigationBarHidden ?? false
     }
 
     func addSutra(_ meta:[String:Any]){
@@ -97,10 +99,12 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // 重置滚动位置时保留导航栏状态，防止 setContentOffset 触发 hidesBarsOnSwipe 导致导航栏跳出
-        let wasNavBarHidden = navigationController?.isNavigationBarHidden ?? false
+        // 🌿 获取最准确的导航栏隐藏状态。在 UIPageViewController 中，子控制器预加载时 self.navigationController 可能为空，
+        // 此时我们通过 fallback 到 parentReader?.navigationController 或 parent?.navigationController 来获取真实的隐藏状态并将其同步，防止翻页时导航栏自动跳出。
+        let targetNavController = self.navigationController ?? self.parentReader?.navigationController ?? self.parent?.navigationController
+        let wasNavBarHidden = targetNavController?.isNavigationBarHidden ?? false
         if wasNavBarHidden {
-            navigationController?.setNavigationBarHidden(true, animated: false)
+            targetNavController?.setNavigationBarHidden(true, animated: false)
         }
 
         NotificationCenter.default.addObserver(
@@ -150,6 +154,10 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
 
     // MARK: - UIGestureRecognizerDelegate
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        // 🌿 如果另一个手势是拖动/滚动手势（UIPanGestureRecognizer），则不允许同时识别，防止滑动翻页时误触发“轻点显示/隐藏导航栏”
+        if otherGestureRecognizer is UIPanGestureRecognizer {
+            return false
+        }
         return true
     }
 }

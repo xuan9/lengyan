@@ -230,6 +230,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     var meta:[String:Any] = [:];
     var contents:[[String:String]] = [];
     var path:String = ""
+    weak var parentReader: SutraPageViewController?
 
     // Zen design properties
     private let zenBackgroundView = UIView()
@@ -384,7 +385,13 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         applyZenTempleSerenityDesignSystem()
 
         // Apply design system to navigation bar
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        let targetNavController = self.navigationController ?? self.parentReader?.navigationController ?? self.parent?.navigationController
+        let wasNavBarHidden = targetNavController?.isNavigationBarHidden ?? false
+        if wasNavBarHidden {
+            targetNavController?.setNavigationBarHidden(true, animated: false)
+        } else {
+            targetNavController?.setNavigationBarHidden(false, animated: animated)
+        }
         configureZenNavigationBar()
     }
 

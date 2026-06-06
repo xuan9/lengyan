@@ -49,7 +49,18 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 name: NSNotification.Name.UIApplicationWillTerminate,
                 object: nil)
         } else {
-            path = tree!["path"] as? String;
+            var resolvedTree = tree!
+            if self.path == nil {
+                self.path = resolvedTree["path"] as? String
+            }
+            while resolvedTree["children"] == nil {
+                if let parent = Book.shared.parentOfItem(resolvedTree) {
+                    resolvedTree = parent
+                } else {
+                    break
+                }
+            }
+            self.tree = resolvedTree
             self.treeView.reloadData()
         }
         self.updateHeader()
@@ -75,6 +86,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        if let currentPath = self.path {
+            self.openPath(currentPath)
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -119,9 +133,14 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func loadRootTree(){
         Book.shared.loadDataWithCompletionHandler { () in
             self.tree = Book.shared.tree
-            self.path = self.tree!["path"] as? String;
+            if self.path == nil || self.path == "/" {
+                self.path = Prefers.shared.lastReadPath ?? (self.tree!["path"] as? String)
+            }
             DispatchQueue.main.async{
                 self.treeView.reloadData()
+                if let currentPath = self.path {
+                    self.openPath(currentPath)
+                }
             }
         }
     }
@@ -262,7 +281,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // If so, we instantiate a new clean copy of that reader type, set the stack to place it on top of self (IndexVC),
         // and animate to it. This avoids both navigation recursion and UIKit stack-corruption bugs from reordering existing instances.
         if let viewControllers = self.navigationController?.viewControllers {
-            if let existingPageVC = viewControllers.first(where: { $0 is SutraPageViewController }) as? SutraPageViewController {
+            if viewControllers.contains(where: { $0 is SutraPageViewController }) {
                 if let foundIndex = bookIndex.index(where: { $0["path"] == path }) {
                     let pageVC = SutraPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
                     pageVC.page = foundIndex
@@ -287,7 +306,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                     self.navigationController?.setViewControllers(newStack, animated: true)
                     return
                 }
-            } else if let existingPurePageVC = viewControllers.first(where: { $0 is SutraPurePageViewController }) as? SutraPurePageViewController {
+            } else if viewControllers.contains(where: { $0 is SutraPurePageViewController }) {
                 let purePageVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
                 purePageVC.path = path
                 
@@ -309,6 +328,23 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 self.navigationController?.setViewControllers(newStack, animated: true)
                 return
             }
+        }
+
+        let mode = Prefers.shared.lastReadMode ?? "paged"
+        if mode == "tree" {
+            let purePageVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+            purePageVC.path = path
+            purePageVC.hidesBottomBarWhenPushed = true
+            purePageVC.onDismiss = { [weak self, weak purePageVC] in
+                guard let strongSelf = self, let reader = purePageVC else { return }
+                if let itemPath = reader.path {
+                    strongSelf.openPath(itemPath)
+                }
+            }
+            print("DEBUG: SutraIndexViewController openItem (Pure) - Stack before push: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
+            self.navigationController?.pushViewController(purePageVC, animated: true)
+            print("DEBUG: SutraIndexViewController openItem (Pure) - Stack after push: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
+            return
         }
 
         let pageVC = SutraPageViewController.init( transitionStyle:.scroll,
@@ -376,6 +412,8 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             return
         }
 
+        self.path = path
+
         // SAFE: Check if tree exists and has path
         guard let tree = self.tree,
               let rootPath = tree["path"] as? String else {
@@ -390,7 +428,6 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         let subPath = path[rootPath.endIndex...]
         var currentNode = tree
-        var isExpanded = false
 
         for id in subPath.components(separatedBy: "/") {
             guard !id.isEmpty else { continue }
@@ -417,12 +454,18 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             // SAFE: Expand node if needed
             if !treeView.isCell(forItemExpanded: currentNode) {
                 treeView.expandRow(forItem: currentNode, with: RATreeViewRowAnimationNone)
-                isExpanded = true
             }
         }
 
-        if isExpanded {
-            treeView.selectRow(forItem: currentNode, animated: true, scrollPosition: RATreeViewScrollPositionMiddle)
+        // Always highlight and center the current reading path in the viewport
+        treeView.selectRow(forItem: currentNode, animated: true, scrollPosition: RATreeViewScrollPositionMiddle)
+        
+        // Refresh visible cells to update text colors immediately
+        treeView.visibleCells()?.forEach { cell in
+            if let cell = cell as? UITableViewCell,
+               let item = treeView.item(for: cell) as? NSDictionary {
+                self.updateCellText(cell, for: item)
+            }
         }
     }
     
@@ -441,27 +484,61 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     private func updateCellText(_ cell: UITableViewCell, for item: NSDictionary) {
         let isLeaf = item["children"] == nil
         let name = item["name"] as? String ?? ""
-        let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
+        let level = treeView.levelForCell(forItem: item)
+        
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        let chapterTitleColor = SutraDesignTokens.shared.color(for: .chapterTitle)
+        let tertiaryTextColor = SutraDesignTokens.shared.color(for: .textTertiary)
         
-        // 🌿 禅意前缀装饰：根据节点展开状态动态显示折叠（▸）或展开（▾）
-        let prefix: String
+        cell.textLabel?.text = name
+        
         if isLeaf {
-            prefix = "•  "
-        } else {
+            let itemPath = item["path"] as? String ?? ""
+            let isActive = (itemPath == self.path)
+            
+            // 🌿 解决对齐问题：使用与目录相同尺寸的隐形占位 Chevron，确保叶子节点与同级目录完美对齐
+            let config = level == 0
+                ? UIImage.SymbolConfiguration(pointSize: 11, weight: .bold)
+                : UIImage.SymbolConfiguration(pointSize: 9, weight: .medium)
+            let spacerImage = UIImage(systemName: "chevron.right")?.withConfiguration(config)
+            cell.imageView?.image = spacerImage
+            cell.imageView?.tintColor = .clear
+            
+            if isActive {
+                // 🎋 当前阅读中的叶子节点：古典雅致的朱砂红 (favorite) + Medium字重
+                let activeColor = SutraDesignTokens.shared.color(for: .favorite)
+                cell.textLabel?.textColor = activeColor
+                cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .medium)
+            } else {
+                // 🌿 普通叶子节点：清雅素淡的竹翠绿 (primary) + Regular字重
+                let leafDefaultColor = SutraDesignTokens.shared.color(for: .primary)
+                cell.textLabel?.textColor = leafDefaultColor
+                cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .regular)
+            }
+        } else if level == 0 {
+            // 🌿 顶级章节：黄金鎏金主色 (chapterTitle) + 24pt Medium，醒目的章节标志
+            cell.textLabel?.textColor = chapterTitleColor
+            cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .medium)
+            
             let isExpanded = treeView.isCell(forItemExpanded: item)
-            prefix = isExpanded ? "▾  " : "▸  "
+            let iconName = isExpanded ? "chevron.down" : "chevron.right"
+            let config = UIImage.SymbolConfiguration(pointSize: 11, weight: .bold)
+            let chevronImage = UIImage(systemName: iconName)?.withConfiguration(config)
+            cell.imageView?.image = chevronImage
+            cell.imageView?.tintColor = chapterTitleColor
+        } else {
+            // 🌿 子级目录：檀褐色 (textSecondary) + 18pt Medium，轻量中性过渡
+            cell.textLabel?.textColor = secondaryTextColor
+            cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .menuItem, weight: .medium)
+            
+            let isExpanded = treeView.isCell(forItemExpanded: item)
+            let iconName = isExpanded ? "chevron.down" : "chevron.right"
+            let config = UIImage.SymbolConfiguration(pointSize: 9, weight: .medium)
+            let chevronImage = UIImage(systemName: iconName)?.withConfiguration(config)
+            cell.imageView?.image = chevronImage
+            cell.imageView?.tintColor = tertiaryTextColor
         }
-        
-        let attrText = NSMutableAttributedString(string: prefix + name)
-        
-        let prefixColor = isLeaf ? SutraDesignTokens.shared.color(for: .decorativeGold) : SutraDesignTokens.shared.color(for: .textTertiary)
-        let textColor = isLeaf ? primaryTextColor : secondaryTextColor
-        
-        attrText.addAttribute(.foregroundColor, value: prefixColor, range: NSRange(location: 0, length: prefix.utf16.count))
-        attrText.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: prefix.utf16.count, length: name.utf16.count))
-        
-        cell.textLabel?.attributedText = attrText
+        cell.setNeedsLayout()
     }
     
     func treeView(_ treeView: RATreeView, cellForItem item: Any?) -> UITableViewCell {
@@ -477,30 +554,23 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if (newCell == nil) {
             newCell = UITableViewCell.init(style:.value1,reuseIdentifier:identifier)
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true
-            newCell!.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
-
-            if (isLeaf) {
-                // 叶子节点：右侧为标准右向箭头，表明点击可跳转到正文
-                let chevronImage = UIImage(systemName: "chevron.right")?
-                    .withConfiguration(UIImage.SymbolConfiguration(pointSize: 12, weight: .medium))
-                let chevronView = UIImageView(image: chevronImage)
-                chevronView.contentMode = .center
-                newCell!.accessoryView = chevronView
-            } else {
-                // 章节/目录节点：无右侧图标，点击直接展开/折叠，不再提供单独的阅读跳转链接
-                newCell!.accessoryView = nil
-            }
         }
 
-        // 每次渲染都刷新颜色（新建 + 复用），确保主题切换即时生效
+        // 每次渲染都刷新颜色和附件样式（新建 + 复用），确保主题切换即时生效
         let cell = newCell!;
+        // 🌿 回归全屏背景色平整统一，符合纯净留白风格，避免花哨的条叠感
         cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        let selectedBg = UIView()
-        selectedBg.backgroundColor = SutraDesignTokens.shared.color(for: .sacredGlow)
-        cell.selectedBackgroundView = selectedBg
+        cell.selectionStyle = .none
+        cell.selectedBackgroundView = nil
         
-        if let imgView = cell.accessoryView as? UIImageView {
-            imgView.tintColor = SutraDesignTokens.shared.color(for: .textTertiary)
+        if (isLeaf) {
+            // 叶子节点：右侧为经典简洁的系统原生右向箭头，用户关注力回归到左侧内容本身
+            cell.accessoryType = .disclosureIndicator
+            cell.accessoryView = nil
+        } else {
+            // 章节/目录节点：无右侧图标，点击直接展开/折叠
+            cell.accessoryType = .none
+            cell.accessoryView = nil
         }
 
         updateCellText(cell, for: item)
@@ -556,6 +626,10 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     func treeView(_ treeView: RATreeView, editActionsForItem item: Any) -> [Any] {
         return [Any]()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
 }

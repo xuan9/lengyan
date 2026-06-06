@@ -8,6 +8,9 @@
 
 set -euo pipefail
 
+# 绕过 Xcode 17.3/26.3 版本的 SWBBuildService/llbuild 符号加载 Bug
+export DYLD_FRAMEWORK_PATH="/Library/Developer/CommandLineTools/usr/lib/swift/pm/llbuild"
+
 # ── 配置 ──
 PROJECT="lengyan.xcodeproj"
 SCHEME="lengyan"

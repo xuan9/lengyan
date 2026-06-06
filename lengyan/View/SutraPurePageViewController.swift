@@ -16,6 +16,13 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     var isShowIndexButton = true;
     private var stayTimer = ReadingStayTimer()
 
+
+    
+    private var backButton: UIBarButtonItem?
+    private var indexButton: UIBarButtonItem?
+    private var shareButton: UIBarButtonItem?
+    private var bookmarkButton: UIBarButtonItem?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = false;
@@ -26,19 +33,18 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.dataSource = self;
         self.delegate = self;
 
-        // STORYBOARD REMOVED: Using programmatic UI now
-        
         self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
 
-        self.setTitle()
+        setupNavigationItems()
+        updateNavigationBarState()
+        setupThemeObserver()
     }
 
     func updatePath(to newPath: String) {
         guard !newPath.isEmpty else { return }
         self.path = newPath
         self.setViewControllers([getViewControllerAtPath(newPath)] as [UIViewController], direction: .forward, animated: false, completion: nil)
-        self.setPageTitle()
-        self.setTitle()
+        updateNavigationBarState()
         
         // Save progress
         Prefers.shared.lastReadPath = newPath
@@ -48,7 +54,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     override var prefersStatusBarHidden: Bool {
         return navigationController?.isNavigationBarHidden ?? false
     }
-    
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -62,6 +67,12 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationController?.hidesBarsOnSwipe = false
         self.navigationController?.hidesBarsOnTap = false
         self.navigationController?.hidesBarsWhenVerticallyCompact = true
+        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
+        self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = false
+
+        // 恢复并统一导航栏外观
+        applyNavigationBarAppearance()
+        updateNavigationBarState()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -77,57 +88,89 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         }
     }
 
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
     @objc func close() {
         print("DEBUG: SutraPurePageViewController close() - Stack before pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
         onDismiss?();
         let popped = self.navigationController?.popViewController(animated: true);
         print("DEBUG: SutraPurePageViewController close() - Popped VC: \(String(describing: popped)), Stack after pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
     }
-    
-    func setTitle() {
-        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
-        // 返回按钮
-        let backButton = UIBarButtonItem(
+    private func setupNavigationItems() {
+        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
+
+        // 1. 返回按钮
+        let backBtn = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
             style: .plain,
             target: self,
             action: #selector(close)
         )
-        backButton.tintColor = secondaryColor
+        backBtn.tintColor = secondaryColor
         if #available(iOS 26.0, *) {
-            backButton.hidesSharedBackground = true
+            backBtn.hidesSharedBackground = true
         }
+        self.backButton = backBtn
 
-        // 目录按钮移到左边
-        var leftButtons: [UIBarButtonItem] = [backButton]
+        // 2. 目录按钮 (只要 isShowIndexButton 为 true 便始终显示，允许从叶子节点直接跳转)
         if self.isShowIndexButton {
-            let item = Book.shared.itemOfPath(path ?? "")
-            if item["children"] != nil {
-                let indexButton = UIBarButtonItem(
-                    image: UIImage(systemName: "list.bullet"),
-                    style: .plain,
-                    target: self,
-                    action: #selector(openIndex)
-                )
-                indexButton.tintColor = secondaryColor
-                if #available(iOS 26.0, *) {
-                    indexButton.hidesSharedBackground = true
-                }
-                leftButtons.append(indexButton)
+            let indexBtn = UIBarButtonItem(
+                image: UIImage(systemName: "list.bullet"),
+                style: .plain,
+                target: self,
+                action: #selector(openIndex)
+            )
+            indexBtn.tintColor = secondaryColor
+            if #available(iOS 26.0, *) {
+                indexBtn.hidesSharedBackground = true
             }
+            self.indexButton = indexBtn
         }
-        self.navigationItem.leftBarButtonItems = leftButtons
 
-        // 导航栏背景统一 — 与阅读内容同色，按钮完全无背景色块
+        // 3. 分享按钮
+        let shareBtn = UIBarButtonItem(
+            image: UIImage(systemName: "square.and.arrow.up"),
+            style: .plain,
+            target: self,
+            action: #selector(share)
+        )
+        shareBtn.tintColor = secondaryColor
+        if #available(iOS 26.0, *) {
+            shareBtn.hidesSharedBackground = true
+        }
+        self.shareButton = shareBtn
+
+        // 4. 收藏按钮 (初始状态)
+        let bookmarkBtn = UIBarButtonItem(
+            image: UIImage(systemName: "bookmark"),
+            style: .plain,
+            target: self,
+            action: #selector(like)
+        )
+        bookmarkBtn.tintColor = secondaryColor
+        if #available(iOS 26.0, *) {
+            bookmarkBtn.hidesSharedBackground = true
+        }
+        self.bookmarkButton = bookmarkBtn
+
+        // 仅装配右侧按钮，左侧返回/目录装配移至 updateNavigationBarState() 进行动态显隐管理
+        self.navigationItem.rightBarButtonItems = [shareBtn, bookmarkBtn]
+
+        applyNavigationBarAppearance()
+    }
+
+    private func applyNavigationBarAppearance() {
+        let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
         let navBarColor = SutraDesignTokens.shared.color(for: .background)
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = navBarColor
         appearance.shadowColor = .clear
         appearance.shadowImage = UIImage()
-        // 按钮外观：显式清除所有状态的背景
+
         let btnAppearance = UIBarButtonItemAppearance(style: .plain)
         btnAppearance.normal.backgroundImage = UIImage()
         btnAppearance.normal.titleTextAttributes = [.foregroundColor: secondaryColor]
@@ -137,63 +180,70 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         btnAppearance.focused.backgroundImage = UIImage()
         appearance.buttonAppearance = btnAppearance
         appearance.doneButtonAppearance = btnAppearance
-        // 隐藏默认返回按钮指示器
         appearance.setBackIndicatorImage(UIImage(), transitionMaskImage: UIImage())
-        
+
         if let navBar = self.navigationController?.navigationBar {
             navBar.standardAppearance = appearance
             navBar.compactAppearance = appearance
             navBar.scrollEdgeAppearance = appearance
             navBar.isTranslucent = false
             navBar.tintColor = secondaryColor
-            // 清除导航栏的背景视图层级中的模糊效果
             navBar.setBackgroundImage(UIImage(), for: .default)
             navBar.shadowImage = UIImage()
             navBar.barTintColor = navBarColor
             navBar.backgroundColor = navBarColor
         }
-
-        self.setPageTitle()
-        self.updateStarButton()
     }
 
-    func updateStarButton(){
+    func updateNavigationBarState() {
         guard let path = self.path else { return }
+        // 🌿 记录当前真实的隐藏状态，避免更新 items 触发重新布局而意外显示导航条
+        let isHidden = self.navigationController?.isNavigationBarHidden ?? false
+        
         let secondaryColor = SutraDesignTokens.shared.color(for: .textSecondary)
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
-        // 收藏按钮
-        let isLiked = Prefers.shared.likes.contains(path)
-        let likeButton = UIBarButtonItem(
-            image: UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark"),
-            style: .plain,
-            target: self,
-            action: isLiked ? #selector(unlike) : #selector(like)
-        )
-        likeButton.tintColor = isLiked ? bookmarkColor : secondaryColor
+        // 🌿 更新经文标题
+        let item = Book.shared.itemOfPath(path)
+        self.navigationItem.titleView = Book.shared.getTitleView(item)
 
-        if #available(iOS 26.0, *) {
-            likeButton.hidesSharedBackground = true
+        // 🌿 动态更新左侧返回/目录项 (叶子正文页自动隐藏目录项，保证纯净阅读环境)
+        let isLeaf = item["children"] == nil
+        var leftButtons = [backButton].compactMap { $0 }
+        if self.isShowIndexButton && !isLeaf {
+            if let indexBtn = self.indexButton {
+                leftButtons.append(indexBtn)
+            }
         }
+        self.navigationItem.leftBarButtonItems = leftButtons
 
-        // 右边统一：[分享] [收藏]
-        let rightButtons: [UIBarButtonItem] = [makeShareButton(color: secondaryColor), likeButton]
-
-        self.navigationItem.setRightBarButtonItems(rightButtons, animated: false)
+        // 🌿 更新收藏状态 (直接修改同一按钮，杜绝闪烁)
+        let isLiked = Prefers.shared.likes.contains(path)
+        bookmarkButton?.image = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
+        bookmarkButton?.tintColor = isLiked ? bookmarkColor : secondaryColor
+        bookmarkButton?.target = self
+        bookmarkButton?.action = isLiked ? #selector(unlike) : #selector(like)
+        
+        // 🌿 强制恢复隐藏状态，防止 layout 被系统强制刷回显示
+        if isHidden {
+            self.navigationController?.setNavigationBarHidden(true, animated: false)
+        }
     }
 
-    private func makeShareButton(color: UIColor) -> UIBarButtonItem {
-        let button = UIBarButtonItem(
-            image: UIImage(systemName: "square.and.arrow.up"),
-            style: .plain,
-            target: self,
-            action: #selector(share)
+    // MARK: - 主题即时刷新支持
+    private func setupThemeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(themeDidChange),
+            name: .themeDidChange,
+            object: nil
         )
-        button.tintColor = color
-        if #available(iOS 26.0, *) {
-            button.hidesSharedBackground = true
-        }
-        return button
+    }
+
+    @objc private func themeDidChange() {
+        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        applyNavigationBarAppearance()
+        updateNavigationBarState()
     }
 
     @objc func share() {
@@ -226,18 +276,19 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         
         let indexVC = SutraIndexViewController();
         indexVC.tree = Book.shared.itemOfPath(path!);
+        indexVC.path = self.path
         indexVC.defaultExpandLevel = 2;
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
     @objc func like() {
         Prefers.shared.like(self.path!)
-        self.updateStarButton()
+        self.updateNavigationBarState()
     }
     
     @objc func unlike() {
         Prefers.shared.unlike(self.path!)
-        self.updateStarButton()
+        self.updateNavigationBarState()
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
@@ -291,33 +342,39 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     
     func getViewControllerAtPath(_ path: String) -> UIViewController
     {
-        
         let pageContent:SutraPurePageContentViewController = SutraPurePageContentViewController();
-        
         pageContent.path = path
-        
+        pageContent.parentReader = self // 🌿 绑定父控制器引用，实现精确的导航栏状态同步
         pageContent.view.frame = self.view.bounds
-        
         return pageContent
     }
     
-    // MARK - UIPageViewControllerDelegate
-    func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
-
-        let pageContent = pageViewController.viewControllers![0] as! SutraPurePageContentViewController
-        self.path = pageContent.path;
-        self.setTitle()
-
-        // 每次翻页完成即保存进度
-        if let path = self.path {
-            Prefers.shared.lastReadPath = path
-            Prefers.shared.lastReadMode = "tree"
+    // MARK: - UIPageViewControllerDelegate
+    func pageViewController(_ pageViewController: UIPageViewController, willTransitionTo pendingViewControllers: [UIViewController]) {
+        // 🌿 在开始翻页过渡手势的瞬间，立刻检查并锁定导航栏隐藏状态，防止划动过程中系统自动拉起导航栏
+        let isHidden = self.navigationController?.isNavigationBarHidden ?? false
+        if isHidden {
+            self.navigationController?.setNavigationBarHidden(true, animated: false)
         }
     }
-    
-    func setPageTitle() {
-        if path == nil { return }
-        let item = Book.shared.itemOfPath(path!);
-        self.navigationItem.titleView = Book.shared.getTitleView(item);
+
+    func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
+        // 🌿 无论翻页成功还是取消，只要之前处于隐藏状态，就必须在翻页结束时强制重新隐藏，彻底堵死各种手势中断/边界回弹带来的跳出问题
+        let isHidden = self.navigationController?.isNavigationBarHidden ?? false
+        if isHidden {
+            self.navigationController?.setNavigationBarHidden(true, animated: false)
+        }
+
+        if completed {
+            let pageContent = pageViewController.viewControllers![0] as! SutraPurePageContentViewController
+            self.path = pageContent.path;
+            self.updateNavigationBarState()
+
+            // 每次翻页完成即保存进度
+            if let path = self.path {
+                Prefers.shared.lastReadPath = path
+                Prefers.shared.lastReadMode = "tree"
+            }
+        }
     }
 }

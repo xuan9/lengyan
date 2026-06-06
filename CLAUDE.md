@@ -56,7 +56,7 @@ pgrep -f "WebDriverAgentRunner" || echo "Not running"
   - AVPlayer + background playback + remote control
 
 ### UI Architecture (Hybrid UIKit/SwiftUI)
-- **Reading**: `SutraPageViewController.swift` (UIKit)
+- **Reading**: `SutraPageViewController.swift`, `SutraPurePageViewController.swift`, `ReaderViewController.swift, `ReaderViewController.swift` (UIKit)
 - **Navigation**: `SutraBookViewController.swift`, `SutraIndexViewController.swift`
 - **Audio**: `MediaTableViewController.swift`
 - **Bookmarks**: `StarsTableViewController.swift`

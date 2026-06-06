@@ -22,7 +22,6 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationController?.hidesBarsOnSwipe = false;
         self.navigationController?.hidesBarsOnTap = false;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
-        self.automaticallyAdjustsScrollViewInsets = false;
 
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(toggleNavigationBar))
         tapGesture.delegate = self
@@ -109,6 +108,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.navigationController?.hidesBarsOnSwipe = false
         self.navigationController?.hidesBarsOnTap = false
         self.navigationController?.hidesBarsWhenVerticallyCompact = true
+        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
+        self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = false
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -160,6 +161,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     func setTitle() {
+        let isHidden = self.navigationController?.isNavigationBarHidden ?? false
+
         // Use modern SF Symbols for better accessibility and consistency
         let backIcon = UIImage(systemName: "chevron.left")
         let backBarButton = UIBarButtonItem(image: backIcon, style: .plain, target: self, action: #selector(close))
@@ -190,6 +193,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
         // Grouping right buttons: [Share on the far right] [Bookmark]
         self.navigationItem.rightBarButtonItems = [shareButton, bookmarkButton]
+
+        if isHidden {
+            self.navigationController?.setNavigationBarHidden(true, animated: false)
+        }
     }
         
     public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
@@ -198,13 +205,12 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         var index = pageContent.pageIndex
         if ((index == 0) || (index == NSNotFound))
         {
-            self.close();
             return nil;
         }
         // 始终跳过非叶子节点（目录页），只翻到有经文的页面
         repeat {
             index -= 1;
-            guard index >= 0 else { self.close(); return nil }
+            guard index >= 0 else { return nil }
         } while !(Book.shared.isItemLeaf(index) ?? true)
         return getViewControllerAtIndex(index: index)
     }
@@ -213,31 +219,32 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     {
         // Create the standard page content controller and enhance it
         let pageContent = SutraPageContentViewController()
-
+ 
         pageContent.pageIndex = index
-
+        pageContent.parentReader = self
+ 
         let frame = self.view.frame;
         // 使用 safeAreaInsets 而非 navigationBar 高度，
         // 这样无论导航栏是否隐藏（hidesBarsOnSwipe），内容都不会被灵动岛遮挡
         let topInset = self.view.safeAreaInsets.top
-
+ 
         pageContent.view.frame = CGRect(
             origin: CGPoint(x: frame.origin.x, y: frame.origin.y + topInset),
             size: CGSize(width: frame.size.width, height: frame.size.height - topInset))
-
+ 
         // Apply Zen Temple Serenity design enhancement
         enhancePageViewController(pageContent)
-
+ 
         return pageContent
     }
-
+ 
     // Apply Zen design enhancements to the page content
     private func enhancePageViewController(_ pageVC: SutraPageContentViewController) {
         // Apply semantic sutra background for page and table
         let backgroundColor = SutraDesignTokens.shared.color(for: .background) // 沉浸无缝，与内容同色
         pageVC.view.backgroundColor = backgroundColor
         pageVC.tableView.backgroundColor = backgroundColor
-
+ 
         // Update fonts with unified SutraTypography design system
         // Uses golden ratio scaling, Chinese font optimization, and proper line heights
         pageVC.sutraFont = SutraTypographyManager.shared.uiFont(for: .sutraBody, weight: .regular)
@@ -251,34 +258,53 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         var index = pageContent.pageIndex
         if (index == NSNotFound || index + 1 == Book.shared.index?.count)
         {
-            self.close();
             return nil;
         }
-
+ 
         // 始终跳过非叶子节点（目录页），只翻到有经文的页面
         let totalCount = Book.shared.index?.count ?? 0
         repeat {
             index += 1;
-            guard index < totalCount else { self.close(); return nil }
+            guard index < totalCount else { return nil }
         } while !(Book.shared.isItemLeaf(index) ?? true)
         return getViewControllerAtIndex(index: index)
     }
     
-    // MARK - UIPageViewControllerDelegate
+    // MARK: - UIPageViewControllerDelegate
+    func pageViewController(_ pageViewController: UIPageViewController, willTransitionTo pendingViewControllers: [UIViewController]) {
+        // 🌿 在开始翻页过渡手势的瞬间，立刻检查并锁定导航栏隐藏状态，防止划动过程中系统自动拉起导航栏
+        let isHidden = self.navigationController?.isNavigationBarHidden ?? false
+        if isHidden {
+            self.navigationController?.setNavigationBarHidden(true, animated: false)
+        }
+    }
+
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool){
+        // 🌿 无论翻页成功还是取消，只要之前处于隐藏状态，就必须在翻页结束时强制重新隐藏，彻底堵死各种手势中断/边界回弹带来的跳出问题
+        let isHidden = self.navigationController?.isNavigationBarHidden ?? false
+        if isHidden {
+            self.navigationController?.setNavigationBarHidden(true, animated: false)
+        }
 
-        let pageContent = pageViewController.viewControllers![0] as! SutraPage
-        self.page = pageContent.pageIndex;
-        self.item = Book.shared.index![page];
-        self.path = item!["path"]
-        self.setPageTitle()
-        self.setTitle()
+        if completed {
+            let pageContent = pageViewController.viewControllers![0] as! SutraPageContentViewController
+            self.page = pageContent.pageIndex;
+            self.item = Book.shared.index![page];
+            self.path = item!["path"]
+            self.setPageTitle()
+            self.setTitle()
 
-        // 每次翻页完成即保存进度
-        if let path = self.path, page >= 0 {
-            Prefers.shared.lastReadPath = path
-            Prefers.shared.lastReadPageIndex = page
-            Prefers.shared.lastReadMode = "paged"
+            // 🌿 再次强制恢复隐藏状态，防止 layout 被系统强制刷回显示
+            if isHidden {
+                self.navigationController?.setNavigationBarHidden(true, animated: false)
+            }
+
+            // 每次翻页完成即保存进度
+            if let path = self.path, page >= 0 {
+                Prefers.shared.lastReadPath = path
+                Prefers.shared.lastReadPageIndex = page
+                Prefers.shared.lastReadMode = "paged"
+            }
         }
     }
     
