@@ -1,0 +1,31 @@
+# Fastfile
+# For more information about the Fastfile, see:
+# https://docs.fastlane.tools/actions/
+
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+    # Set up environment variables if needed
+  end
+
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # 1. Automatically increment the build number based on current App Store Connect state (optional)
+    # increment_build_number(xcodeproj: "lengyan.xcodeproj")
+
+    # 2. Build and sign the application
+    build_app(
+      project: "lengyan.xcodeproj",
+      scheme: "lengyan",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "lengyan.ipa"
+    )
+
+    # 3. Upload the IPA to App Store Connect / TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true # Don't block terminal while Apple processes the build
+    )
+  end
+end

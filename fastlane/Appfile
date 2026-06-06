@@ -1,0 +1,10 @@
+# Appfile
+# For more information about the Appfile, see:
+# https://docs.fastlane.tools/advanced/#appfile
+
+app_identifier("org.fuxuan.lengyan") # The bundle identifier of your app
+apple_id("xuan9@live.com") # Your Apple ID / Developer Email
+
+# You can uncomment and set the team ID if you have multiple teams:
+# team_id("YOUR_TEAM_ID") # Developer Portal Team ID
+# itc_team_id("YOUR_ITC_TEAM_ID") # App Store Connect Team ID
