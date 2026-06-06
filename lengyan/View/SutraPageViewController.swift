@@ -8,7 +8,7 @@
 
 import UIKit
 
-class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
+class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate{
     // STORYBOARD REMOVED: Using programmatic UI now
     var onDismiss: (() -> Void)?
     private var stayTimer = ReadingStayTimer()
@@ -20,9 +20,14 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = false;
-        self.navigationController?.hidesBarsOnTap = true;
+        self.navigationController?.hidesBarsOnTap = false;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.automaticallyAdjustsScrollViewInsets = false;
+
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(toggleNavigationBar))
+        tapGesture.delegate = self
+        tapGesture.cancelsTouchesInView = false
+        self.view.addGestureRecognizer(tapGesture)
         self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 翻页控制器底层背景色
 
         // 导航栏 — 与内容同色，无边界，按钮完全无背景色块
@@ -74,6 +79,23 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.setTitle()
     }
 
+    func updatePage(to index: Int) {
+        guard index >= 0, let indexCount = Book.shared.index?.count, index < indexCount else { return }
+        self.page = index
+        self.item = Book.shared.index![index]
+        self.path = item!["path"]
+        self.setPageTitle()
+        self.setTitle()
+        self.setViewControllers([getViewControllerAtIndex(index: index)] as [UIViewController], direction: .forward, animated: false, completion: nil)
+        
+        // Save progress
+        if let path = self.path {
+            Prefers.shared.lastReadPath = path
+            Prefers.shared.lastReadPageIndex = index
+            Prefers.shared.lastReadMode = "paged"
+        }
+    }
+
     override var prefersStatusBarHidden: Bool {
         return navigationController?.isNavigationBarHidden ?? false
     }
@@ -85,12 +107,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = false
-        self.navigationController?.hidesBarsOnTap = true
+        self.navigationController?.hidesBarsOnTap = false
         self.navigationController?.hidesBarsWhenVerticallyCompact = true
-        // 显式重新启用手势识别器（防止被其他页面禁用）
-        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
-        self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = true
-        self.navigationController?.barHideOnTapGestureRecognizer.cancelsTouchesInView = false
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -116,8 +134,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     @objc func close() {
+        print("DEBUG: SutraPageViewController close() - Stack before pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
         self.onDismiss?()
-        self.navigationController?.popViewController(animated: true)
+        let popped = self.navigationController?.popViewController(animated: true)
+        print("DEBUG: SutraPageViewController close() - Popped VC: \(String(describing: popped)), Stack after pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
     }
     
     @objc func share() {
@@ -264,5 +284,20 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     func setPageTitle() {
         self.navigationItem.titleView = Book.shared.getTitleView(item!)
+    }
+
+    // MARK: - UIGestureRecognizerDelegate
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
+
+    @objc func toggleNavigationBar() {
+        guard let navController = self.navigationController else { return }
+        let isHidden = navController.isNavigationBarHidden
+        navController.setNavigationBarHidden(!isHidden, animated: true)
+        
+        UIView.animate(withDuration: 0.2) {
+            self.setNeedsStatusBarAppearanceUpdate()
+        }
     }
 }

@@ -76,6 +76,19 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
     }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        let bottomPadding = self.view.safeAreaInsets.bottom + 44
+        self.treeView.scrollView.contentInset = UIEdgeInsets(
+            top: 0,
+            left: 0,
+            bottom: bottomPadding,
+            right: 0
+        )
+        self.treeView.scrollView.scrollIndicatorInsets = self.treeView.scrollView.contentInset
+    }
     
     func autoExpend(){
         var rows = self.treeView.numberOfRows();
@@ -220,16 +233,16 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 if(item["children"] == nil){
                     openItem(item)
                 } else {
-                    openIndex(item  );
+                    // Avoid recursively pushing another index view.
+                    // Instead, toggle the expansion state of the parent node inline.
+                    if self.treeView.isCell(forItemExpanded: item) {
+                        self.treeView.collapseRow(forItem: item, collapseChildren: false, with: RATreeViewRowAnimationNone)
+                    } else {
+                        self.treeView.expandRow(forItem: item, expandChildren: false, with: RATreeViewRowAnimationNone)
+                    }
                 }
             }
         }
-    }
-
-    @objc func openAsPageFromCellButton(_ sender:UIButton){
-        let cell:UITableViewCell = sender.superview as! UITableViewCell
-        let item = self.treeView.item(for: cell)
-        openItem((item as! NSDictionary) as! [String : Any])
     }
     
     func openItem(_ item: [String:Any]){
@@ -245,6 +258,59 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             return
         }
 
+        // SAFE: Check if there's an existing reader on the navigation stack.
+        // If so, we instantiate a new clean copy of that reader type, set the stack to place it on top of self (IndexVC),
+        // and animate to it. This avoids both navigation recursion and UIKit stack-corruption bugs from reordering existing instances.
+        if let viewControllers = self.navigationController?.viewControllers {
+            if let existingPageVC = viewControllers.first(where: { $0 is SutraPageViewController }) as? SutraPageViewController {
+                if let foundIndex = bookIndex.index(where: { $0["path"] == path }) {
+                    let pageVC = SutraPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+                    pageVC.page = foundIndex
+                    
+                    var newStack = viewControllers
+                    newStack.removeAll(where: { $0 is SutraPageViewController })
+                    if let selfIndex = newStack.firstIndex(of: self) {
+                        newStack.insert(pageVC, at: selfIndex + 1)
+                        newStack = Array(newStack.prefix(through: selfIndex + 1))
+                    }
+                    
+                    pageVC.hidesBottomBarWhenPushed = true
+                    pageVC.onDismiss = { [weak self, weak pageVC] in
+                        guard let strongSelf = self, let reader = pageVC else { return }
+                        let indexValue = reader.page
+                        if indexValue < bookIndex.count,
+                           let itemPath = bookIndex[indexValue]["path"] {
+                            strongSelf.openPath(itemPath)
+                        }
+                    }
+                    
+                    self.navigationController?.setViewControllers(newStack, animated: true)
+                    return
+                }
+            } else if let existingPurePageVC = viewControllers.first(where: { $0 is SutraPurePageViewController }) as? SutraPurePageViewController {
+                let purePageVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+                purePageVC.path = path
+                
+                var newStack = viewControllers
+                newStack.removeAll(where: { $0 is SutraPurePageViewController })
+                if let selfIndex = newStack.firstIndex(of: self) {
+                    newStack.insert(purePageVC, at: selfIndex + 1)
+                    newStack = Array(newStack.prefix(through: selfIndex + 1))
+                }
+                
+                purePageVC.hidesBottomBarWhenPushed = true
+                purePageVC.onDismiss = { [weak self, weak purePageVC] in
+                    guard let strongSelf = self, let reader = purePageVC else { return }
+                    if let itemPath = reader.path {
+                        strongSelf.openPath(itemPath)
+                    }
+                }
+                
+                self.navigationController?.setViewControllers(newStack, animated: true)
+                return
+            }
+        }
+
         let pageVC = SutraPageViewController.init( transitionStyle:.scroll,
                                                    navigationOrientation:.horizontal,
                                                    options: .none)
@@ -252,9 +318,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         TICK()
 
         // SAFE: Find the page index safely
-        var pageIndex: Any?
-        if let foundIndex = bookIndex.index(where: { ($0 as? [String:Any])?["path"] as? String == path }) {
-            pageIndex = foundIndex
+        if let foundIndex = bookIndex.index(where: { $0["path"] == path }) {
             pageVC.page = foundIndex
         } else {
             print("⚠️ ERROR: Failed to find page for path: \(path)")
@@ -263,15 +327,15 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         TOCK()
 
-        // SAFE: Create weak reference to prevent retain cycle crashes
-        pageVC.onDismiss = { [weak self] in
-            guard let strongSelf = self else { return }
+        // SAFE: Create weak reference to prevent retain cycle crashes.
+        // Capturing pageVC weakly allows reading pageVC.page dynamically when dismissed,
+        // so the tree view always scrolls/highlights the correct last-read page.
+        pageVC.onDismiss = { [weak self, weak pageVC] in
+            guard let strongSelf = self, let reader = pageVC else { return }
 
-            // SAFE: Check if page index exists in book index
-            if let indexValue = pageIndex as? Int,
-               indexValue < bookIndex.count,
-               let pageItem = bookIndex[indexValue] as? NSDictionary,
-               let itemPath = pageItem["path"] as? String {
+            let indexValue = reader.page
+            if indexValue < bookIndex.count,
+               let itemPath = bookIndex[indexValue]["path"] {
                 strongSelf.openPath(itemPath)
             } else {
                 print("⚠️ ERROR: Failed to get path from page in onDismiss closure")
@@ -279,7 +343,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
 
         pageVC.hidesBottomBarWhenPushed = true
+        print("DEBUG: SutraIndexViewController openItem - Stack before push: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
         self.navigationController?.pushViewController(pageVC, animated: true)
+        print("DEBUG: SutraIndexViewController openItem - Stack after push: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
     }
     
     func openIndex(_ item:  [String : Any]){
@@ -372,6 +438,32 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
     }
     
+    private func updateCellText(_ cell: UITableViewCell, for item: NSDictionary) {
+        let isLeaf = item["children"] == nil
+        let name = item["name"] as? String ?? ""
+        let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
+        let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        
+        // 🌿 禅意前缀装饰：根据节点展开状态动态显示折叠（▸）或展开（▾）
+        let prefix: String
+        if isLeaf {
+            prefix = "•  "
+        } else {
+            let isExpanded = treeView.isCell(forItemExpanded: item)
+            prefix = isExpanded ? "▾  " : "▸  "
+        }
+        
+        let attrText = NSMutableAttributedString(string: prefix + name)
+        
+        let prefixColor = isLeaf ? SutraDesignTokens.shared.color(for: .decorativeGold) : SutraDesignTokens.shared.color(for: .textTertiary)
+        let textColor = isLeaf ? primaryTextColor : secondaryTextColor
+        
+        attrText.addAttribute(.foregroundColor, value: prefixColor, range: NSRange(location: 0, length: prefix.utf16.count))
+        attrText.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: prefix.utf16.count, length: name.utf16.count))
+        
+        cell.textLabel?.attributedText = attrText
+    }
+    
     func treeView(_ treeView: RATreeView, cellForItem item: Any?) -> UITableViewCell {
         // SAFE: Check if item can be cast to NSDictionary
         guard let item = item as? NSDictionary else {
@@ -387,16 +479,16 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             newCell!.textLabel?.adjustsFontSizeToFitWidth = true
             newCell!.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
 
-            if (!isLeaf) {
+            if (isLeaf) {
+                // 叶子节点：右侧为标准右向箭头，表明点击可跳转到正文
                 let chevronImage = UIImage(systemName: "chevron.right")?
                     .withConfiguration(UIImage.SymbolConfiguration(pointSize: 12, weight: .medium))
-                let bookBtn = UIButton.init(type: .custom)
-                bookBtn.frame = CGRect(x: 0, y: 0.0, width: 38, height: treeView.rowHeight)
-                bookBtn.setImage(chevronImage, for: .normal)
-                bookBtn.accessibilityLabel = "chevron"
-                bookBtn.isAccessibilityElement = true
-                bookBtn.addTarget(self, action: #selector(openAsPageFromCellButton(_:)) , for: .touchUpInside)
-                newCell!.accessoryView = bookBtn
+                let chevronView = UIImageView(image: chevronImage)
+                chevronView.contentMode = .center
+                newCell!.accessoryView = chevronView
+            } else {
+                // 章节/目录节点：无右侧图标，点击直接展开/折叠，不再提供单独的阅读跳转链接
+                newCell!.accessoryView = nil
             }
         }
 
@@ -406,25 +498,12 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let selectedBg = UIView()
         selectedBg.backgroundColor = SutraDesignTokens.shared.color(for: .sacredGlow)
         cell.selectedBackgroundView = selectedBg
-        if let btn = cell.accessoryView as? UIButton {
-            btn.tintColor = SutraDesignTokens.shared.color(for: .textTertiary)
+        
+        if let imgView = cell.accessoryView as? UIImageView {
+            imgView.tintColor = SutraDesignTokens.shared.color(for: .textTertiary)
         }
 
-        let name = item["name"]! as? String ?? ""
-        let primaryTextColor = SutraDesignTokens.shared.color(for: .sutraText)
-        let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        
-        // 🌿 禅意前缀装饰
-        let prefix = isLeaf ? "•  " : "▸  "
-        let attrText = NSMutableAttributedString(string: prefix + name)
-        
-        let prefixColor = isLeaf ? SutraDesignTokens.shared.color(for: .decorativeGold) : SutraDesignTokens.shared.color(for: .textTertiary)
-        let textColor = isLeaf ? primaryTextColor : secondaryTextColor
-        
-        attrText.addAttribute(.foregroundColor, value: prefixColor, range: NSRange(location: 0, length: prefix.utf16.count))
-        attrText.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: prefix.utf16.count, length: name.utf16.count))
-        
-        cell.textLabel?.attributedText = attrText
+        updateCellText(cell, for: item)
         return cell
     }
     
@@ -442,9 +521,15 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(_ treeView:RATreeView, didExpandRowForItem item:Any){
+        guard let itemNS = item as? NSDictionary,
+              let cell = treeView.cell(forItem: item) else { return }
+        updateCellText(cell, for: itemNS)
     }
     
     func treeView(_ treeView:RATreeView, didCollapseRowForItem item:Any){
+        guard let itemNS = item as? NSDictionary,
+              let cell = treeView.cell(forItem: item) else { return }
+        updateCellText(cell, for: itemNS)
     }
     
     func treeView(_ treeView:RATreeView,  didSelectRowForItem item:Any){

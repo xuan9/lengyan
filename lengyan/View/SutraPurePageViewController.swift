@@ -19,7 +19,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.hidesBarsOnSwipe = false;
-        self.navigationController?.hidesBarsOnTap = true;
+        self.navigationController?.hidesBarsOnTap = false;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
         self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 底层背景与阅读内容同色，防止翻页时闪白
 
@@ -31,6 +31,18 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
 
         self.setTitle()
+    }
+
+    func updatePath(to newPath: String) {
+        guard !newPath.isEmpty else { return }
+        self.path = newPath
+        self.setViewControllers([getViewControllerAtPath(newPath)] as [UIViewController], direction: .forward, animated: false, completion: nil)
+        self.setPageTitle()
+        self.setTitle()
+        
+        // Save progress
+        Prefers.shared.lastReadPath = newPath
+        Prefers.shared.lastReadMode = "tree"
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -48,12 +60,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = false
-        self.navigationController?.hidesBarsOnTap = true
+        self.navigationController?.hidesBarsOnTap = false
         self.navigationController?.hidesBarsWhenVerticallyCompact = true
-        // 显式重新启用手势识别器（防止被其他页面禁用）
-        self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
-        self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = true
-        self.navigationController?.barHideOnTapGestureRecognizer.cancelsTouchesInView = false
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -70,8 +78,10 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     }
 
     @objc func close() {
+        print("DEBUG: SutraPurePageViewController close() - Stack before pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
         onDismiss?();
-        self.navigationController?.popViewController(animated: true);
+        let popped = self.navigationController?.popViewController(animated: true);
+        print("DEBUG: SutraPurePageViewController close() - Popped VC: \(String(describing: popped)), Stack after pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
     }
     
     func setTitle() {
@@ -206,6 +216,14 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     }
 
     @objc func openIndex(){
+        if let viewControllers = self.navigationController?.viewControllers {
+            if let existingIndexVC = viewControllers.first(where: { $0 is SutraIndexViewController }) as? SutraIndexViewController {
+                existingIndexVC.openPath(self.path ?? "")
+                self.navigationController?.popToViewController(existingIndexVC, animated: true)
+                return
+            }
+        }
+        
         let indexVC = SutraIndexViewController();
         indexVC.tree = Book.shared.itemOfPath(path!);
         indexVC.defaultExpandLevel = 2;
@@ -302,5 +320,4 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let item = Book.shared.itemOfPath(path!);
         self.navigationItem.titleView = Book.shared.getTitleView(item);
     }
-
 }

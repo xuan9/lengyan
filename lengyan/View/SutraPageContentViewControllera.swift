@@ -27,6 +27,8 @@ class SutraTableViewCell: UITableViewCell {
     var textView: UITextView!
     private let containerView = UIView()
     private var contentType: String = ""
+    private var containerLeadingConstraint: NSLayoutConstraint!
+    private var containerTrailingConstraint: NSLayoutConstraint!
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -90,11 +92,14 @@ class SutraTableViewCell: UITableViewCell {
 
         containerView.addSubview(textView)
 
+        containerLeadingConstraint = containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor)
+        containerTrailingConstraint = containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
+
         // Seamless scroll structure - no borders or horizontal gaps
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            containerLeadingConstraint,
+            containerTrailingConstraint,
             containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 0),
 
             textView.topAnchor.constraint(equalTo: containerView.topAnchor),
@@ -154,6 +159,13 @@ class SutraTableViewCell: UITableViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        
+        let horizontalInset = SutraAdaptiveLayout.readingHorizontalInsets(
+            containerWidth: contentView.bounds.width
+        )
+        containerLeadingConstraint.constant = horizontalInset
+        containerTrailingConstraint.constant = -horizontalInset
+        
         // 动态调整金线的高度与位置
         if let borderLayer = containerView.layer.sublayers?.first(where: { $0.name == "zenAnchorLine" }) {
             borderLayer.frame = CGRect(x: 4, y: 16, width: 1, height: containerView.bounds.height - 32)
@@ -379,23 +391,20 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        // iPad: 居中阅读宽度并自动让滚动条贴近屏幕边缘
-        let horizontalInset = SutraAdaptiveLayout.readingHorizontalInsets(
-            containerWidth: view.bounds.width
-        )
+        // Keep contentInset left and right at 0 to prevent horizontal scrolling/floating
         tableView.contentInset = UIEdgeInsets(
             top: 24,
-            left: horizontalInset,
+            left: 0,
             bottom: 40,
-            right: horizontalInset
+            right: 0
         )
         
-        // 抵消内容缩进对滚动条的影响，让滚动条始终贴靠屏幕边缘，呈现顶级 iPad 应用体验
+        // Scroll indicators should match the content layout
         tableView.verticalScrollIndicatorInsets = UIEdgeInsets(
             top: 24,
-            left: -horizontalInset,
+            left: 0,
             bottom: 40,
-            right: -horizontalInset
+            right: 0
         )
     }
 

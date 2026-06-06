@@ -8,7 +8,7 @@
 
 import UIKit
 
-class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
+class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, UIGestureRecognizerDelegate {
 
     var onDismiss: (() -> Void)?
     var isShowIndexButton = false;
@@ -73,6 +73,12 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
             sutraTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             sutraTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
+
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleContentTap))
+        tapGesture.delegate = self
+        tapGesture.cancelsTouchesInView = false
+        sutraTextView.addGestureRecognizer(tapGesture)
+
         self.sutraView = sutraTextView
     }
     
@@ -130,5 +136,20 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate {
 
         onDismiss?();
         self.navigationController?.popViewController(animated: true);
+    }
+
+    @objc func handleContentTap() {
+        guard let navController = self.navigationController else { return }
+        let isHidden = navController.isNavigationBarHidden
+        navController.setNavigationBarHidden(!isHidden, animated: true)
+        
+        UIView.animate(withDuration: 0.2) {
+            self.setNeedsStatusBarAppearanceUpdate()
+        }
+    }
+
+    // MARK: - UIGestureRecognizerDelegate
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }
