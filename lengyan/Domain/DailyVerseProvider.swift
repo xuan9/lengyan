@@ -143,10 +143,12 @@ final class DailyVerseProvider {
         let path = getPath(for: date)
 
         let item = Book.shared.itemOfPath(path)
-        let rawText = Book.shared.getSutra(item, maxLength: 40)
-        let text = cleanVerse(rawText)
         let rawFullText = Book.shared.getSutra(item, maxLength: 300)
         let fullText = cleanVerse(rawFullText)
+        
+        // 智能语义截取：在 55 字以内截取最长完整语义句，确保不以 "..." 或逗号生硬结尾
+        let text = semanticTruncate(rawFullText, maxLength: 55)
+        
         let source = buildSource(for: item, path: path)
         let isBookmarked = Prefers.shared.likes.contains(path)
 
@@ -186,6 +188,30 @@ final class DailyVerseProvider {
     }
 
     // MARK: - Text Processing
+
+    /// 智能语义截取：在指定的长度限制内，寻找最后一个完整标点符号切分，避免出现半句话或 "..."
+    private func semanticTruncate(_ text: String, maxLength: Int) -> String {
+        let clean = cleanVerse(text)
+        if clean.count <= maxLength {
+            return clean
+        }
+        
+        // 寻找限制长度范围内的最后一个结句标点或逗号
+        let substring = String(clean.prefix(maxLength))
+        let punctuations: [Character] = ["。", "；", "！", "？", "，", "；", "、", ";", "!", "?", ","]
+        
+        if let lastIdx = substring.lastIndex(where: { punctuations.contains($0) }) {
+            let truncated = String(substring[...lastIdx])
+            // 如果是以逗号或顿号结尾，将其优雅地替换为句号，使句子在语义上是完整的
+            if truncated.hasSuffix("，") || truncated.hasSuffix(",") || truncated.hasSuffix("、") {
+                return String(truncated.dropLast()) + "。"
+            }
+            return truncated
+        }
+        
+        // 如果确实没有任何标点符号，则退回到截断并补齐省略号
+        return String(substring.prefix(maxLength - 3)) + "..."
+    }
 
     /// 清理经文前缀（佛言、阿难等称谓），使卡片上直接呈现核心内容
     private func cleanVerse(_ text: String) -> String {
