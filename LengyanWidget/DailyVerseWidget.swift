@@ -38,9 +38,9 @@ struct DailyVerseEntry: TimelineEntry {
 
     static let fallback = DailyVerseEntry(
         date: Date(),
-        text: "狂心若歇 歇即菩提",
-        fullText: "狂心若歇，歇即菩提。一切众生从无始来，生死相续，皆由不知常住真心性净明体，用诸妄想，此想不真，故有轮转。",
-        source: "楞严经",
+        text: "一切众生从无始来，生死相续，皆由不知常住真心性净明体",
+        fullText: "一切众生从无始来，生死相续，皆由不知常住真心性净明体，用诸妄想，此想不真，故有轮转。",
+        source: "卷一 · 七处征心",
         path: "/A2/B1/C2/D1/E2/F1/G1/H1/I1/J2",
         theme: "sepia",
         isPlaceholder: false
