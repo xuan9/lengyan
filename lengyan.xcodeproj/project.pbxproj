@@ -248,6 +248,7 @@
 		E3092BA60DE2421295F0CD61 /* SharedVerseData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedVerseData.swift; sourceTree = "<group>"; };
 		ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZenTabHeaderView.swift; sourceTree = "<group>"; };
 		EF6B6B533C8E41C5B905D48A /* LengyanWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LengyanWidget.entitlements; sourceTree = "<group>"; };
+		CB1B21E02EBB1C8D00A1ADB7 /* lengyan.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = lengyan.entitlements; sourceTree = "<group>"; };
 		FBDCAC2906D74E67A86FDF14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDesignTokens.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -419,6 +420,7 @@
 				139073171D109194003A3333 /* LaunchScreen.storyboard */,
 				13CA80F01EAB3BF600589E8F /* Assets.xcassets */,
 				1390731A1D109194003A3333 /* Info.plist */,
+				CB1B21E02EBB1C8D00A1ADB7 /* lengyan.entitlements */,
 				132014771F12B9850081FDDB /* Localizable.strings */,
 				1361D0831F647C6A00426DB6 /* InfoPlist.strings */,
 				1390730C1D109193003A3333 /* AppDelegate.swift */,
@@ -1004,6 +1006,7 @@
 					"@executable_path/Frameworks",
 				);
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
+				CODE_SIGN_ENTITLEMENTS = lengyan/lengyan.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1030,6 +1033,7 @@
 					"@executable_path/Frameworks",
 				);
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
+				CODE_SIGN_ENTITLEMENTS = lengyan/lengyan.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
