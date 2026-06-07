@@ -189,7 +189,7 @@ final class DailyVerseProvider {
 
     // MARK: - Text Processing
 
-    /// 智能语义截取：在指定的长度限制内，寻找最后一个完整标点符号切分，避免出现半句话或 "..."
+    /// 智能语义截取：在指定的长度限制内，寻找最后一个完整标点符号切分，避免出现半句话
     private func semanticTruncate(_ text: String, maxLength: Int) -> String {
         let clean = cleanVerse(text)
         if clean.count <= maxLength {
@@ -202,11 +202,20 @@ final class DailyVerseProvider {
         
         if let lastIdx = substring.lastIndex(where: { punctuations.contains($0) }) {
             let truncated = String(substring[...lastIdx])
-            // 如果是以逗号或顿号结尾，将其优雅地替换为句号，使句子在语义上是完整的
-            if truncated.hasSuffix("，") || truncated.hasSuffix(",") || truncated.hasSuffix("、") {
-                return String(truncated.dropLast()) + "。"
+            
+            // 如果原本就是句号、叹号、问号等完整的结句，则原样保留，说明该句本身已完结
+            if truncated.hasSuffix("。") || truncated.hasSuffix("！") || truncated.hasSuffix("？") ||
+               truncated.hasSuffix("!") || truncated.hasSuffix("?") {
+                return truncated
             }
-            return truncated
+            
+            // 如果是逗号、分号、顿号等未完结符号，去掉它并追加 "..."，表明经文未完，敬重原典完整性
+            if truncated.hasSuffix("，") || truncated.hasSuffix("、") || truncated.hasSuffix("；") ||
+               truncated.hasSuffix(",") || truncated.hasSuffix(";") {
+                return String(truncated.dropLast()) + "..."
+            }
+            
+            return truncated + "..."
         }
         
         // 如果确实没有任何标点符号，则退回到截断并补齐省略号
