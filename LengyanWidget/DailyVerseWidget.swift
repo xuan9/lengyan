@@ -120,7 +120,7 @@ struct SmallVerseView: View {
                 Spacer(minLength: 2)
 
                 // 经文 — 尽量多放
-                Text(entry.fullText.replacingOccurrences(of: "\n", with: ""))
+                Text(entry.text.replacingOccurrences(of: "\n", with: ""))
                     .font(WidgetTokens.sutraFont(size: 14))
                     .foregroundColor(WidgetTokens.sutraText)
                     .lineSpacing(4)
@@ -171,7 +171,7 @@ struct MediumVerseView: View {
                 .padding(.top, 14)
 
                 // 经文段落 — 充分利用空间
-                Text(entry.fullText.replacingOccurrences(of: "\n", with: ""))
+                Text(entry.text.replacingOccurrences(of: "\n", with: ""))
                     .font(WidgetTokens.sutraFont(size: 15))
                     .foregroundColor(WidgetTokens.sutraText)
                     .lineSpacing(6)
@@ -308,6 +308,7 @@ struct DailyVerseWidget: Widget {
         .configurationDisplayName("今日读经")
         .description("每天一句楞严经文金句，如晨钟暮鼓。")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .disableContentMarginsIfNeeded()
     }
 }
 
@@ -317,15 +318,18 @@ struct WidgetEntryView: View {
     let entry: DailyVerseEntry
 
     var body: some View {
-        switch family {
-        case .systemSmall:
-            SmallVerseView(entry: entry)
-        case .systemMedium:
-            MediumVerseView(entry: entry)
-        case .systemLarge:
-            LargeVerseView(entry: entry)
-        default:
-            MediumVerseView(entry: entry)
+        let _ = WidgetTokens.resolveTheme(from: entry.theme)
+        return Group {
+            switch family {
+            case .systemSmall:
+                SmallVerseView(entry: entry)
+            case .systemMedium:
+                MediumVerseView(entry: entry)
+            case .systemLarge:
+                LargeVerseView(entry: entry)
+            default:
+                MediumVerseView(entry: entry)
+            }
         }
     }
 }
@@ -351,3 +355,15 @@ struct DailyVerseWidget_Previews: PreviewProvider {
     }
 }
 #endif
+
+// MARK: - WidgetConfiguration Helper
+extension WidgetConfiguration {
+    func disableContentMarginsIfNeeded() -> some WidgetConfiguration {
+        #if compiler(>=5.9)
+        if #available(iOS 17.0, *) {
+            return self.contentMarginsDisabled()
+        }
+        #endif
+        return self
+    }
+}
