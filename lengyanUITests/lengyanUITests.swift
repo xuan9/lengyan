@@ -38,11 +38,12 @@ class lengyanUITests: XCTestCase {
 
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.exists, "Tab bar should exist")
-        XCTAssertEqual(tabBar.buttons.count, 3, "Should have exactly 3 tabs")
+        XCTAssertEqual(tabBar.buttons.count, 4, "Should have exactly 4 tabs")
 
         let readingTab = tabBar.buttons.element(boundBy: 0)
         let listeningTab = tabBar.buttons.element(boundBy: 1)
         let favoritesTab = tabBar.buttons.element(boundBy: 2)
+        let settingsTab = tabBar.buttons.element(boundBy: 3)
 
         // MARK: 2. READING TAB - Comprehensive Testing
 
@@ -238,12 +239,12 @@ class lengyanUITests: XCTestCase {
         // Verify programmatic UI structure (3 tabs as designed)
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.exists, "Tab bar should exist in programmatic UI")
-        XCTAssertEqual(tabBar.buttons.count, 3, "Should have exactly 3 tabs in programmatic UI")
+        XCTAssertEqual(tabBar.buttons.count, 4, "Should have exactly 4 tabs in programmatic UI")
 
         // MARK: 2. Architectural Navigation - Reading Tab State
         let readingTab = tabBar.buttons.element(boundBy: 0)
         XCTAssertTrue(readingTab.exists, "Reading tab should exist")
-        XCTAssertTrue(readingTab.label == "阅读" || readingTab.label == "閱讀", "First tab should be reading tab (simplified or traditional)")
+        XCTAssertTrue(readingTab.label == "读经" || readingTab.label == "讀經", "First tab should be reading tab (simplified or traditional)")
 
         // Ensure we're in reading context (programmatic UI defaults to reading tab)
         if !readingTab.isSelected {
@@ -404,7 +405,7 @@ class lengyanUITests: XCTestCase {
         // Verify tab bar with three tabs
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.exists, "Tab bar should be present")
-        XCTAssertEqual(tabBar.buttons.count, 3, "Should have exactly 3 tabs")
+        XCTAssertEqual(tabBar.buttons.count, 4, "Should have exactly 4 tabs")
 
         // Test enhanced theme toggle button
         let themeButton = app.navigationBars.buttons["🎨"]
@@ -416,44 +417,101 @@ class lengyanUITests: XCTestCase {
         XCTAssertTrue(app.exists, "App should remain stable after theme change")
     }
 
+    func takeAndAttachScreenshot(name: String) {
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.lifetime = .keepAlways
+        attachment.name = name
+        self.add(attachment)
+    }
+
     func testCompleteUserFlow() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
         app.launch()
+        
+        Thread.sleep(forTimeInterval: 1.5)
+        takeAndAttachScreenshot(name: "1_Home_Light")
 
-        // Test theme switching
-        let themeButton = app.navigationBars.buttons["🎨"]
-        if themeButton.exists {
-            themeButton.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.exists, "Tab bar should exist")
+
+        // 1. Test theme switching via Settings
+        let settingsTab = tabBar.buttons.element(boundBy: 3)
+        if settingsTab.exists {
+            settingsTab.tap()
+            Thread.sleep(forTimeInterval: 1.0)
+            
+            // Switch to Sepia theme (古籍)
+            let sepiaThemeButton = app.buttons["古籍"]
+            if sepiaThemeButton.exists {
+                sepiaThemeButton.tap()
+                Thread.sleep(forTimeInterval: 1.0)
+                takeAndAttachScreenshot(name: "2_Settings_Sepia")
+                
+                // Switch back to Light theme (宣纸)
+                let lightThemeButton = app.buttons["宣纸"]
+                if lightThemeButton.exists {
+                    lightThemeButton.tap()
+                    Thread.sleep(forTimeInterval: 1.0)
+                }
+            }
+            
+            // Return to Reading tab
+            let readingTab = tabBar.buttons.element(boundBy: 0)
+            readingTab.tap()
+            Thread.sleep(forTimeInterval: 1.0)
         }
 
-        // Test chapter navigation
+        // 2. Test chapter navigation (opens ReaderViewController)
         let chapterButton = app.buttons["卷一"]
         if chapterButton.exists {
             chapterButton.tap()
-            Thread.sleep(forTimeInterval: 1.0)
+            Thread.sleep(forTimeInterval: 1.5)
+            takeAndAttachScreenshot(name: "4_ReadingView")
 
-            // Go back if possible
-            let backButton = app.navigationBars.buttons["back"]
-            if backButton.exists {
-                backButton.tap()
-                Thread.sleep(forTimeInterval: 0.5)
+            // Go back from Reader to Home
+            let backToHome = app.navigationBars.buttons.element(boundBy: 0)
+            if backToHome.exists {
+                backToHome.tap()
+                Thread.sleep(forTimeInterval: 1.0)
             }
         }
 
-        // Test tab navigation
-        let tabBar = app.tabBars.firstMatch
+        // 3. Test Index view navigation via 开经偈 button
+        let kaiJingJiButton = app.buttons.matching(NSPredicate(format: "label CONTAINS '无上甚深微妙法'")).firstMatch
+        if kaiJingJiButton.exists {
+            kaiJingJiButton.tap()
+            Thread.sleep(forTimeInterval: 1.5)
+            takeAndAttachScreenshot(name: "3_IndexView")
+
+            // Go back from Index to Home
+            let backToHome = app.navigationBars.buttons.element(boundBy: 0)
+            if backToHome.exists {
+                backToHome.tap()
+                Thread.sleep(forTimeInterval: 1.0)
+            }
+        }
+
+        // 4. Test tab navigation
         if tabBar.exists {
-            // Test listening tab
+            // Test listening tab (index 1)
             let listeningTab = tabBar.buttons.element(boundBy: 1)
             listeningTab.tap()
-            Thread.sleep(forTimeInterval: 1.0)
+            Thread.sleep(forTimeInterval: 1.5)
+            takeAndAttachScreenshot(name: "5_ListeningTab")
 
-            // Test favorites tab
+            // Test favorites tab (index 2)
             let favoritesTab = tabBar.buttons.element(boundBy: 2)
             favoritesTab.tap()
-            Thread.sleep(forTimeInterval: 1.0)
+            Thread.sleep(forTimeInterval: 1.5)
+            takeAndAttachScreenshot(name: "6_FavoritesTab")
+
+            // Test settings tab (index 3)
+            let settingsTab = tabBar.buttons.element(boundBy: 3)
+            settingsTab.tap()
+            Thread.sleep(forTimeInterval: 1.5)
+            takeAndAttachScreenshot(name: "7_SettingsTab")
 
             // Return to reading tab
             let readingTab = tabBar.buttons.element(boundBy: 0)
@@ -478,7 +536,7 @@ class lengyanUITests: XCTestCase {
         // MARK: 2. Architectural Navigation - Tab System Integrity
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.exists, "Tab bar should exist in programmatic UI")
-        XCTAssertEqual(tabBar.buttons.count, 3, "Should have exactly 3 tabs")
+        XCTAssertEqual(tabBar.buttons.count, 4, "Should have exactly 4 tabs")
 
         // MARK: 3. Architectural Navigation - Access Listening Tab
         let listeningTab = tabBar.buttons.element(boundBy: 1)
@@ -553,7 +611,7 @@ class lengyanUITests: XCTestCase {
         // MARK: 2. Architectural Navigation - Tab System Integrity
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.exists, "Tab bar should exist in programmatic UI")
-        XCTAssertEqual(tabBar.buttons.count, 3, "Should have exactly 3 tabs")
+        XCTAssertEqual(tabBar.buttons.count, 4, "Should have exactly 4 tabs")
 
         // MARK: 3. Architectural Navigation - Access Favorites Tab
         let favoritesTab = tabBar.buttons.element(boundBy: 2)
@@ -628,11 +686,12 @@ class lengyanUITests: XCTestCase {
         // MARK: 2. Architectural Tab System - Full Validation
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.exists, "Tab bar system should exist")
-        XCTAssertEqual(tabBar.buttons.count, 3, "Should have exactly 3 tabs")
+        XCTAssertEqual(tabBar.buttons.count, 4, "Should have exactly 4 tabs")
 
         let readingTab = tabBar.buttons.element(boundBy: 0)
         let listeningTab = tabBar.buttons.element(boundBy: 1)
         let favoritesTab = tabBar.buttons.element(boundBy: 2)
+        let settingsTab = tabBar.buttons.element(boundBy: 3)
 
         // MARK: 3. Architectural Journey - Reading → Listening → Favorites → Reading
         // Start in Reading (default)
