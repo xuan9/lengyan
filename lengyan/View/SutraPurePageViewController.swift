@@ -241,9 +241,11 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     }
 
     @objc private func themeDidChange() {
-        self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        applyNavigationBarAppearance()
-        updateNavigationBarState()
+        UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
+            self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+            self.applyNavigationBarAppearance()
+            self.updateNavigationBarState()
+        }, completion: nil)
     }
 
     @objc func share() {
@@ -282,11 +284,13 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     }
     
     @objc func like() {
+        HapticManager.shared.bookmarkToggle()
         Prefers.shared.like(self.path!)
         self.updateNavigationBarState()
     }
     
     @objc func unlike() {
+        HapticManager.shared.bookmarkToggle()
         Prefers.shared.unlike(self.path!)
         self.updateNavigationBarState()
     }

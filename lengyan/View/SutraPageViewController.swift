@@ -125,11 +125,13 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
     
     @objc func like() {
+        HapticManager.shared.bookmarkToggle()
         Prefers.shared.like(self.path!)
         self.setTitle()
     }
     
     @objc func unlike() {
+        HapticManager.shared.bookmarkToggle()
         Prefers.shared.unlike(self.path!)
         self.setTitle()
     }

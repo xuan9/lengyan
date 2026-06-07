@@ -325,13 +325,11 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     @objc private func themeDidChangeForViewController() {
-        applyThemeColorsToView()
-        configureTableViewWithDesignSystem()
-
-        // Reload table to update cells
-        DispatchQueue.main.async {
+        UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
+            self.applyThemeColorsToView()
+            self.configureTableViewWithDesignSystem()
             self.tableView.reloadData()
-        }
+        }, completion: nil)
     }
 
     deinit {

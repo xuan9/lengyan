@@ -196,11 +196,13 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     // MARK: - 主题变化即时刷新
     @objc private func themeDidChange() {
-        treeView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        updateHeader()
-        // 强制所有 cell 重新渲染以应用新颜色
-        treeView.reloadData()
+        UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
+            self.treeView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+            self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+            self.updateHeader()
+            // 强制所有 cell 重新渲染以应用新颜色
+            self.treeView.reloadData()
+        }, completion: nil)
     }
     
     func menu(){

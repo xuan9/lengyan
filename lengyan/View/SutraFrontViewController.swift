@@ -171,10 +171,12 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     @objc private func themeDidChangeForFrontViewController() {
-        applyThemeColorsToView()
-        configureTreeViewWithDesignSystem()
-        setupHeaderView(self.view.bounds.size)
-        setupFooterView(self.view.bounds.size)
+        UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
+            self.applyThemeColorsToView()
+            self.configureTreeViewWithDesignSystem()
+            self.setupHeaderView(self.view.bounds.size)
+            self.setupFooterView(self.view.bounds.size)
+        }, completion: nil)
     }
 
     deinit {

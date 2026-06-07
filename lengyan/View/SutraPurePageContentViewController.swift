@@ -119,12 +119,14 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
     }
 
     @objc private func themeDidChangeEvent() {
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        sutraView?.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        // attributedText的foregroundColor优先级高于textColor，需重建整段文字
-        if let item = item {
-            sutraView?.attributedText = Book.shared.getSutraAttributeString(item)
-        }
+        UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
+            self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+            self.sutraView?.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+            // attributedText的foregroundColor优先级高于textColor，需重建整段文字
+            if let item = self.item {
+                self.sutraView?.attributedText = Book.shared.getSutraAttributeString(item)
+            }
+        }, completion: nil)
     }
 
     func updateHeader(_ item:[String:Any]){
