@@ -399,9 +399,7 @@ struct ModernAudioPlayerView: View {
                         guard audioObserver.totalTime > 0 else { return }
                         let percent = min(max(value.location.y / geometry.size.height, 0), 1)
                         let seekTime = audioObserver.totalTime * Double(percent)
-                        audioObserver.currentTime = seekTime
-                        let cmTime = CMTime(seconds: seekTime, preferredTimescale: 600)
-                        audioObserver.queuePlayer?.seek(to: cmTime, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+                        audioObserver.seek(to: seekTime)
                     }
             )
         }
@@ -483,9 +481,7 @@ struct ModernAudioPlayerView: View {
                         guard audioObserver.totalTime > 0 else { return }
                         let percent = min(max(value.location.x / geometry.size.width, 0), 1)
                         let seekTime = audioObserver.totalTime * Double(percent)
-                        audioObserver.currentTime = seekTime
-                        let cmTime = CMTime(seconds: seekTime, preferredTimescale: 600)
-                        audioObserver.queuePlayer?.seek(to: cmTime, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+                        audioObserver.seek(to: seekTime)
                     }
             )
         }

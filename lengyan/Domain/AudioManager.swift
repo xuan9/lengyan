@@ -96,8 +96,7 @@ class AudioManager: ObservableObject {
             // 播放器已加载该曲目
             if audioObserver.currentTrack == name && audioObserver.queuePlayer?.currentItem != nil {
                 // 如果再次点击正在播放的项目，则从头重新播放
-                let cmTime = CMTime(seconds: 0, preferredTimescale: 600)
-                audioObserver.queuePlayer?.seek(to: cmTime, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+                audioObserver.seek(to: 0)
                 if !audioObserver.isPlaying {
                     audioObserver.queuePlayer?.play()
                 }
@@ -369,9 +368,26 @@ class AudioManager: ObservableObject {
         playMedia(name: last.0, file: last.1, fileExtension: last.2)
     }
 
-    private func playNextTrack() {
-        guard let last = audioObserver.lastPlayFile else { return }
-        let currentFile = last.1
+    func playNextTrack() {
+        let currentFile: String
+        if let last = audioObserver.lastPlayFile {
+            currentFile = last.1
+        } else if let currentTrackName = audioObserver.currentTrack {
+            var foundFile: String?
+            for group in mediaGroups {
+                if let index = group.names.firstIndex(of: currentTrackName) {
+                    foundFile = group.files[index]
+                    break
+                }
+            }
+            guard let file = foundFile else { return }
+            currentFile = file
+        } else {
+            // Play first item of first group
+            guard let group = mediaGroups.first, !group.files.isEmpty else { return }
+            handleMediaItemTap(name: group.names[0], file: group.files[0], fileExtension: group.fileExtension)
+            return
+        }
 
         // 在当前组中查找下一首，未下载的自动下载播放
         for group in mediaGroups {
@@ -380,6 +396,38 @@ class AudioManager: ObservableObject {
                 let nextFile = group.files[nextIndex]
                 let nextName = group.names[nextIndex]
                 handleMediaItemTap(name: nextName, file: nextFile, fileExtension: group.fileExtension)
+                return
+            }
+        }
+    }
+
+    func playPreviousTrack() {
+        let currentFile: String
+        if let last = audioObserver.lastPlayFile {
+            currentFile = last.1
+        } else if let currentTrackName = audioObserver.currentTrack {
+            var foundFile: String?
+            for group in mediaGroups {
+                if let index = group.names.firstIndex(of: currentTrackName) {
+                    foundFile = group.files[index]
+                    break
+                }
+            }
+            guard let file = foundFile else { return }
+            currentFile = file
+        } else {
+            // Play first item of first group
+            guard let group = mediaGroups.first, !group.files.isEmpty else { return }
+            handleMediaItemTap(name: group.names[0], file: group.files[0], fileExtension: group.fileExtension)
+            return
+        }
+
+        for group in mediaGroups {
+            if let index = group.files.firstIndex(of: currentFile) {
+                let prevIndex = (index - 1 + group.files.count) % group.files.count
+                let prevFile = group.files[prevIndex]
+                let prevName = group.names[prevIndex]
+                handleMediaItemTap(name: prevName, file: prevFile, fileExtension: group.fileExtension)
                 return
             }
         }

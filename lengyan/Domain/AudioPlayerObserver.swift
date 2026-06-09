@@ -57,6 +57,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         trackSubscription = nil
 
         NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .AVAudioSessionInterruption, object: nil)
 
         removeRemoteCommands()
 
@@ -135,6 +136,14 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             name: .AVPlayerItemDidPlayToEndTime,
             object: nil
         )
+
+        // 监听音频打断通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioSessionInterruption(_:)),
+            name: .AVAudioSessionInterruption,
+            object: nil
+        )
     }
 
     private func setupAudioSessionIfNeeded() {
@@ -162,7 +171,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
         ]
 
-        if let icon = UIImage(named: "AppIcon60x60") ?? UIImage(named: "Icon-60@2x") {
+        if let icon = UIImage(named: "sutra_splash") ?? UIImage(named: "sutra") ?? UIImage(named: "AppIcon60x60") ?? UIImage(named: "Icon-60@2x") {
             let artwork = MPMediaItemArtwork(boundsSize: icon.size) { _ in icon }
             info[MPMediaItemPropertyArtwork] = artwork
         }
@@ -179,6 +188,11 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         commandCenter.pauseCommand.addTarget(self, action: #selector(handlePause))
         commandCenter.togglePlayPauseCommand.addTarget(self, action: #selector(handleTogglePlayPause))
         commandCenter.changePlaybackPositionCommand.addTarget(self, action: #selector(handleSeek(_:)))
+        
+        commandCenter.nextTrackCommand.addTarget(self, action: #selector(handleNextTrack))
+        commandCenter.nextTrackCommand.isEnabled = true
+        commandCenter.previousTrackCommand.addTarget(self, action: #selector(handlePreviousTrack))
+        commandCenter.previousTrackCommand.isEnabled = true
     }
 
     private func removeRemoteCommands() {
@@ -188,6 +202,17 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         commandCenter.pauseCommand.removeTarget(self)
         commandCenter.togglePlayPauseCommand.removeTarget(self)
         commandCenter.changePlaybackPositionCommand.removeTarget(self)
+        commandCenter.nextTrackCommand.removeTarget(self)
+        commandCenter.previousTrackCommand.removeTarget(self)
+    }
+
+    func seek(to seconds: Double) {
+        guard let player = queuePlayer else { return }
+        let time = CMTime(seconds: seconds, preferredTimescale: 600)
+        player.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+        self.currentTime = seconds
+        self.lastNowPlayingUpdateTime = seconds
+        self.updateNowPlayingInfo()
     }
 
     @objc private func handlePlay() -> MPRemoteCommandHandlerStatus {
@@ -225,14 +250,52 @@ class AudioPlayerObserver: NSObject, ObservableObject {
 
     @objc private func handleSeek(_ event: MPChangePlaybackPositionCommandEvent) -> MPRemoteCommandHandlerStatus {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            let time = CMTime(seconds: event.positionTime, preferredTimescale: 600)
-            self.queuePlayer?.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
-            self.currentTime = event.positionTime
-            self.lastNowPlayingUpdateTime = event.positionTime
-            self.updateNowPlayingInfo()
+            self?.seek(to: event.positionTime)
         }
         return .success
+    }
+
+    @objc private func handleNextTrack() -> MPRemoteCommandHandlerStatus {
+        DispatchQueue.main.async {
+            AudioManager.shared.playNextTrack()
+        }
+        return .success
+    }
+
+    @objc private func handlePreviousTrack() -> MPRemoteCommandHandlerStatus {
+        DispatchQueue.main.async {
+            AudioManager.shared.playPreviousTrack()
+        }
+        return .success
+    }
+
+    @objc private func handleAudioSessionInterruption(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSessionInterruptionType(rawValue: typeValue) else {
+            return
+        }
+
+        switch type {
+        case .began:
+            DispatchQueue.main.async { [weak self] in
+                self?.isPlaying = false
+                self?.updateNowPlayingInfo()
+            }
+        case .ended:
+            if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
+                let options = AVAudioSessionInterruptionOptions(rawValue: optionsValue)
+                if options.contains(.shouldResume) {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.queuePlayer?.play()
+                        self?.isPlaying = true
+                        self?.updateNowPlayingInfo()
+                    }
+                }
+            }
+        @unknown default:
+            break
+        }
     }
 
     @objc private func playerItemDidPlayToEndTime(_ notification: Notification) {

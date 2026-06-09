@@ -7,6 +7,8 @@
 //
 
 import XCTest
+import AVFoundation
+import MediaPlayer
 @testable import lengyan
 
 class lengyanTests: XCTestCase {
@@ -42,4 +44,85 @@ class lengyanTests: XCTestCase {
         }
     }
     
+    func testAudioSeekMethod() {
+        let observer = AudioPlayerObserver.shared
+        observer.initializePlayerIfNeeded()
+        observer.seek(to: 125.0)
+        XCTAssertEqual(observer.currentTime, 125.0)
+        observer.cleanup()
+    }
+    
+    func testAudioInterruption() {
+        let observer = AudioPlayerObserver.shared
+        observer.initializePlayerIfNeeded()
+        observer.isPlaying = true
+        
+        NotificationCenter.default.post(
+            name: .AVAudioSessionInterruption,
+            object: nil,
+            userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSessionInterruptionType.began.rawValue]
+        )
+        
+        let expectation = self.expectation(description: "Wait for main queue")
+        DispatchQueue.main.async {
+            XCTAssertFalse(observer.isPlaying)
+            expectation.fulfill()
+        }
+        waitForExpectations(timeout: 2.0, handler: nil)
+        observer.cleanup()
+    }
+    
+    func testLockScreenNowPlayingInfo() {
+        let observer = AudioPlayerObserver.shared
+        observer.initializePlayerIfNeeded()
+        observer.currentTrack = "测试佛经"
+        observer.currentTime = 50.0
+        observer.totalTime = 300.0
+        observer.isPlaying = true
+        
+        observer.updateNowPlayingInfo()
+        
+        let info = MPNowPlayingInfoCenter.default().nowPlayingInfo
+        XCTAssertNotNil(info)
+        XCTAssertEqual(info?[MPMediaItemPropertyTitle] as? String, "测试佛经")
+        XCTAssertEqual(info?[MPNowPlayingInfoPropertyElapsedPlaybackTime] as? Double, 50.0)
+        XCTAssertEqual(info?[MPMediaItemPropertyPlaybackDuration] as? Double, 300.0)
+        XCTAssertEqual(info?[MPNowPlayingInfoPropertyPlaybackRate] as? Double, 1.0)
+        XCTAssertNotNil(info?[MPMediaItemPropertyArtwork])
+        
+        observer.cleanup()
+    }
+    
+    func testAudioManagerTrackSwitching() {
+        let manager = AudioManager.shared
+        let observer = AudioPlayerObserver.shared
+        
+        // Mock media groups and download status
+        let group = MediaGroup(name: "Test Group", files: ["file1", "file2", "file3"], names: ["Track 1", "Track 2", "Track 3"], fileExtension: "mp3")
+        manager.mediaGroups = [group]
+        manager.downloadStatus["file1"] = .downloaded
+        manager.downloadStatus["file2"] = .downloaded
+        manager.downloadStatus["file3"] = .downloaded
+        
+        observer.initializePlayerIfNeeded()
+        observer.currentTrack = "Track 1"
+        observer.lastPlayFile = ("Track 1", "file1", "mp3")
+        
+        // Test playNextTrack
+        manager.playNextTrack()
+        observer.lastPlayFile = ("Track 2", "file2", "mp3")
+        XCTAssertEqual(observer.currentTrack, "Track 2")
+        
+        // Test playPreviousTrack
+        manager.playPreviousTrack()
+        observer.lastPlayFile = ("Track 1", "file1", "mp3")
+        XCTAssertEqual(observer.currentTrack, "Track 1")
+        
+        // Test playPreviousTrack wrap-around
+        manager.playPreviousTrack()
+        observer.lastPlayFile = ("Track 3", "file3", "mp3")
+        XCTAssertEqual(observer.currentTrack, "Track 3")
+        
+        observer.cleanup()
+    }
 }
