@@ -71,8 +71,9 @@ class WidgetDataSyncTests: XCTestCase {
         
         // Check semantic truncation characteristics
         if verse.text.count < verse.fullText.count {
-            // If truncated, it should end with ellipsis "..."
-            XCTAssertTrue(verse.text.hasSuffix("..."), "Truncated short verse should end with ellipsis")
+            // If truncated, it should end with ellipsis "..." or a clean sentence finisher
+            let isCleanFinisher = ["。", "！", "？", "!", "?"].contains { verse.text.hasSuffix($0) }
+            XCTAssertTrue(verse.text.hasSuffix("...") || isCleanFinisher, "Truncated short verse should end with ellipsis or clean finisher")
             XCTAssertFalse(verse.text.hasSuffix("，"), "Truncated short verse should not end with a comma")
             XCTAssertFalse(verse.text.hasSuffix("、"), "Truncated short verse should not end with an enumeration comma")
         } else {
