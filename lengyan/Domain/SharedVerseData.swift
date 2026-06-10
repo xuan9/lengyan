@@ -4,7 +4,7 @@
 //
 //  主App ↔ Widget 共享的每日经文数据
 //  通过 App Group UserDefaults 传递
-//  key: "widget_daily_verse"
+//  key: "lengyan_widget_daily_verse"
 //
 
 import Foundation
@@ -20,10 +20,10 @@ struct SharedVerseData: Codable {
     let theme: String?       // "light" | "sepia" | "dark"
 
     /// App Group identifier
-    static let appGroupID = "group.org.fuxuan.lengyan"
+    static let appGroupID = "group.org.fuxuan.books"
 
     /// UserDefaults key
-    static let defaultsKey = "widget_daily_verse"
+    static let defaultsKey = "lengyan_widget_daily_verse"
 
     /// 从 App Group 读取特定日期的经文
     static func load(for date: Date = Date()) -> SharedVerseData? {

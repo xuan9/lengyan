@@ -77,6 +77,7 @@ if ! xcodebuild build \
     -scheme "$SCHEME" \
     -destination "id=$DEVICE" \
     -derivedDataPath "$DERIVED" \
+    -allowProvisioningUpdates \
     2>&1 | tee "$BUILD_LOG" | grep -E "(error:|warning:|BUILD)" | tail -20; then
 
     echo ""
@@ -113,6 +114,8 @@ echo -e "${GREEN}✓ 安装成功${NC}"
 
 # ── 3. 启动 ──
 echo -e "${YELLOW}▸ [3/3] 启动 App...${NC}"
+BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP_PATH/Info.plist")
+echo -e "${YELLOW}▸ 启动 Bundle ID: ${BUNDLE_ID}${NC}"
 if ! xcrun devicectl device process launch --device "$DEVICE" "$BUNDLE_ID" 2>&1; then
     echo -e "${RED}✗ 启动失败${NC}"
     exit 1
