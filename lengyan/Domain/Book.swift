@@ -359,7 +359,7 @@ class Book: NSObject {
 
         let pStyle = NSMutableParagraphStyle()
         pStyle.lineHeightMultiple = 1.8       // 提升行距呼吸感（与阅读页统一）
-        pStyle.maximumLineHeight = 44.0       // 配合更大行高
+        pStyle.maximumLineHeight = 80.0       // 配合更大行高
         pStyle.minimumLineHeight = 10.0
 
         pStyle.paragraphSpacing = 24          // 段落间重现古卷的留白呼吸

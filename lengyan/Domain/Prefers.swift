@@ -124,7 +124,12 @@ class Prefers: NSObject, PrefersProtocol {
 
     /// Font size level: 0=特小, 1=小, 2=中(default), 3=大, 4=特大
     var fontSizeLevel: Int {
-        get { userDefaults.integer(forKey: Prefers.fontSizeLevelKey) }
+        get {
+            if userDefaults.object(forKey: Prefers.fontSizeLevelKey) == nil {
+                return 2  // 默认为 中 (Medium)
+            }
+            return userDefaults.integer(forKey: Prefers.fontSizeLevelKey)
+        }
         set { userDefaults.set(newValue, forKey: Prefers.fontSizeLevelKey) }
     }
 
@@ -135,14 +140,21 @@ class Prefers: NSObject, PrefersProtocol {
 
     var reminderHour: Int {
         get {
-            let h = userDefaults.integer(forKey: Prefers.reminderHourKey)
-            return h == 0 ? 7 : h  // default 7:00
+            if userDefaults.object(forKey: Prefers.reminderHourKey) == nil {
+                return 8  // 默认为 8:00 AM
+            }
+            return userDefaults.integer(forKey: Prefers.reminderHourKey)
         }
         set { userDefaults.set(newValue, forKey: Prefers.reminderHourKey) }
     }
 
     var reminderMinute: Int {
-        get { userDefaults.integer(forKey: Prefers.reminderMinuteKey) }
+        get {
+            if userDefaults.object(forKey: Prefers.reminderMinuteKey) == nil {
+                return 0  // 默认为 0 分
+            }
+            return userDefaults.integer(forKey: Prefers.reminderMinuteKey)
+        }
         set { userDefaults.set(newValue, forKey: Prefers.reminderMinuteKey) }
     }
 

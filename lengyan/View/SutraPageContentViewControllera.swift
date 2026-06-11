@@ -516,7 +516,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     func paragraphOf(text:String, font:UIFont?) -> NSAttributedString{
     let paragraphStyle: NSMutableParagraphStyle = NSMutableParagraphStyle()
     paragraphStyle.lineHeightMultiple = 1.8
-    paragraphStyle.maximumLineHeight = 44.0
+    paragraphStyle.maximumLineHeight = 80.0
     paragraphStyle.minimumLineHeight = 10.0
     
     let attributes = font == nil ? [NSAttributedStringKey.paragraphStyle: paragraphStyle]

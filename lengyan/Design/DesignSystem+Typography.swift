@@ -83,7 +83,8 @@ public enum SutraTypographyStyle: String, CaseIterable {
     var isFixedUI: Bool {
         switch self {
         case .navigationTitle, .uiLargeTitle, .uiTitle, .uiHeading,
-             .uiBody, .uiCaption, .uiSmall, .label, .buttonLarge, .buttonMedium:
+             .uiBody, .uiCaption, .uiSmall, .label, .buttonLarge, .buttonMedium,
+             .indexItem, .menuItem: // 索引与菜单等结构化导航项，保持尺寸固定，防止多级缩进排版崩溃
             return true
         default:
             return false
@@ -163,11 +164,11 @@ struct ChineseFontManager {
 
         let shift: Int
         switch Prefers.shared.fontSizeLevel {
-        case 0: shift = 0      // 特小：基准，字重正好
-        case 1: shift = 0      // 小：不变
-        case 2: shift = -1     // 中：减轻 1 档
-        case 3: shift = -1     // 大：减轻 1 档
-        case 4: shift = -2     // 特大：减轻 2 档
+        case 0: shift = 0      // 特小：Regular
+        case 1: shift = 0      // 小：Regular
+        case 2: shift = 0      // 中：默认保持 Regular，端庄厚重
+        case 3: shift = -1     // 大：减轻 1 档变为 Light，清雅不挤压
+        case 4: shift = -1     // 特大：为了长辈及视力障碍读者的清晰度，保持 Light 字重，避免 Thin 导致画虚
         default: shift = 0
         }
         let newIdx = max(0, min(weights.count - 1, idx + shift))
