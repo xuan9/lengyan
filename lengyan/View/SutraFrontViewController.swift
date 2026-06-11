@@ -665,7 +665,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         )
         let cw = width - (cx * 2)
 
-        let footerHeight = rs(20) + rs(30) + rs(6) + rs(14) + rs(20) + rs(40)
+        let bottomPadding = rs(80)
+        let footerHeight = rs(20) + rs(30) + rs(6) + bottomPadding
         let footer = UIView(frame: CGRect(x: 0, y: 0, width: width, height: footerHeight))
         footer.backgroundColor = backgroundColor
 
@@ -674,12 +675,12 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         topLine.backgroundColor = decorativeGold.withAlphaComponent(0.3)
         footer.addSubview(topLine)
 
-        // 🙏 南无楞严会上佛菩萨 — 如经题般庄严
-        let homageText = "南无楞严会上佛菩萨"
+        // 🙏 南無楞嚴會上佛菩薩 — 始终使用繁体以显庄严，颜色为清晰饱满的古金色以确保对比度
+        let homageText = "南無楞嚴會上佛菩薩"
         let homageLabel = UILabel()
         homageLabel.attributedText = NSAttributedString(string: homageText, attributes: [
             .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular),
-            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary),
+            .foregroundColor: decorativeGold, // 使用饱满的古金色确保易读性，不再过淡
             .kern: 3.0
         ])
         homageLabel.textAlignment = .center
@@ -692,15 +693,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let homageLine = UIView(frame: CGRect(x: cx + rs(100), y: homageLineY, width: cw - rs(200), height: 0.5))
         homageLine.backgroundColor = decorativeGold.withAlphaComponent(0.25)
         footer.addSubview(homageLine)
-
-        // 莲花装饰
-        let lotusLabel = UILabel()
-        lotusLabel.text = "✧ ❀ ✧"
-        lotusLabel.font = .systemFont(ofSize: round(12 * ChineseFontManager.fontSizeMultiplier))
-        lotusLabel.textColor = decorativeGold.withAlphaComponent(0.4)
-        lotusLabel.textAlignment = .center
-        lotusLabel.frame = CGRect(x: 0, y: homageLineY + rs(14), width: width, height: rs(20))
-        footer.addSubview(lotusLabel)
 
         self.treeView.treeFooterView = footer
     }

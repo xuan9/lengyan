@@ -40,9 +40,9 @@ struct ModernSettingsView: View {
                 zenSection("关于") {
                     aboutItem("致谢", icon: "heart.text.square", action: openAcknowledgments)
                     zenDivider
-                    aboutItem("提交反馈", icon: "envelope", action: openFeedback)
+                    aboutItem("反馈", icon: "envelope", action: openFeedback)
                     zenDivider
-                    aboutItem("评价 App", icon: "star.bubble", action: openAppStoreRating)
+                    aboutItem("评价", icon: "star.bubble", action: openAppStoreRating)
                     zenDivider
                     versionRow
                 }
@@ -267,7 +267,7 @@ struct ModernSettingsView: View {
     }
 
     private func openFeedback() {
-        NavigationHelper.pushSwiftUIView(FeedbackView(), title: "提交反馈")
+        NavigationHelper.pushSwiftUIView(FeedbackView(), title: "反馈")
     }
 
     private func openAppStoreRating() {

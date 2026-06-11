@@ -100,11 +100,18 @@ struct ModernFavoritesView: View {
     @State private var isLoading = true
     @State private var themeVersion: Int = 0
 
+    private var tabBarHeight: CGFloat {
+        let bottomInset = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }?.safeAreaInsets.bottom ?? 0
+        return 49 + bottomInset
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ZenTabHeaderView(titleKey: "star_tab_title", symbolName: "bookmark")
 
-            // 顶部 Tab 切换 — 轻盈透气
             HStack(spacing: 0) {
                 ForEach(FavoritesTab.allCases, id: \.self) { tab in
                     Button(action: { selectedTab = tab }) {
@@ -120,8 +127,10 @@ struct ModernFavoritesView: View {
                                     : Color.clear)
                                 .frame(width: 24, height: 0.8)
                         }
+                        .padding(.vertical, 12)          // 增加上下点击热区，达到 iOS 建议的 44pt 最小高度
+                        .frame(maxWidth: .infinity)      // 热区水平横向拉满
+                        .contentShape(Rectangle())       // 确保透明区域也能响应点击
                     }
-                    .frame(maxWidth: .infinity)
                 }
             }
             .padding(.horizontal, 40)
@@ -145,7 +154,7 @@ struct ModernFavoritesView: View {
                     .readingContentWidth()
                 }
 
-                Spacer(minLength: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL))
+                Spacer(minLength: tabBarHeight + 24)
             }
         }
         .background(SutraDesignSystem.backgroundColor())
