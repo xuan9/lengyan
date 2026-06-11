@@ -113,8 +113,16 @@ class AudioManager: ObservableObject {
     // MARK: - Download
 
     func downloadMedia(name: String, file: String, fileExtension: String) {
+        // 停止当前播放，防止出现一边播放旧音频一边下载新音频的混乱体验
+        audioObserver.queuePlayer?.pause()
+        audioObserver.isPlaying = false
+
         downloadStatus[file] = .downloading
         downloadProgress[file] = 0
+
+        // 立即展示小播放器栏并同步曲目名，进入下载状态
+        audioObserver.currentTrack = name
+        audioObserver.showPlayerBar = true
 
         // 复用已有的 prefetch 请求，避免重复下载
         if let existing = resourceRequests[file] {

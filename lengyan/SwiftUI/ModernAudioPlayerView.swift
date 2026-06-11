@@ -192,17 +192,51 @@ struct ModernAudioPlayerView: View {
         }
     }
 
+    private var isCurrentTrackDownloading: Bool {
+        guard let trackName = audioObserver.currentTrack else { return false }
+        for group in manager.mediaGroups {
+            if let index = group.names.firstIndex(of: trackName) {
+                let file = group.files[index]
+                return manager.downloadStatus[file] == .downloading
+            }
+        }
+        return false
+    }
+
+    private var currentTrackDownloadProgress: Double {
+        guard let trackName = audioObserver.currentTrack else { return 0 }
+        for group in manager.mediaGroups {
+            if let index = group.names.firstIndex(of: trackName) {
+                let file = group.files[index]
+                return manager.downloadProgress[file] ?? 0
+            }
+        }
+        return 0
+    }
+
     // MARK: - Reusable Player Controls
     private var playButton: some View {
         Button(action: manager.togglePlayPause) {
-            Image(systemName: audioObserver.isPlaying ? "pause.fill" : "play.fill")
-                .font(.system(size: 20))
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .background)))
-                .frame(width: 44, height: 44)
-                .background(Color(SutraDesignTokens.shared.color(for: .primary)))
-                .clipShape(Circle())
-                .shadow(color: showTrackList ? Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+            Group {
+                if isCurrentTrackDownloading {
+                    ZenProgressRing(
+                        progress: currentTrackDownloadProgress,
+                        color: Color(SutraDesignTokens.shared.color(for: .background)),
+                        size: 20,
+                        lineWidth: 1.5
+                    )
+                } else {
+                    Image(systemName: audioObserver.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .background)))
+                }
+            }
+            .frame(width: 44, height: 44)
+            .background(Color(SutraDesignTokens.shared.color(for: .primary)))
+            .clipShape(Circle())
+            .shadow(color: showTrackList ? Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
         }
+        .disabled(isCurrentTrackDownloading)
     }
 
     private var modeButton: some View {
@@ -234,10 +268,16 @@ struct ModernAudioPlayerView: View {
     }
 
     private var timeDisplay: some View {
-        HStack(spacing: 4) {
-            Text(AudioManager.formatTime(audioObserver.currentTime))
-            Text("/")
-            Text(AudioManager.formatTime(audioObserver.totalTime))
+        Group {
+            if audioObserver.totalTime > 0 {
+                HStack(spacing: 4) {
+                    Text(AudioManager.formatTime(audioObserver.currentTime))
+                    Text("/")
+                    Text(AudioManager.formatTime(audioObserver.totalTime))
+                }
+            } else {
+                Text(" ")
+            }
         }
         .font(.system(size: 11, weight: .medium, design: .monospaced))
     }
@@ -245,50 +285,68 @@ struct ModernAudioPlayerView: View {
     // MARK: - Layout 1: List Mode Player Bar (Glassmorphism Pill)
     private var listModePlayerBar: some View {
         VStack(spacing: 0) {
-            progressBar
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
+            // 播放器药丸主体
+            VStack(spacing: 0) {
+                progressBar
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
 
-            HStack(alignment: .center, spacing: 16) {
-                playButton
+                HStack(alignment: .center, spacing: 16) {
+                    playButton
 
-                VStack(alignment: .leading, spacing: 4) {
-                    if audioObserver.currentTrack?.isEmpty ?? true {
-                        Text("请轻触卷名听经")
-                            .font(SutraTypographyBridge.uiCaption(weight: .light))
-                            .tracking(2)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                    } else {
-                        Text(audioObserver.currentTrack!)
-                            .font(SutraTypographyBridge.uiBody(weight: .medium))
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 4) {
+                        if audioObserver.currentTrack?.isEmpty ?? true {
+                            Text("请轻触卷名听经")
+                                .font(SutraTypographyBridge.uiCaption(weight: .light))
+                                .tracking(2)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                        } else {
+                            Text(audioObserver.currentTrack!)
+                                .font(SutraTypographyBridge.uiBody(weight: .medium))
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                        }
+
+                        if isCurrentTrackDownloading {
+                            ZenBreathingText(text: NSLocalizedString("downloading_text", comment: ""))
+                        } else {
+                            timeDisplay
+                                .foregroundColor(.secondary)
+                        }
                     }
 
-                    timeDisplay
-                        .foregroundColor(.secondary)
-                }
+                    Spacer()
 
-                Spacer()
-
-                HStack(spacing: 20) {
-                    modeButton
+                    HStack(spacing: 20) {
+                        modeButton
+                    }
+                    .font(.system(size: 18))
+                    .foregroundColor(.secondary)
                 }
-                .font(.system(size: 18))
-                .foregroundColor(.secondary)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 16)
             }
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            )
+            .shadow(color: Color.black.opacity(0.12), radius: 24, x: 0, y: 12)
             .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 16)
+
+            // 1. 透明防穿透遮罩（填满药丸和 TabBar 之间的 8pt 物理空隙，拦截点击事件防止穿透到下方的列表）
+            Color.black.opacity(0.001)
+                .frame(height: 8)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    // 空操作，专用于拦截点击事件，防止穿透
+                }
+
+            // 2. 底部 TabBar 占用高度（不含 8pt 空隙），此处用 Color.clear 保持点击穿透到 TabBar 本身
+            Color.clear
+                .frame(height: max(0, tabBarHeight - 8))
         }
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.ultraThinMaterial)
-        )
-        .shadow(color: Color.black.opacity(0.12), radius: 24, x: 0, y: 12)
-        .padding(.horizontal, 16)
-        .padding(.bottom, tabBarHeight)
     }
 
     // MARK: - Layout 2: Immersive Buddha Mode Controls (Zen Single Column)
@@ -331,10 +389,14 @@ struct ModernAudioPlayerView: View {
                     .frame(width: 48, height: 48)
 
                 VStack(spacing: 2) {
-                    Text(AudioManager.formatTime(audioObserver.currentTime))
-                        .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
-                    Text(AudioManager.formatTime(audioObserver.totalTime))
-                        .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
+                    if audioObserver.totalTime > 0 {
+                        Text(AudioManager.formatTime(audioObserver.currentTime))
+                            .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
+                        Text(AudioManager.formatTime(audioObserver.totalTime))
+                            .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
+                    } else {
+                        Text(" ")
+                    }
                 }
                 .font(.system(size: 9, weight: .medium, design: .monospaced))
             }
@@ -554,9 +616,12 @@ struct ModernAudioPlayerView: View {
 
                 // 右侧状态指示
                 if status == .downloading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .scaleEffect(0.7)
+                    ZenProgressRing(
+                        progress: progress,
+                        color: primary,
+                        size: 14,
+                        lineWidth: 1.5
+                    )
                 } else if status == .error {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 12, weight: .regular))
@@ -606,5 +671,44 @@ private struct TitleHeightPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
+    }
+}
+
+// MARK: - Zen Audio Player Visual Subcomponents
+private struct ZenProgressRing: View {
+    let progress: Double
+    let color: Color
+    let size: CGFloat
+    let lineWidth: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(color.opacity(0.2), lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: CGFloat(max(0.05, min(progress, 1.0))))
+                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .animation(.easeInOut(duration: 0.15), value: progress)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+private struct ZenBreathingText: View {
+    let text: String
+    @State private var isBreathing = false
+
+    var body: some View {
+        Text(text)
+            .font(SutraTypographyBridge.uiCaption(weight: .light))
+            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
+            .lineLimit(1)
+            .opacity(isBreathing ? 0.35 : 1.0)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                    isBreathing = true
+                }
+            }
     }
 }
