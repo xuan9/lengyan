@@ -19,4 +19,12 @@ extension String
         return nil;
     }
 
+    var simplified: String {
+        return self.applyingTransform(StringTransform("Hans-Hant"), reverse: true) ?? self
+    }
+
+    var traditional: String {
+        return self.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? self
+    }
+
 }

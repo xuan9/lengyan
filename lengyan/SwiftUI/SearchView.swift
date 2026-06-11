@@ -10,17 +10,17 @@ import SwiftUI
 // MARK: - 搜索关键词分类
 
 enum SearchSuggestionCategory: String, CaseIterable {
-    case core = "核心"
-    case doctrine = "义理"
-    case practice = "修证"
-    case terms = "名相"
+    case core = "核心主旨"
+    case doctrine = "义理辩证"
+    case practice = "修行观修"
+    case terms = "菩提因果"
 
     var keywords: [String] {
         switch self {
-        case .core:     return ["七处征心", "十番显见", "五十阴魔", "如来藏", "常住真心"]
-        case .doctrine: return ["二种妄见", "四科七大", "三种相续", "三如来藏", "十八界"]
-        case .practice: return ["耳根圆通", "楞严咒", "二十五圆通", "三渐次", "乾慧地"]
-        case .terms:    return ["妄想", "根尘", "菩提", "涅槃", "无明", "五蕴", "六入"]
+        case .core:     return ["如来藏", "常住真心", "妙真如性", "本非因缘", "虚空"]
+        case .doctrine: return ["客尘", "生灭", "知见立知", "演若达多", "第二月"]
+        case .practice: return ["反闻闻自性", "歇即菩提", "圆通", "六结", "清净明诲"]
+        case .terms:    return ["菩提", "涅槃", "妄想", "轮回", "干慧地"]
         }
     }
 }
@@ -173,7 +173,7 @@ struct SearchView: View {
                     .font(.system(size: 14))
                     .foregroundColor(SutraDesignSystem.color(.textSecondary))
 
-                TextField("搜索经文...", text: $query)
+                TextField(Book.shared.isSimplifiedChinese ? "搜索经文..." : "搜尋經文...", text: $query)
                     .font(SutraTypographyBridge.uiBody(weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
                     .focused($isSearchFieldFocused)
@@ -212,7 +212,7 @@ struct SearchView: View {
                     if !recentSearches.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text("最近搜索")
+                                Text(Book.shared.isSimplifiedChinese ? "最近搜索" : "最近搜索".traditional)
                                     .font(SutraTypographyBridge.uiCaption(weight: .regular))
                                     .foregroundColor(SutraDesignSystem.color(.textSecondary))
                                 Spacer()
@@ -220,7 +220,7 @@ struct SearchView: View {
                                     Prefers.shared.clearSearchHistory()
                                     recentSearches = []
                                 }) {
-                                    Text("清除")
+                                    Text(Book.shared.isSimplifiedChinese ? "清除" : "清除".traditional)
                                         .font(.system(size: 13, weight: .light))
                                         .foregroundColor(SutraDesignSystem.color(.textTertiary))
                                 }
@@ -236,10 +236,14 @@ struct SearchView: View {
                     VStack(alignment: .leading, spacing: 28) {
                         ForEach(SearchSuggestionCategory.allCases, id: \.self) { category in
                             VStack(alignment: .leading, spacing: 12) {
-                                Text(category.rawValue)
+                                Text(Book.shared.isSimplifiedChinese ? category.rawValue : category.rawValue.traditional)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                                FlowLayout(spacing: 10, items: category.keywords, availableWidth: geo.size.width) { keyword in
+                                FlowLayout(
+                                    spacing: 10,
+                                    items: category.keywords.map { Book.shared.isSimplifiedChinese ? $0.simplified : $0.traditional },
+                                    availableWidth: geo.size.width
+                                ) { keyword in
                                     query = keyword
                                 }
                             }
@@ -260,7 +264,7 @@ struct SearchView: View {
     private var noResultsState: some View {
         VStack(spacing: 16) {
             Spacer()
-            Text("未找到相关内容")
+            Text(Book.shared.isSimplifiedChinese ? "未找到相关内容" : "未找到相關內容")
                 .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textSecondary))
             Spacer()
@@ -364,19 +368,32 @@ struct SearchView: View {
     private func highlightedText(_ text: String, query: String, highlightColor: Color) -> Text {
         guard !query.isEmpty else { return Text(text) }
 
+        let simplifiedText = text.simplified
+        let simplifiedQuery = query.simplified
+
         var result = Text("")
-        var remaining = text
-        while let range = remaining.range(of: query) {
-            let before = String(remaining[remaining.startIndex..<range.lowerBound])
+        var remainingText = text
+        var remainingSimplifiedText = simplifiedText
+
+        while let range = remainingSimplifiedText.range(of: simplifiedQuery, options: .caseInsensitive) {
+            let beforeStartIndex = remainingText.startIndex
+            let beforeEndIndex = remainingText.index(beforeStartIndex, offsetBy: remainingSimplifiedText.distance(from: remainingSimplifiedText.startIndex, to: range.lowerBound))
+            
+            let before = String(remainingText[beforeStartIndex..<beforeEndIndex])
             if !before.isEmpty {
                 result = result + Text(before)
             }
-            let match = String(remaining[range])
+            
+            let matchEndIndex = remainingText.index(beforeEndIndex, offsetBy: remainingSimplifiedText.distance(from: range.lowerBound, to: range.upperBound))
+            let match = String(remainingText[beforeEndIndex..<matchEndIndex])
             result = result + Text(match).foregroundColor(highlightColor).fontWeight(.semibold)
-            remaining = String(remaining[range.upperBound...])
+            
+            remainingText = String(remainingText[matchEndIndex...])
+            remainingSimplifiedText = String(remainingSimplifiedText[range.upperBound...])
         }
-        if !remaining.isEmpty {
-            result = result + Text(remaining)
+        
+        if !remainingText.isEmpty {
+            result = result + Text(remainingText)
         }
         return result
     }

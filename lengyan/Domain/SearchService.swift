@@ -28,6 +28,7 @@ class SearchService {
     func mergedSearch(query: String) -> [MergedSearchResult] {
         guard !query.isEmpty, Book.shared.loaded else { return [] }
 
+        let simplifiedQuery = query.simplified
         var outlineByPath: [String: String] = [:]
         var sutraByPath: [String: String] = [:]
 
@@ -35,7 +36,7 @@ class SearchService {
         if let index = Book.shared.index {
             for item in index {
                 guard let name = item["name"], let path = item["path"] else { continue }
-                if name.contains(query) {
+                if name.simplified.contains(simplifiedQuery) {
                     outlineByPath[path] = snippet(from: name, query: query, maxLen: 50)
                 }
             }
@@ -46,7 +47,7 @@ class SearchService {
             for (path, sections) in contents {
                 for section in sections {
                     guard section["type"] == "sutra", let text = section["content"] else { continue }
-                    if text.contains(query) {
+                    if text.simplified.contains(simplifiedQuery) {
                         sutraByPath[path] = snippet(from: text, query: query, maxLen: 50)
                         break
                     }
@@ -90,11 +91,21 @@ class SearchService {
 
     /// 截取匹配关键词周围的文本片段，智能断句
     private func snippet(from text: String, query: String, maxLen: Int) -> String {
-        guard let range = text.range(of: query) else {
+        let simplifiedText = text.simplified
+        let simplifiedQuery = query.simplified
+
+        guard let range = simplifiedText.range(of: simplifiedQuery) else {
             return String(text.prefix(maxLen))
         }
-        let start = text.index(range.lowerBound, offsetBy: -maxLen/3, limitedBy: text.startIndex) ?? text.startIndex
-        let end = text.index(range.upperBound, offsetBy: maxLen * 2/3, limitedBy: text.endIndex) ?? text.endIndex
+
+        let startDist = simplifiedText.distance(from: simplifiedText.startIndex, to: range.lowerBound)
+        let endDist = simplifiedText.distance(from: simplifiedText.startIndex, to: range.upperBound)
+
+        let origRangeLower = text.index(text.startIndex, offsetBy: startDist)
+        let origRangeUpper = text.index(text.startIndex, offsetBy: endDist)
+
+        let start = text.index(origRangeLower, offsetBy: -maxLen/3, limitedBy: text.startIndex) ?? text.startIndex
+        let end = text.index(origRangeUpper, offsetBy: maxLen * 2/3, limitedBy: text.endIndex) ?? text.endIndex
         let raw = String(text[start..<end])
         let cleaned = raw.replacingOccurrences(of: "\n", with: " ")
 
@@ -120,14 +131,17 @@ class SearchService {
         // 中文断句标点
         let breakChars: Set<Character> = ["，", "。", "、", "；", "：", "！", "？", "…", "—", "（", "《", "」", "』", "\\", " "]
 
-        guard let matchRange = text.range(of: query) else { return text }
-        let beforeMatch = text[text.startIndex..<matchRange.lowerBound]
+        let simplifiedText = text.simplified
+        let simplifiedQuery = query.simplified
+
+        guard let matchRange = simplifiedText.range(of: simplifiedQuery) else { return text }
+        let beforeMatch = simplifiedText[simplifiedText.startIndex..<matchRange.lowerBound]
 
         // 在匹配词之前，找最后一个标点位置作为截断点
         var lastPunctuation: String.Index?
         for idx in beforeMatch.indices {
             if breakChars.contains(beforeMatch[idx]) {
-                let afterPunct = text.index(after: idx)
+                let afterPunct = simplifiedText.index(after: idx)
                 if afterPunct <= matchRange.lowerBound {
                     lastPunctuation = afterPunct
                 }
@@ -135,7 +149,9 @@ class SearchService {
         }
 
         if let cut = lastPunctuation, cut < matchRange.lowerBound {
-            return String(text[cut...])
+            let dist = simplifiedText.distance(from: simplifiedText.startIndex, to: cut)
+            let origCutIndex = text.index(text.startIndex, offsetBy: dist)
+            return String(text[origCutIndex...])
         }
         // 没找到合适的标点，保留原始截断
         return text
