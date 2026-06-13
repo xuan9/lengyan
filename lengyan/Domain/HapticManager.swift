@@ -25,6 +25,11 @@ final class HapticManager {
         lightImpact.impactOccurred()
     }
 
+    /// 通用轻触觉 — 标签 / 卡片轻点
+    func lightTap() {
+        lightImpact.impactOccurred()
+    }
+
     /// 完成一卷 — 功德圆满的渐进确认
     func chapterComplete() {
         successNotification.notificationOccurred(.success)

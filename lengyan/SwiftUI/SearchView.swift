@@ -7,21 +7,22 @@
 
 import SwiftUI
 
-// MARK: - 搜索关键词分类
+// MARK: - 搜索关键词建议
 
-enum SearchSuggestionCategory: String, CaseIterable {
-    case core = "核心主旨"
-    case doctrine = "义理辩证"
-    case practice = "修行观修"
-    case terms = "菩提因果"
+private let defaultSearchKeywords: [String] = [
+    "如来藏", "真心", "妙明", "妙真如性", "因缘", "和合", "虚空",
+    "客尘", "生灭", "菩提", "涅槃", "妄想", "圆通",
+    "反闻闻自性", "歇即菩提"
+]
 
-    var keywords: [String] {
-        switch self {
-        case .core:     return ["如来藏", "常住真心", "妙真如性", "本非因缘", "虚空"]
-        case .doctrine: return ["客尘", "生灭", "知见立知", "演若达多", "第二月"]
-        case .practice: return ["反闻闻自性", "歇即菩提", "圆通", "六结", "清净明诲"]
-        case .terms:    return ["菩提", "涅槃", "妄想", "轮回", "干慧地"]
-        }
+// MARK: - 按压反馈（复刻 UIKit zen 手感：轻缩 + 微透 + 弹簧回弹）
+
+private struct SutraPressableStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .opacity(configuration.isPressed ? 0.88 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
 
@@ -46,32 +47,33 @@ struct FlowLayout: View {
     }
 
     private func tagView(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 14))
-            .foregroundColor(SutraDesignSystem.color(.textSecondary))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(
-                        Color(SutraDesignTokens.shared.color(for: .decorativeGold))
-                            .opacity(0.08)
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(
-                        Color(SutraDesignTokens.shared.color(for: .decorativeGold))
-                            .opacity(0.15),
-                        lineWidth: 0.5
-                    )
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 10))
-            .onTapGesture { onTap(text) }
+        Button(action: {
+            HapticManager.shared.lightTap()
+            onTap(text)
+        }) {
+            Text(text)
+                .font(SutraTypographyBridge.uiSmall(weight: .regular))
+                .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(SutraDesignSystem.color(.decorativeGold).opacity(0.08))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(SutraDesignSystem.color(.decorativeGold).opacity(0.15), lineWidth: 0.5)
+                )
+                .contentShape(RoundedRectangle(cornerRadius: 8).inset(by: -4))
+        }
+        .buttonStyle(SutraPressableStyle())
+        .accessibilityLabel("搜索：\(text)")
+        .accessibilityHint("填入搜索框")
     }
 
+    @MainActor
     private func computeRows() -> [[String]] {
-        let font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        let font = SutraTypographyManager.shared.uiFont(for: .uiSmall, weight: .regular)
         let tagHPadding: CGFloat = 28
         let screenWidth = availableWidth - 32 // 减去左右 padding 16*2
 
@@ -161,11 +163,18 @@ struct SearchView: View {
     private var searchBar: some View {
         HStack(spacing: 12) {
             // 返回按钮 — dismiss 整个 modal
-            Button(action: { dismissModal() }) {
+            Button(action: {
+                HapticManager.shared.lightTap()
+                dismissModal()
+            }) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 18, weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(SutraPressableStyle())
+            .accessibilityLabel("返回")
 
             // 输入框
             HStack(spacing: 8) {
@@ -179,22 +188,30 @@ struct SearchView: View {
                     .focused($isSearchFieldFocused)
                     .submitLabel(.search)
                     .onSubmit {
+                        recordSearch(query)
                         isSearchFieldFocused = false
                     }
 
                 if !query.isEmpty {
-                    Button(action: { query = "" }) {
+                    Button(action: {
+                        HapticManager.shared.lightTap()
+                        query = ""
+                    }) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 16))
                             .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                            .frame(width: 28, height: 28)
+                            .contentShape(Circle())
                     }
+                    .buttonStyle(SutraPressableStyle())
+                    .accessibilityLabel("清除")
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.3), lineWidth: 0.5)
+                    .fill(SutraDesignSystem.color(.card))
             )
         }
         .padding(.horizontal, 16)
@@ -207,7 +224,7 @@ struct SearchView: View {
     private var emptyState: some View {
         GeometryReader { geo in
             ScrollView {
-                VStack(spacing: 28) {
+                VStack(alignment: .leading, spacing: 28) {
                     // 最近搜索
                     if !recentSearches.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
@@ -217,13 +234,16 @@ struct SearchView: View {
                                     .foregroundColor(SutraDesignSystem.color(.textSecondary))
                                 Spacer()
                                 Button(action: {
+                                    HapticManager.shared.lightTap()
                                     Prefers.shared.clearSearchHistory()
                                     recentSearches = []
                                 }) {
                                     Text(Book.shared.isSimplifiedChinese ? "清除" : "清除".traditional)
-                                        .font(.system(size: 13, weight: .light))
+                                        .font(SutraTypographyBridge.uiSmall(weight: .light))
                                         .foregroundColor(SutraDesignSystem.color(.textTertiary))
                                 }
+                                .buttonStyle(SutraPressableStyle())
+                                .accessibilityLabel("清除搜索历史")
                             }
                             FlowLayout(spacing: 8, items: recentSearches, availableWidth: geo.size.width) { term in
                                 query = term
@@ -233,20 +253,16 @@ struct SearchView: View {
                     }
 
                     // 楞严关键词建议
-                    VStack(alignment: .leading, spacing: 28) {
-                        ForEach(SearchSuggestionCategory.allCases, id: \.self) { category in
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(Book.shared.isSimplifiedChinese ? category.rawValue : category.rawValue.traditional)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                                FlowLayout(
-                                    spacing: 10,
-                                    items: category.keywords.map { Book.shared.isSimplifiedChinese ? $0.simplified : $0.traditional },
-                                    availableWidth: geo.size.width
-                                ) { keyword in
-                                    query = keyword
-                                }
-                            }
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(Book.shared.isSimplifiedChinese ? "经典词句" : "經典詞句")
+                            .font(SutraTypographyBridge.uiCaption(weight: .regular))
+                            .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                        FlowLayout(
+                            spacing: 10,
+                            items: defaultSearchKeywords.map { Book.shared.isSimplifiedChinese ? $0.simplified : $0.traditional },
+                            availableWidth: geo.size.width
+                        ) { keyword in
+                            query = keyword
                         }
                     }
                     .padding(.horizontal, 16)
@@ -262,12 +278,38 @@ struct SearchView: View {
     // MARK: - 无结果
 
     private var noResultsState: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Text(Book.shared.isSimplifiedChinese ? "未找到相关内容" : "未找到相關內容")
-                .font(SutraTypographyBridge.uiBody(weight: .regular))
-                .foregroundColor(SutraDesignSystem.color(.textSecondary))
-            Spacer()
+        GeometryReader { geo in
+            ScrollView {
+                VStack(spacing: 20) {
+                    Spacer(minLength: 60)
+
+                    VStack(spacing: 8) {
+                        Text(Book.shared.isSimplifiedChinese
+                             ? "未找到「\(query)」相关内容"
+                             : "未找到「\(query)」相關內容")
+                            .font(SutraTypographyBridge.uiBody(weight: .regular))
+                            .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                        Text(Book.shared.isSimplifiedChinese ? "试试换一个关键词" : "試試換一個關鍵詞")
+                            .font(SutraTypographyBridge.uiSmall(weight: .regular))
+                            .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                    }
+
+                    // 保留关键词建议，把挫败转化为引导
+                    FlowLayout(
+                        spacing: 10,
+                        items: defaultSearchKeywords.map { Book.shared.isSimplifiedChinese ? $0.simplified : $0.traditional },
+                        availableWidth: geo.size.width
+                    ) { keyword in
+                        query = keyword
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+
+                    Spacer(minLength: 40)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .dismissKeyboardOnScroll()
         }
     }
 
@@ -275,7 +317,10 @@ struct SearchView: View {
 
     private var resultList: some View {
         ScrollView {
-            LazyVStack(spacing: 8) {
+            LazyVStack(spacing: 12) {
+                if query.count == 1, !refinementSuggestions.isEmpty {
+                    refinementGuideBar
+                }
                 ForEach(results) { result in
                     resultCard(result)
                 }
@@ -297,70 +342,73 @@ struct SearchView: View {
             ? Color(SutraDesignTokens.shared.color(for: .decorativeGold))
             : Color(SutraDesignTokens.shared.color(for: .primary))
 
-        return HStack(spacing: 0) {
-            Capsule()
-                .fill(capsuleColor.opacity(0.7))
-                .frame(width: 3)
-                .padding(.vertical, 6)
-
-            VStack(alignment: .leading, spacing: 4) {
-                // 科判命中（合并卡片中的次要信息 / 纯科判卡片的主要内容）
-                if let outlineText = result.outlineMatch {
-                    highlightedText(outlineText, query: query, highlightColor: SutraDesignSystem.color(.primary))
-                        .font(.system(size: isOutlineOnly ? 15 : 12, weight: isOutlineOnly ? .regular : .light))
-                        .foregroundColor(isOutlineOnly
-                            ? SutraDesignSystem.color(.textPrimary)
-                            : SutraDesignSystem.color(.textSecondary))
-                        .lineLimit(1)
-                }
-
-                // 经文片段（命中时高亮，补充上下文时不高亮）
-                if let sutraText = result.sutraMatch {
-                    Group {
-                        if result.sutraHit {
-                            highlightedText(sutraText, query: query, highlightColor: SutraDesignSystem.color(.primary))
-                        } else {
-                            Text(sutraText)
-                        }
-                    }
-                    .font(SutraTypographyBridge.uiBody(weight: .regular))
-                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                    .lineLimit(2)
-                    .lineSpacing(4)
-                }
-
-                // 出处
-                HStack {
-                    Spacer()
-                    Text(result.chapterName)
-                        .font(.system(size: 11, weight: .light))
-                        .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                        .lineLimit(1)
-                }
-            }
-            .padding(.leading, 14)
-            .padding(.trailing, 16)
-            .padding(.vertical, 12)
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(SutraDesignTokens.shared.color(for: .card)))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(
-                            LinearGradient(
-                                colors: [capsuleColor.opacity(0.15), capsuleColor.opacity(0.05)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 0.5
-                        )
-                )
-        )
-        .contentShape(Rectangle())
-        .onTapGesture {
+        return Button(action: {
+            HapticManager.shared.lightTap()
             navigateToResult(result)
+        }) {
+            HStack(spacing: 0) {
+                Capsule()
+                    .fill(capsuleColor.opacity(0.7))
+                    .frame(width: 3)
+                    .padding(.vertical, 6)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    // 科判命中（合并卡片中的次要信息 / 纯科判卡片的主要内容）
+                    if let outlineText = result.outlineMatch {
+                        highlightedText(outlineText, query: query, highlightColor: SutraDesignSystem.color(.decorativeGold))
+                            .font(.system(size: isOutlineOnly ? 15 : 12, weight: isOutlineOnly ? .regular : .light))
+                            .foregroundColor(isOutlineOnly
+                                ? SutraDesignSystem.color(.textPrimary)
+                                : SutraDesignSystem.color(.textSecondary))
+                            .lineLimit(1)
+                    }
+
+                    // 经文片段（命中时高亮，补充上下文时不高亮）
+                    if let sutraText = result.sutraMatch {
+                        Group {
+                            if result.sutraHit {
+                                highlightedText(sutraText, query: query, highlightColor: SutraDesignSystem.color(.decorativeGold))
+                            } else {
+                                Text(sutraText)
+                            }
+                        }
+                        .font(SutraTypographyBridge.uiBody(weight: .regular))
+                        .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                        .lineLimit(2)
+                        .lineSpacing(4)
+                    }
+
+                    // 出处
+                    HStack {
+                        Spacer()
+                        Text(result.chapterName)
+                            .font(.system(size: 11, weight: .light))
+                            .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                            .lineLimit(1)
+                    }
+                }
+                .padding(.leading, 14)
+                .padding(.trailing, 16)
+                .padding(.vertical, 12)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(SutraDesignTokens.shared.color(for: .card)))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [capsuleColor.opacity(0.15), capsuleColor.opacity(0.05)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 0.5
+                            )
+                    )
+            )
         }
+        .buttonStyle(SutraPressableStyle())
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - 高亮关键词
@@ -401,14 +449,69 @@ struct SearchView: View {
     // MARK: - 搜索
 
     private func performSearch(_ query: String) {
-        guard query.count >= 2 else {
+        guard !query.isEmpty else {
             results = []
             return
         }
-        results = SearchService.shared.mergedSearch(query: query)
+        var all = SearchService.shared.mergedSearch(query: query)
+        if all.count > 50 { all = Array(all.prefix(50)) }
+        results = all
         searchCompleted = true
-        Prefers.shared.addSearchQuery(query)
+        // 不在此记录历史 — debounce 会捕获 IME 中间态（拼音 / 部分字）
+    }
+
+    /// 仅在用户明确确认搜索意图时记录（提交 / 点选结果），过滤输入法中间态
+    private func recordSearch(_ term: String) {
+        let trimmed = term.trimmingCharacters(in: .whitespaces)
+        guard containsChinese(trimmed) else { return }  // 挡掉纯拼音 / 字母残留
+        Prefers.shared.addSearchQuery(trimmed)
         recentSearches = Prefers.shared.searchHistory
+    }
+
+    private func containsChinese(_ text: String) -> Bool {
+        text.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) }
+    }
+
+    /// 单字搜索时，从关键词表中找出含该字的精炼词，引导用户精准定位
+    private var refinementSuggestions: [String] {
+        guard query.count == 1 else { return [] }
+        let singleChar = query.simplified
+        return defaultSearchKeywords.filter { keyword in
+            keyword.simplified.contains(singleChar) && keyword.simplified != singleChar
+        }
+    }
+
+    // MARK: - 单字精炼引导条
+
+    private var refinementGuideBar: some View {
+        HStack(spacing: 6) {
+            Text(Book.shared.isSimplifiedChinese
+                 ? "「\(query)」的结果较多 · 可试试"
+                 : "「\(query)」的結果較多 · 可試試")
+                .font(SutraTypographyBridge.uiSmall(weight: .regular))
+                .foregroundColor(SutraDesignSystem.color(.textTertiary))
+
+            ForEach(refinementSuggestions, id: \.self) { word in
+                Button(action: {
+                    HapticManager.shared.lightTap()
+                    query = word
+                }) {
+                    Text(word)
+                        .font(SutraTypographyBridge.uiSmall(weight: .medium))
+                        .foregroundColor(SutraDesignSystem.color(.decorativeGold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule().fill(SutraDesignSystem.color(.decorativeGold).opacity(0.08))
+                        )
+                }
+                .buttonStyle(SutraPressableStyle())
+                .accessibilityLabel("搜索：\(word)")
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 2)
     }
 
     // MARK: - 导航
@@ -427,6 +530,7 @@ struct SearchView: View {
     }
 
     private func navigateToResult(_ result: MergedSearchResult) {
+        recordSearch(query)
         isSearchFieldFocused = false
         if let onNavigate {
             onNavigate(result)
