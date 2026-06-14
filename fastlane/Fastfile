@@ -28,4 +28,26 @@ platform :ios do
       skip_waiting_for_build_processing: true # Don't block terminal while Apple processes the build
     )
   end
+
+  desc "Generate localized App Store screenshots (zh-Hans / zh-Hant, iPhone + iPad)"
+  lane :screenshots do
+    capture_screenshots(
+      project: "lengyan.xcodeproj",
+      scheme: "lengyan"
+    )
+  end
+
+  desc "Upload App Store metadata + screenshots to App Store Connect"
+  lane :release do
+    deliver(
+      app_identifier: "org.fuxuan.lengyan",
+      metadata_path: "./fastlane/metadata",
+      screenshots_path: "./fastlane/screenshots",
+      skip_binary_upload: true,
+      submit_for_review: false,
+      automatic_release: false,
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
 end

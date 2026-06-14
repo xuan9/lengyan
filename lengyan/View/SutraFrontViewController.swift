@@ -466,7 +466,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         pulseAnimation.duration = 2.0
         pulseAnimation.fromValue = 0.8
         pulseAnimation.toValue = 1.2
-        pulseAnimation.timingFunction = CAMediaTimingFunction(name: "easeInEaseOut")
+        pulseAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
         pulseAnimation.autoreverses = true
         pulseAnimation.repeatCount = .infinity
 
@@ -839,7 +839,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     @objc func openDrbaLink(_ sender:UIButton) {
-        if let url = URL(string: "http://www.drbachinese.org/online_reading/sutra_explanation/Shu/contents.htm") {
+        if let url = URL(string: "https://www.drbachinese.org/online_reading/sutra_explanation/Shu/contents.htm") {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
     }
@@ -943,7 +943,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     // 长按科判行 → 打开该条目的下级科判列表（与纯阅读页右上角 index 一致）
     @objc func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
-        if longPressGestureRecognizer.state == UIGestureRecognizerState.began {
+        if longPressGestureRecognizer.state == UIGestureRecognizer.State.began {
             let touchPoint = longPressGestureRecognizer.location(in: self.treeView.scrollView)
             if let rowItem = treeView.itemForRow(at: touchPoint) as? [String] {
                 let path = rowItem[0]
@@ -1098,7 +1098,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.openSutraOfPath(path: item[0])
     }
     
-    func treeView(_ treeView:RATreeView,  commit editingStyle:UITableViewCellEditingStyle, forRowForItem item:Any){
+    func treeView(_ treeView:RATreeView,  commit editingStyle:UITableViewCell.EditingStyle, forRowForItem item:Any){
     }
     
     func treeView(_ treeView: RATreeView, editActionsForItem item: Any) -> [Any] {

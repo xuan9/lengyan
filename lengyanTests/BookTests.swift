@@ -58,9 +58,9 @@ class lengyanTests: XCTestCase {
         observer.isPlaying = true
         
         NotificationCenter.default.post(
-            name: .AVAudioSessionInterruption,
+            name: AVAudioSession.interruptionNotification,
             object: nil,
-            userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSessionInterruptionType.began.rawValue]
+            userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue]
         )
         
         let expectation = self.expectation(description: "Wait for main queue")

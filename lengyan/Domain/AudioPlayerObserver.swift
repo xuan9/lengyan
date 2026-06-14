@@ -57,7 +57,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         trackSubscription = nil
 
         NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .AVAudioSessionInterruption, object: nil)
+        NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: nil)
 
         removeRemoteCommands()
 
@@ -141,7 +141,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleAudioSessionInterruption(_:)),
-            name: .AVAudioSessionInterruption,
+            name: AVAudioSession.interruptionNotification,
             object: nil
         )
     }
@@ -150,9 +150,9 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let session = AVAudioSession.sharedInstance()
-                if session.category != AVAudioSessionCategoryPlayback {
-                    try session.setCategory(AVAudioSessionCategoryPlayback, mode: AVAudioSessionModeDefault)
-                    try session.setActive(true, with: .notifyOthersOnDeactivation)
+                if session.category != AVAudioSession.Category.playback {
+                    try session.setCategory(AVAudioSession.Category.playback, mode: AVAudioSession.Mode.default)
+                    try session.setActive(true, options: .notifyOthersOnDeactivation)
                 }
             } catch {
                 print("⚠️ Audio session setup failed: \(error)")
@@ -209,7 +209,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
     func seek(to seconds: Double) {
         guard let player = queuePlayer else { return }
         let time = CMTime(seconds: seconds, preferredTimescale: 600)
-        player.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+        player.seek(to: time, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
         self.currentTime = seconds
         self.lastNowPlayingUpdateTime = seconds
         self.updateNowPlayingInfo()
@@ -272,7 +272,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
     @objc private func handleAudioSessionInterruption(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
               let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
-              let type = AVAudioSessionInterruptionType(rawValue: typeValue) else {
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
             return
         }
 
@@ -284,7 +284,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             }
         case .ended:
             if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
-                let options = AVAudioSessionInterruptionOptions(rawValue: optionsValue)
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
                 if options.contains(.shouldResume) {
                     DispatchQueue.main.async { [weak self] in
                         self?.queuePlayer?.play()

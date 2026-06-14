@@ -46,7 +46,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(SutraIndexViewController.onApplicationWillTerminate),
-                name: NSNotification.Name.UIApplicationWillTerminate,
+                name: UIApplication.willTerminateNotification,
                 object: nil)
         } else {
             var resolvedTree = tree!
@@ -247,7 +247,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     //Called, when long press occurred
     @objc func longPress(_ longPressGestureRecognizer: UILongPressGestureRecognizer) {
         
-        if longPressGestureRecognizer.state == UIGestureRecognizerState.began {
+        if longPressGestureRecognizer.state == UIGestureRecognizer.State.began {
             
             let touchPoint = longPressGestureRecognizer.location(in: self.treeView.scrollView)
             if let item = treeView.itemForRow(at: touchPoint) as? [String : Any] {

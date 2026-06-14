@@ -5,3 +5,19 @@ TestResults.xcresult
 screenshots/
 mfa/
 derived_data
+
+# fastlane snapshot 自动生成产物
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/Preview.html
+fastlane/report.xml
+fastlane/README.md
+
+# fastlane build artifacts
+build/
+.DS_Store
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved

@@ -12,7 +12,7 @@ import SwiftUI
 class SutraTitleContainerView: UIView {
     override var intrinsicContentSize: CGSize {
         // 要求水平方向尽可能宽，垂直方向自适应，从而强制利用所有可用空间
-        return CGSize(width: UILayoutFittingExpandedSize.width, height: UIViewNoIntrinsicMetric)
+        return CGSize(width: UIView.layoutFittingExpandedSize.width, height: UIView.noIntrinsicMetric)
     }
 }
 
@@ -51,61 +51,68 @@ class Book: NSObject {
             path = "data/simplified/"
         }
         let treeFileURL = Bundle.main.url(forResource: path + "lengyanjing-index-tree", withExtension: "json")
-        
-        let data = try? Foundation.Data(contentsOf: treeFileURL!)
-        do {
-            self.tree = try (JSONSerialization.jsonObject(with: data!, options: .allowFragments)) as? NSDictionary as? [String: Any]
-        } catch _ {
+        if let treeFileURL = treeFileURL,
+           let data = try? Foundation.Data(contentsOf: treeFileURL) {
+            do {
+                self.tree = try (JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? NSDictionary as? [String: Any]
+            } catch _ {
+                self.tree = [:]
+            }
+        } else {
             self.tree = [:]
         }
-        
+
         let contentFile = Bundle.main.url(forResource:  path + "lengyanjing-content", withExtension: "json")
-        
-        let contentData = try? Foundation.Data(contentsOf: contentFile!)
-        do {
-            self.contents = try (JSONSerialization.jsonObject(with: contentData!, options: .allowFragments)) as? NSDictionary
-                as? [String:[[String:String]]]
-        } catch _ {
-            self.contents  = [:]
+        if let contentFile = contentFile,
+           let contentData = try? Foundation.Data(contentsOf: contentFile) {
+            do {
+                self.contents = try (JSONSerialization.jsonObject(with: contentData, options: .allowFragments)) as? NSDictionary
+                    as? [String:[[String:String]]]
+            } catch _ {
+                self.contents  = [:]
+            }
+        } else {
+            self.contents = [:]
         }
-        
+
         let indexFile = Bundle.main.url(forResource:  path + "lengyanjing-index", withExtension: "json")
-        
-        let indexData = try? Foundation.Data(contentsOf: indexFile!)
-        do {
-            let indexArray = try (JSONSerialization.jsonObject(with: indexData!, options: .allowFragments)) as? NSArray
-            //--check if any wront type item
-            //                print( indexArray?.filter({ (a) -> Bool in
-            //                    let d = a as? [String:String]
-            //                    if d == nil {
-            //                        print(( a as? NSDictionary)!["path"])
-            //                        return false
-            //                    }
-            //                    return true
-            //                }).count)
-            self.index = indexArray as? [[String:String]]
-        } catch _ {
+        if let indexFile = indexFile,
+           let indexData = try? Foundation.Data(contentsOf: indexFile) {
+            do {
+                let indexArray = try (JSONSerialization.jsonObject(with: indexData, options: .allowFragments)) as? NSArray
+                self.index = indexArray as? [[String:String]]
+            } catch _ {
+                self.index = []
+            }
+        } else {
             self.index = []
         }
-        
+
         let mediaFile = Bundle.main.url(forResource:  path + "lengyanjing-media", withExtension: "json")
-        
-        let mediaData = try? Foundation.Data(contentsOf: mediaFile!)
-        do {
-            self.media = try (JSONSerialization.jsonObject(with: mediaData!, options: .allowFragments)) as? NSArray
-                as? [[String:Any]]
-        } catch _ {
-            self.media  = []
+        if let mediaFile = mediaFile,
+           let mediaData = try? Foundation.Data(contentsOf: mediaFile) {
+            do {
+                self.media = try (JSONSerialization.jsonObject(with: mediaData, options: .allowFragments)) as? NSArray
+                    as? [[String:Any]]
+            } catch _ {
+                self.media  = []
+            }
+        } else {
+            self.media = []
         }
-        
+
         let chapterMapFile = Bundle.main.url(forResource: "data/lengyanjing-chapter-map", withExtension: "json")
-        let chapterMapData = try? Foundation.Data(contentsOf: chapterMapFile!)
-        do {
-            self.chapterMap = try (JSONSerialization.jsonObject(with: chapterMapData!, options: .allowFragments)) as? [String: [String]]
-        } catch _ {
+        if let chapterMapFile = chapterMapFile,
+           let chapterMapData = try? Foundation.Data(contentsOf: chapterMapFile) {
+            do {
+                self.chapterMap = try (JSONSerialization.jsonObject(with: chapterMapData, options: .allowFragments)) as? [String: [String]]
+            } catch _ {
+                self.chapterMap = [:]
+            }
+        } else {
             self.chapterMap = [:]
         }
-        
+
         self.loaded = true
     }
     
@@ -127,43 +134,44 @@ class Book: NSObject {
     //MARK: Path, item and relations in the tree
     func getAllPaths()->[String]{
         if self.allPaths == nil {
-            self.allPaths = self.index?.map({ (item) -> String in
-                return item["path"]!
-            });
+            self.allPaths = self.index?.compactMap({ $0["path"] }) ?? []
         }
-        return self.allPaths!;
+        return self.allPaths ?? []
     }
 
     func getKeyItems() ->[[String]]{
         return KEY_PATHS.map { (path) -> [String] in
-            let name = Book.shared.itemOfPath(path)["name"]
-            return [path,name as! String]
+            let name = Book.shared.itemOfPath(path)["name"] as? String ?? ""
+            return [path, name]
         }
     }
-    
+
     func itemOfPath(_ path:String ) -> [String:Any] {
-        if path == "" || path == "/" || path == (self.tree!["path"] as! String){
-            return self.tree!
+        guard let tree = self.tree else { return [:] }
+        let rootPath = tree["path"] as? String
+        if path.isEmpty || path == "/" || path == rootPath {
+            return tree
         }
-        var node = tree
+        var node: [String:Any]? = tree
         for id in path.components(separatedBy: "/") {
-            if(id == "" || node!["children"] == nil ){continue}
-            let children = node!["children"] as! NSArray as! [[String:Any]]
-            node = children.filter({
-                $0["id"] as! String == id
-            }).first
+            guard let current = node else { break }
+            if id.isEmpty { continue }
+            guard let children = current["children"] as? [[String:Any]] else { continue }
+            node = children.first(where: { ($0["id"] as? String) == id })
         }
-        return node!
+        return node ?? [:]
     }
-    
+
     func parentOfItem(_ item:[String:Any]) -> [String:Any]? {
-        var path = item["path"] as! String
-        if path == "" || path == "/" {
+        guard let path = item["path"] as? String else { return nil }
+        if path.isEmpty || path == "/" {
             return nil
-        } else {
-            path = (path as NSString).substring(to: path.lastIndexOf("/")!)
         }
-        return self.itemOfPath(path)
+        guard let lastSlash = path.lastIndexOf("/") else {
+            return self.itemOfPath("")
+        }
+        let parentPath = (path as NSString).substring(to: lastSlash)
+        return self.itemOfPath(parentPath)
     }
     
     func getYoungBrotherPath(_ path: String) -> String?{
@@ -197,19 +205,19 @@ class Book: NSObject {
         let parentFont = SutraTypographyManager.shared.uiFont(for: .indexItem, weight: .regular)
         let attrString = NSMutableAttributedString(
             string: prefix + parentTitle as String,
-            attributes: [NSAttributedStringKey.font: parentFont])
+            attributes: [NSAttributedString.Key.font: parentFont])
 
         // Divider "之" uses smaller caption style
         let dividerFont = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .regular)
         let attrString2 = NSMutableAttributedString(
             string: (parent == nil ? "" : " 之 "),
-            attributes: [NSAttributedStringKey.font: dividerFont])
+            attributes: [NSAttributedString.Key.font: dividerFont])
 
         // Title uses navigation title style but with lighter weight and more letter spacing for elegance
         let titleFont = SutraTypographyManager.shared.uiFont(for: .navigationTitle, weight: .regular)
         let attrString1 = NSMutableAttributedString(
             string: title as String,
-            attributes: [NSAttributedStringKey.font: titleFont, NSAttributedStringKey.kern: 2.0])
+            attributes: [NSAttributedString.Key.font: titleFont, NSAttributedString.Key.kern: 2.0])
 
         attrString.append(attrString2)
         attrString.append(attrString1)
@@ -229,14 +237,14 @@ class Book: NSObject {
 
         let attrString = NSMutableAttributedString(
             string: parentTitle as String,
-            attributes: [NSAttributedStringKey.font: font,
-                         NSAttributedStringKey.paragraphStyle : paragraphStyle])
+            attributes: [NSAttributedString.Key.font: font,
+                         NSAttributedString.Key.paragraphStyle : paragraphStyle])
 
         // Divider "之" uses caption style
         let dividerFont = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .regular)
         let attrString2 = NSMutableAttributedString(
             string: parent == nil ? "" : " 之",
-            attributes: [NSAttributedStringKey.font: dividerFont, NSAttributedStringKey.paragraphStyle : paragraphStyle])
+            attributes: [NSAttributedString.Key.font: dividerFont, NSAttributedString.Key.paragraphStyle : paragraphStyle])
 
         let paragraphStyle2 = NSMutableParagraphStyle()
         paragraphStyle2.alignment = .center
@@ -248,9 +256,9 @@ class Book: NSObject {
         let attrString1 = NSMutableAttributedString(
             string: titleText,
             attributes: [
-                NSAttributedStringKey.font: titleFont,
-                NSAttributedStringKey.paragraphStyle : paragraphStyle2,
-                NSAttributedStringKey.kern: 3.0 // 典雅宽绰的字间距
+                NSAttributedString.Key.font: titleFont,
+                NSAttributedString.Key.paragraphStyle : paragraphStyle2,
+                NSAttributedString.Key.kern: 3.0 // 典雅宽绰的字间距
             ])
 
         attrString.append(attrString2)
@@ -280,15 +288,15 @@ class Book: NSObject {
             
             let pText = parentTitle + " 之"
             let pAttr = NSMutableAttributedString(string: pText)
-            pAttr.addAttribute(NSAttributedStringKey.kern, value: 1.0, range: NSRange(location: 0, length: pAttr.length))
+            pAttr.addAttribute(NSAttributedString.Key.kern, value: 1.0, range: NSRange(location: 0, length: pAttr.length))
             
             // 将辅助介词“之”单独缩小及减淡颜色
             let zhiRange = (pText as NSString).range(of: " 之")
             if zhiRange.location != NSNotFound {
                 let zhiFont = SutraTypographyManager.shared.uiFont(for: .sutraCaption, weight: .light).withSize(10)
-                pAttr.addAttribute(NSAttributedStringKey.font, value: zhiFont, range: zhiRange)
+                pAttr.addAttribute(NSAttributedString.Key.font, value: zhiFont, range: zhiRange)
                 // 采用与主标题相同的主色，仅依靠字号大小差异来区分，保证绝对的可读性
-                pAttr.addAttribute(NSAttributedStringKey.foregroundColor, value: SutraDesignTokens.shared.color(for: .textPrimary), range: zhiRange)
+                pAttr.addAttribute(NSAttributedString.Key.foregroundColor, value: SutraDesignTokens.shared.color(for: .textPrimary), range: zhiRange)
             }
             
             parentLabel.attributedText = pAttr
@@ -313,7 +321,7 @@ class Book: NSObject {
         // 因此对于超过 6 个字的长标题，我们舍弃 kern，让系统完美执行文字缩小。
         if title.count <= 6 {
             let attr = NSMutableAttributedString(string: title)
-            attr.addAttribute(NSAttributedStringKey.kern, value: 3.0, range: NSRange(location: 0, length: attr.length))
+            attr.addAttribute(NSAttributedString.Key.kern, value: 3.0, range: NSRange(location: 0, length: attr.length))
             titleLabel.attributedText = attr
         } else {
             titleLabel.text = title
@@ -334,12 +342,12 @@ class Book: NSObject {
 
         let attrString = NSMutableAttributedString(
             string: name,
-            attributes: [NSAttributedStringKey.font: itemFont])
+            attributes: [NSAttributedString.Key.font: itemFont])
 
         let attrString2 = NSMutableAttributedString(
             string: chapterLabel,
-            attributes: [NSAttributedStringKey.font: noteFont,
-                         NSAttributedStringKey.foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary)])
+            attributes: [NSAttributedString.Key.font: noteFont,
+                         NSAttributedString.Key.foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary)])
 
         attrString.append(attrString2)
         return attrString
@@ -365,11 +373,11 @@ class Book: NSObject {
         pStyle.paragraphSpacing = 24          // 段落间重现古卷的留白呼吸
         pStyle.firstLineHeadIndent = font.pointSize * 2.0 // 精确的首行二字缩进
 
-        let pAttributes: [NSAttributedStringKey: Any] = [
-            NSAttributedStringKey.paragraphStyle: pStyle,
-            NSAttributedStringKey.font: font,
-            NSAttributedStringKey.foregroundColor: textColor,
-            NSAttributedStringKey.kern: 1.5   // 文字呼吸感
+        let pAttributes: [NSAttributedString.Key: Any] = [
+            NSAttributedString.Key.paragraphStyle: pStyle,
+            NSAttributedString.Key.font: font,
+            NSAttributedString.Key.foregroundColor: textColor,
+            NSAttributedString.Key.kern: 1.5   // 文字呼吸感
         ]
 
         return NSAttributedString(string: text, attributes:pAttributes)

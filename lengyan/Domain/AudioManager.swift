@@ -482,8 +482,8 @@ class AudioManager: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let session = AVAudioSession.sharedInstance()
-                try session.setCategory(AVAudioSessionCategoryPlayback, mode: AVAudioSessionModeDefault)
-                try session.setActive(true, with: .notifyOthersOnDeactivation)
+                try session.setCategory(AVAudioSession.Category.playback, mode: AVAudioSession.Mode.default)
+                try session.setActive(true, options: .notifyOthersOnDeactivation)
             } catch {
                 print("❌ Failed to setup audio session: \(error)")
             }

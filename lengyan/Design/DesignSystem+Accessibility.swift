@@ -37,7 +37,7 @@ public final class SutraAccessibilityManager {
     private func configureNavigation(for view: UIView, customLabel: String?) {
         view.accessibilityLabel = customLabel ?? NSLocalizedString("accessibility.navigation.default", comment: "Navigation")
         view.accessibilityHint = NSLocalizedString("accessibility.navigation.hint", comment: "Navigate to different sections")
-        view.accessibilityTraits = UIAccessibilityTraitButton
+        view.accessibilityTraits = .button
 
         if let button = view as? UIButton {
             button.accessibilityLabel = customLabel ?? button.currentTitle
@@ -48,21 +48,21 @@ public final class SutraAccessibilityManager {
         if let button = view as? UIButton {
             button.accessibilityLabel = customLabel ?? button.currentTitle
             button.accessibilityHint = NSLocalizedString("accessibility.button.hint", comment: "Double tap to activate")
-            button.accessibilityTraits = UIAccessibilityTraitButton
+            button.accessibilityTraits = .button
         }
     }
 
     // MARK: - Accessibility Announcements
     public func announce(_ message: String) {
-        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, message)
+        UIAccessibility.post(notification: .announcement, argument: message)
     }
 
     public func postLayoutChangedNotification() {
-        UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil)
+        UIAccessibility.post(notification: .layoutChanged, argument: nil)
     }
 
     public func postScreenChangedNotification() {
-        UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, nil)
+        UIAccessibility.post(notification: .screenChanged, argument: nil)
     }
 
     // MARK: - Accessibility State

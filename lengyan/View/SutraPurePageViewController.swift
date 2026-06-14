@@ -33,7 +33,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.dataSource = self;
         self.delegate = self;
 
-        self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
+        self.setViewControllers([getViewControllerAtPath(self.path!)] as [UIViewController], direction: UIPageViewController.NavigationDirection.forward, animated: false, completion: nil)
 
         setupNavigationItems()
         updateNavigationBarState()

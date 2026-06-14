@@ -73,7 +73,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.delegate = self;
 
         // STORYBOARD REMOVED: Using programmatic UI now
-        self.setViewControllers([getViewControllerAtIndex(index: page)] as [UIViewController], direction: UIPageViewControllerNavigationDirection.forward, animated: false, completion: nil)
+        self.setViewControllers([getViewControllerAtIndex(index: page)] as [UIViewController], direction: UIPageViewController.NavigationDirection.forward, animated: false, completion: nil)
 
         self.setTitle()
     }

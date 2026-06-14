@@ -277,7 +277,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         let content = Book.shared.contents?[path];
         if(content != nil){
             contents = content ?? []
-            self.tableView.rowHeight = UITableViewAutomaticDimension
+            self.tableView.rowHeight = UITableView.automaticDimension
         } else {
             meta = Book.shared.itemOfPath(path)
             // SAFE: Check if meta has children and cast safely
@@ -497,7 +497,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         if (indexPath as NSIndexPath).row == contents.count {
             return 100;
         }else{
-            return UITableViewAutomaticDimension;
+            return UITableView.automaticDimension;
         }
         
     }
@@ -519,8 +519,8 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     paragraphStyle.maximumLineHeight = 80.0
     paragraphStyle.minimumLineHeight = 10.0
     
-    let attributes = font == nil ? [NSAttributedStringKey.paragraphStyle: paragraphStyle]
-        :  [NSAttributedStringKey.font: font!, NSAttributedStringKey.paragraphStyle: paragraphStyle]
+    let attributes = font == nil ? [NSAttributedString.Key.paragraphStyle: paragraphStyle]
+        :  [NSAttributedString.Key.font: font!, NSAttributedString.Key.paragraphStyle: paragraphStyle]
         
    return NSAttributedString(string:text, attributes: attributes)
     

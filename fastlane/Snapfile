@@ -1,0 +1,47 @@
+# Snapfile — fastlane snapshot 配置
+# 文档: https://docs.fastlane.tools/actions/snapshot/
+
+# ────────────────────────────────────────────────────────
+# 设备列表（本地 Xcode 26 实际可用型号）
+#   iPhone 17 Pro Max   → 6.9" (必需规格)
+#   iPhone 17 Pro       → 6.3" (可选)
+#   iPad Pro 13-inch (M5) → 13" (iPad 必需规格)
+# ────────────────────────────────────────────────────────
+devices([
+  "iPhone 17 Pro Max",
+  "iPhone 17 Pro",
+  "iPad Pro 13-inch (M5)"
+])
+
+# ────────────────────────────────────────────────────────
+# 本地化（简体 + 繁体）
+# ────────────────────────────────────────────────────────
+languages([
+  "zh-Hans",
+  "zh-Hant"
+])
+
+# Scheme（必须包含 UITest target）
+scheme("lengyan")
+
+# 输出目录（与现有 screenshots/ 分离，避免污染）
+output_directory("./fastlane/screenshots")
+
+# 每次跑前清空输出
+clear_previous_screenshots(true)
+
+# iOS Simulator 版本（按本地 Xcode 安装的最新版）
+# 注：xcodebuild 精确匹配 OS 版本，本地模拟器是 26.1 / 26.3.1
+ios_version("26.1")
+
+# 只跑指定的截图测试（避免运行所有 UITest）
+only_testing("lengyanUITests/SutraSnapshotTests/testAppStoreScreenshots")
+
+# 重试次数（模拟器偶发启动失败时）
+number_of_retries(2)
+
+# 串行跑设备（避免 x86_64 Mac 多 destination 并行失败）
+concurrent_simulators(false)
+
+# 首次失败就停（更快诊断）
+stop_after_first_error(true)
