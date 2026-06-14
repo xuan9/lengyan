@@ -506,16 +506,17 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let cw = width - (cx * 2)
 
         // 🏛️ Sacred header - 含经题 + 开经偈 + 今日读经 + 卷章按钮 + 功能行
-        let titleTopPadding: CGFloat = rs(14)
-        let titleHeight: CGFloat = rs(28)
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let titleTopPadding: CGFloat = rs(isPad ? 20 : 14)
+        let titleHeight: CGFloat = rs(isPad ? 34 : 28)
         let titleLineGap: CGFloat = rs(4)
-        let verseHeight: CGFloat = rs(44)
-        let verseGap: CGFloat = rs(12)       // 开经偈上方呼吸空间
-        let buttonSectionTopGap: CGFloat = rs(10) // 开经偈到卷章按钮间距
-        let buttonHeight: CGFloat = max(44, rs(44))
-        let verticalSpacing: CGFloat = rs(4)
-        let toolRowPadding: CGFloat = rs(18)
-        let toolRowHeight: CGFloat = max(44, rs(44))
+        let verseHeight: CGFloat = rs(isPad ? 56 : 44)
+        let verseGap: CGFloat = rs(isPad ? 20 : 12)            // 开经偈上方呼吸空间
+        let buttonSectionTopGap: CGFloat = rs(isPad ? 22 : 10) // 开经偈到卷章按钮间距
+        let buttonHeight: CGFloat = isPad ? 64 : max(44, rs(44))
+        let verticalSpacing: CGFloat = rs(isPad ? 14 : 4)
+        let toolRowPadding: CGFloat = rs(isPad ? 26 : 18)
+        let toolRowHeight: CGFloat = isPad ? 56 : max(44, rs(44))
 
         let headerHeight = titleTopPadding + titleHeight + titleLineGap + verseGap + verseHeight + buttonSectionTopGap + buttonHeight * 2 + verticalSpacing + toolRowPadding + toolRowHeight
 
@@ -566,8 +567,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         var nextY = verseY + verseHeight + buttonSectionTopGap
 
         // 🏋️ 卷章按钮网格
-        let horizontalPadding: CGFloat = rs(20)
-        let buttonSpacing: CGFloat = rs(10)
+        let horizontalPadding: CGFloat = rs(isPad ? 24 : 20)
+        let buttonSpacing: CGFloat = rs(isPad ? 16 : 10)
         let totalSpacing = horizontalPadding * 2 + buttonSpacing * 4
         let chapterButtonWidth = (cw - totalSpacing) / 5
 
@@ -715,8 +716,9 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             SutraDesignTokens.shared.color(for: isCurrentChapter ? .textSecondary : .textPrimary),
             for: .normal
         )
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(
-            for: .buttonMedium,
+            for: isPad ? .buttonLarge : .buttonMedium,
             weight: isCurrentChapter ? .bold : .regular
         )
 
