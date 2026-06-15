@@ -34,9 +34,23 @@ class Book: NSObject {
 
     //init language based on system locale
     override init(){
+        // 优先响应 -AppleLanguages 启动参数（fastlane snapshot / UITest 通过 app.launchArguments 注入）
+        let launchArgs = ProcessInfo.processInfo.arguments
+        if let idx = launchArgs.firstIndex(of: "-AppleLanguages"), idx + 1 < launchArgs.count {
+            let lang = launchArgs[idx + 1].trimmingCharacters(in: CharacterSet(charactersIn: "(\"' "))
+            if lang.hasPrefix("zh-Hant") || lang.hasPrefix("zh-TW") || lang.hasPrefix("zh-HK") {
+                isSimplifiedChinese = false
+                return
+            }
+            if lang.hasPrefix("zh-Hans") || lang.hasPrefix("zh-CN") {
+                isSimplifiedChinese = true
+                return
+            }
+        }
+        // 兜底：系统首选语言
         for lan in NSLocale.preferredLanguages {
             if lan.hasPrefix("zh-") {
-                if lan.hasPrefix("zh-Hant"){
+                if lan.hasPrefix("zh-Hant") || lan.hasPrefix("zh-TW") || lan.hasPrefix("zh-HK") {
                     isSimplifiedChinese = false
                 }
                 break

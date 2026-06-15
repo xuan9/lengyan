@@ -17,7 +17,8 @@ class SutraSnapshotTests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         setupSnapshot(app)
-        app.launchArguments = ["--uitesting", "--snapshot-mode"]
+        // 注意：必须用 += 追加，不能覆盖（setupSnapshot 已设置 -AppleLanguages 等）
+        app.launchArguments += ["--uitesting", "--snapshot-mode"]
         app.launch()
     }
 

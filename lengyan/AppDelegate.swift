@@ -17,11 +17,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var window: UIWindow?
 
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // 强制 -AppleLanguages / -AppleLocale launch arguments 生效
+        // （iOS 8+ 后系统不再自动应用这些参数，必须主动写入 NSUserDefaults
+        //  否则 NSLocalizedString / Bundle.main.preferredLocalizations 不切换语言，
+        //  导致 fastlane snapshot / UITest 中 zh-Hant 等本地化测试失效）
+        applyLanguageLaunchArgumentsIfNeeded()
+
         // Load book data synchronously
         Book.shared.loadDataSyncWithCompletionHandler { () in
             print("Book data loaded on start")
         }
         return true
+    }
+
+    /// 读取 -AppleLanguages / -AppleLocale launch arguments，写入 NSUserDefaults，
+    /// 让 Bundle.main.preferredLocalizations / NSLocalizedString 在本次启动就生效。
+    private func applyLanguageLaunchArgumentsIfNeeded() {
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-AppleLanguages"), i + 1 < args.count {
+            let raw = args[i + 1].trimmingCharacters(in: CharacterSet(charactersIn: "()\"' "))
+            // 支持形如 (zh-Hant, en) 的列表，但 fastlane 通常只传单个
+            let langs = raw.split(separator: ",").map { $0.trimmingCharacters(in: CharacterSet(charactersIn: " \"'()")) }
+            UserDefaults.standard.set(langs, forKey: "AppleLanguages")
+        }
+        if let i = args.firstIndex(of: "-AppleLocale"), i + 1 < args.count {
+            let locale = args[i + 1].trimmingCharacters(in: CharacterSet(charactersIn: "\"' "))
+            UserDefaults.standard.set([locale], forKey: "AppleLocales")
+        }
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -95,7 +117,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let readingNavController = UINavigationController(rootViewController: sutraFrontVC)
         readingNavController.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 消除 push 转场白色闪现
         readingNavController.tabBarItem = UITabBarItem(
-            title: NSLocalizedString("reading_tab_title", comment: ""),
+            title: L10n.str("reading_tab_title"),
             image: UIImage(systemName: "book")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
             selectedImage: UIImage(systemName: "book.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
@@ -105,7 +127,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let audioHostingController = UIHostingController(rootView: modernAudioPlayer)
         let listeningNavController = UINavigationController(rootViewController: audioHostingController)
         listeningNavController.tabBarItem = UITabBarItem(
-            title: NSLocalizedString("media_tab_title", comment: ""),
+            title: L10n.str("media_tab_title"),
             image: UIImage(systemName: "headphones")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
             selectedImage: UIImage(systemName: "headphones.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
@@ -116,7 +138,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let favoritesHostingController = FavoritesHostingController(rootView: modernFavorites)
         let favoritesNavController = UINavigationController(rootViewController: favoritesHostingController)
         favoritesNavController.tabBarItem = UITabBarItem(
-            title: NSLocalizedString("star_tab_title", comment: ""),
+            title: L10n.str("star_tab_title"),
             image: UIImage(systemName: "heart")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
             selectedImage: UIImage(systemName: "heart.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )
@@ -127,7 +149,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let settingsHostingController = NavBarHostingController(rootView: settingsView, showsNavBar: false)
         let settingsNavController = UINavigationController(rootViewController: settingsHostingController)
         settingsNavController.tabBarItem = UITabBarItem(
-            title: NSLocalizedString("settings_tab_title", comment: ""),
+            title: L10n.str("settings_tab_title"),
             image: UIImage(systemName: "gearshape")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
             selectedImage: UIImage(systemName: "gearshape.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         )

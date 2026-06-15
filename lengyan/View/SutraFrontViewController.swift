@@ -547,7 +547,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let subTitle = UIButton.init(type: .custom)
         let verseY = titleLineY + verseGap
         subTitle.frame = CGRect(x: cx + rs(16), y: verseY, width: cw - rs(32), height: verseHeight)
-        let subTitleText = "无上甚深微妙法 百千万劫难遭遇\n我今见闻得受持 愿解如来真实义"
+        let subTitleText = L10n.str("kai_jing_ji")
         subTitle.setTitle(subTitleText, for: .normal)
         subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .light)
         subTitle.titleLabel?.numberOfLines = 2

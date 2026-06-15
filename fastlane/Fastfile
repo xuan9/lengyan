@@ -33,7 +33,8 @@ platform :ios do
   lane :screenshots do
     capture_screenshots(
       project: "lengyan.xcodeproj",
-      scheme: "lengyan"
+      scheme: "lengyan",
+      clean: true
     )
   end
 

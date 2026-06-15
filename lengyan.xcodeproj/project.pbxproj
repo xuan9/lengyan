@@ -45,6 +45,7 @@
 		133CABBC2364DDB700B61AC0 /* UIView+Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB792364D96900B61AC0 /* UIView+Common.swift */; };
 		133CABBD2364DDB700B61AC0 /* String+Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB9A2364D96900B61AC0 /* String+Common.swift */; };
 		133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB9B2364D96900B61AC0 /* Utils.swift */; };
+		A1B2C3D4E5F6000000000010 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* L10n.swift */; };
 		1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */; };
 		135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D605C1D16FA4A00029090 /* SutraPageViewController.swift */; };
 		135D60631D173B1B00029090 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60621D173B1B00029090 /* Book.swift */; };
@@ -183,6 +184,7 @@
 		133CAB992364D96900B61AC0 /* RATreeView_ClassExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RATreeView_ClassExtension.h; sourceTree = "<group>"; };
 		133CAB9A2364D96900B61AC0 /* String+Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Common.swift"; sourceTree = "<group>"; };
 		133CAB9B2364D96900B61AC0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000011 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewControllera.swift; sourceTree = "<group>"; tabWidth = 4; };
 		135D605C1D16FA4A00029090 /* SutraPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageViewController.swift; sourceTree = "<group>"; };
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
@@ -332,6 +334,7 @@
 				133CAB792364D96900B61AC0 /* UIView+Common.swift */,
 				133CAB9A2364D96900B61AC0 /* String+Common.swift */,
 				133CAB9B2364D96900B61AC0 /* Utils.swift */,
+				A1B2C3D4E5F6000000000011 /* L10n.swift */,
 				CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */,
 				CB1B4DEA8ED2555B51E3976F /* NavigationHelper.swift */,
 			);
@@ -778,6 +781,7 @@
 				133CABBC2364DDB700B61AC0 /* UIView+Common.swift in Sources */,
 				133CABBD2364DDB700B61AC0 /* String+Common.swift in Sources */,
 				133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */,
+				A1B2C3D4E5F6000000000010 /* L10n.swift in Sources */,
 				1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */,
 				1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */,
 				135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */,
