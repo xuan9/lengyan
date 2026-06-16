@@ -32,12 +32,23 @@ struct SharedVerseData: Codable {
               let array = try? JSONDecoder().decode([SharedVerseData].self, from: data) else {
             return nil
         }
-        
+
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let targetStr = formatter.string(from: date)
-        
+
         return array.first { $0.dateString == targetStr }
+    }
+
+    /// App Group 是否完全为空 — 区分「未授记」与「当日数据缺失」
+    /// 为空表示用户尚未打开过主App，Widget 应显示优雅空态而非伪数据
+    static var isEmpty: Bool {
+        guard let defaults = UserDefaults(suiteName: appGroupID),
+              let data = defaults.data(forKey: defaultsKey),
+              let array = try? JSONDecoder().decode([SharedVerseData].self, from: data) else {
+            return true
+        }
+        return array.isEmpty
     }
 
     /// 批量写入未来多天的经文到 App Group

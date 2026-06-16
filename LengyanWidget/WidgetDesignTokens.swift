@@ -71,11 +71,12 @@ enum WidgetTokens {
         }
     }
 
-    /// 提示文字色
+    /// 提示文字色 — WCAG AA ≥4.5:1
+    /// light: ~5.0:1  sepia: ~4.6:1（自 3.4:1 提升）  dark: ~5.4:1
     static var textTertiary: Color {
         switch currentTheme {
         case .light:  return Color(red: 126/255, green: 101/255, blue: 72/255)
-        case .sepia:  return Color(red: 139/255, green: 123/255, blue: 107/255)
+        case .sepia:  return Color(red: 118/255, green: 99/255, blue: 78/255)
         case .dark:   return Color(red: 154/255, green: 142/255, blue: 126/255)
         }
     }

@@ -3,13 +3,16 @@
 //  LengyanWidget
 //
 //  今日读经桌面小组件 — 可读经文 + 主题感知
-//  支持三种尺寸：
+//  支持三种尺寸 + 三种 Lock Screen/StandBy 配件：
 //    小：经文金句（≤20字）+ 出处
-//    中：经文段落 + 装饰线 + 出处
-//    大：完整经文段落（~300字）+ 出处 + "点击阅读" 提示
+//    中：经文段落 + 法卷金线 + 出处
+//    大：完整经文段落（~300字）+ 出处 + 「点击阅读」引导
+//    accessoryInline    — 锁屏顶部一行经句
+//    accessoryCircular  — 锁屏圆形「楞严」二字
+//    accessoryRectangular — 锁屏竖排经句卡片
 //
 //  数据源：主App通过 App Group UserDefaults 写入
-//  更新频率：每日凌晨刷新
+//  更新策略：每日凌晨刷新
 //
 
 import WidgetKit
@@ -25,25 +28,43 @@ struct DailyVerseEntry: TimelineEntry {
     let path: String
     let theme: String
     let isPlaceholder: Bool
+    /// 主App尚未授记过今日经文 — 显示优雅空态而非伪数据
+    let needsOnboarding: Bool
 
+    /// 首次占位：极简留白金句（首次添加 Widget 第一印象）
     static let placeholder = DailyVerseEntry(
         date: Date(),
-        text: "一切众生从无始来生死相续皆由不知常住真心性净明体",
-        fullText: "一切众生从无始来，生死相续，皆由不知常住真心性净明体，用诸妄想，此想不真，故有轮转。",
+        text: "常住真心 · 性净明体",
+        fullText: "一切众生从无始来，生死相续，皆由不知常住真心性净明体。",
         source: "卷一 · 七处征心",
         path: "",
         theme: "sepia",
-        isPlaceholder: true
+        isPlaceholder: true,
+        needsOnboarding: false
     )
 
+    /// 内置兜底：主App 已运行过但当日数据缺失时使用
     static let fallback = DailyVerseEntry(
         date: Date(),
-        text: "一切众生从无始来，生死相续，皆由不知常住真心性净明体",
+        text: "常住真心 · 性净明体",
         fullText: "一切众生从无始来，生死相续，皆由不知常住真心性净明体，用诸妄想，此想不真，故有轮转。",
         source: "卷一 · 七处征心",
         path: "/A2/B1/C2/D1/E2/F1/G1/H1/I1/J2",
         theme: "sepia",
-        isPlaceholder: false
+        isPlaceholder: false,
+        needsOnboarding: false
+    )
+
+    /// 优雅空态：用户尚未打开主App授记
+    static let onboarding = DailyVerseEntry(
+        date: Date(),
+        text: "",
+        fullText: "",
+        source: "",
+        path: "",
+        theme: "sepia",
+        isPlaceholder: false,
+        needsOnboarding: true
     )
 }
 
@@ -55,7 +76,7 @@ struct DailyVerseProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (DailyVerseEntry) -> Void) {
-        let entry = loadEntry(for: Date()) ?? .fallback
+        let entry = loadEntry(for: Date()) ?? .onboarding
         completion(entry)
     }
 
@@ -67,26 +88,30 @@ struct DailyVerseProvider: TimelineProvider {
         for offset in 0..<7 {
             guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { continue }
             let entryDate = offset == 0 ? today : calendar.startOfDay(for: date)
-            
+
             if let entry = loadEntry(for: date, entryDate: entryDate) {
                 entries.append(entry)
             } else if offset == 0 {
-                var fallbackEntry = DailyVerseEntry.fallback
-                fallbackEntry = DailyVerseEntry(
-                    date: entryDate,
-                    text: fallbackEntry.text,
-                    fullText: fallbackEntry.fullText,
-                    source: fallbackEntry.source,
-                    path: fallbackEntry.path,
-                    theme: fallbackEntry.theme,
-                    isPlaceholder: false
-                )
-                entries.append(fallbackEntry)
+                // 今日数据缺失：若 App Group 完全为空，显示空态引导；
+                // 否则用 fallback 经文保持 Widget 气质
+                let entry: DailyVerseEntry
+                if SharedVerseData.isEmpty {
+                    entry = DailyVerseEntry.onboarding.copyWith(date: entryDate)
+                } else {
+                    entry = DailyVerseEntry.fallback.copyWith(date: entryDate)
+                }
+                entries.append(entry)
             }
         }
 
-        // 下一次大更新：7天后，但 iOS 会在 App 被打开调用 reloadAllTimelines 时刷新
-        let nextUpdate = calendar.date(byAdding: .day, value: 7, to: today)!
+        // 次日凌晨刷新 — 「晨钟」意象必须日日更新
+        let nextUpdate: Date
+        if let tomorrow = calendar.date(byAdding: .day, value: 1, to: today),
+           let dawn = calendar.date(bySettingHour: 0, minute: 5, second: 0, of: tomorrow) {
+            nextUpdate = dawn
+        } else {
+            nextUpdate = calendar.date(byAdding: .hour, value: 6, to: today) ?? today
+        }
         let timeline = Timeline(entries: entries, policy: .after(nextUpdate))
         completion(timeline)
     }
@@ -102,7 +127,23 @@ struct DailyVerseProvider: TimelineProvider {
             source: data.source,
             path: data.path,
             theme: data.effectiveTheme,
-            isPlaceholder: false
+            isPlaceholder: false,
+            needsOnboarding: false
+        )
+    }
+}
+
+private extension DailyVerseEntry {
+    func copyWith(date: Date) -> DailyVerseEntry {
+        DailyVerseEntry(
+            date: date,
+            text: text,
+            fullText: fullText,
+            source: source,
+            path: path,
+            theme: theme,
+            isPlaceholder: isPlaceholder,
+            needsOnboarding: needsOnboarding
         )
     }
 }
@@ -116,34 +157,45 @@ struct SmallVerseView: View {
         ZStack {
             WidgetTokens.background
 
-            VStack(spacing: 4) {
-                Spacer(minLength: 2)
+            if entry.needsOnboarding {
+                EmptyStateView(compact: true)
+            } else {
+                // 「天头地脚」抄经纸版式 — 上下双金线包夹经文
+                VStack(spacing: 0) {
+                    Spacer(minLength: 20)
+                    heavenEarthLine
 
-                // 经文 — 尽量多放
-                Text(entry.text.replacingOccurrences(of: "\n", with: ""))
-                    .font(WidgetTokens.sutraFont(size: 14))
-                    .foregroundColor(WidgetTokens.sutraText)
-                    .lineSpacing(4)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(4)
-                    .minimumScaleFactor(0.8)
-                    .padding(.horizontal, 10)
+                    Spacer(minLength: 18)
 
-                Spacer(minLength: 2)
+                    Text(entry.smallText)
+                        .font(WidgetTokens.sutraFont(size: 16))
+                        .foregroundColor(WidgetTokens.sutraText)
+                        .lineSpacing(4)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(4)
+                        .minimumScaleFactor(0.85)
+                        .padding(.horizontal, 14)
 
-                // 来源
-                Text(entry.source)
-                    .font(WidgetTokens.bodyFont(size: 9, weight: .regular))
-                    .foregroundColor(WidgetTokens.textTertiary)
+                    Spacer(minLength: 18)
 
-                Spacer(minLength: 4)
+                    heavenEarthLine
+                    Spacer(minLength: 20)
+                }
             }
         }
-        .widgetURL(url)
+        .widgetURL(entry.url)
     }
 
-    private var url: URL? {
-        URL(string: "lengyan://verse?path=\(entry.path)")
+    /// 抄经纸天头/地脚金线 — 双段断线作「鱼尾」装饰
+    private var heavenEarthLine: some View {
+        HStack(spacing: 6) {
+            Rectangle()
+                .fill(WidgetTokens.decorativeGold.opacity(0.5))
+                .frame(width: 24, height: 0.5)
+            Rectangle()
+                .fill(WidgetTokens.decorativeGold.opacity(0.5))
+                .frame(width: 24, height: 0.5)
+        }
     }
 }
 
@@ -156,56 +208,62 @@ struct MediumVerseView: View {
         ZStack {
             WidgetTokens.background
 
-            VStack(alignment: .leading, spacing: 6) {
-                // 顶部标签
-                HStack(spacing: 4) {
-                    Text("✧")
-                        .font(.system(size: 8))
-                        .foregroundColor(WidgetTokens.decorativeGold.opacity(0.6))
-                    Text("今日读经")
-                        .font(WidgetTokens.bodyFont(size: 10, weight: .medium))
-                        .foregroundColor(WidgetTokens.textTertiary)
-                        .tracking(2)
-                    Spacer()
+            if entry.needsOnboarding {
+                EmptyStateView(compact: false)
+            } else {
+                VStack(alignment: .center, spacing: 0) {
+                    // 法卷题眉：对称居中（解决原版右侧留空的不平衡）
+                    HStack(spacing: 6) {
+                        Spacer(minLength: 0)
+                        lotusLine(width: 20)
+                        Text("今日读经")
+                            .font(WidgetTokens.bodyFont(size: 11, weight: .medium))
+                            .foregroundColor(WidgetTokens.textTertiary)
+                            .tracking(2)
+                        lotusLine(width: 20)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.top, 16)
+
+                    Spacer(minLength: 12)
+
+                    // 经文段落左对齐 — 符合佛经阅读节奏
+                    Text(entry.mediumText)
+                        .font(WidgetTokens.sutraFont(size: 17))
+                        .foregroundColor(WidgetTokens.sutraText)
+                        .lineSpacing(6)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(5)
+                        .minimumScaleFactor(0.85)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Spacer(minLength: 10)
+
+                    // 来源题款：对称居中，与题眉呼应
+                    if !entry.source.isEmpty {
+                        HStack(spacing: 8) {
+                            Spacer(minLength: 0)
+                            lotusLine(width: 22)
+                            Text(entry.source)
+                                .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
+                                .foregroundColor(WidgetTokens.textTertiary)
+                                .tracking(1)
+                            lotusLine(width: 22)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.bottom, 14)
+                    }
                 }
-                .padding(.top, 14)
-
-                // 经文段落 — 充分利用空间
-                Text(entry.text.replacingOccurrences(of: "\n", with: ""))
-                    .font(WidgetTokens.sutraFont(size: 15))
-                    .foregroundColor(WidgetTokens.sutraText)
-                    .lineSpacing(6)
-                    .lineLimit(5)
-                    .minimumScaleFactor(0.85)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Spacer(minLength: 2)
-
-                // 底部来源
-                HStack {
-                    Spacer()
-                    decorativeLine
-                    Text(entry.source)
-                        .font(WidgetTokens.bodyFont(size: 10, weight: .regular))
-                        .foregroundColor(WidgetTokens.textTertiary)
-                        .tracking(1)
-                    decorativeLine
-                }
-                .padding(.bottom, 12)
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 16)
         }
-        .widgetURL(url)
+        .widgetURL(entry.url)
     }
 
-    private var decorativeLine: some View {
+    private func lotusLine(width: CGFloat) -> some View {
         Rectangle()
-            .fill(WidgetTokens.decorativeGold.opacity(0.25))
-            .frame(width: 16, height: 0.5)
-    }
-
-    private var url: URL? {
-        URL(string: "lengyan://verse?path=\(entry.path)")
+            .fill(WidgetTokens.decorativeGold.opacity(0.4))
+            .frame(width: width, height: 0.5)
     }
 }
 
@@ -215,77 +273,302 @@ struct LargeVerseView: View {
     let entry: DailyVerseEntry
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .leading) {
             WidgetTokens.background
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 12)
+            if entry.needsOnboarding {
+                EmptyStateView(compact: false)
+            } else {
+                // 左侧 2pt 装裱金竖线 — 暗示展开的经卷
+                Rectangle()
+                    .fill(WidgetTokens.decorativeGold.opacity(0.55))
+                    .frame(width: 2)
+                    .padding(.vertical, 30)
 
-                // 顶部装饰
-                HStack(spacing: 6) {
-                    topLine
-                    Text("✧ 今日读经 ✧")
-                        .font(WidgetTokens.bodyFont(size: 11, weight: .medium))
-                        .foregroundColor(WidgetTokens.textTertiary)
-                        .tracking(3)
-                    topLine
+                // 主内容
+                VStack(spacing: 0) {
+                    Spacer(minLength: 20)
+
+                    // 法卷题眉
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
+                        lotusLine(width: 30)
+                        Text("今日读经")
+                            .font(WidgetTokens.bodyFont(size: 12, weight: .medium))
+                            .foregroundColor(WidgetTokens.textTertiary)
+                            .tracking(3)
+                        lotusLine(width: 30)
+                        Spacer(minLength: 0)
+                    }
+
+                    Spacer(minLength: 18)
+
+                    // 经文正文 — 首句破题 + 余下段落
+                    sutraBody
+                        .padding(.horizontal, 4)
+
+                    Spacer(minLength: 16)
+
+                    // 来源题款 — 纯净金线包夹
+                    if !entry.source.isEmpty {
+                        HStack(spacing: 8) {
+                            Spacer(minLength: 0)
+                            lotusLine(width: 22)
+                            Text(entry.source)
+                                .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
+                                .foregroundColor(WidgetTokens.textTertiary)
+                                .tracking(1.5)
+                            lotusLine(width: 22)
+                            Spacer(minLength: 0)
+                        }
+                    }
+
+                    Spacer(minLength: 18)
                 }
-
-                Spacer(minLength: 10)
-
-                // 经文正文 — 最大化空间利用
-                Text(entry.fullText.replacingOccurrences(of: "\n", with: ""))
-                    .font(WidgetTokens.sutraFont(size: 15))
-                    .foregroundColor(WidgetTokens.sutraText)
-                    .lineSpacing(6)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(14)
-                    .minimumScaleFactor(0.7)
-                    .padding(.horizontal, 16)
-
-                Spacer(minLength: 8)
-
-                // 来源标注
-                HStack(spacing: 6) {
-                    bottomLine
-                    Text("── \(entry.source) ──")
-                        .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
-                        .foregroundColor(WidgetTokens.textTertiary)
-                        .tracking(1.5)
-                    bottomLine
-                }
-
-                Spacer(minLength: 8)
-
-                // 底部引导
-                HStack {
-                    Spacer()
-                    Text("点击阅读全文 →")
-                        .font(WidgetTokens.bodyFont(size: 11, weight: .medium))
-                        .foregroundColor(WidgetTokens.decorativeGold.opacity(0.7))
-                    Spacer()
-                }
-
-                Spacer(minLength: 10)
+                .padding(.leading, 14)
+                .padding(.trailing, 18)
             }
         }
-        .widgetURL(url)
+        .widgetURL(entry.url)
     }
 
-    private var topLine: some View {
+    /// 经文正文：首句金句「破题」+ 余下正文 — 经卷版式的灵魂
+    @ViewBuilder
+    private var sutraBody: some View {
+        let raw = entry.fullText.isEmpty ? entry.text : entry.fullText.normalized
+        if let heading = headingFrom(raw) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(heading)
+                    .font(WidgetTokens.sutraFont(size: 19))
+                    .foregroundColor(WidgetTokens.sutraText)
+                    .lineSpacing(4)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                let remainder = remainderFrom(raw, heading: heading)
+                if !remainder.isEmpty {
+                    Text(remainder)
+                        .font(WidgetTokens.sutraFont(size: 15))
+                        .foregroundColor(WidgetTokens.sutraText)
+                        .lineSpacing(6)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(12)
+                        .minimumScaleFactor(0.85)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        } else {
+            // 首句过长时，全文 15pt 统一字号
+            Text(raw)
+                .font(WidgetTokens.sutraFont(size: 15))
+                .foregroundColor(WidgetTokens.sutraText)
+                .lineSpacing(6)
+                .multilineTextAlignment(.leading)
+                .lineLimit(12)
+                .minimumScaleFactor(0.85)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// 取首句作「破题」金句 — 按「，」「。」「；」切分，长度 4-14 字为佳
+    private func headingFrom(_ text: String) -> String? {
+        let first = text.components(separatedBy: CharacterSet(charactersIn: "，。；"))
+            .first?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let count = first.count
+        return (count >= 4 && count <= 14) ? first : nil
+    }
+
+    /// 取破题之后的剩余文本
+    private func remainderFrom(_ text: String, heading: String) -> String {
+        guard let range = text.range(of: heading) else { return text }
+        let after = text[range.upperBound...]
+        let trimmed = after.drop(while: { "，。；".contains($0) })
+        return String(trimmed)
+    }
+
+    private func lotusLine(width: CGFloat) -> some View {
         Rectangle()
-            .fill(WidgetTokens.decorativeGold.opacity(0.25))
-            .frame(width: 30, height: 0.5)
+            .fill(WidgetTokens.decorativeGold.opacity(0.4))
+            .frame(width: width, height: 0.5)
+    }
+}
+
+// MARK: - Lock Screen / StandBy Accessories
+
+/// 锁屏顶部一行经句 — StandBy 横屏床头如案头经卷
+struct InlineVerseView: View {
+    let entry: DailyVerseEntry
+
+    var body: some View {
+        if entry.needsOnboarding {
+            Text("楞严 · 待启卷")
+        } else {
+            Text(entry.inlineText)
+        }
+    }
+}
+
+/// 锁屏圆形 — 「楞严」二字法印
+struct CircularVerseView: View {
+    let entry: DailyVerseEntry
+
+    var body: some View {
+        ZStack {
+            if entry.needsOnboarding {
+                VStack(spacing: 2) {
+                    Text("楞").font(WidgetTokens.sutraFont(size: 22))
+                    Text("严").font(WidgetTokens.sutraFont(size: 22))
+                }
+                .minimumScaleFactor(0.7)
+            } else {
+                VStack(spacing: 1) {
+                    Text("楞")
+                        .font(WidgetTokens.sutraFont(size: 22))
+                        .foregroundColor(.white)
+                    Text("严")
+                        .font(WidgetTokens.sutraFont(size: 22))
+                        .foregroundColor(.white)
+                }
+                .minimumScaleFactor(0.7)
+                .widgetLabel(entry.sourceShort)
+            }
+        }
+    }
+}
+
+/// 锁屏竖排卡片 — 一句经文 + 出处
+struct RectangularVerseView: View {
+    let entry: DailyVerseEntry
+
+    var body: some View {
+        if entry.needsOnboarding {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("楞严经")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("请先打开主App启卷")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(entry.inlineText)
+                    .font(WidgetTokens.sutraFont(size: 13))
+                    .foregroundColor(.primary)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.85)
+                Spacer(minLength: 0)
+                Text(entry.source)
+                    .font(.system(size: 10, weight: .regular))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+        }
+    }
+}
+
+// MARK: - Empty State (优雅空态)
+
+private struct EmptyStateView: View {
+    let compact: Bool
+
+    var body: some View {
+        VStack(spacing: compact ? 6 : 10) {
+            Spacer()
+            Text("楞")
+                .font(WidgetTokens.sutraFont(size: compact ? 28 : 36))
+                .foregroundColor(WidgetTokens.decorativeGold.opacity(0.6))
+            Text("请先打开楞严一次")
+                .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
+                .foregroundColor(WidgetTokens.textTertiary)
+                .tracking(1)
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Entry Helpers
+
+private extension DailyVerseEntry {
+    /// 去除换行，便于行内显示
+    var normalizedText: String {
+        text.replacingOccurrences(of: "\n", with: "")
     }
 
-    private var bottomLine: some View {
-        Rectangle()
-            .fill(WidgetTokens.decorativeGold.opacity(0.2))
-            .frame(width: 20, height: 0.5)
+    /// 完整段落（去换行后），优先 fullText
+    var fullBodyText: String {
+        (fullText.isEmpty ? text : fullText).normalized
     }
 
-    private var url: URL? {
-        URL(string: "lengyan://verse?path=\(entry.path)")
+    /// Small 专用：首句金句，目标 ≤22 字
+    /// 取完整首句（按「，。；」切分），超长则截断加 …
+    var smallText: String {
+        let src = fullBodyText
+        let firstClause = src.components(separatedBy: CharacterSet(charactersIn: "，。；；！？"))
+            .first?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? src
+        if firstClause.count <= 22 { return firstClause }
+        // 首句过长：硬截断到 20 字 + …
+        let end = firstClause.index(firstClause.startIndex, offsetBy: 20, limitedBy: firstClause.endIndex) ?? firstClause.endIndex
+        return String(firstClause[..<end]) + "…"
+    }
+
+    /// Medium 专用：~80 字完整段落
+    /// 按句号切分，累计 ≤78 字；不够则硬截断
+    var mediumText: String {
+        let src = fullBodyText
+        if src.count <= 80 { return src }
+        // 按完整句子（。；！？）累计
+        var result = ""
+        let chars = Array(src)
+        var buffer = ""
+        for ch in chars {
+            buffer.append(ch)
+            if "。；！？".contains(ch) {
+                if (result + buffer).count <= 80 {
+                    result += buffer
+                    buffer = ""
+                } else {
+                    break
+                }
+            }
+        }
+        if result.isEmpty {
+            // 无合适句号切分点，硬截断
+            let end = src.index(src.startIndex, offsetBy: 78, limitedBy: src.endIndex) ?? src.endIndex
+            return String(src[..<end]) + "…"
+        }
+        return result
+    }
+
+    /// inline/rectangular 用短文本，避免锁屏截断
+    var inlineText: String {
+        let trimmed = normalizedText
+        if trimmed.count <= 24 { return trimmed }
+        let end = trimmed.index(trimmed.startIndex, offsetBy: 24, limitedBy: trimmed.endIndex) ?? trimmed.endIndex
+        return String(trimmed[..<end]) + "…"
+    }
+
+    var sourceShort: String {
+        // "卷一 · 七处征心" → "卷一"
+        if let idx = source.range(of: " · ") {
+            return String(source[..<idx.lowerBound])
+        }
+        return source
+    }
+
+    var url: URL? {
+        guard !path.isEmpty else { return nil }
+        return URL(string: "lengyan://verse?path=\(path)")
+    }
+}
+
+private extension String {
+    /// 规范化：去换行、合并空白
+    var normalized: String {
+        replacingOccurrences(of: "\n", with: "")
+            .replacingOccurrences(of: "  ", with: " ")
+            .trimmingCharacters(in: .whitespaces)
     }
 }
 
@@ -307,7 +590,10 @@ struct DailyVerseWidget: Widget {
         }
         .configurationDisplayName("今日读经")
         .description("每天一句楞严经文金句，如晨钟暮鼓。")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([
+            .systemSmall, .systemMedium, .systemLarge,
+            .accessoryInline, .accessoryCircular, .accessoryRectangular
+        ])
         .disableContentMarginsIfNeeded()
     }
 }
@@ -327,6 +613,12 @@ struct WidgetEntryView: View {
                 MediumVerseView(entry: entry)
             case .systemLarge:
                 LargeVerseView(entry: entry)
+            case .accessoryInline:
+                InlineVerseView(entry: entry)
+            case .accessoryCircular:
+                CircularVerseView(entry: entry)
+            case .accessoryRectangular:
+                RectangularVerseView(entry: entry)
             default:
                 MediumVerseView(entry: entry)
             }
@@ -351,12 +643,30 @@ struct DailyVerseWidget_Previews: PreviewProvider {
             LargeVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
                 .previewDisplayName("大尺寸")
+
+            InlineVerseView(entry: .placeholder)
+                .previewContext(WidgetPreviewContext(family: .accessoryInline))
+                .previewDisplayName("锁屏·行内")
+
+            CircularVerseView(entry: .placeholder)
+                .previewContext(WidgetPreviewContext(family: .accessoryCircular))
+                .previewDisplayName("锁屏·圆形")
+
+            RectangularVerseView(entry: .placeholder)
+                .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
+                .previewDisplayName("锁屏·卡片")
+
+            // 空态预览
+            SmallVerseView(entry: .onboarding)
+                .previewContext(WidgetPreviewContext(family: .systemSmall))
+                .previewDisplayName("空态·小")
         }
     }
 }
 #endif
 
 // MARK: - WidgetConfiguration Helper
+
 extension WidgetConfiguration {
     func disableContentMarginsIfNeeded() -> some WidgetConfiguration {
         #if compiler(>=5.9)
