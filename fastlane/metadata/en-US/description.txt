@@ -1,0 +1,28 @@
+[Simplicity, resonance, and invisible technology.]
+
+"LengYan" (The Shurangama Sutra) is a premier iOS native application designed for deep scripture reading and Zen meditation. We reject the clutter and noise of modern apps—no accounts, no remote server pushes (only optional local study reminders), and no tracking. We present to you a serene, digital "Xuan Paper" to cultivate your mind.
+
+[Key Design Features]
+
+🎋 Traditional Typography & Aesthetics
+Specially tuned spacing, line heights, and margins optimize Chinese character readability. Designed to resemble ancient scriptures, the layout offers a breathable and peaceful reading interface.
+
+🧬 Structured Hierarchy (Sectional Outlines)
+Navigate easily using the traditional structured keti (outlines). Instantly grasp the logical flow of the entire scripture from macro themes down to specific paragraphs.
+
+🎧 Professional Scripture Audio
+Built-in sentence-synced narration engine with background playback and sleep timer. Let the Dharma flow during your commute, chores, or meditation—listen anywhere, anytime.
+
+🔍 Full-Text Search & Character Tracing
+Cross-volume full-text search with single-character refinement guidance. Trace every word back to its source and pinpoint exactly what your heart seeks in the sea of sutras.
+
+🌅 Widgets & Lock Screen Accessories
+Daily-verse home screen widget, lock screen inline sutra line, circular "楞嚴" glyph, and vertical sutra card—place the Dharma joy wherever your eyes rest.
+
+🕊️ 100% Privacy & Local-first
+No analytics, no ads, and no tracking SDKs. Your bookmarks and reading states remain strictly in your local sandbox.
+
+🎨 Zen Cards for Sharing
+Render any inspiring passage into an elegant, calligraphic picture card in one click to share the dharma joy.
+
+Wishing you peace and wisdom on your spiritual journey.

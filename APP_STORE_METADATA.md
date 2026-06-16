@@ -7,13 +7,15 @@
 ## 1. 核心属性 (Core Metadata)
 
 ### 🏷️ 应用名称 (App Name)
-- **中文（简体/繁体）**：`楞嚴` 或 `楞嚴 - 禪意純淨經文閱讀`
+- **简体中文 (zh-Hans)**：`楞严` 或 `楞严 - 禅意纯净经文阅读`
+- **繁体中文 (zh-Hant)**：`楞嚴` 或 `楞嚴 - 禪意純淨經文閱讀`
 - **English**：`LengYan - Zen Scripture Reader`
 - *注：建议使用简体/繁体各建本地化，中文名称尽量简练，以凸显端庄。*
 
 ### ✍️ 副标题 (Subtitle)
 - **限30个字符，重点传达应用的核心调性。**
-- **中文**：`無縫長卷，科判法脈` 或 `極简古籍排版与禪意閱讀`
+- **简体中文 (zh-Hans)**：`无缝长卷，科判法脉` 或 `极简古籍排版与禅意阅读`
+- **繁体中文 (zh-Hant)**：`無縫長卷，科判法脈` 或 `極簡古籍排版與禪意閱讀`
 - **English**：`Distraction-Free Zen Reader`
 
 ### 📢 宣传文本 (Promotional Text)
@@ -33,7 +35,7 @@
 
 《楞嚴經》——大乘佛教之精髓，破妄显真之大慧。
 
-《楞严》是一款专为经文阅读与禅修设计的 iOS 原生应用。我们摒弃了所有现代应用的浮躁与嘈杂，不推特，不收集隐私，以苹果级的极简主义与禅宗设计哲学，为您在屏幕中铺开一张安宁的“古籍宣纸”。
+《楞严》是一款专为经文阅读与禅修设计的 iOS 原生应用。我们摒弃了所有现代应用的浮躁与嘈杂，不进行网络推送（仅支持可选的本地每日读经提醒），不收集隐私，以苹果级的极简主义与禅宗设计哲学，为您在屏幕中铺开一张安宁的“古籍宣纸”。
 
 【核心设计特征】
 
@@ -57,7 +59,7 @@
 ```
 【Simplicity, resonance, and invisible technology.】
 
-"LengYan" (The Shurangama Sutra) is a premier iOS native application designed for deep scripture reading and Zen meditation. We reject the clutter and noise of modern apps—no accounts, no notifications, and no tracking. We present to you a serene, digital "Xuan Paper" to cultivate your mind.
+"LengYan" (The Shurangama Sutra) is a premier iOS native application designed for deep scripture reading and Zen meditation. We reject the clutter and noise of modern apps—no accounts, no remote server pushes (only optional local study reminders), and no tracking. We present to you a serene, digital "Xuan Paper" to cultivate your mind.
 
 【Key Design Features】
 
@@ -90,10 +92,49 @@ Wishing you peace and wisdom on your spiritual journey.
 
 ## 4. 新版本说明 (What's New in This Version)
 
-*用于 v1.0.0 首次发布的描述。*
+*用于 v1.2（build 11）的更新描述。与 `fastlane/metadata/{zh-Hans,zh-Hant,en-US}/release_notes.txt` 保持一致。*
 
-- **中文**：`1.0.0 首次发布。提供纯净的宣纸排版经文阅读、科判导读、音频播放与一键禅意卡片分享。`
-- **English**：`1.0.0 initial release. Featuring elegant traditional layout, outline navigation, audio player, and zen card sharing.`
+### 中文（简体）
+```
+1.2 版本更新：
+
+• 听经体验全面升级——逐句同步朗读、后台播放与睡眠定时，耳根圆通，随听随入
+• 全文检索新增单字精炼引导，一词一字皆可追本溯源
+• 新增桌面小组件与锁屏配件：每日金句、圆形「楞严」、竖排经句卡片
+• 桌面组件对比度优化，符合无障碍最高标准，夜间阅读更柔润
+• iPad 适配精修，首页放大章节按钮与功能行，呼吸空间更舒展
+• 多项稳定性与细节打磨
+
+愿这一版能为您的修行带来更多安宁。
+```
+
+### 中文（繁體）
+```
+1.2 版本更新：
+
+• 聽經體驗全面升級——逐句同步朗讀、背景播放與睡眠定時，耳根圓通，隨聽隨入
+• 全文檢索新增單字精鍊引導，一詞一字皆可追本溯源
+• 新增桌面小元件與鎖屏配件：每日金句、圓形「楞嚴」、直排經句卡片
+• 桌面元件對比度優化，符合無障礙最高標準，夜間閱讀更柔潤
+• iPad 適配精修，首頁放大章節按鈕與功能列，呼吸空間更舒展
+• 多項穩定性與細節打磨
+
+願這一版能為您的修行帶來更多安寧。
+```
+
+### English
+```
+What's New in 1.2:
+
+• Listening experience upgraded — sentence-synced narration, background playback, and sleep timer
+• Full-text search now with single-character refinement for tracing every word to its source
+• New home screen widgets and lock screen accessories: daily verse, circular glyph, vertical sutra card
+• Widget contrast improved to meet the highest accessibility standards; gentler on the eyes at night
+• iPad layout refined — larger chapter buttons and more breathing room on the home screen
+• Numerous stability and polish improvements
+
+May this update bring more peace to your practice.
+```
 
 ---
 
