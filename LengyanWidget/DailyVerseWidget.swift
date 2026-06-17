@@ -246,22 +246,13 @@ struct MediumVerseView: View {
                 EmptyStateView(compact: false)
             } else {
                 VStack(alignment: .center, spacing: 0) {
-                    // 古意印章题眉 — 「楞嚴」二字，与 Large 同源
-                    Text("楞嚴")
-                        .font(WidgetTokens.sutraFont(size: 12))
-                        .foregroundColor(WidgetTokens.textTertiary)
-                        .tracking(8)
-                        .padding(.top, 18)
-
-                    Spacer(minLength: 14)
-
-                    // 经文段落左对齐 — 动态字号，填满优先
+                    // 经文段落左对齐 — 无题眉，经文占满（顶部对齐，空白落底）
                     let sutra = entry.mediumText
-                    // 可用宽 324pt（364-20×2）、高 ~108pt（170-题眉44-上下spacer）
+                    // 可用宽 324pt（364-20×2）、高 ~140pt（无题眉，垂直留白更舒展）
                     let size = dynamicFontSize(
                         charCount: sutra.count,
                         availableWidth: 324,
-                        availableHeight: 108,
+                        availableHeight: 140,
                         lineSpacing: 6,
                         minSize: 16,
                         maxSize: 22
@@ -272,8 +263,9 @@ struct MediumVerseView: View {
                         .lineSpacing(6)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 18)
 
-                    Spacer(minLength: 18)
+                    Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 20)
             }
@@ -294,23 +286,33 @@ struct LargeVerseView: View {
             if entry.needsOnboarding {
                 EmptyStateView(compact: false)
             } else {
-                // 主内容 — 顶部对齐：印章题眉固定顶部，正文紧随，剩余空白落底部
-                // 短/长经文标题位置都一致，不漂浮
+                // 主内容 — 顶部题眉 + 正文 + 底部卷名页脚（细发丝线分隔）
                 VStack(alignment: .center, spacing: 0) {
-                    // 题眉区（固定顶部留白 + 印章 + 固定间距）
-                    Text("楞嚴")
+                    // 经卷题眉 — 全名「大佛顶首楞嚴經」，庄重不单薄
+                    Text("大佛顶首楞嚴經")
                         .font(WidgetTokens.sutraFont(size: 13))
                         .foregroundColor(WidgetTokens.textTertiary)
-                        .tracking(8)
-                        .padding(.top, 20)
-                        .padding(.bottom, 20)
+                        .tracking(3)
+                        .padding(.top, 18)
+                        .padding(.bottom, 18)
 
                     // 经文正文 — 左对齐，紧随题眉
                     sutraBody
                         .padding(.horizontal, 4)
 
-                    // 所有剩余空间统一落到底部，不分散
-                    Spacer(minLength: 0)
+                    Spacer(minLength: 12)
+
+                    // 卷名页脚 — 细发丝线 + 极淡小字，提供每日定位感
+                    if !entry.source.isEmpty {
+                        VStack(spacing: 8) {
+                            hairlineDivider
+                            Text(entry.source)
+                                .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
+                                .foregroundColor(WidgetTokens.textTertiary)
+                                .tracking(1)
+                        }
+                        .padding(.bottom, 16)
+                    }
                 }
                 .padding(.leading, 18)
                 .padding(.trailing, 18)
@@ -319,19 +321,27 @@ struct LargeVerseView: View {
         .widgetURL(entry.url)
     }
 
+    /// 卷名页脚上方的细发丝线 — 克制装饰，不抢经文
+    private var hairlineDivider: some View {
+        Rectangle()
+            .fill(WidgetTokens.textTertiary.opacity(0.3))
+            .frame(width: 28, height: 0.5)
+    }
+
     /// 经文正文：统一字号线性连贯 — 不再把首句当「破题」标题，
     /// 否则会把「阿难，…」一句完整的话砍成标题+正文两截，割裂阅读。
     /// 动态字号：按字数填满可用空间，短经文放大、长经文回落，不跌破 15pt。
     @ViewBuilder
     private var sutraBody: some View {
         let raw = entry.fullText.isEmpty ? entry.text : entry.fullText.normalized
-        // 可用宽 320pt、高 ~340pt（题眉极小，经文占满主体）；层级最高 15-26pt
+        // 可用宽 320pt、高 ~290pt（题眉 + 卷名页脚已扣除）；层级最高 14-26pt
+        // 底线 14pt：300 字极限经文仍可容下（容量 308），保证不溢出
         let size = dynamicFontSize(
             charCount: raw.count,
             availableWidth: 320,
-            availableHeight: 340,
+            availableHeight: 290,
             lineSpacing: 6,
-            minSize: 15,
+            minSize: 14,
             maxSize: 26
         )
         Text(raw)
