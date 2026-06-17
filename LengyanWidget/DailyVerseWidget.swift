@@ -160,12 +160,9 @@ struct SmallVerseView: View {
             if entry.needsOnboarding {
                 EmptyStateView(compact: true)
             } else {
-                // 「天头地脚」抄经纸版式 — 上下双金线包夹经文
+                // 极简版式 — 经文居中，去金线点缀，留白即为装裱
                 VStack(spacing: 0) {
-                    Spacer(minLength: 20)
-                    heavenEarthLine
-
-                    Spacer(minLength: 18)
+                    Spacer(minLength: 24)
 
                     Text(entry.smallText)
                         .font(WidgetTokens.sutraFont(size: 16))
@@ -176,26 +173,11 @@ struct SmallVerseView: View {
                         .minimumScaleFactor(0.85)
                         .padding(.horizontal, 14)
 
-                    Spacer(minLength: 18)
-
-                    heavenEarthLine
-                    Spacer(minLength: 20)
+                    Spacer(minLength: 24)
                 }
             }
         }
         .widgetURL(entry.url)
-    }
-
-    /// 抄经纸天头/地脚金线 — 双段断线作「鱼尾」装饰
-    private var heavenEarthLine: some View {
-        HStack(spacing: 6) {
-            Rectangle()
-                .fill(WidgetTokens.decorativeGold.opacity(0.5))
-                .frame(width: 24, height: 0.5)
-            Rectangle()
-                .fill(WidgetTokens.decorativeGold.opacity(0.5))
-                .frame(width: 24, height: 0.5)
-        }
     }
 }
 
@@ -212,20 +194,14 @@ struct MediumVerseView: View {
                 EmptyStateView(compact: false)
             } else {
                 VStack(alignment: .center, spacing: 0) {
-                    // 法卷题眉：对称居中（解决原版右侧留空的不平衡）
-                    HStack(spacing: 6) {
-                        Spacer(minLength: 0)
-                        lotusLine(width: 20)
-                        Text("今日读经")
-                            .font(WidgetTokens.bodyFont(size: 11, weight: .medium))
-                            .foregroundColor(WidgetTokens.textTertiary)
-                            .tracking(2)
-                        lotusLine(width: 20)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.top, 16)
+                    // 古意印章题眉 — 「楞嚴」二字，与 Large 同源
+                    Text("楞嚴")
+                        .font(WidgetTokens.sutraFont(size: 12))
+                        .foregroundColor(WidgetTokens.textTertiary)
+                        .tracking(8)
+                        .padding(.top, 18)
 
-                    Spacer(minLength: 12)
+                    Spacer(minLength: 14)
 
                     // 经文段落左对齐 — 符合佛经阅读节奏
                     Text(entry.mediumText)
@@ -237,33 +213,12 @@ struct MediumVerseView: View {
                         .minimumScaleFactor(0.85)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Spacer(minLength: 10)
-
-                    // 来源题款：对称居中，与题眉呼应
-                    if !entry.source.isEmpty {
-                        HStack(spacing: 8) {
-                            Spacer(minLength: 0)
-                            lotusLine(width: 22)
-                            Text(entry.source)
-                                .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
-                                .foregroundColor(WidgetTokens.textTertiary)
-                                .tracking(1)
-                            lotusLine(width: 22)
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.bottom, 14)
-                    }
+                    Spacer(minLength: 18)
                 }
                 .padding(.horizontal, 20)
             }
         }
         .widgetURL(entry.url)
-    }
-
-    private func lotusLine(width: CGFloat) -> some View {
-        Rectangle()
-            .fill(WidgetTokens.decorativeGold.opacity(0.4))
-            .frame(width: width, height: 0.5)
     }
 }
 
@@ -279,27 +234,15 @@ struct LargeVerseView: View {
             if entry.needsOnboarding {
                 EmptyStateView(compact: false)
             } else {
-                // 左侧 2pt 装裱金竖线 — 暗示展开的经卷
-                Rectangle()
-                    .fill(WidgetTokens.decorativeGold.opacity(0.55))
-                    .frame(width: 2)
-                    .padding(.vertical, 30)
-
-                // 主内容
+                // 主内容 — 极简经卷：印章题眉 + 经文，无金线点缀，让经文自己说话
                 VStack(spacing: 0) {
                     Spacer(minLength: 20)
 
-                    // 法卷题眉
-                    HStack(spacing: 8) {
-                        Spacer(minLength: 0)
-                        lotusLine(width: 30)
-                        Text("今日读经")
-                            .font(WidgetTokens.bodyFont(size: 12, weight: .medium))
-                            .foregroundColor(WidgetTokens.textTertiary)
-                            .tracking(3)
-                        lotusLine(width: 30)
-                        Spacer(minLength: 0)
-                    }
+                    // 古意印章题眉 — 「楞嚴」二字，如经卷扉页题签
+                    Text("楞嚴")
+                        .font(WidgetTokens.sutraFont(size: 13))
+                        .foregroundColor(WidgetTokens.textTertiary)
+                        .tracking(8)
 
                     Spacer(minLength: 18)
 
@@ -307,25 +250,9 @@ struct LargeVerseView: View {
                     sutraBody
                         .padding(.horizontal, 4)
 
-                    Spacer(minLength: 16)
-
-                    // 来源题款 — 纯净金线包夹
-                    if !entry.source.isEmpty {
-                        HStack(spacing: 8) {
-                            Spacer(minLength: 0)
-                            lotusLine(width: 22)
-                            Text(entry.source)
-                                .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
-                                .foregroundColor(WidgetTokens.textTertiary)
-                                .tracking(1.5)
-                            lotusLine(width: 22)
-                            Spacer(minLength: 0)
-                        }
-                    }
-
                     Spacer(minLength: 18)
                 }
-                .padding(.leading, 14)
+                .padding(.leading, 18)
                 .padding(.trailing, 18)
             }
         }
