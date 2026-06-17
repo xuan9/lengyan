@@ -209,14 +209,14 @@ struct SmallVerseView: View {
                     Spacer(minLength: 22)
 
                     let sutra = entry.smallText
-                    // 动态字号：可用宽 142pt（170-14×2）、高 ~120pt，填满优先
+                    // 动态字号：限 3 行（130×84），层级下调为小组件小字
                     let size = dynamicFontSize(
                         charCount: sutra.count,
-                        availableWidth: 142,
-                        availableHeight: 120,
+                        availableWidth: 130,
+                        availableHeight: 84,
                         lineSpacing: 4,
-                        minSize: 15,
-                        maxSize: 26
+                        minSize: 13,
+                        maxSize: 19
                     )
                     Text(sutra)
                         .font(WidgetTokens.sutraFont(size: size))
@@ -325,14 +325,14 @@ struct LargeVerseView: View {
     @ViewBuilder
     private var sutraBody: some View {
         let raw = entry.fullText.isEmpty ? entry.text : entry.fullText.normalized
-        // 可用宽 320pt（364-18×2-4）、高 ~310pt（382-题眉40-上下spacer）
+        // 可用宽 320pt、高 ~340pt（题眉极小，经文占满主体）；层级最高 15-26pt
         let size = dynamicFontSize(
             charCount: raw.count,
             availableWidth: 320,
-            availableHeight: 310,
+            availableHeight: 340,
             lineSpacing: 6,
-            minSize: 14,
-            maxSize: 20
+            minSize: 15,
+            maxSize: 26
         )
         Text(raw)
             .font(WidgetTokens.sutraFont(size: size))
