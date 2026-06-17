@@ -294,23 +294,23 @@ struct LargeVerseView: View {
             if entry.needsOnboarding {
                 EmptyStateView(compact: false)
             } else {
-                // 主内容 — 极简经卷：印章题眉 + 经文，无金线点缀，让经文自己说话
-                VStack(spacing: 0) {
-                    Spacer(minLength: 20)
-
-                    // 古意印章题眉 — 「楞嚴」二字，如经卷扉页题签
+                // 主内容 — 顶部对齐：印章题眉固定顶部，正文紧随，剩余空白落底部
+                // 短/长经文标题位置都一致，不漂浮
+                VStack(alignment: .center, spacing: 0) {
+                    // 题眉区（固定顶部留白 + 印章 + 固定间距）
                     Text("楞嚴")
                         .font(WidgetTokens.sutraFont(size: 13))
                         .foregroundColor(WidgetTokens.textTertiary)
                         .tracking(8)
+                        .padding(.top, 20)
+                        .padding(.bottom, 20)
 
-                    Spacer(minLength: 18)
-
-                    // 经文正文 — 统一字号线性连贯，呼语「阿难，」自然成段首
+                    // 经文正文 — 左对齐，紧随题眉
                     sutraBody
                         .padding(.horizontal, 4)
 
-                    Spacer(minLength: 18)
+                    // 所有剩余空间统一落到底部，不分散
+                    Spacer(minLength: 0)
                 }
                 .padding(.leading, 18)
                 .padding(.trailing, 18)
