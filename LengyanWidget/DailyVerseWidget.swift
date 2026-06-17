@@ -18,6 +18,50 @@
 import WidgetKit
 import SwiftUI
 
+// MARK: - 动态字号计算
+
+/// 按字数与可用空间，算出「能容下全部经文的最大字号」。
+/// 填满优先：短经文放大到上限，长经文回落到底线；绝不跌破 minSize。
+///
+/// - Parameters:
+///   - charCount: 经文字数（CJK 全角，每字宽 ≈ 1em = 字号）
+///   - availableWidth: 经文区可用宽（逻辑点，已扣除 padding）
+///   - availableHeight: 经文区可用高
+///   - lineSpacing: 行距（pt），与 .lineSpacing 修饰符一致
+///   - minSize: 可读底线字号
+///   - maxSize: 美学上限字号
+/// - Returns: 夹取在 [minSize, maxSize] 的最佳字号
+///
+/// 推导：CJK 楷体每字宽 ≈ 字号，行高 ≈ 字号 + lineSpacing。
+///   每行字数 = floor(availableWidth / size)
+///   最多行数 = floor(availableHeight / (size + lineSpacing))
+///   容量 = 每行字数 × 最多行数 ≥ charCount
+/// 从 maxSize 向下递减，首个满足容量的即为答案。
+func dynamicFontSize(
+    charCount: Int,
+    availableWidth: CGFloat,
+    availableHeight: CGFloat,
+    lineSpacing: CGFloat,
+    minSize: CGFloat,
+    maxSize: CGFloat
+) -> CGFloat {
+    // 候选字号：从大到小，步长 1pt 精细搜索
+    var best = minSize
+    var size = maxSize
+    while size >= minSize {
+        let charsPerLine = max(1, Int(availableWidth / size))
+        let lineHeight = size + lineSpacing
+        let maxLines = max(1, Int(availableHeight / lineHeight))
+        let capacity = charsPerLine * maxLines
+        if capacity >= charCount {
+            best = size
+            break
+        }
+        size -= 1
+    }
+    return best
+}
+
 // MARK: - Timeline Entry
 
 struct DailyVerseEntry: TimelineEntry {
@@ -162,18 +206,26 @@ struct SmallVerseView: View {
             } else {
                 // 极简版式 — 经文居中，去金线点缀，留白即为装裱
                 VStack(spacing: 0) {
-                    Spacer(minLength: 24)
+                    Spacer(minLength: 22)
 
-                    Text(entry.smallText)
-                        .font(WidgetTokens.sutraFont(size: 16))
+                    let sutra = entry.smallText
+                    // 动态字号：可用宽 142pt（170-14×2）、高 ~120pt，填满优先
+                    let size = dynamicFontSize(
+                        charCount: sutra.count,
+                        availableWidth: 142,
+                        availableHeight: 120,
+                        lineSpacing: 4,
+                        minSize: 15,
+                        maxSize: 26
+                    )
+                    Text(sutra)
+                        .font(WidgetTokens.sutraFont(size: size))
                         .foregroundColor(WidgetTokens.sutraText)
                         .lineSpacing(4)
                         .multilineTextAlignment(.center)
-                        .lineLimit(4)
-                        .minimumScaleFactor(0.85)
                         .padding(.horizontal, 14)
 
-                    Spacer(minLength: 24)
+                    Spacer(minLength: 22)
                 }
             }
         }
@@ -203,14 +255,22 @@ struct MediumVerseView: View {
 
                     Spacer(minLength: 14)
 
-                    // 经文段落左对齐 — 符合佛经阅读节奏
-                    Text(entry.mediumText)
-                        .font(WidgetTokens.sutraFont(size: 17))
+                    // 经文段落左对齐 — 动态字号，填满优先
+                    let sutra = entry.mediumText
+                    // 可用宽 324pt（364-20×2）、高 ~108pt（170-题眉44-上下spacer）
+                    let size = dynamicFontSize(
+                        charCount: sutra.count,
+                        availableWidth: 324,
+                        availableHeight: 108,
+                        lineSpacing: 6,
+                        minSize: 16,
+                        maxSize: 22
+                    )
+                    Text(sutra)
+                        .font(WidgetTokens.sutraFont(size: size))
                         .foregroundColor(WidgetTokens.sutraText)
                         .lineSpacing(6)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(5)
-                        .minimumScaleFactor(0.85)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     Spacer(minLength: 18)
@@ -261,23 +321,25 @@ struct LargeVerseView: View {
 
     /// 经文正文：统一字号线性连贯 — 不再把首句当「破题」标题，
     /// 否则会把「阿难，…」一句完整的话砍成标题+正文两截，割裂阅读。
+    /// 动态字号：按字数填满可用空间，短经文放大、长经文回落，不跌破 15pt。
     @ViewBuilder
     private var sutraBody: some View {
         let raw = entry.fullText.isEmpty ? entry.text : entry.fullText.normalized
+        // 可用宽 320pt（364-18×2-4）、高 ~310pt（382-题眉40-上下spacer）
+        let size = dynamicFontSize(
+            charCount: raw.count,
+            availableWidth: 320,
+            availableHeight: 310,
+            lineSpacing: 6,
+            minSize: 14,
+            maxSize: 20
+        )
         Text(raw)
-            .font(WidgetTokens.sutraFont(size: 15))
+            .font(WidgetTokens.sutraFont(size: size))
             .foregroundColor(WidgetTokens.sutraText)
             .lineSpacing(6)
             .multilineTextAlignment(.leading)
-            .lineLimit(12)
-            .minimumScaleFactor(0.85)
             .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func lotusLine(width: CGFloat) -> some View {
-        Rectangle()
-            .fill(WidgetTokens.decorativeGold.opacity(0.4))
-            .frame(width: width, height: 0.5)
     }
 }
 
