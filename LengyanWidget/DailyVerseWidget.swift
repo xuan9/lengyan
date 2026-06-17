@@ -303,7 +303,7 @@ struct LargeVerseView: View {
 
                     Spacer(minLength: 18)
 
-                    // 经文正文 — 首句破题 + 余下段落
+                    // 经文正文 — 统一字号线性连贯，呼语「阿难，」自然成段首
                     sutraBody
                         .padding(.horizontal, 4)
 
@@ -332,59 +332,19 @@ struct LargeVerseView: View {
         .widgetURL(entry.url)
     }
 
-    /// 经文正文：首句金句「破题」+ 余下正文 — 经卷版式的灵魂
+    /// 经文正文：统一字号线性连贯 — 不再把首句当「破题」标题，
+    /// 否则会把「阿难，…」一句完整的话砍成标题+正文两截，割裂阅读。
     @ViewBuilder
     private var sutraBody: some View {
         let raw = entry.fullText.isEmpty ? entry.text : entry.fullText.normalized
-        if let heading = headingFrom(raw) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(heading)
-                    .font(WidgetTokens.sutraFont(size: 19))
-                    .foregroundColor(WidgetTokens.sutraText)
-                    .lineSpacing(4)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                let remainder = remainderFrom(raw, heading: heading)
-                if !remainder.isEmpty {
-                    Text(remainder)
-                        .font(WidgetTokens.sutraFont(size: 15))
-                        .foregroundColor(WidgetTokens.sutraText)
-                        .lineSpacing(6)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(12)
-                        .minimumScaleFactor(0.85)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-        } else {
-            // 首句过长时，全文 15pt 统一字号
-            Text(raw)
-                .font(WidgetTokens.sutraFont(size: 15))
-                .foregroundColor(WidgetTokens.sutraText)
-                .lineSpacing(6)
-                .multilineTextAlignment(.leading)
-                .lineLimit(12)
-                .minimumScaleFactor(0.85)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    /// 取首句作「破题」金句 — 按「，」「。」「；」切分，长度 4-14 字为佳
-    private func headingFrom(_ text: String) -> String? {
-        let first = text.components(separatedBy: CharacterSet(charactersIn: "，。；"))
-            .first?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let count = first.count
-        return (count >= 4 && count <= 14) ? first : nil
-    }
-
-    /// 取破题之后的剩余文本
-    private func remainderFrom(_ text: String, heading: String) -> String {
-        guard let range = text.range(of: heading) else { return text }
-        let after = text[range.upperBound...]
-        let trimmed = after.drop(while: { "，。；".contains($0) })
-        return String(trimmed)
+        Text(raw)
+            .font(WidgetTokens.sutraFont(size: 15))
+            .foregroundColor(WidgetTokens.sutraText)
+            .lineSpacing(6)
+            .multilineTextAlignment(.leading)
+            .lineLimit(12)
+            .minimumScaleFactor(0.85)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func lotusLine(width: CGFloat) -> some View {
@@ -500,17 +460,25 @@ private extension DailyVerseEntry {
         (fullText.isEmpty ? text : fullText).normalized
     }
 
-    /// Small 专用：首句金句，目标 ≤22 字
-    /// 取完整首句（按「，。；」切分），超长则截断加 …
+    /// Small 专用：完整首句金句，目标 ≤22 字
+    /// 按「句号/问号/感叹号」切分取首个完整句（含「阿难，…」呼语），
+    /// 不再按逗号切分——否则会把「阿难，」呼语当首句只剩二字。
+    /// 超长则在末个逗号处优雅截断，末尾补 …。
     var smallText: String {
         let src = fullBodyText
-        let firstClause = src.components(separatedBy: CharacterSet(charactersIn: "，。；；！？"))
+        // 先取第一个完整句（以 。；！？ 结尾），呼语逗号自然保留在句内
+        let firstSentence = src.components(separatedBy: CharacterSet(charactersIn: "。；！？;!?"))
             .first?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? src
-        if firstClause.count <= 22 { return firstClause }
-        // 首句过长：硬截断到 20 字 + …
-        let end = firstClause.index(firstClause.startIndex, offsetBy: 20, limitedBy: firstClause.endIndex) ?? firstClause.endIndex
-        return String(firstClause[..<end]) + "…"
+        if firstSentence.count <= 22 { return firstSentence }
+        // 首句过长：回退到 22 字内最后一个逗号处截断，保语义完整
+        let head = String(firstSentence.prefix(22))
+        if let lastComma = head.lastIndex(where: { $0 == "，" || $0 == "、" }) {
+            return String(head[..<lastComma]) + "…"
+        }
+        // 无逗号可切：硬截断
+        let end = firstSentence.index(firstSentence.startIndex, offsetBy: 20, limitedBy: firstSentence.endIndex) ?? firstSentence.endIndex
+        return String(firstSentence[..<end]) + "…"
     }
 
     /// Medium 专用：~80 字完整段落
