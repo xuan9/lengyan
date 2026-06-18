@@ -14,6 +14,7 @@ struct ModernSettingsView: View {
     @State private var isReminderOn: Bool = Prefers.shared.isDailyReminderOn
     @State private var reminderHour: Int = Prefers.shared.reminderHour
     @State private var reminderMinute: Int = Prefers.shared.reminderMinute
+    @State private var showPermissionDeniedAlert: Bool = false
 
     private let sizeLabels = ["特小", "小", "中", "大", "特大"]
     private let sizeFonts: [CGFloat] = [13, 16, 20, 25, 30]
@@ -57,6 +58,12 @@ struct ModernSettingsView: View {
         }
         .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
+        .alert("通知未开启", isPresented: $showPermissionDeniedAlert) {
+            Button("去设置") { openSystemNotificationSettings() }
+            Button("知道了", role: .cancel) {}
+        } message: {
+            Text("每日读经提醒需要通知权限。请前往「设置」开启本应用的通知。")
+        }
     }
 
     // MARK: - Section
@@ -179,12 +186,33 @@ struct ModernSettingsView: View {
                 .labelsHidden()
                 .tint(Color(SutraDesignTokens.shared.color(for: .primary)))
                 .onChange(of: isReminderOn) { on in
-                    Prefers.shared.isDailyReminderOn = on
-                    if on { ReminderManager.shared.requestPermissionAndSchedule() }
-                    else { ReminderManager.shared.cancelAll() }
+                    handleReminderToggle(on)
                 }
         }
         .padding(.vertical, 16)
+    }
+
+    /// 开关切换处理：开启时请求权限，拒绝则回滚开关并引导去系统设置。
+    private func handleReminderToggle(_ on: Bool) {
+        if on {
+            ReminderManager.shared.requestPermissionAndSchedule { granted in
+                if !granted {
+                    // 权限被拒：回滚开关，与实际状态保持一致，并提示去设置开启
+                    isReminderOn = false
+                    showPermissionDeniedAlert = true
+                }
+            }
+        } else {
+            Prefers.shared.isDailyReminderOn = false
+            ReminderManager.shared.cancelAll()
+        }
+    }
+
+    /// 跳转系统设置页（让用户重新开启通知权限）。
+    private func openSystemNotificationSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
     }
 
     private var compactTimePicker: some View {

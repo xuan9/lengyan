@@ -276,13 +276,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func openNotificationItem(path: String) {
-        while !Book.shared.loaded {
+        // 异步等待书库加载完成（含 5s 超时保护），避免主线程忙等死锁。
+        // 冷启动点通知时，didFinishLaunching 的后台加载可能尚未完成。
+        openItemWhenBookReady(path: path)
+    }
+
+    /// 轮询等待 Book.shared.loaded，加载完成或超时后切回主线程跳转。
+    private func openItemWhenBookReady(path: String, attempt: Int = 0) {
+        if Book.shared.loaded {
+            navigateToSutra(path: path)
+            return
         }
-        let root = window?.rootViewController as! UITabBarController
-        root.selectedIndex = 0  // 读经 Tab
-        guard let nav = root.selectedViewController as? UINavigationController else { return }
-        nav.popToRootViewController(animated: false)
-        (nav.topViewController as? SutraFrontViewController)?.openSutraOfPath(path: path)
+        // 超时保护：每 0.1s 轮询一次，最多 50 次 ≈ 5 秒
+        if attempt >= 50 {
+            // 超时仍跳转：openSutraOfPath 内部对未加载数据有兜底，
+            // 优于无限等待导致 App 无响应。
+            navigateToSutra(path: path)
+            return
+        }
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.openItemWhenBookReady(path: path, attempt: attempt + 1)
+        }
+    }
+
+    /// 切到读经 Tab 并打开指定经文（必须在主线程）。
+    private func navigateToSutra(path: String) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let root = self.window?.rootViewController as? UITabBarController else { return }
+            root.selectedIndex = 0  // 读经 Tab
+            guard let nav = root.selectedViewController as? UINavigationController else { return }
+            nav.popToRootViewController(animated: false)
+            (nav.topViewController as? SutraFrontViewController)?.openSutraOfPath(path: path)
+        }
     }
 
     // MARK: - Widget Deep Link

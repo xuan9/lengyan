@@ -22,8 +22,10 @@ class ReminderManager {
 
     // MARK: - 权限请求 + 调度
 
-    func requestPermissionAndSchedule() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+    /// 请求通知权限并调度。`completion` 在主线程回调是否授权成功，
+    /// 调用方可据此同步 UI 状态（拒绝时回滚开关、引导去设置）。
+    func requestPermissionAndSchedule(completion: ((Bool) -> Void)? = nil) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
             DispatchQueue.main.async {
                 if granted {
                     Prefers.shared.isDailyReminderOn = true
@@ -31,6 +33,16 @@ class ReminderManager {
                 } else {
                     Prefers.shared.isDailyReminderOn = false
                 }
+                completion?(granted)
+            }
+        }
+    }
+
+    /// 当前通知授权状态（异步，主线程回调）。
+    func authorizationStatus(_ handler: @escaping (UNAuthorizationStatus) -> Void) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                handler(settings.authorizationStatus)
             }
         }
     }
