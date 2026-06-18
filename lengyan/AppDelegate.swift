@@ -276,21 +276,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func openNotificationItem(path: String) {
-        // 异步等待书库加载完成（含 5s 超时保护），避免主线程忙等死锁。
-        // 冷启动点通知时，didFinishLaunching 的后台加载可能尚未完成。
+        // 书库在 didFinishLaunching 里已同步加载完毕（loadDataSyncWithCompletionHandler
+        // 阻塞至读完 5 个 JSON 并置 loaded=true），故此处 loaded 几乎恒为 true。
+        // 仍做防御性等待：若未来加载改为异步，这里不会退化为忙等死锁。
         openItemWhenBookReady(path: path)
     }
 
-    /// 轮询等待 Book.shared.loaded，加载完成或超时后切回主线程跳转。
+    /// 等待 Book.shared.loaded 后切主线程跳转；含超时保护避免任何死锁可能。
     private func openItemWhenBookReady(path: String, attempt: Int = 0) {
         if Book.shared.loaded {
             navigateToSutra(path: path)
             return
         }
-        // 超时保护：每 0.1s 轮询一次，最多 50 次 ≈ 5 秒
+        // 超时保护：每 0.1s 轮询一次，最多 50 次 ≈ 5 秒。
+        // 超时后直接跳转——push VC 本身不读数据，实际取数在后续页面，
+        // 且书库设计为必须加载（loadDataSync 已在启动同步完成），此分支理论上不可达。
         if attempt >= 50 {
-            // 超时仍跳转：openSutraOfPath 内部对未加载数据有兜底，
-            // 优于无限等待导致 App 无响应。
             navigateToSutra(path: path)
             return
         }
