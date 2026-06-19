@@ -971,14 +971,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let pageVC = SutraPageViewController.init( transitionStyle:.scroll,
                                                    navigationOrientation:.horizontal,
                                                    options: .none)
-        let path:String = item["path"] as! String
+        guard let path = item["path"] as? String else { return }
         pageVC.hidesBottomBarWhenPushed = true
-        // TICK()
-        pageVC.page=Book.shared.index!.index(where: { (
-            item) -> Bool in
-            return item["path"] == path
-        })!;
-        // TOCK()
+        // 查找 path 对应页码，找不到则放弃跳转（深链指向不存在的内容时不崩溃）
+        guard let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == path }) else { return }
+        pageVC.page = pageIndex
 
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(pageVC, animated: true)

@@ -63,10 +63,15 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         
         if page < 0 {
             self.close()
+            return
         }
-        
-        item = Book.shared.index![page]
-        self.path = item!["path"]
+        // 边界守卫：防止深链/状态恢复传入越界 page 导致崩溃
+        guard let indexArr = Book.shared.index, page < indexArr.count else {
+            self.close()
+            return
+        }
+        item = indexArr[page]
+        self.path = item?["path"]
         
         self.setPageTitle()
         self.dataSource = self;
@@ -79,10 +84,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
 
     func updatePage(to index: Int) {
-        guard index >= 0, let indexCount = Book.shared.index?.count, index < indexCount else { return }
+        guard index >= 0, let indexArr = Book.shared.index, index < indexArr.count else { return }
         self.page = index
-        self.item = Book.shared.index![index]
-        self.path = item!["path"]
+        self.item = indexArr[index]
+        self.path = item?["path"]
         self.setPageTitle()
         self.setTitle()
         self.setViewControllers([getViewControllerAtIndex(index: index)] as [UIViewController], direction: .forward, animated: false, completion: nil)
@@ -289,10 +294,12 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         }
 
         if completed {
-            let pageContent = pageViewController.viewControllers![0] as! SutraPageContentViewController
+            guard let pageContent = pageViewController.viewControllers?.first as? SutraPageContentViewController else { return }
             self.page = pageContent.pageIndex;
-            self.item = Book.shared.index![page];
-            self.path = item!["path"]
+            // 边界守卫：防止 page 越界
+            guard let indexArr = Book.shared.index, page >= 0, page < indexArr.count else { return }
+            self.item = indexArr[page];
+            self.path = item?["path"]
             self.setPageTitle()
             self.setTitle()
 
