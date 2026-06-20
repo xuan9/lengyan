@@ -46,11 +46,27 @@ class SutraSnapshotTests: XCTestCase {
             snapshot("02_Listening")
         }
 
-        // 03 - 收藏 Tab
+        // 03 - 收藏 Tab（切到「精选」子标签，避免空白）
         let favoritesTab = tabBar.buttons.element(boundBy: 2)
         if favoritesTab.exists {
             favoritesTab.tap()
             Thread.sleep(forTimeInterval: 1.5)
+
+            // 收藏页默认是「我的收藏」（新用户为空），点击「精选」展示编者精选内容
+            // 「先看看精选 →」按钮出现在空状态；或顶部的「精选」segmented 按钮
+            let curatedEntryCandidates = ["先看看精选 →", "先看看精选", "精选"]
+            var didSwitchToCurated = false
+            for label in curatedEntryCandidates {
+                let btn = app.buttons[label]
+                if btn.exists {
+                    btn.tap()
+                    Thread.sleep(forTimeInterval: 1.8)  // 等精选数据加载
+                    didSwitchToCurated = true
+                    break
+                }
+            }
+            _ = didSwitchToCurated  // 即使没切成功也截图（兜底）
+
             snapshot("03_Favorites")
         }
 
