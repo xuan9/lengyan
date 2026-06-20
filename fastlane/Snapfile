@@ -30,9 +30,10 @@ output_directory("./fastlane/screenshots")
 # 每次跑前清空输出
 clear_previous_screenshots(true)
 
-# iOS Simulator 版本（按本地 Xcode 安装的最新版）
-# 注：xcodebuild 精确匹配 OS 版本，本地模拟器是 26.1 / 26.3.1
-ios_version("26.1")
+# iOS Simulator 版本
+# 注：不指定 ios_version，让 fastlane 自动选最新可用设备
+# （fastlane 2.226 对 26.3.1 有解析 bug 会截成 26.3 导致匹配失败）
+# ios_version("26.3.1")
 
 # 只跑指定的截图测试（避免运行所有 UITest）
 only_testing("lengyanUITests/SutraSnapshotTests/testAppStoreScreenshots")
