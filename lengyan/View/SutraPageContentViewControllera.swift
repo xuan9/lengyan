@@ -161,7 +161,8 @@ class SutraTableViewCell: UITableViewCell {
         super.layoutSubviews()
         
         let horizontalInset = SutraAdaptiveLayout.readingHorizontalInsets(
-            containerWidth: contentView.bounds.width
+            containerWidth: contentView.bounds.width,
+            containerHeight: contentView.bounds.height
         )
         containerLeadingConstraint.constant = horizontalInset
         containerTrailingConstraint.constant = -horizontalInset

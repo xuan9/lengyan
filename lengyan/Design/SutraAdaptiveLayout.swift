@@ -9,6 +9,13 @@ enum SutraAdaptiveLayout {
     /// Apple HIG 推荐的舒适阅读上限（用于计算或 SwiftUI 回退时）
     static let optimalReadingWidth: CGFloat = 680
     static let homeContentWidth: CGFloat = 720
+    /// 横屏阅读上限：iPad 横屏时放宽经文宽度，减少两侧留白空洞感
+    static let landscapeReadingWidth: CGFloat = 960
+
+    /// 根据容器尺寸判断是否横屏宽屏（宽度大于高度，且足够宽）
+    static func isWideLandscape(containerWidth: CGFloat, containerHeight: CGFloat) -> Bool {
+        return containerWidth > containerHeight && containerWidth >= 1024
+    }
 
     // MARK: - UIKit 约束
 
@@ -28,13 +35,18 @@ enum SutraAdaptiveLayout {
 
     /// 动态计算需要的水平内边距 (textContainerInset 或 contentInset 使用)，
     /// 确保内部文字等核心内容居中且不超过 maxWidth，同时让底层 ScrollView 撑满全屏。
+    /// 横屏宽屏时自动放宽至 landscapeReadingWidth，减少 iPad 横屏留白空洞。
     static func readingHorizontalInsets(
         containerWidth: CGFloat,
+        containerHeight: CGFloat = 0,
         maxWidth: CGFloat = optimalReadingWidth,
         minMargin: CGFloat = 20
     ) -> CGFloat {
-        if containerWidth > maxWidth {
-            return floor((containerWidth - maxWidth) / 2)
+        let effectiveWidth = isWideLandscape(containerWidth: containerWidth, containerHeight: containerHeight)
+            ? max(maxWidth, landscapeReadingWidth)
+            : maxWidth
+        if containerWidth > effectiveWidth {
+            return floor((containerWidth - effectiveWidth) / 2)
         }
         return minMargin
     }

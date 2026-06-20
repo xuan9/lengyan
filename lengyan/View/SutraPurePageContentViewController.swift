@@ -88,7 +88,8 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
         super.viewDidLayoutSubviews()
         // 核心：让文字内容优雅地居中在 optimalReadingWidth 内，同时保持外层 textView 满屏
         let horizontalInset = SutraAdaptiveLayout.readingHorizontalInsets(
-            containerWidth: view.bounds.width
+            containerWidth: view.bounds.width,
+            containerHeight: view.bounds.height
         )
         sutraView?.textContainerInset = UIEdgeInsets(top: 12, left: horizontalInset, bottom: 24, right: horizontalInset)
     }
