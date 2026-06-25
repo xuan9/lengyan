@@ -2,7 +2,26 @@
   "permissions": {
     "allow": [
       "Bash(xcodebuild build:*)",
-      "Bash(xcrun devicectl:*)"
+      "Bash(xcrun devicectl:*)",
+      "Bash(./scripts/build_sim)",
+      "mcp__XcodeBuildMCP__session_show_defaults",
+      "mcp__XcodeBuildMCP__discover_projs",
+      "mcp__XcodeBuildMCP__list_schemes",
+      ".*",
+      "Bash(./scripts/build_and_install_device.sh)",
+      "Bash(find /Users/fuxuan/github/lengyan -name \"*.swift\" -type f -exec grep -l \"\\\\.accessibility\" {})",
+      "mcp__mobile-mcp__mobile_list_available_devices",
+      "mcp__zai-mcp-server__analyze_image",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(grep -i \"\\\\.swift$\")",
+      "Bash(ls -la /Users/fuxuan/github/lengyan/*.md)",
+      "Bash(find /Users/fuxuan/github/lengyan/fastlane -name *iPad*Home* -o -name *iPad*01*)",
+      "mcp__XcodeBuildMCP__list_sims",
+      "mcp__XcodeBuildMCP__session_set_defaults",
+      "mcp__XcodeBuildMCP__build_run_sim",
+      "mcp__XcodeBuildMCP__screenshot",
+      "mcp__zai-mcp-server__ui_diff_check"
     ]
   }
 }

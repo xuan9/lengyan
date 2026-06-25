@@ -20,6 +20,12 @@
 "favorites_subtitle" = "你喜欢的经文";
 "no_favorites" = "暂无收藏";
 "no_favorites_description" = "在阅读时点击收藏按钮，将喜欢的经文添加到这里";
+"favorites_tab_personal" = "收藏";
+"favorites_tab_curated" = "精选";
+"favorites_personal_empty_desc" = "阅读时轻触收藏按钮即可收藏";
+"favorites_curated_empty" = "暂无精选内容";
+"favorites_curated_title" = "经典段落由编者精选";
+"favorites_curated_empty_button" = "先看看精选 →";
 "unknown_sutra" = "未知经文";
 "contains_sub_chapters" = "包含子章节";
 "sutra" = "经文";
@@ -51,3 +57,6 @@
 "chapter_10" = "卷十";
 "end" = "终";
 "start_qi" = "起";
+"select_favorites_placeholder" = "请选择左侧经文开始深读";
+"enter_reading_mode" = "进入全卷精读";
+

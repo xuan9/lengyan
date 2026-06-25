@@ -19,6 +19,12 @@
 "favorites_subtitle" = "你喜歡的經文";
 "no_favorites" = "暫無收藏";
 "no_favorites_description" = "在閱讀時點擊收藏按鈕，將喜歡的經文添加到這裡";
+"favorites_tab_personal" = "收藏";
+"favorites_tab_curated" = "精選";
+"favorites_personal_empty_desc" = "閱讀時輕觸收藏按鈕即可收藏";
+"favorites_curated_empty" = "暫無精選內容";
+"favorites_curated_title" = "經典段落由編者精選";
+"favorites_curated_empty_button" = "先看看精選 →";
 "unknown_sutra" = "未知經文";
 "contains_sub_chapters" = "包含子章節";
 "sutra" = "經文";
@@ -50,3 +56,6 @@
 "chapter_10" = "卷十";
 "end" = "終";
 "start_qi" = "起";
+"select_favorites_placeholder" = "請選擇左側經文開始深讀";
+"enter_reading_mode" = "進入全卷精讀";
+

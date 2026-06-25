@@ -146,6 +146,7 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
     }
 
     @objc func handleContentTap() {
+        if parentReader?.isEmbedded == true { return } // 🌿 嵌套状态下由 SwiftUI 接管头部，不响应轻点切换导航栏
         guard let navController = self.navigationController else { return }
         let isHidden = navController.isNavigationBarHidden
         navController.setNavigationBarHidden(!isHidden, animated: true)

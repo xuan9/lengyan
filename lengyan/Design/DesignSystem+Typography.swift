@@ -176,10 +176,20 @@ struct ChineseFontManager {
     }
 
     static func appropriateUIFont(size: CGFloat, weight: UIFont.Weight, style: SutraTypographyStyle) -> UIFont {
-        // iPad 屏幕大、视距远，且由于排版采用了极宽的 680pt 容器
-        // 根据 Apple HIG 建议，在杂志/沉浸阅读类应用中，iPad 的基础字号应做适当等比放大，以维持与 iPhone 相同的主观视觉比例与每行字数
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
-        let padScale: CGFloat = isPad ? 1.15 : 1.0 // 放大 15% 保证 680pt 下每行约 30-40 个中文字符的黄金阅读律
+        
+        let padScale: CGFloat
+        if isPad {
+            switch style {
+            case .sutraBody, .sutraLarge, .sacredText:
+                // 大雕像级别: 1.5倍缩放，填补iPad空间空洞，字大而静雅
+                padScale = 1.5
+            default:
+                padScale = 1.15
+            }
+        } else {
+            padScale = 1.0
+        }
         
         // UI 骨架样式：固定大小和字重
         // 内容样式：跟随字号缩放 + optical sizing 字重调整

@@ -15,6 +15,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     var _paths:[String] = [];
     var isShowIndexButton = true;
     private var stayTimer = ReadingStayTimer()
+    var isEmbedded = false
 
 
     
@@ -58,11 +59,12 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         stayTimer.start()
-        self.tabBarController?.tabBar.isHidden = true
-        if #available(iOS 18.0, *) {
-            self.tabBarController?.setTabBarHidden(true, animated: false)
+        if !isEmbedded {
+            self.tabBarController?.tabBar.isHidden = true
+            if #available(iOS 18.0, *) {
+                self.tabBarController?.setTabBarHidden(true, animated: false)
+            }
         }
-        // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = false
         self.navigationController?.hidesBarsOnTap = false
@@ -77,9 +79,11 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        self.tabBarController?.tabBar.isHidden = false
-        if #available(iOS 18.0, *) {
-            self.tabBarController?.setTabBarHidden(false, animated: false)
+        if !isEmbedded {
+            self.tabBarController?.tabBar.isHidden = false
+            if #available(iOS 18.0, *) {
+                self.tabBarController?.setTabBarHidden(false, animated: false)
+            }
         }
         self.navigationController?.hidesBarsOnTap = false
         if let path = self.path, stayTimer.isValidReading {
@@ -209,7 +213,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
         // 🌿 动态更新左侧返回/目录项 (叶子正文页自动隐藏目录项，保证纯净阅读环境)
         let isLeaf = item["children"] == nil
-        var leftButtons = [backButton].compactMap { $0 }
+        var leftButtons = (isEmbedded ? [] : [backButton]).compactMap { $0 }
         if self.isShowIndexButton && !isLeaf {
             if let indexBtn = self.indexButton {
                 leftButtons.append(indexBtn)

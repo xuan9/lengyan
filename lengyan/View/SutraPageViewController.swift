@@ -13,6 +13,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     var onDismiss: (() -> Void)?
     private var stayTimer = ReadingStayTimer()
     var page:Int = 0
+    var isEmbedded = false
 
     var path:String?
     var item:[String:String]?
@@ -107,8 +108,12 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         stayTimer.start()
-        self.tabBarController?.tabBar.isHidden = true
-        // 每次出现时重新启用滑动隐藏，因为首页 viewWillAppear 会将其重置为 false
+        if !isEmbedded {
+            self.tabBarController?.tabBar.isHidden = true
+            if #available(iOS 18.0, *) {
+                self.tabBarController?.setTabBarHidden(true, animated: false)
+            }
+        }
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.hidesBarsOnSwipe = false
         self.navigationController?.hidesBarsOnTap = false
@@ -119,7 +124,12 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        self.tabBarController?.tabBar.isHidden = false
+        if !isEmbedded {
+            self.tabBarController?.tabBar.isHidden = false
+            if #available(iOS 18.0, *) {
+                self.tabBarController?.setTabBarHidden(false, animated: false)
+            }
+        }
         self.navigationController?.hidesBarsOnTap = false
         // 保存阅读进度（停留超过10秒才视为有效阅读）
         if let path = self.path, page >= 0, stayTimer.isValidReading {
@@ -170,11 +180,6 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     func setTitle() {
         let isHidden = self.navigationController?.isNavigationBarHidden ?? false
 
-        // Use modern SF Symbols for better accessibility and consistency
-        let backIcon = UIImage(systemName: "chevron.left")
-        let backBarButton = UIBarButtonItem(image: backIcon, style: .plain, target: self, action: #selector(close))
-        self.navigationItem.leftBarButtonItem = backBarButton
-
         // Right side: Bookmark + Share (禅意极简排列)
         let shareIcon = UIImage(systemName: "square.and.arrow.up")
         let shareButton = UIBarButtonItem(image: shareIcon, style: .plain, target: self, action: #selector(share))
@@ -187,13 +192,23 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
-        self.navigationItem.leftBarButtonItem?.tintColor = secondaryTextColor
+        if isEmbedded {
+            self.navigationItem.leftBarButtonItem = nil
+        } else {
+            let backIcon = UIImage(systemName: "chevron.left")
+            let backBarButton = UIBarButtonItem(image: backIcon, style: .plain, target: self, action: #selector(close))
+            self.navigationItem.leftBarButtonItem = backBarButton
+            self.navigationItem.leftBarButtonItem?.tintColor = secondaryTextColor
+            if #available(iOS 26.0, *) {
+                backBarButton.hidesSharedBackground = true
+            }
+        }
+
         shareButton.tintColor = secondaryTextColor
         bookmarkButton.tintColor = isLiked ? bookmarkColor : secondaryTextColor
 
         // 移除 iOS 26 Liquid Glass 按钮背景，与导航栏完全融合
         if #available(iOS 26.0, *) {
-            backBarButton.hidesSharedBackground = true
             shareButton.hidesSharedBackground = true
             bookmarkButton.hidesSharedBackground = true
         }
@@ -327,6 +342,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     }
 
     @objc func toggleNavigationBar() {
+        if isEmbedded { return } // 🌿 嵌套状态下由 SwiftUI 接管头部，不响应轻点切换导航栏
         guard let navController = self.navigationController else { return }
         let isHidden = navController.isNavigationBarHidden
         navController.setNavigationBarHidden(!isHidden, animated: true)
