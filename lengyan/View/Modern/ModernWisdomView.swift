@@ -135,12 +135,17 @@ struct WisdomVerseCard: View {
 
 // MARK: - Lesson Complete View
 struct WisdomLessonCompleteView: View {
+    @State private var isReminderOn: Bool = Prefers.shared.isDailyReminderOn
+    @State private var showingAlert = false
+
     var body: some View {
         ZStack {
             Color(uiColor: SutraDesignTokens.shared.color(for: .background))
                 .ignoresSafeArea()
             
             VStack(spacing: 30) {
+                Spacer()
+                
                 Text("今日功课已毕")
                     .font(.custom("STKaiti", size: 24))
                     .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textPrimary)))
@@ -150,6 +155,48 @@ struct WisdomLessonCompleteView: View {
                     .font(.custom("STKaiti", size: 16))
                     .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)))
                     .tracking(2)
+                
+                Spacer()
+                
+                if !isReminderOn {
+                    Button(action: {
+                        ReminderManager.shared.requestPermissionAndSchedule { granted in
+                            isReminderOn = granted
+                            if !granted {
+                                showingAlert = true
+                            }
+                        }
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "bell")
+                                .font(.system(size: 14))
+                            Text("开启每日提醒，每日晨钟，回归宁静")
+                                .font(.system(size: 14, weight: .light, design: .serif))
+                        }
+                        .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(
+                            Capsule()
+                                .stroke(Color(uiColor: SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.4), lineWidth: 1)
+                        )
+                    }
+                    .padding(.bottom, 60)
+                    .transition(.opacity)
+                }
+            }
+            .alert("通知未开启", isPresented: $showingAlert) {
+                Button("去设置") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("知道了", role: .cancel) {}
+            } message: {
+                Text("每日读经提醒需要通知权限。请前往「设置」开启本应用的通知。")
+            }
+            .onAppear {
+                isReminderOn = Prefers.shared.isDailyReminderOn
             }
         }
     }

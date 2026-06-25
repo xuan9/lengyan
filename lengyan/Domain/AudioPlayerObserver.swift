@@ -162,6 +162,29 @@ class AudioPlayerObserver: NSObject, ObservableObject {
 
     // MARK: - Now Playing Info
 
+    private func getAppIcon() -> UIImage? {
+        if let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any],
+           let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
+           let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
+           let lastIcon = iconFiles.last,
+           let image = UIImage(named: lastIcon) {
+            return image
+        }
+        if let icons = Bundle.main.infoDictionary?["CFBundleIcons~ipad"] as? [String: Any],
+           let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
+           let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
+           let lastIcon = iconFiles.last,
+           let image = UIImage(named: lastIcon) {
+            return image
+        }
+        for name in ["AppIcon60x60", "AppIcon76x76", "AppIcon83.5x83.5", "AppIcon40x40", "AppIcon"] {
+            if let image = UIImage(named: name) {
+                return image
+            }
+        }
+        return nil
+    }
+
     func updateNowPlayingInfo() {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: currentTrack ?? "楞嚴經",
@@ -171,13 +194,14 @@ class AudioPlayerObserver: NSObject, ObservableObject {
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
         ]
 
-        if let icon = UIImage(named: "sutra_splash") ?? UIImage(named: "sutra") ?? UIImage(named: "AppIcon60x60") ?? UIImage(named: "Icon-60@2x") {
+        if let icon = getAppIcon() ?? UIImage(named: "sutra") {
             let artwork = MPMediaItemArtwork(boundsSize: icon.size) { _ in icon }
             info[MPMediaItemPropertyArtwork] = artwork
         }
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
+
 
     // MARK: - Remote Commands
 

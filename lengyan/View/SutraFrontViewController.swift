@@ -176,6 +176,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.configureTreeViewWithDesignSystem()
             self.setupHeaderView(self.view.bounds.size)
             self.setupFooterView(self.view.bounds.size)
+            self.treeView?.reloadData()
         }, completion: nil)
     }
 

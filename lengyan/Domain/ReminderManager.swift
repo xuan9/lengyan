@@ -62,6 +62,19 @@ class ReminderManager {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 
+        // 🌾 准备通知附件图片 (sutra_splash)
+        var attachmentURL: URL? = nil
+        if let image = UIImage(named: "sutra_splash"),
+           let data = image.pngData() {
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("notification_splash.png")
+            do {
+                try data.write(to: tempURL)
+                attachmentURL = tempURL
+            } catch {
+                print("⚠️ Failed to write notification splash: \(error)")
+            }
+        }
+
         for index in 0..<ReminderManager.maxScheduleDays {
             guard let triggerDate = calendar.date(byAdding: .day, value: index, to: today) else { continue }
 
@@ -80,6 +93,13 @@ class ReminderManager {
             content.body = cleanBody
             content.sound = nil
             content.userInfo = ["path": path]
+
+            // 🌾 如果存在附件，则添加至通知
+            if let attURL = attachmentURL {
+                if let attachment = try? UNNotificationAttachment(identifier: "sutra_splash_\(dateStr)", url: attURL, options: nil) {
+                    content.attachments = [attachment]
+                }
+            }
 
             var dc = DateComponents()
             dc.hour = baseHour

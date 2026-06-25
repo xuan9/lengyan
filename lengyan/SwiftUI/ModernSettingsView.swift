@@ -39,11 +39,11 @@ struct ModernSettingsView: View {
 
                 // ── 关于 ──
                 zenSection("关于") {
-                    aboutItem("致谢", icon: "heart.text.square", action: openAcknowledgments)
-                    zenDivider
                     aboutItem("反馈", icon: "envelope", action: openFeedback)
                     zenDivider
                     aboutItem("评价", icon: "star.bubble", action: openAppStoreRating)
+                    zenDivider
+                    aboutItem("致谢", icon: "heart.text.square", action: openAcknowledgments)
                     zenDivider
                     versionRow
                 }
