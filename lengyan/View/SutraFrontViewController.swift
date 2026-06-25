@@ -100,6 +100,22 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // 子页面（阅读页）会在各自的 viewWillAppear 中重新启用。
         self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = false
         self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
+        
+        // 🌾 第一次启动时，优雅展示开卷欢迎与晨钟提醒授权页
+        showOnboardingIfNeeded()
+    }
+
+    private func showOnboardingIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") else { return }
+        
+        let onboardingView = SutraOnboardingView { [weak self] in
+            self?.dismiss(animated: true)
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        }
+        let hostingController = UIHostingController(rootView: onboardingView)
+        hostingController.modalPresentationStyle = .fullScreen
+        hostingController.modalTransitionStyle = .crossDissolve
+        self.present(hostingController, animated: true)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
