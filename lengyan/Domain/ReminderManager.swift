@@ -77,6 +77,7 @@ class ReminderManager {
 
             let content = UNMutableNotificationContent()
             content.title = title
+            content.subtitle = "輕觸可閱讀，亦可鎖屏聽經"
             content.body = cleanBody
             content.sound = nil
             content.userInfo = ["path": path]

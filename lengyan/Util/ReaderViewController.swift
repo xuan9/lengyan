@@ -1,4 +1,5 @@
 import UIKit
+import Combine
 
 final class ReaderViewController: UIViewController, UIScrollViewDelegate {
 
@@ -12,6 +13,10 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     // 极简页码指示器
     private let pageIndicator = UILabel()
     private var hidePageIndicatorTimer: Timer?
+
+    // 🔊 听经一体化播放器观察与按钮
+    private var playButton: UIBarButtonItem?
+    private var playCancellable: AnyCancellable?
 
 
     init(title:String, content:NSAttributedString, chapter: Int, restoreOffset: CGFloat? = nil) {
@@ -79,21 +84,7 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         }
 
         setupContentView()
-
-        // 恢复进度时右上角显示"第一页"按钮
-        if let offset = restoreOffset, offset > 0 {
-            let firstPageButton = UIBarButtonItem(
-                title: "第一页",
-                style: .plain,
-                target: self,
-                action: #selector(goToFirstPage)
-            )
-            firstPageButton.tintColor = secondaryColor
-            if #available(iOS 26.0, *) {
-                firstPageButton.hidesSharedBackground = true
-            }
-            self.navigationItem.rightBarButtonItem = firstPageButton
-        }
+        setupPlayButton()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -143,7 +134,8 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
 
     @objc private func goToFirstPage() {
         contentView.setContentOffset(.zero, animated: true)
-        navigationItem.rightBarButtonItem = nil
+        hasRestoredOffset = true
+        updateRightBarButtonItems()
     }
 
     // MARK: - UIScrollViewDelegate
@@ -326,6 +318,100 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
                 toast.removeFromSuperview()
             }
         }
+    }
+
+    // MARK: - 听经一体化控制
+
+    private func setupPlayButton() {
+        let btn = UIButton(type: .system)
+        // 初始设为播放图标
+        btn.setImage(UIImage(systemName: "play.fill"), for: .normal)
+        btn.tintColor = SutraDesignTokens.shared.color(for: .textSecondary)
+        btn.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
+        btn.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+        
+        let barBtn = UIBarButtonItem(customView: btn)
+        self.playButton = barBtn
+        
+        updateRightBarButtonItems()
+
+        // 绑定音频播放器状态，实现播放中/暂停状态的自动同步
+        playCancellable = Publishers.CombineLatest(
+            AudioPlayerObserver.shared.$isPlaying,
+            AudioPlayerObserver.shared.$currentTrack
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] isPlaying, currentTrack in
+            self?.updatePlayButtonState(isPlaying: isPlaying, currentTrack: currentTrack)
+        }
+    }
+
+    private func updateRightBarButtonItems() {
+        var items: [UIBarButtonItem] = []
+        
+        if let playBtn = self.playButton {
+            items.append(playBtn)
+        }
+        
+        // 只有在需要恢复进度且未点过“第一页”时，才在右上角叠展“第一页”按钮
+        if let offset = restoreOffset, offset > 0, !hasRestoredOffset {
+            let firstPageButton = UIBarButtonItem(
+                title: "第一页",
+                style: .plain,
+                target: self,
+                action: #selector(goToFirstPage)
+            )
+            firstPageButton.tintColor = SutraDesignTokens.shared.color(for: .textSecondary)
+            if #available(iOS 26.0, *) {
+                firstPageButton.hidesSharedBackground = true
+            }
+            items.append(firstPageButton)
+        }
+        
+        self.navigationItem.rightBarButtonItems = items
+    }
+
+    @objc private func playButtonTapped() {
+        if AudioManager.shared.mediaGroups.isEmpty {
+            AudioManager.shared.loadMediaData()
+        }
+        
+        guard let group = AudioManager.shared.mediaGroups.first,
+              chapter >= 0 && chapter < group.files.count else { return }
+        
+        let file = group.files[chapter]
+        let name = group.names[chapter]
+        let ext = group.fileExtension
+        
+        let isCurrent = AudioPlayerObserver.shared.currentTrack == name
+        
+        if isCurrent {
+            AudioManager.shared.togglePlayPause()
+        } else {
+            AudioManager.shared.handleMediaItemTap(name: name, file: file, fileExtension: ext)
+        }
+    }
+
+    private func updatePlayButtonState(isPlaying: Bool, currentTrack: String?) {
+        let trackName = getTrackName()
+        let isCurrentPlaying = isPlaying && (currentTrack == trackName)
+        let iconName = isCurrentPlaying ? "pause.fill" : "play.fill"
+        
+        if let btn = self.playButton?.customView as? UIButton {
+            UIView.performWithoutAnimation {
+                btn.setImage(UIImage(systemName: iconName), for: .normal)
+                btn.layoutIfNeeded()
+            }
+        }
+    }
+    
+    private func getTrackName() -> String? {
+        if AudioManager.shared.mediaGroups.isEmpty {
+            AudioManager.shared.loadMediaData()
+        }
+        guard let group = AudioManager.shared.mediaGroups.first,
+              chapter >= 0 && chapter < group.files.count else { return nil }
+        return group.names[chapter]
     }
 
 }

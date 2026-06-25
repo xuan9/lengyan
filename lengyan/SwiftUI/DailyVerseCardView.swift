@@ -45,6 +45,15 @@ struct SutraOnboardingView: View {
                     .shadow(color: .black.opacity(0.6), radius: 8, x: 0, y: 2)
                     .opacity(showContent ? 1 : 0)
                     .offset(y: showContent ? 0 : 20)
+                    
+                    // 🌿 禅意引言 — 引导听经
+                    Text("— 可隨科判靜讀，亦可隨喜聽經 —")
+                        .font(.system(size: 13, weight: .light, design: .serif))
+                        .foregroundColor(.white.opacity(0.75))
+                        .padding(.top, 12)
+                        .shadow(color: .black.opacity(0.4), radius: 4, x: 0, y: 1)
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
                 }
                 
                 Spacer()
