@@ -21,3 +21,14 @@ build/
 .swiftpm/
 .build/
 Package.resolved
+
+# vim 交换文件 & CLI 缓存
+*.swp
+.antigravitycli/
+
+# 根目录散落的一次性测试/预览脚本
+/test_tabbar
+/test_tabbar.swift
+/test_layout.swift
+/staged_diff.txt
+/sutra_design_preview.html
