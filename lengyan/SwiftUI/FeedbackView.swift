@@ -36,9 +36,9 @@ struct FeedbackView: View {
 
             // 莲花意象 — 内敛而庄严
             Image(systemName: "leaf.circle")
-                .font(.system(size: 44, weight: .ultraLight))
+                .font(.system(size: 48, weight: .ultraLight))
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(showContent ? 0.6 : 0))
-                .padding(.bottom, 32)
+                .padding(.bottom, 24)
 
             // 主文：感恩
             Text("感谢你的心声")
@@ -52,19 +52,24 @@ struct FeedbackView: View {
                 .font(SutraTypographyBridge.uiCaption(weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.textTertiary))
                 .opacity(showContent ? 1 : 0)
-                .padding(.bottom, 40)
+                .padding(.bottom, 48)
 
-            // 金色分隔线
-            Rectangle()
-                .fill(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.3))
-                .frame(width: 40, height: 0.5)
-                .opacity(showContent ? 1 : 0)
-                .padding(.bottom, 20)
-
-            // 收束：佛门祝福
-            Text("阿弥陀佛")
-                .font(SutraTypographyBridge.uiCaption(weight: .light))
-                .foregroundColor(SutraDesignSystem.color(.textTertiary))
+            // 手动完成按钮 — 稳重、清晰、体面
+            Button(action: {
+                dismiss()
+            }) {
+                Text(NSLocalizedString("done", comment: "完成"))
+                    .font(.system(size: 16, weight: .medium, design: .serif))
+                    .tracking(3)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 64)
+                    .padding(.vertical, 14)
+                    .background(
+                        Capsule()
+                            .fill(SutraDesignSystem.color(.primary))
+                    )
+            }
+            .opacity(showContent ? 1 : 0)
 
             Spacer()
         }
@@ -74,9 +79,6 @@ struct FeedbackView: View {
             // 淡入动画，让致谢有仪式感
             withAnimation(.easeInOut(duration: 0.8)) {
                 showContent = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                dismiss()
             }
         }
     }

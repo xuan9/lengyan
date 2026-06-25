@@ -60,7 +60,7 @@ struct SutraAcknowledgmentsView: View {
                         .foregroundColor(textTertiary)
                         .tracking(4)
 
-                    Text("南無楞嚴會上佛菩薩")
+                    Text("☸️南無楞嚴會上佛菩薩")
                         .font(SutraTypographyBridge.uiCaption(weight: .medium))
                         .foregroundColor(goldColor.opacity(0.65))
                         .tracking(3)

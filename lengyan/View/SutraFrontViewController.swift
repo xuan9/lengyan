@@ -677,7 +677,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         footer.addSubview(topLine)
 
         // 🙏 南無楞嚴會上佛菩薩 — 始终使用繁体以显庄严，颜色为清晰饱满的古金色以确保对比度
-        let homageText = "南無楞嚴會上佛菩薩"
+        let homageText = "☸️ 南無楞嚴會上佛菩薩"
         let homageLabel = UILabel()
         homageLabel.attributedText = NSAttributedString(string: homageText, attributes: [
             .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular),
