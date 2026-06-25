@@ -16,6 +16,7 @@ protocol PrefersProtocol {
     var isDailyReminderOn: Bool { get set }
     var reminderHour: Int { get set }
     var reminderMinute: Int { get set }
+    var hasSeenSwipeGuide: Bool { get set }
 
     func like(_ path:String)
     func unlike(_ path:String)
@@ -44,6 +45,7 @@ class Prefers: NSObject, PrefersProtocol {
     private static let lastReadChapterOffsetKey = "lastReadChapterOffset"
     private static let userLikesKey = "userLikes"
     private static let searchHistoryKey = "searchHistory"
+    private static let hasSeenSwipeGuideKey = "hasSeenSwipeGuide"
 
     static let shared = Prefers()
 
@@ -108,6 +110,11 @@ class Prefers: NSObject, PrefersProtocol {
         set {
             userDefaults.set(newValue, forKey: Prefers.playFileKey)
         }
+    }
+
+    var lastPlayTime: Double {
+        get { userDefaults.double(forKey: "lastPlayTime") }
+        set { userDefaults.set(newValue, forKey: "lastPlayTime") }
     }
 
     var lastPlayMode: Int? {
@@ -210,6 +217,11 @@ class Prefers: NSObject, PrefersProtocol {
 
     func clearSearchHistory() {
         searchHistory = []
+    }
+
+    var hasSeenSwipeGuide: Bool {
+        get { userDefaults.bool(forKey: Prefers.hasSeenSwipeGuideKey) }
+        set { userDefaults.set(newValue, forKey: Prefers.hasSeenSwipeGuideKey) }
     }
 
     func persist() {

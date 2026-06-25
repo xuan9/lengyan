@@ -207,9 +207,10 @@ class AudioManager: ObservableObject {
             return
         }
 
-        // 新曲目，重置播放计数（必须在设置 currentTrack 之前判断）
-        if audioObserver.currentTrack != name {
+        // 新曲目，重置播放计数与播放位置（若非上次保存的曲目，则清空播放位置）
+        if Prefers.shared.lastPlayFile?.first != file {
             playCount = 0
+            Prefers.shared.lastPlayTime = 0
         }
 
         audioObserver.currentTrack = name
@@ -293,6 +294,12 @@ class AudioManager: ObservableObject {
             Prefers.shared.lastPlayFile = [file]
         }
 
+        // 🌾 恢复上次播放时间点
+        let savedTime = Prefers.shared.lastPlayTime
+        if savedTime > 0 && Prefers.shared.lastPlayFile?.first == fileName {
+            audioObserver.seek(to: savedTime)
+        }
+
         if autoplay || wasPlaying {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 self.audioObserver.queuePlayer?.play()
@@ -330,6 +337,37 @@ class AudioManager: ObservableObject {
         }
     }
 
+    func startPlayback() {
+        if audioObserver.isPlaying {
+            return
+        }
+        if let player = audioObserver.queuePlayer, player.currentItem != nil {
+            player.play()
+            audioObserver.isPlaying = true
+        } else {
+            if audioObserver.currentTrack == nil {
+                resumeLastPlayback()
+            }
+            startCurrentTrack()
+        }
+    }
+
+    func playChapter(chapter: Int) {
+        if mediaGroups.isEmpty {
+            loadMediaData()
+        }
+        guard chapter >= 0 && chapter < 10 else { return }
+        guard let group = mediaGroups.first else { return }
+        guard chapter < group.files.count && chapter < group.names.count else { return }
+        
+        let name = group.names[chapter]
+        let file = group.files[chapter]
+        let ext = group.fileExtension
+        
+        handleMediaItemTap(name: name, file: file, fileExtension: ext)
+    }
+
+
     /// 根据 currentTrack 名称找到对应文件，走完整的点击流程（自动处理下载）
     private func startCurrentTrack() {
         guard let trackName = audioObserver.currentTrack else { return }
@@ -354,6 +392,7 @@ class AudioManager: ObservableObject {
 
     func handlePlaybackCompletion() {
         playCount += 1
+        Prefers.shared.lastPlayTime = 0 // 重置为 0，因为播放完成了
         let mode = selectedPlayMode
 
         switch mode {

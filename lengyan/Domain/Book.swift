@@ -480,6 +480,30 @@ class Book: NSObject {
         return titles
     }
 
+    func getChapterOfPath(_ path: String) -> Int? {
+        guard let chapterMap = chapterMap else { return nil }
+        // 1. Try exact match first
+        for (chapterKey, paths) in chapterMap {
+            if paths.contains(path) {
+                if let chapterInt = Int(chapterKey) {
+                    return chapterInt - 1
+                }
+            }
+        }
+        // 2. Try prefix matching to support deeply nested bookmarked paths
+        for (chapterKey, paths) in chapterMap {
+            for p in paths {
+                if path == p || path.hasPrefix(p + "/") {
+                    if let chapterInt = Int(chapterKey) {
+                        return chapterInt - 1
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+
     //MARK: Build pages from any path
     func getPreviousPagePath(_ path:String?)->String?{
         if path == nil { return nil }

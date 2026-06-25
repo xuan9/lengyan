@@ -118,10 +118,11 @@ class AudioPlayerObserver: NSObject, ObservableObject {
                 self.totalTime = durationSeconds
             }
 
-            // 每5秒更新一次锁屏进度
+            // 每5秒更新一次锁屏进度并记录播放位置
             if currentTimeSeconds - self.lastNowPlayingUpdateTime >= 5.0 {
                 self.lastNowPlayingUpdateTime = currentTimeSeconds
                 self.updateNowPlayingInfo()
+                Prefers.shared.lastPlayTime = currentTimeSeconds
             }
         }
 
@@ -237,6 +238,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         self.currentTime = seconds
         self.lastNowPlayingUpdateTime = seconds
         self.updateNowPlayingInfo()
+        Prefers.shared.lastPlayTime = seconds
     }
 
     @objc private func handlePlay() -> MPRemoteCommandHandlerStatus {

@@ -71,15 +71,20 @@ class ReminderManager {
 
             let path = DailyVerseProvider.shared.getPath(for: triggerDate)
             let item = Book.shared.itemOfPath(path)
-            let title = "今日读经"
+            
+            let isSimplified = Book.shared.isSimplifiedChinese
+            let title = isSimplified ? "今日金句" : "今日金句"
+            let subtitle = isSimplified ? "轻触可阅读，亦可闭目听经。" : "輕觸可閱讀，亦可閉目聽經。"
+            
             let body = Book.shared.getSutra(item, maxLength: 80)
             let cleanBody = cleanNotificationBody(body)
 
             let content = UNMutableNotificationContent()
             content.title = title
-            content.subtitle = "輕觸可閱讀，亦可鎖屏聽經"
+            content.subtitle = subtitle
             content.body = cleanBody
             content.sound = nil
+            content.categoryIdentifier = "DAILY_SUTRA_CATEGORY"
             content.userInfo = ["path": path]
 
             var dc = DateComponents()

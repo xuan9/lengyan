@@ -59,4 +59,6 @@
 "select_favorites_placeholder" = "請選擇左側經文開始深讀";
 "enter_reading_mode" = "進入全卷精讀";
 "done" = "完成";
+"continue_listening_format" = "•  續聽·%@（上次聽到 %@） →";
+
 

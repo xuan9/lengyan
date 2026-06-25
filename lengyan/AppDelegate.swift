@@ -57,6 +57,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         // Set notification delegate
         UNUserNotificationCenter.current().delegate = self
+        registerNotificationCategory()
 
         // 将所有可能涉及 IO 或底层 IPC 通信的非 UI 任务放到后台，坚决不阻塞启动
         DispatchQueue.global(qos: .utility).async {
@@ -260,10 +261,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         Prefers.shared.persist()
     }
 
+    private func registerNotificationCategory() {
+        let playAction = UNNotificationAction(
+            identifier: "PLAY_ACTION",
+            title: Book.shared.isSimplifiedChinese ? "🔊 播放此卷听经" : "🔊 播放此卷聽經",
+            options: [] // Run in background
+        )
+        let category = UNNotificationCategory(
+            identifier: "DAILY_SUTRA_CATEGORY",
+            actions: [playAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
+
     // MARK: - UNUserNotificationCenterDelegate
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let path = response.notification.request.content.userInfo["path"] as? String
+        
+        if response.actionIdentifier == "PLAY_ACTION" {
+            if let path = path, let chapter = Book.shared.getChapterOfPath(path) {
+                AudioManager.shared.playChapter(chapter: chapter)
+            }
+            completionHandler()
+            return
+        }
+        
         if let path = path {
             openNotificationItem(path: path)
         }

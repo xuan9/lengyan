@@ -535,7 +535,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let toolRowPadding: CGFloat = rs(isPad ? 26 : 18)
         let toolRowHeight: CGFloat = isPad ? 56 : max(44, rs(44))
 
-        let headerHeight = titleTopPadding + titleHeight + titleLineGap + verseGap + verseHeight + buttonSectionTopGap + buttonHeight * 2 + verticalSpacing + toolRowPadding + toolRowHeight
+        // Check if there is playback progress
+        let lastPlayFile = Prefers.shared.lastPlayFile?.first
+        let hasListening = lastPlayFile != nil && !lastPlayFile!.isEmpty
+        let toolRowCount: CGFloat = 2 // Always show both rows for layout stability and symmetry
+        let actualToolRowHeight = toolRowHeight * toolRowCount
+
+        let headerHeight = titleTopPadding + titleHeight + titleLineGap + verseGap + verseHeight + buttonSectionTopGap + buttonHeight * 2 + verticalSpacing + toolRowPadding + actualToolRowHeight
 
         let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: headerHeight))
         header.backgroundColor = backgroundColor
@@ -610,7 +616,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         // ── 合并功能行：续读（左）+ 搜索（右）──
         let toolRowY = indexes.frame.maxY + toolRowPadding
-        let toolRow = UIView(frame: CGRect(x: cx, y: toolRowY, width: cw, height: toolRowHeight))
+        let toolRow = UIView(frame: CGRect(x: cx, y: toolRowY, width: cw, height: actualToolRowHeight))
 
         // 续读 — 始终显示，有进度时显示章节名，无进度时引导开始读经
         let bodyColor = SutraDesignTokens.shared.color(for: .textSecondary)
@@ -619,7 +625,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let continueLabel = UIButton(type: .system)
         let toolFont = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
         let hasProgress = Prefers.shared.lastReadPath != nil
-        let buttonText = hasProgress ? "•  续读" : "•  开始读经"
+        
+        let isSimplified = Book.shared.isSimplifiedChinese
+        let buttonText = hasProgress ? (isSimplified ? "•  续读" : "•  續讀") : (isSimplified ? "•  开始读经" : "•  開始讀經")
+        
         let continueAttr = NSMutableAttributedString(string: buttonText, attributes: [
             .font: toolFont,
             .foregroundColor: bodyColor
@@ -652,8 +661,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // 搜索 — 左对齐卷十按钮的右边缘
         let colTenRight = horizontalPadding + (chapterButtonWidth + buttonSpacing) * 4 + chapterButtonWidth
         let searchBtn = UIButton(type: .system)
-        let searchAttr = NSMutableAttributedString(string: "•  搜索", attributes: [
-            .font: SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium),
+        
+        let searchText = isSimplified ? "•  搜索" : "•  搜尋"
+        let searchAttr = NSMutableAttributedString(string: searchText, attributes: [
+            .font: toolFont,
             .foregroundColor: bodyColor
         ])
         searchAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
@@ -663,6 +674,36 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         searchBtn.contentHorizontalAlignment = .right
         searchBtn.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
         toolRow.addSubview(searchBtn)
+
+        // 续听 — 始终显示，位于第二行
+        let continueListeningLabel = UIButton(type: .system)
+        let listeningText: String
+        
+        if hasListening, let trackInfo = getLastPlayTrackInfo() {
+            let seconds = Prefers.shared.lastPlayTime
+            if seconds >= 1.0 {
+                let listeningFormat = L10n.str("continue_listening_format")
+                listeningText = String(format: listeningFormat, trackInfo.name, trackInfo.formattedTime)
+            } else {
+                let prefix = isSimplified ? "•  续听·" : "•  續聽·"
+                listeningText = "\(prefix)\(trackInfo.name) →"
+            }
+        } else {
+            listeningText = isSimplified ? "•  开始听经" : "•  開始聽經"
+        }
+        
+        let continueListeningAttr = NSMutableAttributedString(string: listeningText, attributes: [
+            .font: toolFont,
+            .foregroundColor: bodyColor
+        ])
+        continueListeningAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
+        
+        continueListeningLabel.setAttributedTitle(continueListeningAttr, for: .normal)
+        let btnY2 = toolRowHeight + (toolRowHeight - btnHeight) / 2
+        continueListeningLabel.frame = CGRect(x: rs(20), y: btnY2, width: cw - rs(40), height: btnHeight)
+        continueListeningLabel.contentHorizontalAlignment = .left
+        continueListeningLabel.addTarget(self, action: #selector(continueListening), for: .touchUpInside)
+        toolRow.addSubview(continueListeningLabel)
 
         header.addSubview(toolRow)
 
@@ -867,6 +908,63 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let hostingController = UIHostingController(rootView: SutraAcknowledgmentsView())
         hostingController.title = "致谢"
         self.navigationController?.pushViewController(hostingController, animated: true)
+    }
+
+    private func getLastPlayTrackInfo() -> (name: String, formattedTime: String)? {
+        guard let lastFileName = Prefers.shared.lastPlayFile?.first,
+              !lastFileName.isEmpty else {
+            return nil
+        }
+        
+        // Find the track name
+        var trackName: String?
+        for group in AudioManager.shared.mediaGroups {
+            if let index = group.files.firstIndex(of: lastFileName) {
+                if index < group.names.count {
+                    trackName = group.names[index]
+                    break
+                }
+            }
+        }
+        
+        if trackName == nil {
+            if AudioManager.shared.mediaGroups.isEmpty {
+                AudioManager.shared.loadMediaData()
+                for group in AudioManager.shared.mediaGroups {
+                    if let index = group.files.firstIndex(of: lastFileName) {
+                        if index < group.names.count {
+                            trackName = group.names[index]
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        
+        let displayName = trackName ?? lastFileName
+        
+        let seconds = Prefers.shared.lastPlayTime
+        let minutes = Int(seconds) / 60
+        let remainingSeconds = Int(seconds) % 60
+        let formattedTime = String(format: "%02d:%02d", minutes, remainingSeconds)
+        
+        return (displayName, formattedTime)
+    }
+
+    @objc private func continueListening() {
+        let selectionFeedback = UISelectionFeedbackGenerator()
+        selectionFeedback.selectionChanged()
+        
+        if let tabBarController = self.tabBarController {
+            tabBarController.selectedIndex = 1
+        }
+        
+        let lastPlayFile = Prefers.shared.lastPlayFile?.first
+        if lastPlayFile == nil || lastPlayFile!.isEmpty {
+            AudioManager.shared.playChapter(chapter: 0)
+        } else {
+            AudioManager.shared.startPlayback()
+        }
     }
 
     // MARK: - 合并行功能

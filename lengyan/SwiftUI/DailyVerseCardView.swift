@@ -47,7 +47,7 @@ struct SutraOnboardingView: View {
                     .offset(y: showContent ? 0 : 20)
                     
                     // 🌿 禅意引言 — 引导听经
-                    Text("— 可隨科判靜讀，亦可隨喜聽經 —")
+                    Text(Book.shared.isSimplifiedChinese ? "— 随文静读，亦可听经 —" : "— 隨文靜讀，亦可聽經 —")
                         .font(.system(size: 13, weight: .light, design: .serif))
                         .foregroundColor(.white.opacity(0.75))
                         .padding(.top, 12)
@@ -72,10 +72,10 @@ struct SutraOnboardingView: View {
                                 .foregroundColor(isReminderOn ? Color(uiColor: SutraDesignTokens.shared.color(for: .primary)) : .white.opacity(0.7))
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("开启每日晨钟提醒")
+                                Text(Book.shared.isSimplifiedChinese ? "开启每日晨钟提醒" : "開啟每日晨鐘提醒")
                                     .font(.system(size: 14, weight: .medium, design: .serif))
                                     .foregroundColor(.white)
-                                Text("每日早晨八时，为您推送一句经文金句")
+                                Text(Book.shared.isSimplifiedChinese ? "每日早晨八时为您推送，可在设置中自定义时间" : "每日早晨八時為您推送，可在設置中自定義時間")
                                     .font(.system(size: 11, weight: .light))
                                     .foregroundColor(.white.opacity(0.8))
                             }
