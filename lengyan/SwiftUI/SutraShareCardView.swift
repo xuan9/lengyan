@@ -46,6 +46,8 @@ struct SutraShareCardView: View {
     let text: String
     let source: String
     let template: ShareCardTemplate
+    /// 经文正文字号基准（由渲染器按文字长度自适应传入：短句大、长文小）
+    var verseFontBase: CGFloat = 22
 
     var body: some View {
         GeometryReader { geo in
@@ -213,7 +215,7 @@ struct SutraShareCardView: View {
     }
 
     private func shareFont(size: CGSize) -> Font {
-        let sz = fontSize(for: size, base: 22)
+        let sz = fontSize(for: size, base: verseFontBase)
         // 优先楷体
         if let _ = UIFont(name: "STKaiti", size: sz) {
             return .custom("STKaiti", size: sz)

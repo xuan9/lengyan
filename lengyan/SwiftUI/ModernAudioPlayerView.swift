@@ -9,14 +9,13 @@ struct ModernAudioPlayerView: View {
     @State private var modeButtonFrame: CGRect = .zero
     @State private var showTrackList = true
     @State private var isListInteractive = true // 防止过渡动画期间误触
-    @State private var titleHeight: CGFloat = 0 // 标题实际高度，约束卧香
+
+    // 底部安全区在 onAppear 读一次缓存，避免在 body 里每帧读取 UIApplication.keyWindow
+    // （iPad 多窗口/快速重绘时该值不稳，会在播放器栏内形成 AttributeGraph 布局环，冻结 UI 更新）
+    @State private var bottomSafeArea: CGFloat = 0
 
     private var tabBarHeight: CGFloat {
-        let bottomInset = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap { $0.windows }
-            .first { $0.isKeyWindow }?.safeAreaInsets.bottom ?? 0
-        return 49 + bottomInset + 8
+        49 + bottomSafeArea + 8
     }
 
     var body: some View {
@@ -124,6 +123,14 @@ struct ModernAudioPlayerView: View {
             manager.setupAudioSession()
             manager.loadMediaData()  // loadMediaData 内部已调用 resumeLastPlayback
             audioObserver.showPlayerBar = true
+            // 缓存底部安全区（供 tabBarHeight 使用），避免在 body 里逐帧读取 UIApplication.keyWindow
+            if bottomSafeArea == 0 {
+                let window = UIApplication.shared.connectedScenes
+                    .compactMap({ $0 as? UIWindowScene })
+                    .flatMap({ $0.windows })
+                    .first(where: { $0.isKeyWindow })
+                bottomSafeArea = window?.safeAreaInsets.bottom ?? 0
+            }
         }
         .overlay {
             GeometryReader { overlayGeo in
@@ -193,25 +200,13 @@ struct ModernAudioPlayerView: View {
     }
 
     private var isCurrentTrackDownloading: Bool {
-        guard let trackName = audioObserver.currentTrack else { return false }
-        for group in manager.mediaGroups {
-            if let index = group.names.firstIndex(of: trackName) {
-                let file = group.files[index]
-                return manager.downloadStatus[file] == .downloading
-            }
-        }
-        return false
+        let s = manager.downloadState(forTrackName: audioObserver.currentTrack)
+        NSLog("🔎 [UI isDownloading] track=%@ isDL=%d prog=%.2f", audioObserver.currentTrack ?? "nil", s.isDownloading ? 1 : 0, s.progress)
+        return s.isDownloading
     }
 
     private var currentTrackDownloadProgress: Double {
-        guard let trackName = audioObserver.currentTrack else { return 0 }
-        for group in manager.mediaGroups {
-            if let index = group.names.firstIndex(of: trackName) {
-                let file = group.files[index]
-                return manager.downloadProgress[file] ?? 0
-            }
-        }
-        return 0
+        manager.downloadState(forTrackName: audioObserver.currentTrack).progress
     }
 
     // MARK: - Reusable Player Controls
@@ -245,11 +240,18 @@ struct ModernAudioPlayerView: View {
                 .renderingMode(.template)
         }
         .background(
-            GeometryReader { geo in
-                Color.clear.preference(
-                    key: ButtonFramePreferenceKey.self,
-                    value: geo.frame(in: .global)
-                )
+            // 仅在菜单展开时测量自身 frame。常驻的 GeometryReader→PreferenceKey→@State 会在
+            // 高频重绘（如下载进度 0.1s 刷新）时形成 AttributeGraph 布局环，从而阻断 downloadStatus
+            // 等状态变更向 UI 的传递（表现为小播放器卡在「下载中」）。门控后下载期间不再测量、不成环。
+            Group {
+                if showModeMenu {
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ButtonFramePreferenceKey.self,
+                            value: geo.frame(in: .global)
+                        )
+                    }
+                }
             }
         )
         .onPreferenceChange(ButtonFramePreferenceKey.self) { frame in
@@ -369,16 +371,11 @@ struct ModernAudioPlayerView: View {
                     }
                 }
                 .fixedSize()
-                .background(GeometryReader { geo in
-                    Color.clear.preference(key: TitleHeightPreferenceKey.self, value: geo.size.height)
-                })
-                .onPreferenceChange(TitleHeightPreferenceKey.self) { height in
-                    titleHeight = height
-                }
 
-                // 竖向卧香紧贴标题右侧，高度匹配标题，裁剪溢出
+                // 竖向卧香紧贴标题右侧；直接用 maxHeight:.infinity 填满 HStack 高度（=标题高度），
+                // 不再「量标题高度 → @State → 喂回 frame」——那是 AttributeGraph 布局环的源头
                 verticalIncenseProgressBar
-                    .frame(width: 44, height: max(1, titleHeight))
+                    .frame(minWidth: 44, maxWidth: 44, maxHeight: .infinity)
                     .clipped()
             }
 
@@ -663,13 +660,6 @@ struct ModernAudioPlayerView: View {
 private struct ButtonFramePreferenceKey: PreferenceKey {
     static var defaultValue: CGRect = .zero
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        value = nextValue()
-    }
-}
-
-private struct TitleHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
     }
 }

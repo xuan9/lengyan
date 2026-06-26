@@ -94,7 +94,13 @@ class FavoritesViewModel: ObservableObject {
     init() {
         // If under UITesting / snapshot-mode, load synchronously during init to ensure immediate rendering
         if ProcessInfo.processInfo.arguments.contains("--uitesting") || ProcessInfo.processInfo.arguments.contains("--snapshot-mode") {
-            let paths = Prefers.shared.userLikes
+            // 快照模式：若无个人收藏，预置「破妄识无处」一条，让「我的收藏」区有内容
+            var paths = Prefers.shared.userLikes
+            if paths.isEmpty {
+                let seedPath = "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K1"  // 破妄识无处（破妄識無處）
+                Prefers.shared.like(seedPath)
+                paths = [seedPath]
+            }
             let cpItems = self.loadItems(from: paths)
             FavoritesCache.shared.cacheFavorites(cpItems, paths: paths)
             self.favorites = cpItems
@@ -595,14 +601,13 @@ struct ModernFavoritesView: View {
 
     private func shareFavorite(_ item: FavoriteItem) {
         let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
-        let sutraText = Book.shared.getSutra(Book.shared.itemOfPath(item.path), maxLength: 40)
-        let source = item.title.isEmpty ? bookTitle : "\(bookTitle) · \(item.title)"
+        let sutraText = Book.shared.getSutra(Book.shared.itemOfPath(item.path))
 
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootVC = windowScene.windows.first?.rootViewController {
-            SutraCardRenderer.shareCard(
+            SutraCardRenderer.presentPreview(
                 text: sutraText,
-                source: source,
+                source: bookTitle,
                 from: rootVC,
                 barButtonItem: nil
             )

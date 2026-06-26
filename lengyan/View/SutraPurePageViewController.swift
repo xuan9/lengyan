@@ -258,15 +258,13 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let item = Book.shared.itemOfPath(path)
         let bookTitle = NSLocalizedString("lengyan_book_title", comment: "《楞嚴經》")
 
-        // 获取经文和来源
-        let sutraText = Book.shared.getSutra(item, maxLength: 40)
-        let name = item["name"] as? String ?? ""
-        let source = name.isEmpty ? bookTitle : "\(bookTitle) · \(name)"
+        // 完整经文（不截断），来源只留《楞嚴經》（去掉科判后缀）
+        let sutraText = Book.shared.getSutra(item)
 
-        // 零摩擦分享：默认竖版美图卡片
-        SutraCardRenderer.shareCard(
+        // 走预览页：用户可选「分享美图（自动适配/分多图）/ 分享文字 / 拷贝」
+        SutraCardRenderer.presentPreview(
             text: sutraText,
-            source: source,
+            source: bookTitle,
             from: self,
             barButtonItem: self.navigationItem.rightBarButtonItems?.first
         )

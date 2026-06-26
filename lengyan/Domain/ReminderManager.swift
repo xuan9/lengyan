@@ -115,23 +115,11 @@ class ReminderManager {
     // MARK: - 清理通知文本
 
     private func cleanNotificationBody(_ text: String) -> String {
-        var result = text
-
-        let prefixes = [
-            "佛言：", "佛告阿难：", "阿难！", "阿难白佛言：",
-            "佛言：富楼那！", "文殊！", "尔时",
-        ]
-        for prefix in prefixes {
-            if result.hasPrefix(prefix) {
-                result = String(result.dropFirst(prefix.count))
-                break
-            }
-        }
-
+        // 保留经文原味（含「佛言：」「阿难！」等呼语，是经文的语境与口吻），仅去空白、超长截断
+        var result = text.trimmingCharacters(in: .whitespaces)
         if result.count > 80 {
             result = String(result.prefix(77)) + "…"
         }
-
-        return result.trimmingCharacters(in: .whitespaces)
+        return result
     }
 }

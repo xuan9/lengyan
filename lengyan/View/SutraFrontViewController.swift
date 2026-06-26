@@ -100,22 +100,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // 子页面（阅读页）会在各自的 viewWillAppear 中重新启用。
         self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = false
         self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
-        
-        // 🌾 第一次启动时，优雅展示开卷欢迎与晨钟提醒授权页
-        showOnboardingIfNeeded()
-    }
-
-    private func showOnboardingIfNeeded() {
-        guard !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") else { return }
-        
-        let onboardingView = SutraOnboardingView { [weak self] in
-            self?.dismiss(animated: true)
-            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
-        }
-        let hostingController = UIHostingController(rootView: onboardingView)
-        hostingController.modalPresentationStyle = .fullScreen
-        hostingController.modalTransitionStyle = .crossDissolve
-        self.present(hostingController, animated: true)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -538,7 +522,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // Check if there is playback progress
         let lastPlayFile = Prefers.shared.lastPlayFile?.first
         let hasListening = lastPlayFile != nil && !lastPlayFile!.isEmpty
-        let toolRowCount: CGFloat = 2 // Always show both rows for layout stability and symmetry
+        let toolRowCount: CGFloat = isPad ? 1 : 2 // iPad：续读/续听/搜索 同行；iPhone：仍两行
         let actualToolRowHeight = toolRowHeight * toolRowCount
 
         let headerHeight = titleTopPadding + titleHeight + titleLineGap + verseGap + verseHeight + buttonSectionTopGap + buttonHeight * 2 + verticalSpacing + toolRowPadding + actualToolRowHeight
@@ -652,7 +636,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         continueLabel.setAttributedTitle(continueAttr, for: .normal)
         let btnHeight = max(44, rs(32))
         let btnY = (toolRowHeight - btnHeight) / 2
-        continueLabel.frame = CGRect(x: rs(20), y: btnY, width: cw * 0.65, height: btnHeight)
+        let searchWidth: CGFloat = rs(72)
+        // iPad 同行：续读靠左、续听居中（屏幕中线）、搜索靠右。续听用居中宽槽容下完整文字，
+        // 两侧对称窄槽，保证续听真正落在 cw/2
+        let listenSlotW: CGFloat = isPad ? (cw * 0.42) : 0
+        let sideSlotW: CGFloat = isPad ? ((cw - listenSlotW - rs(40)) / 2) : 0
+        let continueWidth: CGFloat = isPad ? sideSlotW : (cw * 0.65)
+        continueLabel.frame = CGRect(x: rs(20), y: btnY, width: continueWidth, height: btnHeight)
         continueLabel.contentHorizontalAlignment = .left
         continueLabel.tag = 9991
         continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
@@ -669,8 +659,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         ])
         searchAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
         searchBtn.setAttributedTitle(searchAttr, for: .normal)
-        let searchWidth: CGFloat = rs(72)
-        searchBtn.frame = CGRect(x: colTenRight - searchWidth, y: btnY, width: searchWidth, height: btnHeight)
+        let searchX: CGFloat = isPad ? (cw - rs(20) - sideSlotW) : (colTenRight - searchWidth)
+        searchBtn.frame = CGRect(x: searchX, y: btnY, width: isPad ? sideSlotW : searchWidth, height: btnHeight)
         searchBtn.contentHorizontalAlignment = .right
         searchBtn.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
         toolRow.addSubview(searchBtn)
@@ -699,9 +689,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         continueListeningAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
         
         continueListeningLabel.setAttributedTitle(continueListeningAttr, for: .normal)
-        let btnY2 = toolRowHeight + (toolRowHeight - btnHeight) / 2
-        continueListeningLabel.frame = CGRect(x: rs(20), y: btnY2, width: cw - rs(40), height: btnHeight)
-        continueListeningLabel.contentHorizontalAlignment = .left
+        let listeningY: CGFloat = isPad ? btnY : (toolRowHeight + (toolRowHeight - btnHeight) / 2)
+        let listeningX: CGFloat = isPad ? (rs(20) + sideSlotW) : rs(20)
+        let listeningW: CGFloat = isPad ? listenSlotW : (cw - rs(40))
+        continueListeningLabel.frame = CGRect(x: listeningX, y: listeningY, width: listeningW, height: btnHeight)
+        continueListeningLabel.contentHorizontalAlignment = isPad ? .center : .left
         continueListeningLabel.addTarget(self, action: #selector(continueListening), for: .touchUpInside)
         toolRow.addSubview(continueListeningLabel)
 

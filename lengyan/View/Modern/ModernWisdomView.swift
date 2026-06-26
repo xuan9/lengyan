@@ -170,7 +170,7 @@ struct WisdomLessonCompleteView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "bell")
                                 .font(.system(size: 14))
-                            Text("开启每日提醒，每日晨钟，回归宁静")
+                            Text("开启每日提醒，每日金句，回归宁静")
                                 .font(.system(size: 14, weight: .light, design: .serif))
                         }
                         .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))

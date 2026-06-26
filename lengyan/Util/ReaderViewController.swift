@@ -364,7 +364,13 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
 
     private func showSwipeGuideIfNeeded() {
         guard !Prefers.shared.hasSeenSwipeGuide else { return }
-        
+        // 快照/UITest 模式跳过翻页引导，保证截图干净（不出现「左右滑动翻页」遮罩）
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("--snapshot-mode") || args.contains("--uitesting") {
+            Prefers.shared.hasSeenSwipeGuide = true
+            return
+        }
+
         let guideView = UIView(frame: view.bounds)
         guideView.tag = 9988
         guideView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -525,23 +531,14 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         progressRingLayer = ring
     }
 
-    /// 当前卷对应的音频文件名（用于查询下载状态/进度）
-    private func getChapterFile() -> String? {
-        if AudioManager.shared.mediaGroups.isEmpty {
-            AudioManager.shared.loadMediaData()
-        }
-        guard let group = AudioManager.shared.mediaGroups.first,
-              chapter >= 0, chapter < group.files.count else { return nil }
-        return group.files[chapter]
-    }
-
     /// 统一刷新播放按钮：下载中显示进度圆环，否则显示播放/暂停图标
     private func refreshPlayButton() {
         guard let btn = self.playButton?.customView as? UIButton else { return }
 
-        let file = getChapterFile()
-        let isDownloading = file.flatMap { AudioManager.shared.downloadStatus[$0] } == .downloading
-        let progress = file.flatMap { AudioManager.shared.downloadProgress[$0] } ?? 0
+        // 下载状态走 AudioManager 统一入口，与听经小播放器同源同逻辑
+        let state = AudioManager.shared.downloadState(forTrackName: getTrackName())
+        let isDownloading = state.isDownloading
+        let progress = state.progress
 
         let ringColor = SutraDesignTokens.shared.color(for: .background)
         progressTrackLayer?.strokeColor = ringColor.withAlphaComponent(0.2).cgColor

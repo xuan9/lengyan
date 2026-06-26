@@ -29,6 +29,8 @@ class SutraSnapshotTests: XCTestCase {
     /// 一份完整截图序列：首页 / 听经 / 收藏 / 设置 / 经文阅读
     /// zh-Hans + zh-Hant 各 5 张，满足 App Store Connect 3-10 张要求
     func testAppStoreScreenshots() throws {
+        // 强制竖屏，避免模拟器被旋转过导致截图颠倒（尤其 iPad）
+        XCUIDevice.shared.orientation = .portrait
         // 等待首屏稳定
         Thread.sleep(forTimeInterval: 1.5)
 

@@ -39,6 +39,6 @@
 "end" = "終";
 "start_qi" = "起";
 "done" = "完成";
-"continue_listening_format" = "•  續聽·%@（上次聽到 %@） →";
+"continue_listening_format" = "•  續聽·%@（%@） →";
 
 
