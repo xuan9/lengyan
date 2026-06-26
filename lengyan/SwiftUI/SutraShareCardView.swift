@@ -48,21 +48,54 @@ struct SutraShareCardView: View {
     let template: ShareCardTemplate
     /// 经文正文字号基准（由渲染器按文字长度自适应传入：短句大、长文小）
     var verseFontBase: CGFloat = 22
+    /// 紧凑模式：单张短/中经文用——竖版宽度不变、高度随内容收缩，消除 9:16 画框的上下尴尬留白。
+    /// 间距改以宽度为基准（不依赖高度），并无 GeometryReader，便于高度自适应。
+    var compact: Bool = false
+    /// 紧凑模式上下边缘留白高度（由渲染器按测量出的内容高度计算传入）
+    var compactBreath: CGFloat = 0
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                // 背景
-                cardBackground
+        if compact {
+            compactBody
+        } else {
+            GeometryReader { geo in
+                ZStack {
+                    // 背景
+                    cardBackground
 
-                // 内容布局
-                cardContent(size: geo.size)
+                    // 内容布局
+                    cardContent(size: geo.size)
 
-                // 水印
-                watermark(size: geo.size)
+                    // 水印
+                    watermark(size: geo.size)
+                }
             }
+            .aspectRatio(template.aspectRatio, contentMode: .fit)
         }
-        .aspectRatio(template.aspectRatio, contentMode: .fit)
+    }
+
+    /// 紧凑模式渲染：固定宽度 1080、无 GeometryReader，高度由内容撑开（由渲染器加 frame 定最终高度）。
+    /// watermark 用 overlay 贴右下——不进 ZStack，避免其 Spacer/maxHeight 撑破自然高度测量。
+    private var compactBody: some View {
+        let size = CGSize(width: 1080, height: 1080)
+        return ZStack {
+            cardBackground
+            cardContent(size: size)
+        }
+        .frame(width: 1080)
+        .overlay(watermark(size: size), alignment: .bottomTrailing)
+    }
+
+    /// 紧凑模式上下边缘留白：固定高度（compactBreath），避免弹性 Spacer 使自然高度不可测；
+    /// 固定模板仍用弹性 Spacer 撑满 9:16 画框。
+    @ViewBuilder
+    private var edgeSpacer: some View {
+        if compact { Spacer().frame(height: compactBreath) } else { Spacer() }
+    }
+
+    /// 经文上下留白：弹性 minHeight，短句时撑开让经文居中、长文时自动收紧
+    private func verseEdgeGap(size: CGSize) -> some View {
+        Spacer().frame(minHeight: ratio(size, 0.05))
     }
 
     // MARK: - Background
@@ -94,27 +127,20 @@ struct SutraShareCardView: View {
 
     private func cardContent(size: CGSize) -> some View {
         VStack(spacing: 0) {
-            Spacer()
-
-            // 顶部装饰
+            // 页眉：上边距 + 顶饰（固定在顶）
+            edgeSpacer
             topDecoration(size: size)
 
-            Spacer().frame(height: size.height * 0.06)
-
-            // 经文正文
+            // 经文主体：上下留白将其推至视觉中部；内容多时弹性自动收紧、短句撑开居中
+            verseEdgeGap(size: size)
             verseContent(size: size)
+            verseEdgeGap(size: size)
 
-            Spacer().frame(height: size.height * 0.04)
-
-            // 来源标注
+            // 页脚：来源 + 底饰紧凑成组，贴下边距（normal page footer）
             sourceAttribution(size: size)
-
-            Spacer()
-
-            // 底部装饰
+            Spacer().frame(height: ratio(size, 0.025))
             bottomDecoration(size: size)
-
-            Spacer().frame(height: size.height * 0.05)
+            edgeSpacer
         }
         .padding(.horizontal, size.width * 0.1)
     }
@@ -134,7 +160,7 @@ struct SutraShareCardView: View {
     // MARK: - Verse Content
 
     private func verseContent(size: CGSize) -> some View {
-        VStack(spacing: size.height * 0.02) {
+        VStack(spacing: ratio(size, 0.02)) {
             // 开引号
             HStack {
                 Text("「")
@@ -188,16 +214,16 @@ struct SutraShareCardView: View {
     // MARK: - Watermark
 
     private func watermark(size: CGSize) -> some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                Text("楞严")
-                    .font(.system(size: fontSize(for: size, base: 8), weight: .ultraLight))
-                    .foregroundColor(SutraDesignSystem.color(.textTertiary).opacity(0.2))
-                    .padding(.trailing, size.width * 0.05)
-                    .padding(.bottom, size.height * 0.02)
-            }
+        let mark = Text("楞严")
+            .font(.system(size: fontSize(for: size, base: 8), weight: .ultraLight))
+            .foregroundColor(SutraDesignSystem.color(.textTertiary).opacity(0.2))
+            .padding(.trailing, size.width * 0.05)
+            .padding(.bottom, ratio(size, 0.02))
+        // 紧凑模式：返回纯标记（不带 maxHeight frame，否则会撑破自然高度测量），由 compactBody 用 overlay 贴右下
+        if compact {
+            return AnyView(mark)
+        } else {
+            return AnyView(VStack { Spacer(); HStack { Spacer(); mark } })
         }
     }
 
@@ -210,8 +236,14 @@ struct SutraShareCardView: View {
     }
 
     private func fontSize(for size: CGSize, base: CGFloat) -> CGFloat {
-        let scale = min(size.width, size.height) / 300.0
+        // 以宽度为基准：固定模板（min 即取宽）与紧凑模式（高度自适应）下都稳定一致
+        let scale = size.width / 300.0
         return base * max(0.8, min(scale, 2.5))
+    }
+
+    /// 段间间距基准：固定模板沿用高度比例（原视觉不变），紧凑模式用宽度比例（不依赖自适应高度）
+    private func ratio(_ size: CGSize, _ v: CGFloat) -> CGFloat {
+        compact ? size.width * v : size.height * v
     }
 
     private func shareFont(size: CGSize) -> Font {
