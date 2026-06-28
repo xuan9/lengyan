@@ -8,8 +8,8 @@
 //    中：经文段落 + 法卷金线 + 出处
 //    大：完整经文段落（~300字）+ 出处 + 「点击阅读」引导
 //    accessoryInline    — 锁屏顶部一行经句
-//    accessoryCircular  — 锁屏圆形「楞严」二字
-//    accessoryRectangular — 锁屏竖排经句卡片
+//    accessoryCircular  — 锁屏圆形四字经文印
+//    accessoryRectangular — 锁屏经句卡片
 //
 //  数据源：主App通过 App Group UserDefaults 写入
 //  更新策略：每日凌晨刷新
@@ -204,28 +204,28 @@ struct SmallVerseView: View {
             if entry.needsOnboarding {
                 EmptyStateView(compact: true)
             } else {
-                // 极简版式 — 经文居中，去金线点缀，留白即为装裱
-                VStack(spacing: 0) {
-                    Spacer(minLength: 22)
-
+                // 小尺寸尽量让经文本身占满空间，留白只做呼吸感。
+                GeometryReader { proxy in
+                    let horizontalPadding: CGFloat = 12
+                    let verticalPadding: CGFloat = 10
                     let sutra = entry.smallText
-                    // 动态字号：限 3 行（130×84），层级下调为小组件小字
                     let size = dynamicFontSize(
                         charCount: sutra.count,
-                        availableWidth: 130,
-                        availableHeight: 84,
-                        lineSpacing: 4,
-                        minSize: 13,
-                        maxSize: 19
+                        availableWidth: max(CGFloat(80), proxy.size.width - horizontalPadding * 2),
+                        availableHeight: max(CGFloat(80), proxy.size.height - verticalPadding * 2),
+                        lineSpacing: 5,
+                        minSize: 16,
+                        maxSize: 26
                     )
                     Text(sutra)
                         .font(WidgetTokens.sutraFont(size: size))
                         .foregroundColor(WidgetTokens.sutraText)
-                        .lineSpacing(4)
+                        .lineSpacing(5)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 14)
-
-                    Spacer(minLength: 22)
+                        .minimumScaleFactor(0.82)
+                        .padding(.horizontal, horizontalPadding)
+                        .padding(.vertical, verticalPadding)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
             }
         }
@@ -245,29 +245,28 @@ struct MediumVerseView: View {
             if entry.needsOnboarding {
                 EmptyStateView(compact: false)
             } else {
-                VStack(alignment: .center, spacing: 0) {
-                    // 经文段落左对齐 — 无题眉，经文占满（顶部对齐，空白落底）
+                GeometryReader { proxy in
+                    let horizontalPadding: CGFloat = 18
+                    let verticalPadding: CGFloat = 14
                     let sutra = entry.mediumText
-                    // 可用宽 324pt（364-20×2）、高 ~140pt（无题眉，垂直留白更舒展）
                     let size = dynamicFontSize(
                         charCount: sutra.count,
-                        availableWidth: 324,
-                        availableHeight: 140,
-                        lineSpacing: 6,
-                        minSize: 16,
-                        maxSize: 22
+                        availableWidth: max(CGFloat(240), proxy.size.width - horizontalPadding * 2),
+                        availableHeight: max(CGFloat(110), proxy.size.height - verticalPadding * 2),
+                        lineSpacing: 5,
+                        minSize: 15,
+                        maxSize: 25
                     )
                     Text(sutra)
                         .font(WidgetTokens.sutraFont(size: size))
                         .foregroundColor(WidgetTokens.sutraText)
-                        .lineSpacing(6)
+                        .lineSpacing(5)
                         .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 18)
-
-                    Spacer(minLength: 0)
+                        .minimumScaleFactor(0.9)
+                        .padding(.horizontal, horizontalPadding)
+                        .padding(.vertical, verticalPadding)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
-                .padding(.horizontal, 20)
             }
         }
         .widgetURL(entry.url)
@@ -368,35 +367,36 @@ struct InlineVerseView: View {
     }
 }
 
-/// 锁屏圆形 — 「楞严」二字法印
+/// 锁屏圆形 — 当前经文前四字，做成小印章，不再显示静态应用名。
 struct CircularVerseView: View {
     let entry: DailyVerseEntry
 
     var body: some View {
         ZStack {
             if entry.needsOnboarding {
-                VStack(spacing: 2) {
-                    Text("楞").font(WidgetTokens.sutraFont(size: 22))
-                    Text("严").font(WidgetTokens.sutraFont(size: 22))
+                VStack(spacing: 0) {
+                    Text("启")
+                        .font(WidgetTokens.sutraFont(size: 18))
+                    Text("卷")
+                        .font(WidgetTokens.sutraFont(size: 18))
                 }
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.75)
             } else {
-                VStack(spacing: 1) {
-                    Text("楞")
-                        .font(WidgetTokens.sutraFont(size: 22))
-                        .foregroundColor(.white)
-                    Text("严")
-                        .font(WidgetTokens.sutraFont(size: 22))
-                        .foregroundColor(.white)
+                let lines = entry.circularLines
+                VStack(spacing: 0) {
+                    Text(lines.top)
+                        .font(WidgetTokens.sutraFont(size: 17))
+                    Text(lines.bottom)
+                        .font(WidgetTokens.sutraFont(size: 17))
                 }
-                .minimumScaleFactor(0.7)
-                .widgetLabel(entry.sourceShort)
+                .foregroundColor(.primary)
+                .minimumScaleFactor(0.68)
             }
         }
     }
 }
 
-/// 锁屏竖排卡片 — 一句经文 + 出处
+/// 锁屏卡片 — 只放经文，不放出处 footer。
 struct RectangularVerseView: View {
     let entry: DailyVerseEntry
 
@@ -410,20 +410,21 @@ struct RectangularVerseView: View {
                     .foregroundColor(.secondary)
             }
         } else {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(entry.inlineText)
-                    .font(WidgetTokens.sutraFont(size: 13))
-                    .foregroundColor(.primary)
-                    .lineLimit(3)
-                    .minimumScaleFactor(0.85)
-                Spacer(minLength: 0)
-                Text(entry.source)
-                    .font(.system(size: 10, weight: .regular))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
+            Text(entry.lockScreenText)
+                .font(WidgetTokens.sutraFont(size: 13.5))
+                .foregroundColor(.primary)
+                .lineSpacing(2)
+                .lineLimit(3)
+                .minimumScaleFactor(0.78)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
     }
+}
+
+private struct CircularTextLines {
+    let top: String
+    let bottom: String
 }
 
 // MARK: - Empty State (优雅空态)
@@ -480,11 +481,12 @@ private extension DailyVerseEntry {
         return String(firstSentence[..<end]) + "…"
     }
 
-    /// Medium 专用：~80 字完整段落
-    /// 按句号切分，累计 ≤78 字；不够则硬截断
+    /// Medium 专用：约 120 字完整段落，减少中号组件无意义空白。
+    /// 按句号切分，累计到上限；不够则硬截断。
     var mediumText: String {
+        let limit = 120
         let src = fullBodyText
-        if src.count <= 80 { return src }
+        if src.count <= limit { return src }
         // 按完整句子（。；！？）累计
         var result = ""
         let chars = Array(src)
@@ -492,7 +494,7 @@ private extension DailyVerseEntry {
         for ch in chars {
             buffer.append(ch)
             if "。；！？".contains(ch) {
-                if (result + buffer).count <= 80 {
+                if (result + buffer).count <= limit {
                     result += buffer
                     buffer = ""
                 } else {
@@ -502,18 +504,55 @@ private extension DailyVerseEntry {
         }
         if result.isEmpty {
             // 无合适句号切分点，硬截断
-            let end = src.index(src.startIndex, offsetBy: 78, limitedBy: src.endIndex) ?? src.endIndex
+            let end = src.index(src.startIndex, offsetBy: limit - 2, limitedBy: src.endIndex) ?? src.endIndex
             return String(src[..<end]) + "…"
         }
         return result
     }
 
-    /// inline/rectangular 用短文本，避免锁屏截断
+    /// inline 用一行短文本，避免锁屏顶部截断。
     var inlineText: String {
-        let trimmed = normalizedText
-        if trimmed.count <= 24 { return trimmed }
-        let end = trimmed.index(trimmed.startIndex, offsetBy: 24, limitedBy: trimmed.endIndex) ?? trimmed.endIndex
-        return String(trimmed[..<end]) + "…"
+        clippedFullText(limit: 24)
+    }
+
+    /// rectangular 锁屏卡片只放经文，不放 footer，给三行留足内容。
+    var lockScreenText: String {
+        clippedFullText(limit: 36)
+    }
+
+    /// circular 锁屏用当前经文前四个有效字，而不是静态「楞严」。
+    var circularLines: CircularTextLines {
+        let cleanScalars = fullBodyText.unicodeScalars.filter {
+            !Self.circularExcludedCharacters.contains($0)
+        }
+        let cleanText = cleanScalars.map(String.init).joined()
+        let sealText = cleanText.isEmpty ? "启卷" : String(cleanText.prefix(4))
+        let splitOffset = min(2, sealText.count)
+        let splitIndex = sealText.index(sealText.startIndex, offsetBy: splitOffset)
+        let top = String(sealText[..<splitIndex])
+        let bottom = String(sealText[splitIndex...])
+        return CircularTextLines(top: top, bottom: bottom.isEmpty ? "经" : bottom)
+    }
+
+    private func clippedFullText(limit: Int) -> String {
+        let src = fullBodyText
+        if src.count <= limit { return src }
+        let head = String(src.prefix(limit))
+        if let sentenceEnd = head.lastIndex(where: { "。；！？".contains($0) }) {
+            return String(head[...sentenceEnd])
+        }
+        if let comma = head.lastIndex(where: { "，、".contains($0) }) {
+            return String(head[..<comma]) + "…"
+        }
+        let end = src.index(src.startIndex, offsetBy: max(1, limit - 1), limitedBy: src.endIndex) ?? src.endIndex
+        return String(src[..<end]) + "…"
+    }
+
+    private static var circularExcludedCharacters: CharacterSet {
+        var set = CharacterSet.punctuationCharacters
+        set.formUnion(.whitespacesAndNewlines)
+        set.formUnion(CharacterSet(charactersIn: "，。；！？、：；「」『』《》〈〉（）【】〔〕·"))
+        return set
     }
 
     var sourceShort: String {
