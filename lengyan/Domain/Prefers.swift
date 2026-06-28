@@ -46,6 +46,7 @@ class Prefers: NSObject, PrefersProtocol {
     private static let userLikesKey = "userLikes"
     private static let searchHistoryKey = "searchHistory"
     private static let hasSeenSwipeGuideKey = "hasSeenSwipeGuide"
+    private static let hasSeenDailyReminderPromptKey = "hasSeenDailyReminderPrompt"
 
     static let shared = Prefers()
 
@@ -222,6 +223,11 @@ class Prefers: NSObject, PrefersProtocol {
     var hasSeenSwipeGuide: Bool {
         get { userDefaults.bool(forKey: Prefers.hasSeenSwipeGuideKey) }
         set { userDefaults.set(newValue, forKey: Prefers.hasSeenSwipeGuideKey) }
+    }
+
+    var hasSeenDailyReminderPrompt: Bool {
+        get { userDefaults.bool(forKey: Prefers.hasSeenDailyReminderPromptKey) }
+        set { userDefaults.set(newValue, forKey: Prefers.hasSeenDailyReminderPromptKey) }
     }
 
     func persist() {

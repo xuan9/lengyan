@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 import SwiftUI
+import UserNotifications
 
 class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
@@ -100,6 +101,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // 子页面（阅读页）会在各自的 viewWillAppear 中重新启用。
         self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = false
         self.navigationController?.barHideOnSwipeGestureRecognizer.isEnabled = false
+        maybeShowDailyReminderPrompt()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -652,12 +654,14 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let colTenRight = horizontalPadding + (chapterButtonWidth + buttonSpacing) * 4 + chapterButtonWidth
         let searchBtn = UIButton(type: .system)
         
-        let searchText = isSimplified ? "•  搜索" : "•  搜尋"
-        let searchAttr = NSMutableAttributedString(string: searchText, attributes: [
-            .font: toolFont,
-            .foregroundColor: bodyColor
-        ])
-        searchAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
+        let searchText = isSimplified ? "搜索" : "搜尋"
+        let searchAttr = makeToolIconTitle(
+            symbolName: "magnifyingglass",
+            text: searchText,
+            font: toolFont,
+            bodyColor: bodyColor,
+            goldColor: goldColor
+        )
         searchBtn.setAttributedTitle(searchAttr, for: .normal)
         let searchX: CGFloat = isPad ? (cw - rs(20) - sideSlotW) : (colTenRight - searchWidth)
         searchBtn.frame = CGRect(x: searchX, y: btnY, width: isPad ? sideSlotW : searchWidth, height: btnHeight)
@@ -672,22 +676,23 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if hasListening, let trackInfo = getLastPlayTrackInfo() {
             let seconds = Prefers.shared.lastPlayTime
             if seconds >= 1.0 {
-                let listeningFormat = L10n.str("continue_listening_format")
-                listeningText = String(format: listeningFormat, trackInfo.name, trackInfo.formattedTime)
+                let prefix = isSimplified ? "续听·" : "續聽·"
+                listeningText = "\(prefix)\(trackInfo.name)（\(trackInfo.formattedTime)） →"
             } else {
-                let prefix = isSimplified ? "•  续听·" : "•  續聽·"
+                let prefix = isSimplified ? "续听·" : "續聽·"
                 listeningText = "\(prefix)\(trackInfo.name) →"
             }
         } else {
-            listeningText = isSimplified ? "•  开始听经" : "•  開始聽經"
+            listeningText = isSimplified ? "开始听经" : "開始聽經"
         }
         
-        let continueListeningAttr = NSMutableAttributedString(string: listeningText, attributes: [
-            .font: toolFont,
-            .foregroundColor: bodyColor
-        ])
-        continueListeningAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
-        
+        let continueListeningAttr = makeToolIconTitle(
+            symbolName: "play.fill",
+            text: listeningText,
+            font: toolFont,
+            bodyColor: bodyColor,
+            goldColor: goldColor
+        )
         continueListeningLabel.setAttributedTitle(continueListeningAttr, for: .normal)
         let listeningY: CGFloat = isPad ? btnY : (toolRowHeight + (toolRowHeight - btnHeight) / 2)
         let listeningX: CGFloat = isPad ? (rs(20) + sideSlotW) : rs(20)
@@ -759,24 +764,59 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         btn.addTarget(self, action: #selector(chapterTouchUp(_:)), for: [.touchUpOutside, .touchCancel])
         btn.titleLabel?.adjustsFontSizeToFitWidth = true
 
-        // 当前正在阅读的卷用 bold 字重突出
-        let isCurrentChapter = Prefers.shared.lastReadChapter == chapter
+        // 当前正在阅读的卷：用文字层级 + 短金线提示，保持首页纯文字气质
+        let isCurrentChapter = currentChapterForHomeButtons() == chapter
         btn.backgroundColor = .clear
         btn.setTitleColor(
-            SutraDesignTokens.shared.color(for: isCurrentChapter ? .textSecondary : .textPrimary),
+            SutraDesignTokens.shared.color(for: isCurrentChapter ? .chapterTitle : .textPrimary),
             for: .normal
         )
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
         btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(
             for: isPad ? .buttonLarge : .buttonMedium,
-            weight: isCurrentChapter ? .bold : .regular
+            weight: isCurrentChapter ? .semibold : .regular
         )
 
         // 去除原本的强边框与阴影，仅留极细微的底边暗示
         btn.layer.borderWidth = 0
         btn.layer.shadowOpacity = 0
 
+        if isCurrentChapter {
+            addCurrentChapterIndicator(to: btn)
+        }
+
         return btn
+    }
+
+    private func currentChapterForHomeButtons() -> Int? {
+        let savedChapter = Prefers.shared.lastReadChapter
+        if (0..<10).contains(savedChapter) {
+            return savedChapter
+        }
+
+        guard let lastPath = Prefers.shared.lastReadPath else {
+            return nil
+        }
+        return Book.shared.getChapterOfPath(lastPath)
+    }
+
+    private func addCurrentChapterIndicator(to button: UIButton) {
+        let rs = SutraDesignTokens.shared.responsiveSpacing
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let indicatorWidth = min(rs(isPad ? 34 : 28), button.bounds.width * 0.5)
+        let indicatorHeight = CGFloat(1)
+        let indicatorY = button.bounds.height - rs(isPad ? 10 : 7)
+        let indicator = UIView(frame: CGRect(
+            x: (button.bounds.width - indicatorWidth) / 2,
+            y: indicatorY,
+            width: indicatorWidth,
+            height: indicatorHeight
+        ))
+        indicator.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.65)
+        indicator.layer.cornerRadius = indicatorHeight / 2
+        indicator.isUserInteractionEnabled = false
+        indicator.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin]
+        button.addSubview(indicator)
     }
 
     // MARK: - 古卷经题（签名时刻）
@@ -933,7 +973,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
         
-        let displayName = trackName ?? lastFileName
+        let displayName = displayAudioTrackName(trackName ?? lastFileName)
         
         let seconds = Prefers.shared.lastPlayTime
         let minutes = Int(seconds) / 60
@@ -941,6 +981,40 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let formattedTime = String(format: "%02d:%02d", minutes, remainingSeconds)
         
         return (displayName, formattedTime)
+    }
+
+    private func displayAudioTrackName(_ name: String) -> String {
+        let removablePrefixes = ["楞严经 ", "楞嚴經 "]
+        for prefix in removablePrefixes where name.hasPrefix(prefix) {
+            return String(name.dropFirst(prefix.count))
+        }
+        return name
+    }
+
+    private func makeToolIconTitle(symbolName: String, text: String, font: UIFont, bodyColor: UIColor, goldColor: UIColor) -> NSAttributedString {
+        let title = NSMutableAttributedString()
+
+        if let image = UIImage(systemName: symbolName)?.withTintColor(goldColor.withAlphaComponent(0.85), renderingMode: .alwaysOriginal) {
+            let attachment = NSTextAttachment()
+            attachment.image = image
+            attachment.bounds = CGRect(x: 0, y: -1, width: 11, height: 11)
+            title.append(NSAttributedString(attachment: attachment))
+            title.append(NSAttributedString(string: "  ", attributes: [
+                .font: font,
+                .foregroundColor: bodyColor
+            ]))
+        } else {
+            title.append(NSAttributedString(string: "•  ", attributes: [
+                .font: font,
+                .foregroundColor: goldColor
+            ]))
+        }
+
+        title.append(NSAttributedString(string: text, attributes: [
+            .font: font,
+            .foregroundColor: bodyColor
+        ]))
+        return title
     }
 
     @objc private func continueListening() {
@@ -957,6 +1031,73 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         } else {
             AudioManager.shared.startPlayback()
         }
+    }
+
+    // MARK: - Daily Reminder Prompt
+
+    private func maybeShowDailyReminderPrompt() {
+        guard shouldShowDailyReminderPrompt else { return }
+
+        ReminderManager.shared.authorizationStatus { [weak self] status in
+            guard let self = self else { return }
+            guard status == .notDetermined else { return }
+            guard self.presentedViewController == nil else { return }
+
+            Prefers.shared.hasSeenDailyReminderPrompt = true
+            self.presentDailyReminderPrompt()
+        }
+    }
+
+    private var shouldShowDailyReminderPrompt: Bool {
+        guard !Prefers.shared.isDailyReminderOn else { return false }
+        guard !Prefers.shared.hasSeenDailyReminderPrompt else { return false }
+        return Prefers.shared.lastReadPath != nil || Prefers.shared.lastReadChapter >= 0
+    }
+
+    private func presentDailyReminderPrompt() {
+        let isSimplified = Book.shared.isSimplifiedChinese
+        let title = isSimplified ? "每日读经提醒" : "每日讀經提醒"
+        let reminderTime = formattedReminderTime()
+        let message = isSimplified
+            ? "每天 \(reminderTime) 在通知中心显示一段经文，轻触可打开继续读。无声音，只在本机提醒。"
+            : "每天 \(reminderTime) 在通知中心顯示一段經文，輕觸可打開繼續讀。無聲音，只在本機提醒。"
+
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: isSimplified ? "开启每日提醒" : "開啟每日提醒", style: .default) { [weak self] _ in
+            ReminderManager.shared.requestPermissionAndSchedule { granted in
+                if !granted {
+                    self?.presentNotificationSettingsAlert()
+                }
+            }
+        })
+        alert.addAction(UIAlertAction(title: isSimplified ? "改时间" : "改時間", style: .default) { [weak self] _ in
+            self?.tabBarController?.selectedIndex = 3
+        })
+        alert.addAction(UIAlertAction(title: isSimplified ? "暂不" : "暫不", style: .cancel))
+
+        present(alert, animated: true)
+    }
+
+    private func presentNotificationSettingsAlert() {
+        let isSimplified = Book.shared.isSimplifiedChinese
+        let alert = UIAlertController(
+            title: isSimplified ? "通知未开启" : "通知未開啟",
+            message: isSimplified
+                ? "每日读经提醒需要通知权限，才能把经文显示在通知中心。请前往「设置」开启本应用的通知。"
+                : "每日讀經提醒需要通知權限，才能把經文顯示在通知中心。請前往「設定」開啟本應用的通知。",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: isSimplified ? "去设置" : "去設定", style: .default) { _ in
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        })
+        alert.addAction(UIAlertAction(title: isSimplified ? "知道了" : "知道了", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func formattedReminderTime() -> String {
+        String(format: "%02d:%02d", Prefers.shared.reminderHour, Prefers.shared.reminderMinute)
     }
 
     // MARK: - 合并行功能
@@ -1235,4 +1376,3 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
      
         }
     }
-

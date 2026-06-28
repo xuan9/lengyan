@@ -170,7 +170,7 @@ struct WisdomLessonCompleteView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "bell")
                                 .font(.system(size: 14))
-                            Text("开启每日提醒，每日金句，回归宁静")
+                            Text("开启每日提醒，每天读一段经文")
                                 .font(.system(size: 14, weight: .light, design: .serif))
                         }
                         .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))
@@ -193,7 +193,7 @@ struct WisdomLessonCompleteView: View {
                 }
                 Button("知道了", role: .cancel) {}
             } message: {
-                Text("每日读经提醒需要通知权限。请前往「设置」开启本应用的通知。")
+                Text("每日读经提醒需要通知权限，才能把经文显示在通知中心。请前往「设置」开启本应用的通知。")
             }
             .onAppear {
                 isReminderOn = Prefers.shared.isDailyReminderOn

@@ -62,7 +62,7 @@ struct ModernSettingsView: View {
             Button("去设置") { openSystemNotificationSettings() }
             Button("知道了", role: .cancel) {}
         } message: {
-            Text("每日读经提醒需要通知权限。请前往「设置」开启本应用的通知。")
+            Text("每日读经提醒需要通知权限，才能把经文显示在通知中心。请前往「设置」开启本应用的通知。")
         }
     }
 

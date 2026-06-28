@@ -2,7 +2,7 @@
 //  ReminderManager.swift
 //  lengyan
 //
-//  每日提醒通知管理 — 每日推送经文金句
+//  每日提醒通知管理 — 每日在通知中心显示一段经文
 //  绝对防重复：identifier = daily_sutra_yyyyMMdd，每天唯一
 //  调度60天，kill/打开/多天不用都不会重复
 //
@@ -25,7 +25,7 @@ class ReminderManager {
     /// 请求通知权限并调度。`completion` 在主线程回调是否授权成功，
     /// 调用方可据此同步 UI 状态（拒绝时回滚开关、引导去设置）。
     func requestPermissionAndSchedule(completion: ((Bool) -> Void)? = nil) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert]) { granted, _ in
             DispatchQueue.main.async {
                 if granted {
                     Prefers.shared.isDailyReminderOn = true
@@ -73,15 +73,13 @@ class ReminderManager {
             let item = Book.shared.itemOfPath(path)
             
             let isSimplified = Book.shared.isSimplifiedChinese
-            let title = isSimplified ? "今日金句" : "今日金句"
-            let subtitle = isSimplified ? "轻触可阅读，亦可闭目听经。" : "輕觸可閱讀，亦可閉目聽經。"
+            let title = isSimplified ? "今日读经" : "今日讀經"
             
             let body = Book.shared.getSutra(item, maxLength: 80)
             let cleanBody = cleanNotificationBody(body)
 
             let content = UNMutableNotificationContent()
             content.title = title
-            content.subtitle = subtitle
             content.body = cleanBody
             content.sound = nil
             content.categoryIdentifier = "DAILY_SUTRA_CATEGORY"
