@@ -644,8 +644,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let listenSlotW: CGFloat = isPad ? (cw * 0.42) : 0
         let sideSlotW: CGFloat = isPad ? ((cw - listenSlotW - rs(40)) / 2) : 0
         let continueWidth: CGFloat = isPad ? sideSlotW : (cw * 0.65)
-        continueLabel.frame = CGRect(x: rs(20), y: btnY, width: continueWidth, height: btnHeight)
-        continueLabel.contentHorizontalAlignment = .left
+        let continueSlot = CGRect(x: rs(20), y: btnY, width: continueWidth, height: btnHeight)
+        fitToolButton(continueLabel, in: continueSlot, alignment: .left, extraTapPadding: rs(12))
         continueLabel.tag = 9991
         continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
         toolRow.addSubview(continueLabel)
@@ -664,8 +664,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         )
         searchBtn.setAttributedTitle(searchAttr, for: .normal)
         let searchX: CGFloat = isPad ? (cw - rs(20) - sideSlotW) : (colTenRight - searchWidth)
-        searchBtn.frame = CGRect(x: searchX, y: btnY, width: isPad ? sideSlotW : searchWidth, height: btnHeight)
-        searchBtn.contentHorizontalAlignment = .right
+        let searchSlot = CGRect(x: searchX, y: btnY, width: isPad ? sideSlotW : searchWidth, height: btnHeight)
+        fitToolButton(searchBtn, in: searchSlot, alignment: .right, extraTapPadding: rs(12))
         searchBtn.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
         toolRow.addSubview(searchBtn)
 
@@ -697,8 +697,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let listeningY: CGFloat = isPad ? btnY : (toolRowHeight + (toolRowHeight - btnHeight) / 2)
         let listeningX: CGFloat = isPad ? (rs(20) + sideSlotW) : rs(20)
         let listeningW: CGFloat = isPad ? listenSlotW : (cw - rs(40))
-        continueListeningLabel.frame = CGRect(x: listeningX, y: listeningY, width: listeningW, height: btnHeight)
-        continueListeningLabel.contentHorizontalAlignment = isPad ? .center : .left
+        let listeningSlot = CGRect(x: listeningX, y: listeningY, width: listeningW, height: btnHeight)
+        fitToolButton(continueListeningLabel, in: listeningSlot, alignment: isPad ? .center : .left, extraTapPadding: rs(12))
         continueListeningLabel.addTarget(self, action: #selector(continueListening), for: .touchUpInside)
         toolRow.addSubview(continueListeningLabel)
 
@@ -991,13 +991,33 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         return name
     }
 
+    private func fitToolButton(_ button: UIButton, in slot: CGRect, alignment: UIControl.ContentHorizontalAlignment, extraTapPadding: CGFloat) {
+        let titleWidth = ceil(button.attributedTitle(for: .normal)?.size().width ?? button.intrinsicContentSize.width)
+        let width = min(slot.width, max(44, titleWidth + extraTapPadding * 2))
+        let x: CGFloat
+
+        switch alignment {
+        case .right, .trailing:
+            x = slot.maxX - width
+        case .center, .fill:
+            x = slot.midX - width / 2
+        default:
+            x = slot.minX
+        }
+
+        button.frame = CGRect(x: x, y: slot.minY, width: width, height: slot.height)
+        button.contentHorizontalAlignment = alignment == .fill ? .center : alignment
+    }
+
     private func makeToolIconTitle(symbolName: String, text: String, font: UIFont, bodyColor: UIColor, goldColor: UIColor) -> NSAttributedString {
         let title = NSMutableAttributedString()
 
-        if let image = UIImage(systemName: symbolName)?.withTintColor(goldColor.withAlphaComponent(0.85), renderingMode: .alwaysOriginal) {
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 10.5, weight: .light, scale: .small)
+        if let image = UIImage(systemName: symbolName, withConfiguration: symbolConfig)?
+            .withTintColor(goldColor.withAlphaComponent(0.68), renderingMode: .alwaysOriginal) {
             let attachment = NSTextAttachment()
             attachment.image = image
-            attachment.bounds = CGRect(x: 0, y: -1, width: 11, height: 11)
+            attachment.bounds = CGRect(x: 0, y: -1, width: 10.5, height: 10.5)
             title.append(NSAttributedString(attachment: attachment))
             title.append(NSAttributedString(string: "  ", attributes: [
                 .font: font,

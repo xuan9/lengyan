@@ -556,7 +556,7 @@ struct DailyVerseWidget: Widget {
             }
         }
         .configurationDisplayName("今日读经")
-        .description("每天一句楞严经文金句，如晨钟暮鼓。")
+        .description("每天一段楞严经文，可放在桌面或锁屏。")
         .supportedFamilies([
             .systemSmall, .systemMedium, .systemLarge,
             .accessoryInline, .accessoryCircular, .accessoryRectangular

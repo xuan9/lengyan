@@ -7,6 +7,7 @@
 
 import SwiftUI
 import StoreKit
+import WidgetKit
 
 struct ModernSettingsView: View {
     @State private var fontSizeLevel: Int = Prefers.shared.fontSizeLevel
@@ -15,9 +16,12 @@ struct ModernSettingsView: View {
     @State private var reminderHour: Int = Prefers.shared.reminderHour
     @State private var reminderMinute: Int = Prefers.shared.reminderMinute
     @State private var showPermissionDeniedAlert: Bool = false
+    @State private var hasSeenWidgetGuide: Bool = Prefers.shared.hasSeenWidgetGuide
+    @State private var hasInstalledWidget: Bool = false
 
     private let sizeLabels = ["特小", "小", "中", "大", "特大"]
     private let sizeFonts: [CGFloat] = [13, 16, 20, 25, 30]
+    private static let widgetKind = "DailyVerseWidget"
 
     var body: some View {
         ScrollView {
@@ -26,8 +30,19 @@ struct ModernSettingsView: View {
 
                 // ── 修行 ──
                 zenSection("修行") {
+                    if shouldShowWidgetHint {
+                        widgetDiscoveryHint
+                        zenDivider
+                    }
+                    if !hasInstalledWidget {
+                        widgetGuideRow
+                        zenDivider
+                    }
                     reminderControl
-                    if isReminderOn { compactTimePicker }
+                    if isReminderOn {
+                        zenDivider
+                        compactTimePicker
+                    }
                 }
 
                 // ── 外观 ──
@@ -63,6 +78,9 @@ struct ModernSettingsView: View {
             Button("知道了", role: .cancel) {}
         } message: {
             Text("每日读经提醒需要通知权限，才能把经文显示在通知中心。请前往「设置」开启本应用的通知。")
+        }
+        .onAppear {
+            refreshWidgetInstallState()
         }
     }
 
@@ -174,6 +192,85 @@ struct ModernSettingsView: View {
         }
     }
 
+    // MARK: - 小组件
+
+    private var shouldShowWidgetHint: Bool {
+        !hasSeenWidgetGuide && !hasInstalledWidget
+    }
+
+    private var widgetDiscoveryHint: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "rectangle.grid.2x2")
+                .font(.system(size: 15, weight: .light))
+                .foregroundColor(SutraDesignSystem.color(.primary))
+                .frame(width: 24)
+
+            Button(action: { openWidgetGuide(markSeen: true) }) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("可将今日经文放到桌面与锁屏")
+                        .font(SutraTypographyBridge.uiBody(weight: .regular))
+                        .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                    Text("桌面小组件与锁屏配件")
+                        .font(.system(size: 12, weight: .light))
+                        .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PlainButtonStyle())
+
+            Button(action: dismissWidgetHint) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .accessibilityLabel("关闭")
+        }
+        .padding(.vertical, 16)
+    }
+
+    private var widgetGuideRow: some View {
+        settingsItem(
+            "桌面与锁屏小组件",
+            subtitle: "今日经文可常驻一眼可见处",
+            icon: "rectangle.grid.2x2",
+            action: { openWidgetGuide(markSeen: true) }
+        )
+    }
+
+    private func dismissWidgetHint() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            hasSeenWidgetGuide = true
+            Prefers.shared.hasSeenWidgetGuide = true
+        }
+    }
+
+    private func openWidgetGuide(markSeen: Bool) {
+        if markSeen {
+            hasSeenWidgetGuide = true
+            Prefers.shared.hasSeenWidgetGuide = true
+        }
+        NavigationHelper.pushSwiftUIView(
+            WidgetGuideView(hasInstalledWidget: hasInstalledWidget),
+            title: "小组件"
+        )
+    }
+
+    private func refreshWidgetInstallState() {
+        WidgetCenter.shared.getCurrentConfigurations { result in
+            let installed = (try? result.get())?.contains { $0.kind == Self.widgetKind } ?? false
+            DispatchQueue.main.async {
+                hasInstalledWidget = installed
+                if installed {
+                    hasSeenWidgetGuide = true
+                    Prefers.shared.hasSeenWidgetGuide = true
+                }
+            }
+        }
+    }
+
     // MARK: - 每日提醒
 
     private var reminderControl: some View {
@@ -252,18 +349,25 @@ struct ModernSettingsView: View {
         if isReminderOn { ReminderManager.shared.scheduleDaily() }
     }
 
-    // MARK: - 关于
+    // MARK: - Rows
 
-    private func aboutItem(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+    private func settingsItem(_ title: String, subtitle: String? = nil, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: icon)
                     .font(.system(size: 15, weight: .light))
                     .foregroundColor(SutraDesignSystem.color(.primary))
                     .frame(width: 24)
-                Text(title)
-                    .font(SutraTypographyBridge.uiBody(weight: .regular))
-                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(SutraTypographyBridge.uiBody(weight: .regular))
+                        .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 12, weight: .light))
+                            .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                    }
+                }
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .regular))
@@ -273,6 +377,12 @@ struct ModernSettingsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
+    }
+
+    // MARK: - 关于
+
+    private func aboutItem(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+        settingsItem(title, icon: icon, action: action)
     }
 
     private var versionRow: some View {
@@ -301,6 +411,106 @@ struct ModernSettingsView: View {
     private func openAppStoreRating() {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
         SKStoreReviewController.requestReview(in: scene)
+    }
+}
+
+struct WidgetGuideView: View {
+    let hasInstalledWidget: Bool
+
+    private let previewColumns = [
+        GridItem(.adaptive(minimum: 92), spacing: 12)
+    ]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                statusRow
+                    .padding(.top, 28)
+                    .padding(.bottom, 28)
+
+                guideSectionTitle("组件样式")
+                LazyVGrid(columns: previewColumns, alignment: .leading, spacing: 12) {
+                    WidgetPreviewTile(title: "桌面", subtitle: "小中大尺寸", symbol: "rectangle.grid.2x2")
+                    WidgetPreviewTile(title: "锁屏", subtitle: "行内、圆形、矩形", symbol: "lock")
+                    WidgetPreviewTile(title: "经文卡片", subtitle: "大号可读段落", symbol: "text.alignleft")
+                }
+                .padding(.bottom, 32)
+
+                guideSectionTitle("添加方式")
+                instructionText("长按桌面空白处 → 点「+」→ 搜索「楞严」→ 添加「今日读经」。")
+                instructionText("锁屏长按 → 自定 → 锁屏 → 添加小组件 → 选择「楞严」。")
+                    .padding(.top, 10)
+
+                guideSectionTitle("使用")
+                    .padding(.top, 32)
+                instructionText("小组件每日自动更新经文。点按经文，可回到 App 深读。")
+                    .padding(.bottom, 80)
+            }
+            .padding(.horizontal, 36)
+            .readingContentWidth()
+        }
+        .background(SutraDesignSystem.backgroundColor())
+    }
+
+    private var statusRow: some View {
+        HStack(spacing: 14) {
+            Image(systemName: hasInstalledWidget ? "checkmark.circle" : "rectangle.grid.2x2")
+                .font(.system(size: 18, weight: .light))
+                .foregroundColor(SutraDesignSystem.color(.primary))
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(hasInstalledWidget ? "已添加小组件" : "今日经文可放到桌面或锁屏")
+                    .font(SutraTypographyBridge.uiBody(weight: .regular))
+                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                Text(hasInstalledWidget ? "桌面或锁屏上的经文会随每日内容更新" : "打开 App 前，先在桌面或锁屏看一段")
+                    .font(.system(size: 13, weight: .light))
+                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+            }
+        }
+    }
+
+    private func guideSectionTitle(_ text: String) -> some View {
+        Text(text)
+            .font(SutraTypographyBridge.uiCaption(weight: .semibold))
+            .tracking(2)
+            .foregroundColor(SutraDesignSystem.color(.primary))
+            .padding(.bottom, 14)
+    }
+
+    private func instructionText(_ text: String) -> some View {
+        Text(text)
+            .font(SutraTypographyBridge.uiBody(weight: .regular))
+            .foregroundColor(SutraDesignSystem.color(.textPrimary))
+            .lineSpacing(5)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+private struct WidgetPreviewTile: View {
+    let title: String
+    let subtitle: String
+    let symbol: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 17, weight: .light))
+                .foregroundColor(SutraDesignSystem.color(.primary))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(SutraTypographyBridge.uiBody(weight: .regular))
+                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                Text(subtitle)
+                    .font(.system(size: 12, weight: .light))
+                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(SutraDesignSystem.color(.card).opacity(0.55))
+        )
     }
 }
 

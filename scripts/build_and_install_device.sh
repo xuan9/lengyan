@@ -69,6 +69,18 @@ fi
 echo -e "${YELLOW}▸ 设备: ${DEVICE_NAME}${NC}  ($DEVICE)"
 echo ""
 
+# ── 清理旧构建缓存 ──
+# 固定复用 /tmp 下的 DerivedData 时，Xcode 的 ExplicitPrecompiledModules
+# 偶尔会留下失效 .pcm 引用，导致 Foundation-*.pcm not found。
+if [[ -z "$DERIVED" || "$DERIVED" != /tmp/lengyan_device_build ]]; then
+    echo -e "${RED}错误: 非预期的构建目录: $DERIVED${NC}"
+    exit 1
+fi
+echo -e "${YELLOW}▸ 清理旧的真机构建缓存...${NC}"
+rm -rf "$DERIVED"
+mkdir -p "$DERIVED"
+echo ""
+
 # ── 1. 编译 ──
 echo -e "${YELLOW}▸ [1/3] 编译中 (Target: 真机)...${NC}"
 BUILD_LOG=$(mktemp)
