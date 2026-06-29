@@ -764,11 +764,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         btn.addTarget(self, action: #selector(chapterTouchUp(_:)), for: [.touchUpOutside, .touchCancel])
         btn.titleLabel?.adjustsFontSizeToFitWidth = true
 
-        // 当前正在阅读的卷：用文字层级 + 短金线提示，保持首页纯文字气质
+        // 当前正在阅读的卷：文字回到正文辅助色，状态只交给字重和短金线提示。
         let isCurrentChapter = currentChapterForHomeButtons() == chapter
         btn.backgroundColor = .clear
         btn.setTitleColor(
-            SutraDesignTokens.shared.color(for: isCurrentChapter ? .chapterTitle : .textPrimary),
+            SutraDesignTokens.shared.color(for: isCurrentChapter ? .textSecondary : .textPrimary),
             for: .normal
         )
         let isPad = UIDevice.current.userInterfaceIdiom == .pad

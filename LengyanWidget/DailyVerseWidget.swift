@@ -3,12 +3,11 @@
 //  LengyanWidget
 //
 //  今日读经桌面小组件 — 可读经文 + 主题感知
-//  支持三种尺寸 + 三种 Lock Screen/StandBy 配件：
+//  支持三种尺寸 + 两种 Lock Screen/StandBy 配件：
 //    小：经文金句（≤20字）+ 出处
 //    中：经文段落 + 法卷金线 + 出处
 //    大：完整经文段落（~300字）+ 出处 + 「点击阅读」引导
 //    accessoryInline    — 锁屏顶部一行经句
-//    accessoryCircular  — 锁屏圆形四字经文印
 //    accessoryRectangular — 锁屏经句卡片
 //
 //  数据源：主App通过 App Group UserDefaults 写入
@@ -367,35 +366,6 @@ struct InlineVerseView: View {
     }
 }
 
-/// 锁屏圆形 — 当前经文前四字，做成小印章，不再显示静态应用名。
-struct CircularVerseView: View {
-    let entry: DailyVerseEntry
-
-    var body: some View {
-        ZStack {
-            if entry.needsOnboarding {
-                VStack(spacing: 0) {
-                    Text("启")
-                        .font(WidgetTokens.sutraFont(size: 18))
-                    Text("卷")
-                        .font(WidgetTokens.sutraFont(size: 18))
-                }
-                .minimumScaleFactor(0.75)
-            } else {
-                let lines = entry.circularLines
-                VStack(spacing: 0) {
-                    Text(lines.top)
-                        .font(WidgetTokens.sutraFont(size: 17))
-                    Text(lines.bottom)
-                        .font(WidgetTokens.sutraFont(size: 17))
-                }
-                .foregroundColor(.primary)
-                .minimumScaleFactor(0.68)
-            }
-        }
-    }
-}
-
 /// 锁屏卡片 — 只放经文，不放出处 footer。
 struct RectangularVerseView: View {
     let entry: DailyVerseEntry
@@ -420,11 +390,6 @@ struct RectangularVerseView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
     }
-}
-
-private struct CircularTextLines {
-    let top: String
-    let bottom: String
 }
 
 // MARK: - Empty State (优雅空态)
@@ -520,20 +485,6 @@ private extension DailyVerseEntry {
         clippedFullText(limit: 36)
     }
 
-    /// circular 锁屏用当前经文前四个有效字，而不是静态「楞严」。
-    var circularLines: CircularTextLines {
-        let cleanScalars = fullBodyText.unicodeScalars.filter {
-            !Self.circularExcludedCharacters.contains($0)
-        }
-        let cleanText = cleanScalars.map(String.init).joined()
-        let sealText = cleanText.isEmpty ? "启卷" : String(cleanText.prefix(4))
-        let splitOffset = min(2, sealText.count)
-        let splitIndex = sealText.index(sealText.startIndex, offsetBy: splitOffset)
-        let top = String(sealText[..<splitIndex])
-        let bottom = String(sealText[splitIndex...])
-        return CircularTextLines(top: top, bottom: bottom.isEmpty ? "经" : bottom)
-    }
-
     private func clippedFullText(limit: Int) -> String {
         let src = fullBodyText
         if src.count <= limit { return src }
@@ -546,13 +497,6 @@ private extension DailyVerseEntry {
         }
         let end = src.index(src.startIndex, offsetBy: max(1, limit - 1), limitedBy: src.endIndex) ?? src.endIndex
         return String(src[..<end]) + "…"
-    }
-
-    private static var circularExcludedCharacters: CharacterSet {
-        var set = CharacterSet.punctuationCharacters
-        set.formUnion(.whitespacesAndNewlines)
-        set.formUnion(CharacterSet(charactersIn: "，。；！？、：；「」『』《》〈〉（）【】〔〕·"))
-        return set
     }
 
     var sourceShort: String {
@@ -598,7 +542,7 @@ struct DailyVerseWidget: Widget {
         .description("每天一段楞严经文，可放在桌面或锁屏。")
         .supportedFamilies([
             .systemSmall, .systemMedium, .systemLarge,
-            .accessoryInline, .accessoryCircular, .accessoryRectangular
+            .accessoryInline, .accessoryRectangular
         ])
         .disableContentMarginsIfNeeded()
     }
@@ -621,8 +565,6 @@ struct WidgetEntryView: View {
                 LargeVerseView(entry: entry)
             case .accessoryInline:
                 InlineVerseView(entry: entry)
-            case .accessoryCircular:
-                CircularVerseView(entry: entry)
             case .accessoryRectangular:
                 RectangularVerseView(entry: entry)
             default:
@@ -653,10 +595,6 @@ struct DailyVerseWidget_Previews: PreviewProvider {
             InlineVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .accessoryInline))
                 .previewDisplayName("锁屏·行内")
-
-            CircularVerseView(entry: .placeholder)
-                .previewContext(WidgetPreviewContext(family: .accessoryCircular))
-                .previewDisplayName("锁屏·圆形")
 
             RectangularVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .accessoryRectangular))

@@ -431,7 +431,7 @@ struct WidgetGuideView: View {
                 guideSectionTitle("组件样式")
                 LazyVGrid(columns: previewColumns, alignment: .leading, spacing: 12) {
                     WidgetPreviewTile(title: "桌面", subtitle: "小中大尺寸", symbol: "rectangle.grid.2x2")
-                    WidgetPreviewTile(title: "锁屏", subtitle: "行内、圆形、矩形", symbol: "lock")
+                    WidgetPreviewTile(title: "锁屏", subtitle: "行内、矩形", symbol: "lock")
                     WidgetPreviewTile(title: "经文卡片", subtitle: "大号可读段落", symbol: "text.alignleft")
                 }
                 .padding(.bottom, 32)
