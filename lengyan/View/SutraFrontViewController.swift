@@ -613,13 +613,13 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let hasProgress = Prefers.shared.lastReadPath != nil
         
         let isSimplified = Book.shared.isSimplifiedChinese
-        let buttonText = hasProgress ? (isSimplified ? "•  续读" : "•  續讀") : (isSimplified ? "•  开始读经" : "•  開始讀經")
-        
-        let continueAttr = NSMutableAttributedString(string: buttonText, attributes: [
-            .font: toolFont,
-            .foregroundColor: bodyColor
-        ])
-        continueAttr.addAttribute(.foregroundColor, value: goldColor, range: NSRange(location: 0, length: 1))
+        let continueText = hasProgress ? (isSimplified ? "续读" : "續讀") : (isSimplified ? "开始读经" : "開始讀經")
+        let continueAttr = makeToolDotTitle(
+            text: continueText,
+            font: toolFont,
+            bodyColor: bodyColor,
+            goldColor: goldColor
+        )
         if let lastPath = Prefers.shared.lastReadPath {
             let itemName = Book.shared.itemOfPath(lastPath)["name"] as? String ?? ""
             if !itemName.isEmpty {
@@ -1030,6 +1030,35 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             ]))
         }
 
+        title.append(NSAttributedString(string: text, attributes: [
+            .font: font,
+            .foregroundColor: bodyColor
+        ]))
+        return title
+    }
+
+    private func makeToolDotTitle(text: String, font: UIFont, bodyColor: UIColor, goldColor: UIColor) -> NSMutableAttributedString {
+        let title = NSMutableAttributedString()
+        let dotDiameter: CGFloat = 6.2
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: dotDiameter, height: dotDiameter))
+        let dotImage = renderer.image { context in
+            goldColor.withAlphaComponent(0.78).setFill()
+            context.cgContext.fillEllipse(in: CGRect(origin: .zero, size: CGSize(width: dotDiameter, height: dotDiameter)))
+        }
+
+        let attachment = NSTextAttachment()
+        attachment.image = dotImage
+        attachment.bounds = CGRect(
+            x: 0,
+            y: (font.capHeight - dotDiameter) / 2,
+            width: dotDiameter,
+            height: dotDiameter
+        )
+        title.append(NSAttributedString(attachment: attachment))
+        title.append(NSAttributedString(string: "  ", attributes: [
+            .font: font,
+            .foregroundColor: bodyColor
+        ]))
         title.append(NSAttributedString(string: text, attributes: [
             .font: font,
             .foregroundColor: bodyColor

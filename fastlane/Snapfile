@@ -2,14 +2,12 @@
 # 文档: https://docs.fastlane.tools/actions/snapshot/
 
 # ────────────────────────────────────────────────────────
-# 设备列表（本地 Xcode 26 实际可用型号）
-#   iPhone 17 Pro Max   → 6.9" (必需规格)
-#   iPhone 17 Pro       → 6.3" (可选)
+# 设备列表
+#   iPhone 13 Pro Max     → 1284 × 2778 (App Store 接受的 iPhone 截图规格)
 #   iPad Pro 13-inch (M5) → 13" (iPad 必需规格)
 # ────────────────────────────────────────────────────────
 devices([
-  "iPhone 17 Pro Max",
-  "iPhone 17 Pro",
+  "iPhone 13 Pro Max",
   "iPad Pro 13-inch (M5)"
 ])
 
@@ -31,9 +29,10 @@ output_directory("./fastlane/screenshots")
 clear_previous_screenshots(true)
 
 # iOS Simulator 版本
-# 注：不指定 ios_version，让 fastlane 自动选最新可用设备
-# （fastlane 2.226 对 26.3.1 有解析 bug 会截成 26.3 导致匹配失败）
-# ios_version("26.3.1")
+# fastlane 2.226 会从 SDK 26.2 推导设备版本，遇到本机 26.3.1 runtime 时
+# 回退成 OS=26.3，导致 xcodebuild 精确匹配失败。
+# Fastfile 的 screenshots lane 会改用 UDID destination；这里保留完整版本用于配置可读性。
+ios_version("26.3.1")
 
 # 只跑指定的截图测试（避免运行所有 UITest）
 only_testing("lengyanUITests/SutraSnapshotTests/testAppStoreScreenshots")

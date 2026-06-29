@@ -16,8 +16,8 @@ struct ModernSettingsView: View {
     @State private var reminderHour: Int = Prefers.shared.reminderHour
     @State private var reminderMinute: Int = Prefers.shared.reminderMinute
     @State private var showPermissionDeniedAlert: Bool = false
-    @State private var hasSeenWidgetGuide: Bool = Prefers.shared.hasSeenWidgetGuide
-    @State private var hasInstalledWidget: Bool = false
+    @State private var hasDesktopWidget: Bool = false
+    @State private var hasLockScreenWidget: Bool = false
 
     private let sizeLabels = ["特小", "小", "中", "大", "特大"]
     private let sizeFonts: [CGFloat] = [13, 16, 20, 25, 30]
@@ -30,11 +30,7 @@ struct ModernSettingsView: View {
 
                 // ── 修行 ──
                 zenSection("修行") {
-                    if shouldShowWidgetHint {
-                        widgetDiscoveryHint
-                        zenDivider
-                    }
-                    if !hasInstalledWidget {
+                    if shouldShowWidgetGuideRow {
                         widgetGuideRow
                         zenDivider
                     }
@@ -194,77 +190,77 @@ struct ModernSettingsView: View {
 
     // MARK: - 小组件
 
-    private var shouldShowWidgetHint: Bool {
-        !hasSeenWidgetGuide && !hasInstalledWidget
+    private var shouldShowWidgetGuideRow: Bool {
+        !(hasDesktopWidget && hasLockScreenWidget)
     }
 
-    private var widgetDiscoveryHint: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "rectangle.grid.2x2")
-                .font(.system(size: 15, weight: .light))
-                .foregroundColor(SutraDesignSystem.color(.primary))
-                .frame(width: 24)
-
-            Button(action: { openWidgetGuide(markSeen: true) }) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("可将今日经文放到桌面与锁屏")
-                        .font(SutraTypographyBridge.uiBody(weight: .regular))
-                        .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                    Text("桌面小组件与锁屏配件")
-                        .font(.system(size: 12, weight: .light))
-                        .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(PlainButtonStyle())
-
-            Button(action: dismissWidgetHint) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                    .frame(width: 44, height: 44)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .accessibilityLabel("关闭")
+    private var widgetGuideActionText: String {
+        switch (hasDesktopWidget, hasLockScreenWidget) {
+        case (true, false):
+            return "还可放到锁屏"
+        case (false, true):
+            return "还可放到桌面"
+        default:
+            return "放到桌面与锁屏"
         }
-        .padding(.vertical, 16)
     }
 
     private var widgetGuideRow: some View {
-        settingsItem(
-            "桌面与锁屏小组件",
-            subtitle: "今日经文可常驻一眼可见处",
-            icon: "rectangle.grid.2x2",
-            action: { openWidgetGuide(markSeen: true) }
-        )
+        Button(action: openWidgetGuide) {
+            HStack(spacing: 0) {
+                Text("今日经文")
+                    .font(SutraTypographyBridge.uiBody(weight: .regular))
+                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                Spacer()
+                Text(widgetGuideActionText)
+                    .font(.system(size: 12, weight: .light))
+                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                    .padding(.leading, 10)
+            }
+            .padding(.vertical, 16)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 
-    private func dismissWidgetHint() {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            hasSeenWidgetGuide = true
-            Prefers.shared.hasSeenWidgetGuide = true
-        }
-    }
-
-    private func openWidgetGuide(markSeen: Bool) {
-        if markSeen {
-            hasSeenWidgetGuide = true
-            Prefers.shared.hasSeenWidgetGuide = true
-        }
+    private func openWidgetGuide() {
+        Prefers.shared.hasSeenWidgetGuide = true
         NavigationHelper.pushSwiftUIView(
-            WidgetGuideView(hasInstalledWidget: hasInstalledWidget),
+            WidgetGuideView(
+                hasDesktopWidget: hasDesktopWidget,
+                hasLockScreenWidget: hasLockScreenWidget
+            ),
             title: "小组件"
         )
     }
 
     private func refreshWidgetInstallState() {
         WidgetCenter.shared.getCurrentConfigurations { result in
-            let installed = (try? result.get())?.contains { $0.kind == Self.widgetKind } ?? false
+            let configurations = (try? result.get()) ?? []
+            let matchingWidgets = configurations.filter { $0.kind == Self.widgetKind }
+            let desktopInstalled = matchingWidgets.contains { info in
+                switch info.family {
+                case .systemSmall, .systemMedium, .systemLarge, .systemExtraLarge:
+                    return true
+                default:
+                    return false
+                }
+            }
+            let lockScreenInstalled = matchingWidgets.contains { info in
+                switch info.family {
+                case .accessoryInline, .accessoryRectangular, .accessoryCircular:
+                    return true
+                default:
+                    return false
+                }
+            }
             DispatchQueue.main.async {
-                hasInstalledWidget = installed
-                if installed {
-                    hasSeenWidgetGuide = true
+                hasDesktopWidget = desktopInstalled
+                hasLockScreenWidget = lockScreenInstalled
+                if desktopInstalled && lockScreenInstalled {
                     Prefers.shared.hasSeenWidgetGuide = true
                 }
             }
@@ -415,7 +411,8 @@ struct ModernSettingsView: View {
 }
 
 struct WidgetGuideView: View {
-    let hasInstalledWidget: Bool
+    let hasDesktopWidget: Bool
+    let hasLockScreenWidget: Bool
 
     private let previewColumns = [
         GridItem(.adaptive(minimum: 92), spacing: 12)
@@ -454,18 +451,44 @@ struct WidgetGuideView: View {
 
     private var statusRow: some View {
         HStack(spacing: 14) {
-            Image(systemName: hasInstalledWidget ? "checkmark.circle" : "rectangle.grid.2x2")
+            Image(systemName: hasDesktopWidget && hasLockScreenWidget ? "checkmark.circle" : "rectangle.grid.2x2")
                 .font(.system(size: 18, weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.primary))
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 5) {
-                Text(hasInstalledWidget ? "已添加小组件" : "今日经文可放到桌面或锁屏")
+                Text(widgetStatusTitle)
                     .font(SutraTypographyBridge.uiBody(weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                Text(hasInstalledWidget ? "桌面或锁屏上的经文会随每日内容更新" : "打开 App 前，先在桌面或锁屏看一段")
+                Text(widgetStatusSubtitle)
                     .font(.system(size: 13, weight: .light))
                     .foregroundColor(SutraDesignSystem.color(.textSecondary))
             }
+        }
+    }
+
+    private var widgetStatusTitle: String {
+        switch (hasDesktopWidget, hasLockScreenWidget) {
+        case (true, true):
+            return "已添加桌面与锁屏"
+        case (true, false):
+            return "桌面小组件已添加"
+        case (false, true):
+            return "锁屏配件已添加"
+        default:
+            return "今日经文可放到桌面或锁屏"
+        }
+    }
+
+    private var widgetStatusSubtitle: String {
+        switch (hasDesktopWidget, hasLockScreenWidget) {
+        case (true, true):
+            return "经文会随每日内容更新"
+        case (true, false):
+            return "还可添加锁屏配件，一眼看到今日经文"
+        case (false, true):
+            return "还可添加桌面小组件，常驻一眼可见处"
+        default:
+            return "打开 App 前，先看一段今日经文"
         }
     }
 

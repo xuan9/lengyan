@@ -8,7 +8,7 @@ cache_dir = os.path.expanduser("~/Library/Caches/tools.fastlane")
 screenshots_cache_dir = os.path.join(cache_dir, "screenshots")
 
 devices = [
-    "iPhone 17 Pro Max",
+    "iPhone 13 Pro Max",
     "iPad Pro 13-inch (M5)"
 ]
 

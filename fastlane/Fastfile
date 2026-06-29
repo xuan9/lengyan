@@ -2,7 +2,108 @@
 # For more information about the Fastfile, see:
 # https://docs.fastlane.tools/actions/
 
+require "json"
+require "open3"
+
 default_platform(:ios)
+
+def ensure_snapshot_simulator_available(device_name)
+  stdout, stderr, status = Open3.capture3("xcrun", "simctl", "list", "devices", "available", "--json")
+  UI.user_error!("Unable to list iOS simulators: #{stderr}") unless status.success?
+
+  simulators = JSON.parse(stdout).fetch("devices").values.flatten
+  return if simulators.any? { |device| device["name"] == device_name && device["isAvailable"] }
+
+  stdout, stderr, status = Open3.capture3("xcrun", "simctl", "list", "runtimes", "available", "--json")
+  UI.user_error!("Unable to list iOS runtimes: #{stderr}") unless status.success?
+
+  runtime = JSON.parse(stdout).fetch("runtimes")
+                      .select { |item| item["isAvailable"] && item["identifier"].to_s.include?("SimRuntime.iOS") }
+                      .select { |item| item.fetch("supportedDeviceTypes", []).any? { |type| type["name"] == device_name } }
+                      .max_by { |item| item["version"].to_s.scan(/\d+/).map(&:to_i) }
+  UI.user_error!("No available iOS runtime supports '#{device_name}'") unless runtime
+
+  device_type = runtime.fetch("supportedDeviceTypes").find { |type| type["name"] == device_name }
+  stdout, stderr, status = Open3.capture3(
+    "xcrun",
+    "simctl",
+    "create",
+    device_name,
+    device_type.fetch("identifier"),
+    runtime.fetch("identifier")
+  )
+  UI.user_error!("Unable to create simulator '#{device_name}': #{stderr}") unless status.success?
+
+  UI.message("Created simulator '#{device_name}' (#{stdout.strip})")
+end
+
+def patch_snapshot_destinations_to_use_udids
+  return if @snapshot_udid_destination_patch_applied
+
+  require "snapshot/test_command_generator"
+
+  # fastlane 2.226 truncates iOS 26.3.1 simulator versions to 26.3.
+  # Use UDID destinations so xcodebuild does not exact-match the OS string.
+  patch = Module.new do
+    def destination(devices)
+      device_names = Array(devices)
+      return ["-destination 'platform=macOS'"] if device_names.first.to_s =~ /^Mac/
+
+      simulators = available_simulators
+      destinations = device_names.map do |device_name|
+        simulator = simulators.find { |device| device["name"] == device_name.to_s && device["isAvailable"] }
+        unless simulator
+          create_simulator(device_name.to_s)
+          simulators = available_simulators
+          simulator = simulators.find { |device| device["name"] == device_name.to_s && device["isAvailable"] }
+        end
+        UI.user_error!("No available simulator found named '#{device_name}'") unless simulator
+
+        "-destination 'platform=iOS Simulator,id=#{simulator.fetch('udid')}'"
+      end
+
+      [destinations.join(" ")]
+    end
+
+    def available_simulators
+      stdout, stderr, status = Open3.capture3("xcrun", "simctl", "list", "devices", "available", "--json")
+      UI.user_error!("Unable to list iOS simulators: #{stderr}") unless status.success?
+
+      JSON.parse(stdout).fetch("devices").values.flatten
+    end
+
+    def create_simulator(device_name)
+      runtime = latest_available_ios_runtime_for_device(device_name)
+      UI.user_error!("No available iOS runtime supports '#{device_name}'") unless runtime
+
+      device_type = runtime.fetch("supportedDeviceTypes").find { |type| type["name"] == device_name }
+      stdout, stderr, status = Open3.capture3(
+        "xcrun",
+        "simctl",
+        "create",
+        device_name,
+        device_type.fetch("identifier"),
+        runtime.fetch("identifier")
+      )
+      UI.user_error!("Unable to create simulator '#{device_name}': #{stderr}") unless status.success?
+
+      UI.message("Created simulator '#{device_name}' (#{stdout.strip})")
+    end
+
+    def latest_available_ios_runtime_for_device(device_name)
+      stdout, stderr, status = Open3.capture3("xcrun", "simctl", "list", "runtimes", "available", "--json")
+      UI.user_error!("Unable to list iOS runtimes: #{stderr}") unless status.success?
+
+      JSON.parse(stdout).fetch("runtimes")
+                        .select { |runtime| runtime["isAvailable"] && runtime["identifier"].to_s.include?("SimRuntime.iOS") }
+                        .select { |runtime| runtime.fetch("supportedDeviceTypes", []).any? { |type| type["name"] == device_name } }
+                        .max_by { |runtime| runtime["version"].to_s.scan(/\d+/).map(&:to_i) }
+    end
+  end
+
+  Snapshot::TestCommandGenerator.singleton_class.prepend(patch)
+  @snapshot_udid_destination_patch_applied = true
+end
 
 platform :ios do
   before_all do
@@ -31,6 +132,9 @@ platform :ios do
 
   desc "Generate localized App Store screenshots (zh-Hans / zh-Hant, iPhone + iPad)"
   lane :screenshots do
+    ensure_snapshot_simulator_available("iPhone 13 Pro Max")
+    patch_snapshot_destinations_to_use_udids
+
     capture_screenshots(
       project: "lengyan.xcodeproj",
       scheme: "lengyan",
