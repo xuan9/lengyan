@@ -202,7 +202,7 @@ extension SutraCardRenderer {
         let preview: SutraSharePreviewController
         if chunks.count > maxShareImageCount {
             preview = SutraSharePreviewController(images: [], fullText: text,
-                                                  longTextHint: "經文較長（約 \(text.count) 字），已為你備妥全文")
+                                                  longTextHint: String(format: L10n.str("share_long_text_hint_format"), text.count))
         } else {
             let images = chunks.compactMap { chunk in
                 let base = verseFontBase(forCharCount: chunk.count)
@@ -236,7 +236,7 @@ struct SutraSharePreviewView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("预览")
+                Text(L10n.str("share_preview_title"))
                     .font(.system(size: 16, weight: .medium, design: .serif))
                     .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textPrimary)))
                 Spacer()
@@ -280,10 +280,10 @@ struct SutraSharePreviewView: View {
 
             HStack(spacing: 10) {
                 if !images.isEmpty {
-                    actionButton(title: "分享美图", systemName: "photo", action: { onShareImage?() }, primary: true)
+                    actionButton(title: L10n.str("share_image"), systemName: "photo", action: { onShareImage?() }, primary: true)
                 }
-                actionButton(title: "分享文字", systemName: "text.alignleft", action: { onShareText?() }, primary: images.isEmpty)
-                actionButton(title: "拷贝", systemName: "doc.on.doc", action: { onCopy?() }, primary: false)
+                actionButton(title: L10n.str("share_text"), systemName: "text.alignleft", action: { onShareText?() }, primary: images.isEmpty)
+                actionButton(title: L10n.str("copy"), systemName: "doc.on.doc", action: { onCopy?() }, primary: false)
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)

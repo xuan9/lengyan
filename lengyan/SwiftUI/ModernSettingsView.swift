@@ -19,7 +19,15 @@ struct ModernSettingsView: View {
     @State private var hasDesktopWidget: Bool = false
     @State private var hasLockScreenWidget: Bool = false
 
-    private let sizeLabels = ["特小", "小", "中", "大", "特大"]
+    private var sizeLabels: [String] {
+        [
+            L10n.str("settings_font_size_xs"),
+            L10n.str("settings_font_size_s"),
+            L10n.str("settings_font_size_m"),
+            L10n.str("settings_font_size_l"),
+            L10n.str("settings_font_size_xl"),
+        ]
+    }
     private let sizeFonts: [CGFloat] = [13, 16, 20, 25, 30]
     private static let widgetKind = "DailyVerseWidget"
 
@@ -29,7 +37,7 @@ struct ModernSettingsView: View {
                 ZenTabHeaderView(titleKey: "settings_tab_title", symbolName: "gearshape")
 
                 // ── 修行 ──
-                zenSection("修行") {
+                zenSection(L10n.str("settings_section_practice")) {
                     if shouldShowWidgetGuideRow {
                         widgetGuideRow
                         zenDivider
@@ -42,19 +50,19 @@ struct ModernSettingsView: View {
                 }
 
                 // ── 外观 ──
-                zenSection("外观") {
+                zenSection(L10n.str("settings_section_appearance")) {
                     fontSizeControl
                     zenDivider
                     themeControl
                 }
 
                 // ── 关于 ──
-                zenSection("关于") {
-                    aboutItem("反馈", icon: "envelope", action: openFeedback)
+                zenSection(L10n.str("settings_section_about")) {
+                    aboutItem(L10n.str("settings_feedback"), icon: "envelope", action: openFeedback)
                     zenDivider
-                    aboutItem("评价", icon: "star.bubble", action: openAppStoreRating)
+                    aboutItem(L10n.str("settings_rate"), icon: "star.bubble", action: openAppStoreRating)
                     zenDivider
-                    aboutItem("致谢", icon: "heart.text.square", action: openAcknowledgments)
+                    aboutItem(L10n.str("settings_acknowledgments"), icon: "heart.text.square", action: openAcknowledgments)
                     zenDivider
                     versionRow
                 }
@@ -69,11 +77,11 @@ struct ModernSettingsView: View {
         }
         .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
-        .alert("通知未开启", isPresented: $showPermissionDeniedAlert) {
-            Button("去设置") { openSystemNotificationSettings() }
-            Button("知道了", role: .cancel) {}
+        .alert(L10n.str("settings_notification_alert_title"), isPresented: $showPermissionDeniedAlert) {
+            Button(L10n.str("settings_notification_alert_open_settings")) { openSystemNotificationSettings() }
+            Button(L10n.str("settings_notification_alert_ok"), role: .cancel) {}
         } message: {
-            Text("每日读经提醒需要通知权限，才能把经文显示在通知中心。请前往「设置」开启本应用的通知。")
+            Text(L10n.str("settings_notification_alert_message"))
         }
         .onAppear {
             refreshWidgetInstallState()
@@ -144,7 +152,7 @@ struct ModernSettingsView: View {
 
     private var themeControl: some View {
         HStack(spacing: 0) {
-            Text("主题")
+            Text(L10n.str("settings_theme"))
                 .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textPrimary))
             Spacer()
@@ -158,7 +166,7 @@ struct ModernSettingsView: View {
                 let textUIColor = theme == .dark
                     ? UIColor(hex: "#E8DFD0") ?? .white
                     : UIColor(hex: "#33231A") ?? .black
-                let label = theme == .light ? "宣纸" : theme == .sepia ? "古籍" : "夜读"
+                let label = theme == .light ? L10n.str("settings_theme_paper") : theme == .sepia ? L10n.str("settings_theme_classic") : L10n.str("settings_theme_night")
                 Button(action: { changeTheme(theme) }) {
                     Text(label)
                         .font(.system(size: 12, weight: sel ? .medium : .light))
@@ -197,18 +205,18 @@ struct ModernSettingsView: View {
     private var widgetGuideActionText: String {
         switch (hasDesktopWidget, hasLockScreenWidget) {
         case (true, false):
-            return "还可放到锁屏"
+            return L10n.str("settings_widget_action_add_lock_screen")
         case (false, true):
-            return "还可放到桌面"
+            return L10n.str("settings_widget_action_add_home_screen")
         default:
-            return "放到桌面与锁屏"
+            return L10n.str("settings_widget_action_add_both")
         }
     }
 
     private var widgetGuideRow: some View {
         Button(action: openWidgetGuide) {
             HStack(spacing: 0) {
-                Text("今日经文")
+                Text(L10n.str("settings_widget_today_verse"))
                     .font(SutraTypographyBridge.uiBody(weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
                 Spacer()
@@ -233,7 +241,7 @@ struct ModernSettingsView: View {
                 hasDesktopWidget: hasDesktopWidget,
                 hasLockScreenWidget: hasLockScreenWidget
             ),
-            title: "小组件"
+            title: L10n.str("settings_widget_title")
         )
     }
 
@@ -271,7 +279,7 @@ struct ModernSettingsView: View {
 
     private var reminderControl: some View {
         HStack(spacing: 0) {
-            Text("每日提醒")
+            Text(L10n.str("settings_daily_reminder"))
                 .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textPrimary))
             Spacer()
@@ -314,7 +322,7 @@ struct ModernSettingsView: View {
                 .font(.system(size: 15, weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.primary))
                 .frame(width: 24)
-            Text("提醒时间")
+            Text(L10n.str("settings_reminder_time"))
                 .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textPrimary))
             Spacer()
@@ -383,7 +391,7 @@ struct ModernSettingsView: View {
 
     private var versionRow: some View {
         HStack {
-            Text("版本")
+            Text(L10n.str("settings_version"))
                 .font(SutraTypographyBridge.uiBody(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textPrimary))
             Spacer()
@@ -397,11 +405,11 @@ struct ModernSettingsView: View {
     // MARK: - Navigation (delegates to NavigationHelper)
 
     private func openAcknowledgments() {
-        NavigationHelper.pushSwiftUIView(SutraAcknowledgmentsView(), title: "致谢")
+        NavigationHelper.pushSwiftUIView(SutraAcknowledgmentsView(), title: L10n.str("settings_acknowledgments"))
     }
 
     private func openFeedback() {
-        NavigationHelper.pushSwiftUIView(FeedbackView(), title: "反馈")
+        NavigationHelper.pushSwiftUIView(FeedbackView(), title: L10n.str("settings_feedback"))
     }
 
     private func openAppStoreRating() {
@@ -425,22 +433,22 @@ struct WidgetGuideView: View {
                     .padding(.top, 28)
                     .padding(.bottom, 28)
 
-                guideSectionTitle("组件样式")
+                guideSectionTitle(L10n.str("widget_guide_styles"))
                 LazyVGrid(columns: previewColumns, alignment: .leading, spacing: 12) {
-                    WidgetPreviewTile(title: "桌面", subtitle: "小中大尺寸", symbol: "rectangle.grid.2x2")
-                    WidgetPreviewTile(title: "锁屏", subtitle: "行内、矩形", symbol: "lock")
-                    WidgetPreviewTile(title: "经文卡片", subtitle: "大号可读段落", symbol: "text.alignleft")
+                    WidgetPreviewTile(title: L10n.str("widget_guide_home_title"), subtitle: L10n.str("widget_guide_home_subtitle"), symbol: "rectangle.grid.2x2")
+                    WidgetPreviewTile(title: L10n.str("widget_guide_lock_title"), subtitle: L10n.str("widget_guide_lock_subtitle"), symbol: "lock")
+                    WidgetPreviewTile(title: L10n.str("widget_guide_card_title"), subtitle: L10n.str("widget_guide_card_subtitle"), symbol: "text.alignleft")
                 }
                 .padding(.bottom, 32)
 
-                guideSectionTitle("添加方式")
-                instructionText("长按桌面空白处 → 点「+」→ 搜索「楞严」→ 添加「今日读经」。")
-                instructionText("锁屏长按 → 自定 → 锁屏 → 添加小组件 → 选择「楞严」。")
+                guideSectionTitle(L10n.str("widget_guide_how_to_add"))
+                instructionText(L10n.str("widget_guide_home_instruction"))
+                instructionText(L10n.str("widget_guide_lock_instruction"))
                     .padding(.top, 10)
 
-                guideSectionTitle("使用")
+                guideSectionTitle(L10n.str("widget_guide_usage"))
                     .padding(.top, 32)
-                instructionText("小组件每日自动更新经文。点按经文，可回到 App 深读。")
+                instructionText(L10n.str("widget_guide_usage_instruction"))
                     .padding(.bottom, 80)
             }
             .padding(.horizontal, 36)
@@ -469,26 +477,26 @@ struct WidgetGuideView: View {
     private var widgetStatusTitle: String {
         switch (hasDesktopWidget, hasLockScreenWidget) {
         case (true, true):
-            return "已添加桌面与锁屏"
+            return L10n.str("widget_status_both_added")
         case (true, false):
-            return "桌面小组件已添加"
+            return L10n.str("widget_status_home_added")
         case (false, true):
-            return "锁屏配件已添加"
+            return L10n.str("widget_status_lock_added")
         default:
-            return "今日经文可放到桌面或锁屏"
+            return L10n.str("widget_status_not_added")
         }
     }
 
     private var widgetStatusSubtitle: String {
         switch (hasDesktopWidget, hasLockScreenWidget) {
         case (true, true):
-            return "经文会随每日内容更新"
+            return L10n.str("widget_status_both_added_subtitle")
         case (true, false):
-            return "还可添加锁屏配件，一眼看到今日经文"
+            return L10n.str("widget_status_home_added_subtitle")
         case (false, true):
-            return "还可添加桌面小组件，常驻一眼可见处"
+            return L10n.str("widget_status_lock_added_subtitle")
         default:
-            return "打开 App 前，先看一段今日经文"
+            return L10n.str("widget_status_not_added_subtitle")
         }
     }
 

@@ -48,14 +48,14 @@ enum PlayMode: Int, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .repeatAll: return NSLocalizedString("play_mode_repeat", comment: "順序循環")
-        case .repeatOne: return NSLocalizedString("play_mode_repeat_one", comment: "單曲循環")
-        case .playOnce: return NSLocalizedString("play_mode_play_one", comment: "單曲播放") + "1次"
-        case .playTwice: return NSLocalizedString("play_mode_play_one", comment: "單曲播放") + "2次"
-        case .play3Times: return NSLocalizedString("play_mode_play_one", comment: "單曲播放") + "3次"
-        case .play4Times: return NSLocalizedString("play_mode_play_one", comment: "單曲播放") + "4次"
-        case .play5Times: return NSLocalizedString("play_mode_play_one", comment: "單曲播放") + "5次"
-        case .play6Times: return NSLocalizedString("play_mode_play_one", comment: "單曲播放") + "6次"
+        case .repeatAll: return L10n.str("play_mode_repeat")
+        case .repeatOne: return L10n.str("play_mode_repeat_one")
+        case .playOnce: return String(format: L10n.str("play_mode_times_format"), L10n.str("play_mode_play_one"), 1)
+        case .playTwice: return String(format: L10n.str("play_mode_times_format"), L10n.str("play_mode_play_one"), 2)
+        case .play3Times: return String(format: L10n.str("play_mode_times_format"), L10n.str("play_mode_play_one"), 3)
+        case .play4Times: return String(format: L10n.str("play_mode_times_format"), L10n.str("play_mode_play_one"), 4)
+        case .play5Times: return String(format: L10n.str("play_mode_times_format"), L10n.str("play_mode_play_one"), 5)
+        case .play6Times: return String(format: L10n.str("play_mode_times_format"), L10n.str("play_mode_play_one"), 6)
         }
     }
 

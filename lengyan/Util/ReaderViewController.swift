@@ -328,7 +328,7 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         }
         
         let toast = UILabel()
-        toast.text = "已恢复进度" + pageText
+        toast.text = L10n.str("reader_resume_progress") + pageText
         toast.font = SutraTypographyManager.shared.uiFont(for: .uiSmall, weight: .regular)
         toast.textColor = SutraDesignTokens.shared.color(for: .textSecondary)
         toast.textAlignment = .center
@@ -589,7 +589,7 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         // 只有在需要恢复进度且未点过“第一页”时，才在右上角叠展“第一页”按钮
         if let offset = restoreOffset, offset > 0, !hasRestoredOffset {
             let firstPageButton = UIBarButtonItem(
-                title: "第一页",
+                title: L10n.str("reader_first_page"),
                 style: .plain,
                 target: self,
                 action: #selector(goToFirstPage)
@@ -636,8 +636,7 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     }
 
     private func showAudioToast(chapterName: String) {
-        let isSimplified = Book.shared.isSimplifiedChinese
-        let toastText = isSimplified ? "耳畔梵音 · \(chapterName)" : "耳畔梵音 · \(chapterName)"
+        let toastText = String(format: L10n.str("reader_audio_toast_format"), chapterName)
         
         let toast = UILabel()
         toast.text = toastText

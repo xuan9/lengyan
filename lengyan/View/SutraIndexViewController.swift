@@ -210,18 +210,18 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
         let firstAction:UIAlertAction
         if(!Prefers.shared.isLike(path!)){
-            firstAction = UIAlertAction(title: "★加入精選", style: .default) { (alert: UIAlertAction!) -> Void in
+            firstAction = UIAlertAction(title: L10n.str("menu_add_curated"), style: .default) { (alert: UIAlertAction!) -> Void in
                 Prefers.shared.like(self.path!)
                 self.updateHeader();
             }
         } else {
-            firstAction = UIAlertAction(title: "☆移除精選", style: .destructive) { (alert: UIAlertAction!) -> Void in
+            firstAction = UIAlertAction(title: L10n.str("menu_remove_curated"), style: .destructive) { (alert: UIAlertAction!) -> Void in
                 Prefers.shared.unlike(self.path!)
                 self.updateHeader();
             }
         }
         
-        let secondAction = UIAlertAction(title: "👍讚", style: .default) { (alert: UIAlertAction!) -> Void in
+        let secondAction = UIAlertAction(title: L10n.str("menu_like"), style: .default) { (alert: UIAlertAction!) -> Void in
             Prefers.shared.like(self.path!)
         }
         

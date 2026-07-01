@@ -938,7 +938,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     @objc func openAcknowledgments() {
         let hostingController = UIHostingController(rootView: SutraAcknowledgmentsView())
-        hostingController.title = "致谢"
+        hostingController.title = L10n.str("settings_acknowledgments")
         self.navigationController?.pushViewController(hostingController, animated: true)
     }
 

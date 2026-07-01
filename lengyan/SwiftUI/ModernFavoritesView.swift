@@ -14,6 +14,12 @@ extension Notification.Name {
     static let favoritesDidChange = Notification.Name("favoritesDidChange")
 }
 
+private extension Book {
+    func displayName(of item: [String: Any]) -> String {
+        item["name"] as? String ?? ""
+    }
+}
+
 // MARK: - Favorites Cache
 class FavoritesCache {
     static let shared = FavoritesCache()
@@ -180,7 +186,8 @@ class FavoritesViewModel: ObservableObject {
         var items: [FavoriteItem] = []
         for path in paths {
             let item = Book.shared.itemOfPath(path)
-            let title = item["name"] as? String ?? NSLocalizedString("unknown_sutra", comment: "")
+            let displayTitle = Book.shared.displayName(of: item)
+            let title = displayTitle.isEmpty ? L10n.str("unknown_sutra") : displayTitle
             let hasChildren = item["children"] != nil
             let content = extractContentEfficiently(from: item)
             items.append(FavoriteItem(path: path, title: title, content: content, hasChildren: hasChildren))
@@ -205,7 +212,7 @@ class FavoritesViewModel: ObservableObject {
         if charCount >= maxCount && rawContent.count > maxCount {
             result.append("...")
         }
-        return result.isEmpty ? NSLocalizedString("no_content_preview", comment: "") : result
+        return result.isEmpty ? L10n.str("no_content_preview") : result
     }
 }
 
@@ -254,7 +261,7 @@ struct ModernFavoritesView: View {
                             } else {
                                 VStack(spacing: 0) {
                                     // Section 1: 我的收藏
-                                    SectionHeader(title: NSLocalizedString("favorites_tab_personal", comment: ""))
+                                    SectionHeader(title: L10n.str("favorites_tab_personal"))
                                     
                                     if viewModel.favorites.isEmpty {
                                         personalEmptyCard
@@ -269,7 +276,7 @@ struct ModernFavoritesView: View {
                                     }
                                     
                                     // Section 2: 编者精选
-                                    SectionHeader(title: NSLocalizedString("favorites_tab_curated", comment: ""))
+                                    SectionHeader(title: L10n.str("favorites_tab_curated"))
                                     
                                     VStack(spacing: 14) {
                                         ForEach(viewModel.curatedItems) { item in
@@ -355,7 +362,7 @@ struct ModernFavoritesView: View {
                         } else {
                             VStack(spacing: 0) {
                                 // Section 1: 我的收藏
-                                SectionHeader(title: NSLocalizedString("favorites_tab_personal", comment: ""))
+                                SectionHeader(title: L10n.str("favorites_tab_personal"))
                                 
                                 if viewModel.favorites.isEmpty {
                                     personalEmptyCard
@@ -372,7 +379,7 @@ struct ModernFavoritesView: View {
                                 }
                                 
                                 // Section 2: 编者精选
-                                SectionHeader(title: NSLocalizedString("favorites_tab_curated", comment: ""))
+                                SectionHeader(title: L10n.str("favorites_tab_curated"))
                                 
                                 VStack(spacing: 14) {
                                     ForEach(viewModel.curatedItems) { item in
@@ -405,11 +412,11 @@ struct ModernFavoritesView: View {
 
     private var emptyView: some View {
         VStack(spacing: SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingXL)) {
-            Text(NSLocalizedString("favorites_curated_empty", comment: ""))
+            Text(L10n.str("favorites_curated_empty"))
                 .font(.system(size: 14, weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.textSecondary))
 
-            Text(NSLocalizedString("favorites_curated_title", comment: ""))
+            Text(L10n.str("favorites_curated_title"))
                 .font(.system(size: 13, weight: .light))
                 .foregroundColor(SutraDesignSystem.secondaryTextColor().opacity(0.5))
         }
@@ -425,7 +432,7 @@ struct ModernFavoritesView: View {
                 .frame(width: 3)
                 .padding(.vertical, 8)
 
-            Text(NSLocalizedString("favorites_personal_empty_desc", comment: ""))
+            Text(L10n.str("favorites_personal_empty_desc"))
                 .font(.system(size: 12, weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.textSecondary).opacity(0.6))
                 .lineLimit(2)
@@ -524,7 +531,8 @@ struct ModernFavoritesView: View {
 
     private func openSutra(_ path: String, navigationController: UINavigationController) {
         let item = Book.shared.itemOfPath(path)
-        let title = item["name"] as? String ?? NSLocalizedString("sutra", comment: "")
+        let displayTitle = Book.shared.displayName(of: item)
+        let title = displayTitle.isEmpty ? L10n.str("sutra") : displayTitle
 
         navigationController.setNavigationBarHidden(false, animated: false)
 
@@ -550,7 +558,7 @@ struct ModernFavoritesView: View {
             item["path"] as? String == path
         }) {
             let item = Book.shared.index?[pageIndex]
-            let title = item?["name"] as? String ?? NSLocalizedString("sutra", comment: "")
+            let title = item?["name"] as? String ?? L10n.str("sutra")
 
             navigationController.setNavigationBarHidden(false, animated: false)
 
@@ -639,7 +647,8 @@ struct SwiftUISutraReader: UIViewControllerRepresentable {
             sutraVC.path = path
             sutraVC.isShowIndexButton = true
             let item = Book.shared.itemOfPath(path)
-            sutraVC.title = item["name"] as? String ?? NSLocalizedString("sutra", comment: "")
+            let displayTitle = Book.shared.displayName(of: item)
+            sutraVC.title = displayTitle.isEmpty ? L10n.str("sutra") : displayTitle
             sutraVC.isEmbedded = true
             childVC = sutraVC
         } else {
@@ -653,7 +662,7 @@ struct SwiftUISutraReader: UIViewControllerRepresentable {
             )
             pageVC.page = pageIndex
             let item = Book.shared.index?[pageIndex]
-            pageVC.title = item?["name"] as? String ?? NSLocalizedString("sutra", comment: "")
+            pageVC.title = item?["name"] as? String ?? L10n.str("sutra")
             pageVC.isEmbedded = true
             childVC = pageVC
         }
@@ -680,12 +689,12 @@ struct ZenPlaceholderView: View {
                     .font(.system(size: 40, weight: .light))
                     .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)).opacity(0.4))
                 
-                Text(NSLocalizedString(titleKey, comment: ""))
+                Text(L10n.str(titleKey))
                     .font(.system(size: 16, weight: .regular, design: .serif))
                     .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textPrimary)))
                     .tracking(2)
                 
-                Text(NSLocalizedString(descKey, comment: ""))
+                Text(L10n.str(descKey))
                     .font(.system(size: 13, weight: .light))
                     .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)).opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -780,7 +789,7 @@ struct ZenScriptureCardView: View {
             
             Button(action: onEnterReader) {
                 HStack(spacing: 8) {
-                    Text(NSLocalizedString("enter_reading_mode", comment: "进入全卷精读"))
+                    Text(L10n.str("enter_reading_mode"))
                         .font(.system(size: 15, weight: .light, design: .serif))
                         .tracking(1.5)
                     Image(systemName: "arrow.right")

@@ -86,7 +86,9 @@
 		79B350D0AB4F410EA57A6BB0 /* LengyanWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		81087998413F437A88554F80 /* SutraShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F2AB5239634E76892FCE47 /* SutraShareCardView.swift */; };
 		85A2373A9BA144E2BE43792D /* WidgetDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */; };
+		85A2373A9BA144E2BE43793D /* WidgetDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */; };
 		87D1ECE90E034EB3906ECCB0 /* DailyVerseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61446741A3764C48A56C80B4 /* DailyVerseWidget.swift */; };
+		87D1ECE90E034EB3906ECCB1 /* DailyVerseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61446741A3764C48A56C80B4 /* DailyVerseWidget.swift */; };
 		88E94BDF895BD780748A3751 /* NavigationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B4DEA8ED2555B51E3976F /* NavigationHelper.swift */; };
 		927EE1F0882A4B54BD07EC6A /* DailyVerseProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C71E0A9097A94FEB961AE65F /* DailyVerseProvider.swift */; };
 		A68C1C994600674BC5F7FB08 /* SutraAcknowledgmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */; };
@@ -108,6 +110,7 @@
 		DA693579DBDB4BE1A515D099 /* DailyVerseCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C58F932A85A4413B9FABE8D /* DailyVerseCardView.swift */; };
 		DF295F665CF84003BE3C9258 /* SharedVerseData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3092BA60DE2421295F0CD61 /* SharedVerseData.swift */; };
 		E8EC0AE8385E41F18E1DB992 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FC6B7D88C924C55AF90EB80 /* WidgetKit.framework */; };
+		E8EC0AE8385E41F18E1DB993 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FC6B7D88C924C55AF90EB80 /* WidgetKit.framework */; };
 		F84996CF47F64470BEEEF12B /* SharedVerseData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C610B94F2962439384250E92 /* SharedVerseData.swift */; };
 /* End PBXBuildFile section */
 
@@ -266,6 +269,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8EC0AE8385E41F18E1DB993 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -806,6 +810,8 @@
 				B12E4D8E8D3A0321CB2E3F9E /* FeedbackService.swift in Sources */,
 				ADD297E8BFA3460927DBAC9C /* ReadingStayTimer.swift in Sources */,
 				927EE1F0882A4B54BD07EC6A /* DailyVerseProvider.swift in Sources */,
+				87D1ECE90E034EB3906ECCB1 /* DailyVerseWidget.swift in Sources */,
+				85A2373A9BA144E2BE43793D /* WidgetDesignTokens.swift in Sources */,
 				0EF37E68574D4E54B045E5F3 /* HapticManager.swift in Sources */,
 				AC0AD1957DE54E5A8579DA52 /* SutraCardRenderer.swift in Sources */,
 				DA693579DBDB4BE1A515D099 /* DailyVerseCardView.swift in Sources */,

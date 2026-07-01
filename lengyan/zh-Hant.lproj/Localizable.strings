@@ -15,7 +15,7 @@
 "reading_tab_title" = "讀經";
 "media_tab_title" = "聽經";
 "star_tab_title" = "收藏";
-"settings_tab_title" = "設置";
+"settings_tab_title" = "設定";
 "favorites_subtitle" = "你喜歡的經文";
 "no_favorites" = "暫無收藏";
 "no_favorites_description" = "在閱讀時點擊收藏按鈕，將喜歡的經文添加到這裡";
@@ -35,7 +35,7 @@
 
 "downloading_text" = "正在下載...";
 "welcoming_sutra" = "正在迎請經典…";
-"download_failed" = "下載失敗，请稍後重試";
+"download_failed" = "下載失敗，請稍後重試";
 "download_error_out_of_space" = "空間不足，下載失敗";
 "download_error_too_big" = "程序錯誤，文件過大";
 "download_error_invalid_tag" = "程序錯誤，文件不存在";
@@ -61,4 +61,113 @@
 "done" = "完成";
 "continue_listening_format" = "•  續聽·%@（%@） →";
 
+"settings_section_practice" = "修行";
+"settings_section_appearance" = "外觀";
+"settings_section_about" = "關於";
+"settings_font_size_xs" = "特小";
+"settings_font_size_s" = "小";
+"settings_font_size_m" = "中";
+"settings_font_size_l" = "大";
+"settings_font_size_xl" = "特大";
+"settings_theme" = "主題";
+"settings_theme_paper" = "宣紙";
+"settings_theme_classic" = "古籍";
+"settings_theme_night" = "夜讀";
+"settings_widget_today_verse" = "今日經文";
+"settings_widget_action_add_lock_screen" = "還可放到鎖屏";
+"settings_widget_action_add_home_screen" = "還可放到桌面";
+"settings_widget_action_add_both" = "放到桌面與鎖屏";
+"settings_widget_title" = "小元件";
+"settings_daily_reminder" = "每日提醒";
+"settings_reminder_time" = "提醒時間";
+"settings_feedback" = "反饋";
+"settings_rate" = "評價";
+"settings_acknowledgments" = "致謝";
+"settings_version" = "版本";
+"settings_notification_alert_title" = "通知未開啟";
+"settings_notification_alert_open_settings" = "去設定";
+"settings_notification_alert_ok" = "知道了";
+"settings_notification_alert_message" = "每日讀經提醒需要通知權限，才能把經文顯示在通知中心。請前往「設定」開啟本應用的通知。";
 
+"widget_guide_styles" = "小元件樣式";
+"widget_guide_home_title" = "桌面";
+"widget_guide_home_subtitle" = "小中大尺寸";
+"widget_guide_lock_title" = "鎖屏";
+"widget_guide_lock_subtitle" = "行內、矩形";
+"widget_guide_card_title" = "經文卡片";
+"widget_guide_card_subtitle" = "大號可讀段落";
+"widget_guide_how_to_add" = "添加方式";
+"widget_guide_home_instruction" = "長按桌面空白處 → 點「+」→ 搜尋「楞嚴」→ 添加「今日讀經」。";
+"widget_guide_lock_instruction" = "鎖屏長按 → 自定 → 鎖屏 → 添加小元件 → 選擇「楞嚴」。";
+"widget_guide_usage" = "使用";
+"widget_guide_usage_instruction" = "小元件每日自動更新經文。點按經文，可回到 App 深讀。";
+"widget_status_both_added" = "已添加桌面與鎖屏";
+"widget_status_home_added" = "桌面小元件已添加";
+"widget_status_lock_added" = "鎖屏配件已添加";
+"widget_status_not_added" = "今日經文可放到桌面或鎖屏";
+"widget_status_both_added_subtitle" = "經文會隨每日內容更新";
+"widget_status_home_added_subtitle" = "還可添加鎖屏配件，一眼看到今日經文";
+"widget_status_lock_added_subtitle" = "還可添加桌面小元件，常駐一眼可見處";
+"widget_status_not_added_subtitle" = "打開 App 前，先看一段今日經文";
+
+"no_content_preview" = "暫無內容";
+
+"audio_credit" = "屏東能淨協會讀誦";
+"play_mode_times_format" = "%@%d次";
+"audio_empty_prompt" = "請輕觸卷名聽經";
+"audio_immersive_title" = "聽\n經";
+"audio_error_out_of_space" = "儲存空間不足，無法下載音頻";
+"audio_error_too_big" = "音頻文件過大";
+"audio_error_invalid" = "音頻資源無效";
+"audio_error_download_failed" = "下載失敗，請檢查網絡後重試";
+
+"feedback_success_title" = "感謝你的心聲";
+"feedback_success_subtitle" = "每一份心聲，我們都珍重";
+"feedback_title" = "有什麼想對我們說？";
+"feedback_subtitle" = "任何想法，我們都珍重";
+"feedback_placeholder" = "寫下你的心聲…";
+"feedback_send" = "發送";
+"feedback_sending" = "發送中…";
+"feedback_footer" = "隨緣隨喜";
+"feedback_send_failed" = "發送失敗，請檢查網絡後重試";
+
+"acknowledgments_intro" = "經典流傳 仰仗諸緣";
+"acknowledgments_text_title" = "文字";
+"acknowledgments_text_body" = "《大佛頂首楞嚴經》源自佛陀於舍衛國祇園精舍宣說，又名《中印度那爛陀大道場經》。相傳龍樹菩薩自龍宮默記傳出。天台智者大師為求此經，面向西方禮拜十八年而未得見。後般剌蜜諦法師割臂藏經，歷盡艱險帶至廣州，於唐神龍元年（705）在制旨道場（今光孝寺）譯出。般剌蜜諦法師任譯主，彌伽釋迦法師譯語，懷迪法師證譯，房融筆受。譯畢，法師即回國承當罪責。\n\n此後歷經千年，無數大德傳持、註釋、流通。本應用經文與科判取材於法界佛教總會編輯之《大佛頂首楞嚴經淺釋》，其經文援用《龍藏》，科判以圓瑛法師簡要科判為主，參照交光法師《正脈疏》等。感恩一切為此經流傳付出心血者。";
+"acknowledgments_audio_title" = "音頻";
+"acknowledgments_audio_body" = "音頻讀誦由屏東能淨協會錄製，資料來源於佛學多媒體資料庫。感恩清音演法，普利有情。";
+"acknowledgments_image_title" = "圖像";
+"acknowledgments_image_body" = "圖標和啟動畫面取自明代畫家吳彬佛畫。吳彬，字文中，莆田人，以奇崛畫法著稱，其佛畫莊嚴古逸，為晚明獨步。";
+"acknowledgments_footer" = "隨喜功德";
+
+"wisdom_enter_reading" = "進入經文深讀";
+"wisdom_lesson_complete_title" = "今日功課已畢";
+"wisdom_lesson_complete_subtitle" = "請安心生活，明日再來";
+"wisdom_enable_daily_reminder" = "開啟每日提醒，每天讀一段經文";
+
+"share_long_text_hint_format" = "經文較長（約 %d 字），已為你備妥全文";
+"share_preview_title" = "預覽";
+"share_image" = "分享美圖";
+"share_text" = "分享文字";
+"copy" = "拷貝";
+"share_card_watermark" = "楞嚴";
+
+"reader_resume_progress" = "已恢復進度";
+"reader_first_page" = "第一頁";
+"reader_audio_toast_format" = "耳畔梵音 · %@";
+
+"search_placeholder" = "搜尋經文、通議...";
+"search_recent" = "最近搜尋";
+"search_clear" = "清除";
+"search_clear_history" = "清除搜尋歷史";
+"search_classic_keywords" = "經典詞句";
+"search_no_results_format" = "未找到「%@」相關內容";
+"search_try_another_keyword" = "試試換一個關鍵詞";
+"search_refinement_format" = "「%@」的結果較多 · 可試試";
+"search_accessibility_search_format" = "搜尋：%@";
+"search_accessibility_fill_hint" = "填入搜尋框";
+"search_accessibility_back" = "返回";
+
+"menu_add_curated" = "★加入精選";
+"menu_remove_curated" = "☆移除精選";
+"menu_like" = "👍讚";

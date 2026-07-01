@@ -13,7 +13,7 @@ struct ZenTabHeaderView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(NSLocalizedString(titleKey, comment: ""))
+            Text(L10n.str(titleKey))
                 .font(SutraTypographyBridge.uiLargeTitle(weight: .bold))
                 .tracking(20)
                 .foregroundColor(SutraDesignSystem.color(.primary))

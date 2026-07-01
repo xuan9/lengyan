@@ -562,13 +562,13 @@ class AudioManager: ObservableObject {
     private func getODRErrorMessage(_ error: NSError) -> String {
         switch error.code {
         case NSBundleOnDemandResourceOutOfSpaceError:
-            return "存储空间不足，无法下载音频"
+            return L10n.str("audio_error_out_of_space")
         case NSBundleOnDemandResourceExceededMaximumSizeError:
-            return "音频文件过大"
+            return L10n.str("audio_error_too_big")
         case NSBundleOnDemandResourceInvalidTagError:
-            return "音频资源无效"
+            return L10n.str("audio_error_invalid")
         default:
-            return "下载失败，请检查网络后重试"
+            return L10n.str("audio_error_download_failed")
         }
     }
 }

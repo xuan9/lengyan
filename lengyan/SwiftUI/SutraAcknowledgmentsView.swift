@@ -24,7 +24,7 @@ struct SutraAcknowledgmentsView: View {
             VStack(spacing: 0) {
 
                 // MARK: 开篇 — 缘起
-                Text("经典流传 仰仗诸缘")
+                Text(L10n.str("acknowledgments_intro"))
                     .font(SutraTypographyBridge.uiBody(weight: .regular))
                     .foregroundColor(textSecondary)
                     .tracking(3)
@@ -33,34 +33,34 @@ struct SutraAcknowledgmentsView: View {
 
                 // MARK: 来源 — 逐一致敬
                 sourceCard(
-                    title: "文字",
-                    text: "《大佛顶首楞严经》源自佛陀于舍卫国祇园精舍宣说，又名《中印度那烂陀大道场经》。相传龙树菩萨自龙宫默记传出。天台智者大师为求此经，面向西方礼拜十八年而未得见。后般剌蜜谛法师割臂藏经，历尽艰险带至广州，于唐神龙元年（705）在制旨道场（今光孝寺）译出。般剌蜜谛法师任译主，弥伽释迦法师译语，怀迪法师证译，房融笔受。译毕，法师即回国承当罪责。\n\n此后历经千年，无数大德传持、注释、流通。本应用经文与科判取材于法界佛教总会编辑之《大佛顶首楞严经浅释》，其经文援用《龙藏》，科判以圆瑛法师简要科判为主，参照交光法师《正脉疏》等。感恩一切为此经流传付出心血者。"
+                    title: L10n.str("acknowledgments_text_title"),
+                    text: L10n.str("acknowledgments_text_body")
                 )
 
                 goldDivider
 
                 sourceCard(
-                    title: "音频",
-                    text: "音频读诵由屏东能净协会录制，资料来源于佛学多媒体资料库。感恩清音演法，普利有情。"
+                    title: L10n.str("acknowledgments_audio_title"),
+                    text: L10n.str("acknowledgments_audio_body")
                 )
 
                 goldDivider
 
                 sourceCard(
-                    title: "图像",
-                    text: "图标和启动画面取自明代画家吴彬佛画。吴彬，字文中，莆田人，以奇崛画法著称，其佛画庄严古逸，为晚明独步。"
+                    title: L10n.str("acknowledgments_image_title"),
+                    text: L10n.str("acknowledgments_image_body")
                 )
 
                 goldDivider
 
                 // MARK: 收束 — 致敬
                 VStack(spacing: 12) {
-                    Text("随喜功德")
+                    Text(L10n.str("acknowledgments_footer"))
                         .font(SutraTypographyBridge.uiCaption(weight: .light))
                         .foregroundColor(textTertiary)
                         .tracking(4)
 
-                    Text("☸️南無楞嚴會上佛菩薩")
+                    Text(L10n.str("footer_homage"))
                         .font(SutraTypographyBridge.uiCaption(weight: .medium))
                         .foregroundColor(goldColor.opacity(0.65))
                         .tracking(3)

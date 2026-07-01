@@ -41,14 +41,14 @@ struct FeedbackView: View {
                 .padding(.bottom, 24)
 
             // 主文：感恩
-            Text("感谢你的心声")
+            Text(L10n.str("feedback_success_title"))
                 .font(SutraTypographyBridge.uiBody(weight: .medium))
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
                 .opacity(showContent ? 1 : 0)
                 .padding(.bottom, 12)
 
             // 副文：珍重
-            Text("每一份心声，我们都珍重")
+            Text(L10n.str("feedback_success_subtitle"))
                 .font(SutraTypographyBridge.uiCaption(weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.textTertiary))
                 .opacity(showContent ? 1 : 0)
@@ -58,7 +58,7 @@ struct FeedbackView: View {
             Button(action: {
                 dismiss()
             }) {
-                Text(NSLocalizedString("done", comment: "完成"))
+                Text(L10n.str("done"))
                     .font(.system(size: 16, weight: .medium, design: .serif))
                     .tracking(3)
                     .foregroundColor(.white)
@@ -117,11 +117,11 @@ struct FeedbackView: View {
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("有什么想对我们说？")
+            Text(L10n.str("feedback_title"))
                 .font(SutraTypographyBridge.uiBody(weight: .medium))
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
 
-            Text("任何想法，我们都珍重")
+            Text(L10n.str("feedback_subtitle"))
                 .font(SutraTypographyBridge.uiCaption(weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.textTertiary))
         }
@@ -150,7 +150,7 @@ struct FeedbackView: View {
                 .fill(Color(SutraDesignTokens.shared.color(for: .card)))
 
             if content.isEmpty {
-                Text("写下你的心声…")
+                Text(L10n.str("feedback_placeholder"))
                     .font(SutraTypographyBridge.uiBody(weight: .light))
                     .foregroundColor(SutraDesignSystem.color(.textTertiary).opacity(0.5))
                     .padding(16)
@@ -174,7 +174,7 @@ struct FeedbackView: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(0.8)
                 }
-                Text(isSending ? "发送中…" : "发送")
+                Text(isSending ? L10n.str("feedback_sending") : L10n.str("feedback_send"))
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(.white)
             }
@@ -196,7 +196,7 @@ struct FeedbackView: View {
     // MARK: - 底部文字
 
     private var footerText: some View {
-        Text("随缘随喜")
+        Text(L10n.str("feedback_footer"))
             .font(SutraTypographyBridge.uiSmall(weight: .light))
             .foregroundColor(SutraDesignSystem.color(.textTertiary))
             .frame(maxWidth: .infinity)
@@ -219,7 +219,7 @@ struct FeedbackView: View {
                     content = ""
                     sendSucceeded = true
                 case .failure:
-                    errorMessage = "发送失败，请检查网络后重试"
+                    errorMessage = L10n.str("feedback_send_failed")
                 }
             }
         }

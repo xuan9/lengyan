@@ -113,7 +113,7 @@ struct DailyVerseEntry: TimelineEntry {
 
 // MARK: - Timeline Provider
 
-struct DailyVerseProvider: TimelineProvider {
+struct DailyVerseTimelineProvider: TimelineProvider {
     func placeholder(in context: Context) -> DailyVerseEntry {
         return .placeholder
     }
@@ -528,8 +528,8 @@ struct DailyVerseWidget: Widget {
     let kind: String = "DailyVerseWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: DailyVerseProvider()) { entry in
-            if #available(iOSApplicationExtension 17.0, *) {
+        StaticConfiguration(kind: kind, provider: DailyVerseTimelineProvider()) { entry in
+            if #available(iOS 17.0, iOSApplicationExtension 17.0, *) {
                 WidgetEntryView(entry: entry)
                     .containerBackground(for: .widget) {
                         WidgetTokens.background

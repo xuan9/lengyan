@@ -66,7 +66,7 @@ struct ModernAudioPlayerView: View {
                         }
 
                         // 归属署名 — 安静低调
-                        Text("屏东能净协会读诵")
+                        Text(L10n.str("audio_credit"))
                             .font(SutraTypographyBridge.uiCaption(weight: .light))
                             .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
                             .padding(.top, 36)
@@ -149,12 +149,16 @@ struct ModernAudioPlayerView: View {
                         let padBottom = overlayGeo.size.height - menuBottomY
 
                         VStack(spacing: 0) {
-                            playModeRow(.repeatOne, title: NSLocalizedString("play_mode_repeat_one", comment: ""), icon: "ic_repeat_one")
+                            playModeRow(.repeatOne, title: L10n.str("play_mode_repeat_one"), icon: "ic_repeat_one")
                             goldDivider
-                            playModeRow(.repeatAll, title: NSLocalizedString("play_mode_repeat", comment: ""), icon: "ic_repeat")
+                            playModeRow(.repeatAll, title: L10n.str("play_mode_repeat"), icon: "ic_repeat")
                             goldDivider
                             ForEach(1...3, id: \.self) { i in
-                                playModeRow(playMode(for: i), title: "\(NSLocalizedString("play_mode_play_one", comment: ""))\(i)次", icon: "ic_looks_\(i)")
+                                playModeRow(
+                                    playMode(for: i),
+                                    title: String(format: L10n.str("play_mode_times_format"), L10n.str("play_mode_play_one"), i),
+                                    icon: "ic_looks_\(i)"
+                                )
                                 if i < 3 { goldDivider }
                             }
                         }
@@ -298,7 +302,7 @@ struct ModernAudioPlayerView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         if audioObserver.currentTrack?.isEmpty ?? true {
-                            Text("请轻触卷名听经")
+                            Text(L10n.str("audio_empty_prompt"))
                                 .font(SutraTypographyBridge.uiCaption(weight: .light))
                                 .tracking(2)
                                 .foregroundColor(.primary)
@@ -311,7 +315,7 @@ struct ModernAudioPlayerView: View {
                         }
 
                         if isCurrentTrackDownloading {
-                            ZenBreathingText(text: NSLocalizedString("downloading_text", comment: ""))
+                            ZenBreathingText(text: L10n.str("downloading_text"))
                         } else {
                             timeDisplay
                                 .foregroundColor(.secondary)
@@ -364,7 +368,7 @@ struct ModernAudioPlayerView: View {
                             .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
                             .lineSpacing(4)
                     } else {
-                        Text("听\n经")
+                        Text(L10n.str("audio_immersive_title"))
                             .font(.system(size: 20, weight: .light))
                             .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
                             .lineSpacing(4)

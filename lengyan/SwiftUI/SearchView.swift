@@ -67,8 +67,8 @@ struct FlowLayout: View {
                 .contentShape(RoundedRectangle(cornerRadius: 8).inset(by: -4))
         }
         .buttonStyle(SutraPressableStyle())
-        .accessibilityLabel("搜索：\(text)")
-        .accessibilityHint("填入搜索框")
+        .accessibilityLabel(String(format: L10n.str("search_accessibility_search_format"), text))
+        .accessibilityHint(L10n.str("search_accessibility_fill_hint"))
     }
 
     @MainActor
@@ -174,7 +174,7 @@ struct SearchView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(SutraPressableStyle())
-            .accessibilityLabel("返回")
+            .accessibilityLabel(L10n.str("search_accessibility_back"))
 
             // 输入框
             HStack(spacing: 8) {
@@ -182,7 +182,7 @@ struct SearchView: View {
                     .font(.system(size: 14))
                     .foregroundColor(SutraDesignSystem.color(.textSecondary))
 
-                TextField(Book.shared.isSimplifiedChinese ? "搜索经文..." : "搜尋經文...", text: $query)
+                TextField(L10n.str("search_placeholder"), text: $query)
                     .font(SutraTypographyBridge.uiBody(weight: .regular))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
                     .focused($isSearchFieldFocused)
@@ -204,7 +204,7 @@ struct SearchView: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(SutraPressableStyle())
-                    .accessibilityLabel("清除")
+                    .accessibilityLabel(L10n.str("search_clear"))
                 }
             }
             .padding(.horizontal, 12)
@@ -229,7 +229,7 @@ struct SearchView: View {
                     if !recentSearches.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text(Book.shared.isSimplifiedChinese ? "最近搜索" : "最近搜索".traditional)
+                                Text(L10n.str("search_recent"))
                                     .font(SutraTypographyBridge.uiCaption(weight: .regular))
                                     .foregroundColor(SutraDesignSystem.color(.textSecondary))
                                 Spacer()
@@ -238,12 +238,12 @@ struct SearchView: View {
                                     Prefers.shared.clearSearchHistory()
                                     recentSearches = []
                                 }) {
-                                    Text(Book.shared.isSimplifiedChinese ? "清除" : "清除".traditional)
+                                    Text(L10n.str("search_clear"))
                                         .font(SutraTypographyBridge.uiSmall(weight: .light))
                                         .foregroundColor(SutraDesignSystem.color(.textTertiary))
                                 }
                                 .buttonStyle(SutraPressableStyle())
-                                .accessibilityLabel("清除搜索历史")
+                                .accessibilityLabel(L10n.str("search_clear_history"))
                             }
                             FlowLayout(spacing: 8, items: recentSearches, availableWidth: geo.size.width) { term in
                                 query = term
@@ -254,12 +254,12 @@ struct SearchView: View {
 
                     // 楞严关键词建议
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(Book.shared.isSimplifiedChinese ? "经典词句" : "經典詞句")
+                        Text(L10n.str("search_classic_keywords"))
                             .font(SutraTypographyBridge.uiCaption(weight: .regular))
                             .foregroundColor(SutraDesignSystem.color(.textSecondary))
                         FlowLayout(
                             spacing: 10,
-                            items: defaultSearchKeywords.map { Book.shared.isSimplifiedChinese ? $0.simplified : $0.traditional },
+                            items: localizedSearchKeywords,
                             availableWidth: geo.size.width
                         ) { keyword in
                             query = keyword
@@ -284,12 +284,10 @@ struct SearchView: View {
                     Spacer(minLength: 60)
 
                     VStack(spacing: 8) {
-                        Text(Book.shared.isSimplifiedChinese
-                             ? "未找到「\(query)」相关内容"
-                             : "未找到「\(query)」相關內容")
+                        Text(String(format: L10n.str("search_no_results_format"), query))
                             .font(SutraTypographyBridge.uiBody(weight: .regular))
                             .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                        Text(Book.shared.isSimplifiedChinese ? "试试换一个关键词" : "試試換一個關鍵詞")
+                        Text(L10n.str("search_try_another_keyword"))
                             .font(SutraTypographyBridge.uiSmall(weight: .regular))
                             .foregroundColor(SutraDesignSystem.color(.textTertiary))
                     }
@@ -297,7 +295,7 @@ struct SearchView: View {
                     // 保留关键词建议，把挫败转化为引导
                     FlowLayout(
                         spacing: 10,
-                        items: defaultSearchKeywords.map { Book.shared.isSimplifiedChinese ? $0.simplified : $0.traditional },
+                        items: localizedSearchKeywords,
                         availableWidth: geo.size.width
                     ) { keyword in
                         query = keyword
@@ -476,18 +474,20 @@ struct SearchView: View {
     private var refinementSuggestions: [String] {
         guard query.count == 1 else { return [] }
         let singleChar = query.simplified
-        return defaultSearchKeywords.filter { keyword in
+        return localizedSearchKeywords.filter { keyword in
             keyword.simplified.contains(singleChar) && keyword.simplified != singleChar
         }
+    }
+
+    private var localizedSearchKeywords: [String] {
+        defaultSearchKeywords.map { Book.shared.isSimplifiedChinese ? $0.simplified : $0.traditional }
     }
 
     // MARK: - 单字精炼引导条
 
     private var refinementGuideBar: some View {
         HStack(spacing: 6) {
-            Text(Book.shared.isSimplifiedChinese
-                 ? "「\(query)」的结果较多 · 可试试"
-                 : "「\(query)」的結果較多 · 可試試")
+            Text(String(format: L10n.str("search_refinement_format"), query))
                 .font(SutraTypographyBridge.uiSmall(weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.textTertiary))
 
@@ -506,7 +506,7 @@ struct SearchView: View {
                         )
                 }
                 .buttonStyle(SutraPressableStyle())
-                .accessibilityLabel("搜索：\(word)")
+                .accessibilityLabel(String(format: L10n.str("search_accessibility_search_format"), word))
             }
 
             Spacer(minLength: 0)

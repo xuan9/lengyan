@@ -40,6 +40,16 @@ struct SharedVerseData: Codable {
         return array.first { $0.dateString == targetStr }
     }
 
+    /// App Group 是否完全为空 — 区分「未授记」与「当日数据缺失」。
+    static var isEmpty: Bool {
+        guard let defaults = UserDefaults(suiteName: appGroupID),
+              let data = defaults.data(forKey: defaultsKey),
+              let array = try? JSONDecoder().decode([SharedVerseData].self, from: data) else {
+            return true
+        }
+        return array.isEmpty
+    }
+
     /// 批量写入未来多天的经文到 App Group
     static func save(verses: [SharedVerseData]) {
         guard let defaults = UserDefaults(suiteName: appGroupID),

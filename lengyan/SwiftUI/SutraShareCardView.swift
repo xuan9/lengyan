@@ -214,7 +214,7 @@ struct SutraShareCardView: View {
     // MARK: - Watermark
 
     private func watermark(size: CGSize) -> some View {
-        let mark = Text("楞严")
+        let mark = Text(L10n.str("share_card_watermark"))
             .font(.system(size: fontSize(for: size, base: 8), weight: .ultraLight))
             .foregroundColor(SutraDesignSystem.color(.textTertiary).opacity(0.2))
             .padding(.trailing, size.width * 0.05)

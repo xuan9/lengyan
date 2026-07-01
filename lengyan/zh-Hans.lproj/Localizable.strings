@@ -62,4 +62,113 @@
 "done" = "完成";
 "continue_listening_format" = "•  续听·%@（%@） →";
 
+"settings_section_practice" = "修行";
+"settings_section_appearance" = "外观";
+"settings_section_about" = "关于";
+"settings_font_size_xs" = "特小";
+"settings_font_size_s" = "小";
+"settings_font_size_m" = "中";
+"settings_font_size_l" = "大";
+"settings_font_size_xl" = "特大";
+"settings_theme" = "主题";
+"settings_theme_paper" = "宣纸";
+"settings_theme_classic" = "古籍";
+"settings_theme_night" = "夜读";
+"settings_widget_today_verse" = "今日经文";
+"settings_widget_action_add_lock_screen" = "还可放到锁屏";
+"settings_widget_action_add_home_screen" = "还可放到桌面";
+"settings_widget_action_add_both" = "放到桌面与锁屏";
+"settings_widget_title" = "小组件";
+"settings_daily_reminder" = "每日提醒";
+"settings_reminder_time" = "提醒时间";
+"settings_feedback" = "反馈";
+"settings_rate" = "评价";
+"settings_acknowledgments" = "致谢";
+"settings_version" = "版本";
+"settings_notification_alert_title" = "通知未开启";
+"settings_notification_alert_open_settings" = "去设置";
+"settings_notification_alert_ok" = "知道了";
+"settings_notification_alert_message" = "每日读经提醒需要通知权限，才能把经文显示在通知中心。请前往「设置」开启本应用的通知。";
 
+"widget_guide_styles" = "组件样式";
+"widget_guide_home_title" = "桌面";
+"widget_guide_home_subtitle" = "小中大尺寸";
+"widget_guide_lock_title" = "锁屏";
+"widget_guide_lock_subtitle" = "行内、矩形";
+"widget_guide_card_title" = "经文卡片";
+"widget_guide_card_subtitle" = "大号可读段落";
+"widget_guide_how_to_add" = "添加方式";
+"widget_guide_home_instruction" = "长按桌面空白处 → 点「+」→ 搜索「楞严」→ 添加「今日读经」。";
+"widget_guide_lock_instruction" = "锁屏长按 → 自定 → 锁屏 → 添加小组件 → 选择「楞严」。";
+"widget_guide_usage" = "使用";
+"widget_guide_usage_instruction" = "小组件每日自动更新经文。点按经文，可回到 App 深读。";
+"widget_status_both_added" = "已添加桌面与锁屏";
+"widget_status_home_added" = "桌面小组件已添加";
+"widget_status_lock_added" = "锁屏配件已添加";
+"widget_status_not_added" = "今日经文可放到桌面或锁屏";
+"widget_status_both_added_subtitle" = "经文会随每日内容更新";
+"widget_status_home_added_subtitle" = "还可添加锁屏配件，一眼看到今日经文";
+"widget_status_lock_added_subtitle" = "还可添加桌面小组件，常驻一眼可见处";
+"widget_status_not_added_subtitle" = "打开 App 前，先看一段今日经文";
+
+"no_content_preview" = "暂无内容";
+
+"audio_credit" = "屏东能净协会读诵";
+"play_mode_times_format" = "%@%d次";
+"audio_empty_prompt" = "请轻触卷名听经";
+"audio_immersive_title" = "听\n经";
+"audio_error_out_of_space" = "存储空间不足，无法下载音频";
+"audio_error_too_big" = "音频文件过大";
+"audio_error_invalid" = "音频资源无效";
+"audio_error_download_failed" = "下载失败，请检查网络后重试";
+
+"feedback_success_title" = "感谢你的心声";
+"feedback_success_subtitle" = "每一份心声，我们都珍重";
+"feedback_title" = "有什么想对我们说？";
+"feedback_subtitle" = "任何想法，我们都珍重";
+"feedback_placeholder" = "写下你的心声…";
+"feedback_send" = "发送";
+"feedback_sending" = "发送中…";
+"feedback_footer" = "随缘随喜";
+"feedback_send_failed" = "发送失败，请检查网络后重试";
+
+"acknowledgments_intro" = "经典流传 仰仗诸缘";
+"acknowledgments_text_title" = "文字";
+"acknowledgments_text_body" = "《大佛顶首楞严经》源自佛陀于舍卫国祇园精舍宣说，又名《中印度那烂陀大道场经》。相传龙树菩萨自龙宫默记传出。天台智者大师为求此经，面向西方礼拜十八年而未得见。后般剌蜜谛法师割臂藏经，历尽艰险带至广州，于唐神龙元年（705）在制旨道场（今光孝寺）译出。般剌蜜谛法师任译主，弥伽释迦法师译语，怀迪法师证译，房融笔受。译毕，法师即回国承当罪责。\n\n此后历经千年，无数大德传持、注释、流通。本应用经文与科判取材于法界佛教总会编辑之《大佛顶首楞严经浅释》，其经文援用《龙藏》，科判以圆瑛法师简要科判为主，参照交光法师《正脉疏》等。感恩一切为此经流传付出心血者。";
+"acknowledgments_audio_title" = "音频";
+"acknowledgments_audio_body" = "音频读诵由屏东能净协会录制，资料来源于佛学多媒体资料库。感恩清音演法，普利有情。";
+"acknowledgments_image_title" = "图像";
+"acknowledgments_image_body" = "图标和启动画面取自明代画家吴彬佛画。吴彬，字文中，莆田人，以奇崛画法著称，其佛画庄严古逸，为晚明独步。";
+"acknowledgments_footer" = "随喜功德";
+
+"wisdom_enter_reading" = "进入经文深读";
+"wisdom_lesson_complete_title" = "今日功课已毕";
+"wisdom_lesson_complete_subtitle" = "请安心生活，明日再来";
+"wisdom_enable_daily_reminder" = "开启每日提醒，每天读一段经文";
+
+"share_long_text_hint_format" = "经文较长（约 %d 字），已为你备妥全文";
+"share_preview_title" = "预览";
+"share_image" = "分享美图";
+"share_text" = "分享文字";
+"copy" = "拷贝";
+"share_card_watermark" = "楞严";
+
+"reader_resume_progress" = "已恢复进度";
+"reader_first_page" = "第一页";
+"reader_audio_toast_format" = "耳畔梵音 · %@";
+
+"search_placeholder" = "搜索经文、通议...";
+"search_recent" = "最近搜索";
+"search_clear" = "清除";
+"search_clear_history" = "清除搜索历史";
+"search_classic_keywords" = "经典词句";
+"search_no_results_format" = "未找到「%@」相关内容";
+"search_try_another_keyword" = "试试换一个关键词";
+"search_refinement_format" = "「%@」的结果较多 · 可试试";
+"search_accessibility_search_format" = "搜索：%@";
+"search_accessibility_fill_hint" = "填入搜索框";
+"search_accessibility_back" = "返回";
+
+"menu_add_curated" = "★加入精选";
+"menu_remove_curated" = "☆移除精选";
+"menu_like" = "👍赞";

@@ -104,7 +104,7 @@ struct WisdomVerseCard: View {
                 Button(action: {
                     openSutra()
                 }) {
-                    Text("进入经文深读")
+                    Text(L10n.str("wisdom_enter_reading"))
                         .font(.custom("STKaiti", size: 16))
                         .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))
                         .padding(.horizontal, 24)
@@ -146,12 +146,12 @@ struct WisdomLessonCompleteView: View {
             VStack(spacing: 30) {
                 Spacer()
                 
-                Text("今日功课已毕")
+                Text(L10n.str("wisdom_lesson_complete_title"))
                     .font(.custom("STKaiti", size: 24))
                     .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textPrimary)))
                     .tracking(4)
                 
-                Text("请安心生活，明日再来")
+                Text(L10n.str("wisdom_lesson_complete_subtitle"))
                     .font(.custom("STKaiti", size: 16))
                     .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)))
                     .tracking(2)
@@ -170,7 +170,7 @@ struct WisdomLessonCompleteView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "bell")
                                 .font(.system(size: 14))
-                            Text("开启每日提醒，每天读一段经文")
+                            Text(L10n.str("wisdom_enable_daily_reminder"))
                                 .font(.system(size: 14, weight: .light, design: .serif))
                         }
                         .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))
@@ -185,15 +185,15 @@ struct WisdomLessonCompleteView: View {
                     .transition(.opacity)
                 }
             }
-            .alert("通知未开启", isPresented: $showingAlert) {
-                Button("去设置") {
+            .alert(L10n.str("settings_notification_alert_title"), isPresented: $showingAlert) {
+                Button(L10n.str("settings_notification_alert_open_settings")) {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
                         UIApplication.shared.open(url)
                     }
                 }
-                Button("知道了", role: .cancel) {}
+                Button(L10n.str("settings_notification_alert_ok"), role: .cancel) {}
             } message: {
-                Text("每日读经提醒需要通知权限，才能把经文显示在通知中心。请前往「设置」开启本应用的通知。")
+                Text(L10n.str("settings_notification_alert_message"))
             }
             .onAppear {
                 isReminderOn = Prefers.shared.isDailyReminderOn
