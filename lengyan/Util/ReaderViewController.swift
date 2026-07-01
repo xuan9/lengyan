@@ -622,7 +622,6 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
             AudioManager.shared.togglePlayPause()
         } else {
             AudioManager.shared.handleMediaItemTap(name: name, file: file, fileExtension: ext)
-            showAudioToast(chapterName: name)
         }
     }
 
@@ -633,45 +632,6 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         guard let group = AudioManager.shared.mediaGroups.first,
               chapter >= 0 && chapter < group.files.count else { return nil }
         return group.names[chapter]
-    }
-
-    private func showAudioToast(chapterName: String) {
-        let toastText = String(format: L10n.str("reader_audio_toast_format"), chapterName)
-        
-        let toast = UILabel()
-        toast.text = toastText
-        toast.font = SutraTypographyManager.shared.uiFont(for: .uiBody, weight: .regular).withSize(14)
-        toast.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        toast.textAlignment = .center
-        toast.backgroundColor = SutraDesignTokens.shared.color(for: .card).withAlphaComponent(0.9)
-        toast.layer.cornerRadius = 16
-        toast.clipsToBounds = true
-        toast.layer.borderWidth = 0.5
-        toast.layer.borderColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.3).cgColor
-        
-        let toastHeight: CGFloat = 32
-        let textWidth = toast.intrinsicContentSize.width
-        let toastWidth = textWidth + 32
-        
-        let bottomPadding: CGFloat = view.safeAreaInsets.bottom > 0 ? 100 : 80
-        toast.frame = CGRect(
-            x: (view.bounds.width - toastWidth) / 2,
-            y: view.bounds.height - toastHeight - bottomPadding,
-            width: toastWidth,
-            height: toastHeight
-        )
-        toast.alpha = 0
-        view.addSubview(toast)
-        
-        UIView.animate(withDuration: 0.3, animations: {
-            toast.alpha = 1
-        }) { _ in
-            UIView.animate(withDuration: 0.5, delay: 1.5, options: [], animations: {
-                toast.alpha = 0
-            }) { _ in
-                toast.removeFromSuperview()
-            }
-        }
     }
 
     private func setupThemeObserver() {
