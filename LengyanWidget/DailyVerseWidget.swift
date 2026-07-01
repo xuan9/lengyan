@@ -378,15 +378,27 @@ struct RectangularVerseView: View {
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         } else {
-            Text(entry.lockScreenText)
-                .font(WidgetTokens.sutraFont(size: 13.5))
-                .foregroundColor(.primary)
-                .lineSpacing(2)
-                .lineLimit(3)
-                .minimumScaleFactor(0.78)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            GeometryReader { proxy in
+                let text = entry.lockScreenText
+                let size = dynamicFontSize(
+                    charCount: text.count,
+                    availableWidth: max(CGFloat(120), proxy.size.width),
+                    availableHeight: max(CGFloat(48), proxy.size.height),
+                    lineSpacing: 1.5,
+                    minSize: 10.5,
+                    maxSize: 12.5
+                )
+                Text(text)
+                    .font(WidgetTokens.sutraFont(size: size))
+                    .foregroundColor(.primary)
+                    .lineSpacing(1.5)
+                    .lineLimit(4)
+                    .minimumScaleFactor(0.9)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            }
         }
     }
 }
@@ -465,7 +477,7 @@ private extension DailyVerseEntry {
 
     /// rectangular 锁屏卡片只放经文，不放 footer，给三行留足内容。
     var lockScreenText: String {
-        clippedFullText(limit: 36)
+        clippedFullText(limit: 52)
     }
 
     private func clippedFullText(limit: Int) -> String {
