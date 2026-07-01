@@ -52,6 +52,7 @@ class SutraSnapshotTests: XCTestCase {
         if listeningTab.exists {
             listeningTab.tap()
             Thread.sleep(forTimeInterval: 1.8)
+            selectAudioTrackForSnapshot()
             snapshot("02_Listening")
         }
 
@@ -119,5 +120,28 @@ class SutraSnapshotTests: XCTestCase {
                 return
             }
         }
+    }
+
+    private func selectAudioTrackForSnapshot() {
+        let trackNames = ["楞严经 卷一", "楞嚴經 卷一"]
+        for name in trackNames {
+            let track = app.staticTexts[name]
+            guard track.waitForExistence(timeout: 1.5) else { continue }
+            track.tap()
+            waitForAudioReadyForSnapshot()
+            return
+        }
+    }
+
+    private func waitForAudioReadyForSnapshot() {
+        let downloadingLabels = ["正在下载...", "正在下載..."]
+        let deadline = Date().addingTimeInterval(18.0)
+        while Date() < deadline {
+            let isDownloading = downloadingLabels.contains { app.staticTexts[$0].exists }
+            if !isDownloading { break }
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        Thread.sleep(forTimeInterval: 1.0)
     }
 }
