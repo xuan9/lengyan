@@ -1108,11 +1108,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let title = isSimplified ? "每天一段经文？" : "每天一段經文？"
         let reminderTime = formattedReminderTime()
         let message = isSimplified
-            ? "你愿意每天 \(reminderTime) 在通知中心收到一段经文吗？轻触通知可回到上次阅读。没有声音打扰，也不会频繁提醒。开启后可在设置中修改时间。"
-            : "你願意每天 \(reminderTime) 在通知中心收到一段經文嗎？輕觸通知可回到上次閱讀。沒有聲音打擾，也不會頻繁提醒。開啟後可在設定中修改時間。"
+            ? "想每天 \(reminderTime) 在通知中心收到一段经文吗？没有声音打扰，点开就能继续读。时间可在设置里改。"
+            : "想每天 \(reminderTime) 在通知中心收到一段經文嗎？沒有聲音打擾，點開就能繼續讀。時間可在設定裡改。"
 
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: isSimplified ? "开启" : "開啟", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: isSimplified ? "好，开启" : "好，開啟", style: .default) { [weak self] _ in
             ReminderManager.shared.requestPermissionAndSchedule { granted in
                 if !granted {
                     self?.presentNotificationSettingsAlert()
