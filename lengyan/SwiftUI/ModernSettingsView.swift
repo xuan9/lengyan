@@ -257,13 +257,18 @@ struct ModernSettingsView: View {
                     return false
                 }
             }
-            let lockScreenInstalled = matchingWidgets.contains { info in
-                switch info.family {
-                case .accessoryInline, .accessoryRectangular, .accessoryCircular:
-                    return true
-                default:
-                    return false
+            let lockScreenInstalled: Bool
+            if #available(iOS 16.0, *) {
+                lockScreenInstalled = matchingWidgets.contains { info in
+                    switch info.family {
+                    case .accessoryInline, .accessoryRectangular, .accessoryCircular:
+                        return true
+                    default:
+                        return false
+                    }
                 }
+            } else {
+                lockScreenInstalled = false
             }
             DispatchQueue.main.async {
                 hasDesktopWidget = desktopInstalled

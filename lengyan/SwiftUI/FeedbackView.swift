@@ -228,6 +228,11 @@ struct FeedbackView: View {
 
 // MARK: - TextEditor 背景隐藏
 
+@ViewBuilder
 private func hideTextEditorBackground(_ editor: TextEditor) -> some View {
-    editor.scrollContentBackground(.hidden)
+    if #available(iOS 16.0, *) {
+        editor.scrollContentBackground(.hidden)
+    } else {
+        editor
+    }
 }

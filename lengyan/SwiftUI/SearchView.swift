@@ -112,8 +112,13 @@ class SearchHostingController: UIHostingController<SearchView> {
 // MARK: - 键盘收起
 
 extension View {
+    @ViewBuilder
     func dismissKeyboardOnScroll() -> some View {
-        self.scrollDismissesKeyboard(.interactively)
+        if #available(iOS 16.0, *) {
+            self.scrollDismissesKeyboard(.interactively)
+        } else {
+            self
+        }
     }
 }
 

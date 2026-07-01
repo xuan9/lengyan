@@ -540,11 +540,16 @@ struct DailyVerseWidget: Widget {
         }
         .configurationDisplayName("今日读经")
         .description("每天一段楞严经文，可放在桌面或锁屏。")
-        .supportedFamilies([
-            .systemSmall, .systemMedium, .systemLarge,
-            .accessoryInline, .accessoryRectangular
-        ])
+        .supportedFamilies(supportedFamilies)
         .disableContentMarginsIfNeeded()
+    }
+
+    private var supportedFamilies: [WidgetFamily] {
+        var families: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
+        if #available(iOS 16.0, iOSApplicationExtension 16.0, *) {
+            families.append(contentsOf: [.accessoryInline, .accessoryRectangular])
+        }
+        return families
     }
 }
 
@@ -556,6 +561,13 @@ struct WidgetEntryView: View {
     var body: some View {
         let _ = WidgetTokens.resolveTheme(from: entry.theme)
         return Group {
+            widgetContent
+        }
+    }
+
+    @ViewBuilder
+    private var widgetContent: some View {
+        if #available(iOS 16.0, iOSApplicationExtension 16.0, *) {
             switch family {
             case .systemSmall:
                 SmallVerseView(entry: entry)
@@ -567,6 +579,17 @@ struct WidgetEntryView: View {
                 InlineVerseView(entry: entry)
             case .accessoryRectangular:
                 RectangularVerseView(entry: entry)
+            default:
+                MediumVerseView(entry: entry)
+            }
+        } else {
+            switch family {
+            case .systemSmall:
+                SmallVerseView(entry: entry)
+            case .systemMedium:
+                MediumVerseView(entry: entry)
+            case .systemLarge:
+                LargeVerseView(entry: entry)
             default:
                 MediumVerseView(entry: entry)
             }

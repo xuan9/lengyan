@@ -32,7 +32,7 @@ struct SutraCardRenderer {
         let view = SutraShareCardView(text: text, source: source, template: template, verseFontBase: verseFontBase)
             .frame(width: size.width, height: size.height)
 
-        return renderWithImageRenderer(view: view, size: size)
+        return renderView(view: view, size: size)
     }
 
     /// 使用默认竖版模板快速渲染（零摩擦分享路径）
@@ -44,11 +44,38 @@ struct SutraCardRenderer {
     // MARK: - ImageRenderer
 
     @MainActor
+    private static func renderView<V: View>(view: V, size: CGSize) -> UIImage? {
+        if #available(iOS 16.0, *) {
+            return renderWithImageRenderer(view: view, size: size)
+        } else {
+            return renderWithHostingController(view: view, size: size)
+        }
+    }
+
+    @available(iOS 16.0, *)
+    @MainActor
     private static func renderWithImageRenderer<V: View>(view: V, size: CGSize) -> UIImage? {
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2.0  // 2x 对于分享图足够清晰
         renderer.proposedSize = ProposedViewSize(width: size.width, height: size.height)
         return renderer.uiImage
+    }
+
+    @MainActor
+    private static func renderWithHostingController<V: View>(view: V, size: CGSize) -> UIImage? {
+        let controller = UIHostingController(rootView: view)
+        controller.view.bounds = CGRect(origin: .zero, size: size)
+        controller.view.backgroundColor = .clear
+        controller.view.setNeedsLayout()
+        controller.view.layoutIfNeeded()
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 2.0
+        format.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        return renderer.image { _ in
+            controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+        }
     }
 
 }
@@ -147,7 +174,7 @@ extension SutraCardRenderer {
         let view = SutraShareCardView(text: text, source: source, template: .portrait,
                                       verseFontBase: verseFontBase, compact: true, compactBreath: width * breathRatio)
             .frame(width: width, height: targetHeight)
-        return renderWithImageRenderer(view: view, size: CGSize(width: width, height: targetHeight))
+        return renderView(view: view, size: CGSize(width: width, height: targetHeight))
     }
 
     /// 用 UIFont 估算经文块（上引号 + 正文 + 下引号）的渲染高度，与 SutraShareCardView 的字号/行距一致。

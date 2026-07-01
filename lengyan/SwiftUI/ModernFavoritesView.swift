@@ -484,7 +484,6 @@ struct ModernFavoritesView: View {
                             .font(.system(size: 10, weight: .light, design: .serif))
                             .foregroundColor(SutraDesignSystem.color(.textSecondary).opacity(0.7))
                             .lineLimit(1)
-                            .tracking(0.5)
                     }
                 }
                 .padding(.leading, 12)
