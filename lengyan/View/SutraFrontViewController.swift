@@ -1105,7 +1105,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     private func presentDailyReminderPrompt() {
         let isSimplified = Book.shared.isSimplifiedChinese
-        let title = isSimplified ? "每天一段经文？" : "每天一段經文？"
+        let title = isSimplified ? "明天也读一段？" : "明天也讀一段？"
         let reminderTime = formattedReminderTime()
         let message = isSimplified
             ? "想每天 \(reminderTime) 在通知中心收到一段经文吗？没有声音打扰，点开就能继续读。时间可在设置里改。"
