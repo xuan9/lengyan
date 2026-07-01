@@ -202,10 +202,10 @@ struct SmallVerseView: View {
             if entry.needsOnboarding {
                 EmptyStateView(compact: true)
             } else {
-                // 小尺寸显示短段经文，但字号不超过中/大组件。
+                // 小尺寸也按经文段落排版：左对齐、紧凑留白。
                 GeometryReader { proxy in
-                    let horizontalPadding: CGFloat = 12
-                    let verticalPadding: CGFloat = 10
+                    let horizontalPadding: CGFloat = 10
+                    let verticalPadding: CGFloat = 9
                     let sutra = entry.compactText
                     let size = dynamicFontSize(
                         charCount: sutra.count,
@@ -219,11 +219,11 @@ struct SmallVerseView: View {
                         .font(WidgetTokens.sutraFont(size: size))
                         .foregroundColor(WidgetTokens.sutraText)
                         .lineSpacing(3.5)
-                        .multilineTextAlignment(.center)
+                        .multilineTextAlignment(.leading)
                         .minimumScaleFactor(0.9)
                         .padding(.horizontal, horizontalPadding)
                         .padding(.vertical, verticalPadding)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
             }
         }
