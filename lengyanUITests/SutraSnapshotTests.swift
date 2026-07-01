@@ -18,7 +18,7 @@ class SutraSnapshotTests: XCTestCase {
         app = XCUIApplication()
         setupSnapshot(app)
         // 注意：必须用 += 追加，不能覆盖（setupSnapshot 已设置 -AppleLanguages 等）
-        app.launchArguments += ["--uitesting", "--snapshot-mode"]
+        app.launchArguments += ["--uitesting", "--snapshot-mode", "--snapshot-reminder-on"]
         app.launch()
     }
 
@@ -34,11 +34,18 @@ class SutraSnapshotTests: XCTestCase {
         // 等待首屏稳定
         Thread.sleep(forTimeInterval: 1.5)
 
-        // 01 - 首页（阅读 Tab）
-        snapshot("01_Home")
-
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.exists, "TabBar should be present")
+
+        selectSnapshotTheme(tabBar: tabBar)
+
+        // 01 - 首页（阅读 Tab）
+        let readingTab = tabBar.buttons.element(boundBy: 0)
+        if readingTab.exists {
+            readingTab.tap()
+            Thread.sleep(forTimeInterval: 1.0)
+        }
+        snapshot("01_Home")
 
         // 02 - 听经 Tab
         let listeningTab = tabBar.buttons.element(boundBy: 1)
@@ -65,7 +72,6 @@ class SutraSnapshotTests: XCTestCase {
         }
 
         // 05 - 经文阅读（回到首页，进入卷一）
-        let readingTab = tabBar.buttons.element(boundBy: 0)
         if readingTab.exists {
             readingTab.tap()
             Thread.sleep(forTimeInterval: 1.0)
@@ -87,6 +93,30 @@ class SutraSnapshotTests: XCTestCase {
             } else {
                 // 兜底：再截一张首页精装版
                 snapshot("05_HomeAlt")
+            }
+        }
+    }
+
+    private func selectSnapshotTheme(tabBar: XCUIElement) {
+        let settingsTab = tabBar.buttons.element(boundBy: 3)
+        if settingsTab.exists {
+            settingsTab.tap()
+            Thread.sleep(forTimeInterval: 1.5)
+            selectSettingsTheme(classic: true)
+            Thread.sleep(forTimeInterval: 0.8)
+        }
+    }
+
+    private func selectSettingsTheme(classic: Bool) {
+        let candidateTitles = classic
+            ? ["古籍"]
+            : ["宣纸", "宣紙"]
+
+        for title in candidateTitles {
+            let button = app.buttons[title]
+            if button.waitForExistence(timeout: 1.0) {
+                button.tap()
+                return
             }
         }
     }

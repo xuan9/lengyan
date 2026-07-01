@@ -21,10 +21,10 @@ HEADER_HEIGHT = 390
 # 字体: 宋体 (经文气质)
 FONT_PATH = "/System/Library/Fonts/Supplemental/Songti.ttc"
 
-# 宣纸米黄底色 + 墨色文字 (与 app 一致)
-BG_COLOR = (245, 238, 222)       # 宣纸米黄 #F5EEDE
+# 浅宣纸底色 + 墨色文字。外层广告背景比古籍截图更浅, 让真实截图更突出。
+BG_COLOR = (250, 246, 234)       # 浅宣纸 #FAF6EA
 TITLE_COLOR = (45, 40, 35)       # 墨色
-SUBTITLE_COLOR = (120, 105, 85)  # 淡墨
+SUBTITLE_COLOR = (92, 80, 65)    # 深淡墨, 提高浅宣纸背景上的可读性
 
 TITLE_FONT_SIZE = 76
 SUBTITLE_FONT_SIZE = 42
@@ -69,8 +69,28 @@ def render_centered(draw, text, font, color, center_x, top_y):
     return top_y + text_h
 
 
-def process_one(src_path, out_path, title, subtitle):
+def clean_ipad_window(src):
+    """Remove iPad simulator wallpaper around the floating app window."""
+    if src.size != (2064, 2752):
+        return src
+
+    # The iPad snapshots are captured as floating windows. Keep the real app
+    # window pixels, but replace the surrounding system wallpaper with the same
+    # App Store canvas background used by the rest of the ad image.
+    window_box = (116, 334, 1914, 2752)
+    radius = 86
+    cleaned = Image.new("RGB", src.size, BG_COLOR)
+    mask = Image.new("L", src.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rounded_rectangle(window_box, radius=radius, fill=255)
+    cleaned.paste(src, (0, 0), mask)
+    return cleaned.crop(window_box)
+
+
+def process_one(src_path, out_path, title, subtitle, clean_ipad_background=False):
     src = Image.open(src_path).convert("RGB")
+    if clean_ipad_background:
+        src = clean_ipad_window(src)
 
     # 创建固定画布
     canvas = Image.new("RGB", (CANVAS_W, CANVAS_H), BG_COLOR)
@@ -110,14 +130,15 @@ def process_one(src_path, out_path, title, subtitle):
 
 
 def main():
-    # === iPhone 13 Pro Max: App Store 接受规格 1284×2778 ===
+    # === iPhone 17 Pro Max output, composed from iPhone 13 Pro Max raw captures ===
     process_device(
-        device_prefix="iPhone 13 Pro Max",
-        canvas=(1284, 2778),
+        device_prefix="iPhone 17 Pro Max",
+        canvas=(1320, 2868),
         header_height=390,
         title_size=76,
         subtitle_size=42,
         gap=26,
+        source_device_prefix="iPhone 13 Pro Max",
     )
 
     # === iPad Pro 13" (M5): 官方规格 2064×2752 ===
@@ -133,7 +154,15 @@ def main():
     print(f"\n✅ 输出: {OUT_DIR}/")
 
 
-def process_device(device_prefix, canvas, header_height, title_size, subtitle_size, gap):
+def process_device(
+    device_prefix,
+    canvas,
+    header_height,
+    title_size,
+    subtitle_size,
+    gap,
+    source_device_prefix=None,
+):
     """处理某设备的全部截图。"""
     global CANVAS_W, CANVAS_H, HEADER_HEIGHT, TITLE_FONT_SIZE, SUBTITLE_FONT_SIZE, TITLE_TO_SUBTITLE_GAP
     CANVAS_W, CANVAS_H = canvas
@@ -141,6 +170,7 @@ def process_device(device_prefix, canvas, header_height, title_size, subtitle_si
     TITLE_FONT_SIZE = title_size
     SUBTITLE_FONT_SIZE = subtitle_size
     TITLE_TO_SUBTITLE_GAP = gap
+    source_device_prefix = source_device_prefix or device_prefix
 
     for lang in ["zh-Hans", "zh-Hant"]:
         lang_out = OUT_DIR / lang
@@ -148,14 +178,20 @@ def process_device(device_prefix, canvas, header_height, title_size, subtitle_si
         src_lang_dir = SRC_DIR / lang
         print(f"\n=== {device_prefix} / {lang} ===")
         for new_idx, page_key in enumerate(PUBLISH_ORDER, start=1):
-            src = src_lang_dir / f"{device_prefix}-{page_key}.png"
+            src = src_lang_dir / f"{source_device_prefix}-{page_key}.png"
             if not src.exists():
                 print(f"  ✗ 缺失: {src}")
                 continue
             title, subtitle = COPY[lang][page_key]
             page_name = page_key.split("_", 1)[1]
             out = lang_out / f"{device_prefix}-{new_idx:02d}_{page_name}.png"
-            process_one(src, out, title, subtitle)
+            process_one(
+                src,
+                out,
+                title,
+                subtitle,
+                clean_ipad_background=device_prefix.startswith("iPad"),
+            )
             print(f"  ✓ {out.name}  ({CANVAS_W}×{CANVAS_H})")
 
 

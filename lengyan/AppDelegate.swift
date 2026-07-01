@@ -22,6 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         //  否则 NSLocalizedString / Bundle.main.preferredLocalizations 不切换语言，
         //  导致 fastlane snapshot / UITest 中 zh-Hant 等本地化测试失效）
         applyLanguageLaunchArgumentsIfNeeded()
+        applySnapshotLaunchArgumentsIfNeeded()
 
         // Load book data synchronously
         Book.shared.loadDataSyncWithCompletionHandler { () in
@@ -43,6 +44,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         if let i = args.firstIndex(of: "-AppleLocale"), i + 1 < args.count {
             let locale = args[i + 1].trimmingCharacters(in: CharacterSet(charactersIn: "\"' "))
             UserDefaults.standard.set([locale], forKey: "AppleLocales")
+        }
+    }
+
+    private func applySnapshotLaunchArgumentsIfNeeded() {
+        let args = ProcessInfo.processInfo.arguments
+        guard args.contains("--snapshot-mode") else { return }
+
+        if args.contains("--snapshot-reminder-on") {
+            UserDefaults.standard.set(true, forKey: "dailyReminderOn")
+            UserDefaults.standard.set(true, forKey: "hasSeenDailyReminderPrompt")
         }
     }
 
