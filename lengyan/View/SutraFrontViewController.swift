@@ -1105,21 +1105,21 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     private func presentDailyReminderPrompt() {
         let isSimplified = Book.shared.isSimplifiedChinese
-        let title = isSimplified ? "每日读经提醒" : "每日讀經提醒"
+        let title = isSimplified ? "每天一段经文？" : "每天一段經文？"
         let reminderTime = formattedReminderTime()
         let message = isSimplified
-            ? "每天 \(reminderTime) 在通知中心显示一段经文，轻触可打开继续读。无声音，只在本机提醒。开启后可在设置中修改时间。"
-            : "每天 \(reminderTime) 在通知中心顯示一段經文，輕觸可打開繼續讀。無聲音，只在本機提醒。開啟後可在設定中修改時間。"
+            ? "你愿意每天 \(reminderTime) 在通知中心收到一段经文吗？轻触通知可回到上次阅读。没有声音打扰，也不会频繁提醒。开启后可在设置中修改时间。"
+            : "你願意每天 \(reminderTime) 在通知中心收到一段經文嗎？輕觸通知可回到上次閱讀。沒有聲音打擾，也不會頻繁提醒。開啟後可在設定中修改時間。"
 
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: isSimplified ? "开启每日提醒" : "開啟每日提醒", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: isSimplified ? "开启" : "開啟", style: .default) { [weak self] _ in
             ReminderManager.shared.requestPermissionAndSchedule { granted in
                 if !granted {
                     self?.presentNotificationSettingsAlert()
                 }
             }
         })
-        alert.addAction(UIAlertAction(title: isSimplified ? "暂不" : "暫不", style: .cancel))
+        alert.addAction(UIAlertAction(title: isSimplified ? "暂不需要" : "暫不需要", style: .cancel))
 
         present(alert, animated: true)
     }
