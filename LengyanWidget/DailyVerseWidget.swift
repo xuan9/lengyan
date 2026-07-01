@@ -202,7 +202,7 @@ struct SmallVerseView: View {
             if entry.needsOnboarding {
                 EmptyStateView(compact: true)
             } else {
-                // 小尺寸尽量让经文本身占满空间，留白只做呼吸感。
+                // 小尺寸显示短段经文，但字号不超过中/大组件。
                 GeometryReader { proxy in
                     let horizontalPadding: CGFloat = 12
                     let verticalPadding: CGFloat = 10
@@ -211,14 +211,14 @@ struct SmallVerseView: View {
                         charCount: sutra.count,
                         availableWidth: max(CGFloat(80), proxy.size.width - horizontalPadding * 2),
                         availableHeight: max(CGFloat(80), proxy.size.height - verticalPadding * 2),
-                        lineSpacing: 4,
-                        minSize: 13,
-                        maxSize: 17
+                        lineSpacing: 3.5,
+                        minSize: 12.5,
+                        maxSize: 13.5
                     )
                     Text(sutra)
                         .font(WidgetTokens.sutraFont(size: size))
                         .foregroundColor(WidgetTokens.sutraText)
-                        .lineSpacing(4)
+                        .lineSpacing(3.5)
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(0.9)
                         .padding(.horizontal, horizontalPadding)
@@ -252,8 +252,8 @@ struct MediumVerseView: View {
                         availableWidth: max(CGFloat(240), proxy.size.width - horizontalPadding * 2),
                         availableHeight: max(CGFloat(110), proxy.size.height - verticalPadding * 2),
                         lineSpacing: 5,
-                        minSize: 14,
-                        maxSize: 18
+                        minSize: 13.5,
+                        maxSize: 14.5
                     )
                     Text(sutra)
                         .font(WidgetTokens.sutraFont(size: size))
@@ -327,19 +327,18 @@ struct LargeVerseView: View {
 
     /// 经文正文：统一字号线性连贯 — 不再把首句当「破题」标题，
     /// 否则会把「阿难，…」一句完整的话砍成标题+正文两截，割裂阅读。
-    /// 动态字号：按字数填满可用空间，短经文放大、长经文回落，不跌破 15pt。
+    /// 动态字号：大组件可以比小/中组件稍大，但仍优先容纳完整段落。
     @ViewBuilder
     private var sutraBody: some View {
         let raw = entry.fullText.isEmpty ? entry.text : entry.fullText.normalized
-        // 可用宽 320pt、高 ~290pt（题眉 + 卷名页脚已扣除）；层级最高 14-26pt
-        // 底线 14pt：300 字极限经文仍可容下（容量 308），保证不溢出
+        // 底线 14pt：300 字极限经文仍可容下；上限 17pt 避免短段落过度放大。
         let size = dynamicFontSize(
             charCount: raw.count,
             availableWidth: 320,
             availableHeight: 290,
             lineSpacing: 6,
             minSize: 14,
-            maxSize: 26
+            maxSize: 17
         )
         Text(raw)
             .font(WidgetTokens.sutraFont(size: size))
@@ -438,7 +437,7 @@ private extension DailyVerseEntry {
 
     /// Small 专用：短段经文。小组件空间有限，但不要做成大字标语。
     var compactText: String {
-        clippedFullText(limit: 46)
+        clippedFullText(limit: 58)
     }
 
     /// Medium 专用：约 120 字完整段落，减少中号组件无意义空白。
