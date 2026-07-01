@@ -18,6 +18,7 @@ struct ModernSettingsView: View {
     @State private var showPermissionDeniedAlert: Bool = false
     @State private var hasDesktopWidget: Bool = false
     @State private var hasLockScreenWidget: Bool = false
+    @State private var isSyncingReminderState: Bool = false
 
     private var sizeLabels: [String] {
         [
@@ -84,7 +85,11 @@ struct ModernSettingsView: View {
             Text(L10n.str("settings_notification_alert_message"))
         }
         .onAppear {
+            syncReminderState()
             refreshWidgetInstallState()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: ReminderManager.reminderStateDidChange)) { _ in
+            syncReminderState()
         }
     }
 
@@ -292,6 +297,7 @@ struct ModernSettingsView: View {
                 .labelsHidden()
                 .tint(Color(SutraDesignTokens.shared.color(for: .primary)))
                 .onChange(of: isReminderOn) { on in
+                    guard !isSyncingReminderState else { return }
                     handleReminderToggle(on)
                 }
         }
@@ -311,6 +317,16 @@ struct ModernSettingsView: View {
         } else {
             Prefers.shared.isDailyReminderOn = false
             ReminderManager.shared.cancelAll()
+        }
+    }
+
+    private func syncReminderState() {
+        isSyncingReminderState = true
+        isReminderOn = Prefers.shared.isDailyReminderOn
+        reminderHour = Prefers.shared.reminderHour
+        reminderMinute = Prefers.shared.reminderMinute
+        DispatchQueue.main.async {
+            isSyncingReminderState = false
         }
     }
 

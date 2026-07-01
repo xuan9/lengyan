@@ -1108,8 +1108,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let title = isSimplified ? "每日读经提醒" : "每日讀經提醒"
         let reminderTime = formattedReminderTime()
         let message = isSimplified
-            ? "每天 \(reminderTime) 在通知中心显示一段经文，轻触可打开继续读。无声音，只在本机提醒。"
-            : "每天 \(reminderTime) 在通知中心顯示一段經文，輕觸可打開繼續讀。無聲音，只在本機提醒。"
+            ? "每天 \(reminderTime) 在通知中心显示一段经文，轻触可打开继续读。无声音，只在本机提醒。开启后可在设置中修改时间。"
+            : "每天 \(reminderTime) 在通知中心顯示一段經文，輕觸可打開繼續讀。無聲音，只在本機提醒。開啟後可在設定中修改時間。"
 
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: isSimplified ? "开启每日提醒" : "開啟每日提醒", style: .default) { [weak self] _ in
@@ -1118,9 +1118,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                     self?.presentNotificationSettingsAlert()
                 }
             }
-        })
-        alert.addAction(UIAlertAction(title: isSimplified ? "改时间" : "改時間", style: .default) { [weak self] _ in
-            self?.tabBarController?.selectedIndex = 3
         })
         alert.addAction(UIAlertAction(title: isSimplified ? "暂不" : "暫不", style: .cancel))
 

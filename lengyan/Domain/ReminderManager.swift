@@ -11,6 +11,7 @@ import UserNotifications
 
 class ReminderManager {
     static let shared = ReminderManager()
+    static let reminderStateDidChange = Notification.Name("ReminderManager.reminderStateDidChange")
 
     /// 调度天数
     private static let maxScheduleDays = 60
@@ -33,6 +34,7 @@ class ReminderManager {
                 } else {
                     Prefers.shared.isDailyReminderOn = false
                 }
+                NotificationCenter.default.post(name: ReminderManager.reminderStateDidChange, object: nil)
                 completion?(granted)
             }
         }
@@ -100,6 +102,7 @@ class ReminderManager {
 
     func cancelAll() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        NotificationCenter.default.post(name: ReminderManager.reminderStateDidChange, object: nil)
     }
 
     // MARK: - 日期格式化
