@@ -26,3 +26,10 @@ func print(_ items: Any..., separator: String = " ", terminator: String = "\n") 
     Swift.print(items, separator: separator, terminator: terminator)
     #endif
 }
+
+@inline(__always)
+func debugLog(_ message: @autoclosure () -> String) {
+    #if DEBUG
+    NSLog("%@", message())
+    #endif
+}

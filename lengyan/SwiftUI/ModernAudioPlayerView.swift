@@ -205,7 +205,7 @@ struct ModernAudioPlayerView: View {
 
     private var isCurrentTrackDownloading: Bool {
         let s = manager.downloadState(forTrackName: audioObserver.currentTrack)
-        NSLog("🔎 [UI isDownloading] track=%@ isDL=%d prog=%.2f", audioObserver.currentTrack ?? "nil", s.isDownloading ? 1 : 0, s.progress)
+        debugLog("UI isDownloading track=\(audioObserver.currentTrack ?? "nil") isDL=\(s.isDownloading) prog=\(s.progress)")
         return s.isDownloading
     }
 

@@ -126,7 +126,7 @@ class AudioManager: ObservableObject {
     // MARK: - Download
 
     func downloadMedia(name: String, file: String, fileExtension: String) {
-        NSLog("📥 [DL] downloadMedia file=\(file) prefetchReqExists=\(resourceRequests[file] != nil)")
+        debugLog("DL downloadMedia file=\(file) prefetchReqExists=\(resourceRequests[file] != nil)")
         // 停止当前播放，防止出现一边播放旧音频一边下载新音频的混乱体验
         audioObserver.queuePlayer?.pause()
         audioObserver.isPlaying = false
@@ -201,7 +201,7 @@ class AudioManager: ObservableObject {
                     self.downloadErrorMessage = msg
                 } else {
                     print("✅ Successfully downloaded ODR: \(file)")
-                    NSLog("📥 [DL] beginAccess OK file=\(file) -> status=downloaded")
+                    debugLog("DL beginAccess OK file=\(file) -> status=downloaded")
                     self.downloadStatus[file] = .downloaded
                     self.downloadProgress[file] = 1.0
 
@@ -249,18 +249,18 @@ class AudioManager: ObservableObject {
 
     private func playMediaUsingRequest(request: NSBundleResourceRequest, name: String, file: String, fileExtension: String, autoplay: Bool = true) {
         if let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
-            NSLog("▶️ [play] URL OK file=\(file) -> playAudio")
+            debugLog("play URL OK file=\(file) -> playAudio")
             playAudio(url: url, name: name, autoplay: autoplay)
         } else {
-            NSLog("▶️ [play] URL nil file=\(file) -> conditionallyBegin")
+            debugLog("play URL nil file=\(file) -> conditionallyBegin")
             // 获取不到 URL 说明尚未持有访问权限，需正式申请资源访问
             request.conditionallyBeginAccessingResources { available in
                 DispatchQueue.main.async {
                     if available, let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
-                        NSLog("▶️ [play] cond OK file=\(file) -> playAudio")
+                        debugLog("play cond OK file=\(file) -> playAudio")
                         self.playAudio(url: url, name: name, autoplay: autoplay)
                     } else {
-                        NSLog("⚠️ [play] cond FAIL file=\(file) -> FALLBACK downloadMedia (会重置 status=downloading!)")
+                        debugLog("play cond FAIL file=\(file) -> fallback downloadMedia")
                         // 如果状态有误，回退到标准下载流程
                         self.downloadMedia(name: name, file: file, fileExtension: fileExtension)
                     }

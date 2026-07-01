@@ -583,7 +583,7 @@ class Book: NSObject {
             }
         }while(true)
             
-        NSLog("Error: Could not getBelongingKeyPagePath for path \(path)")
+        debugLog("Could not getBelongingKeyPagePath for path \(path)")
         return nil
     }
     
