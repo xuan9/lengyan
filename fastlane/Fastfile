@@ -147,7 +147,7 @@ platform :ios do
     deliver(
       app_identifier: "org.fuxuan.lengyan",
       metadata_path: "./fastlane/metadata",
-      screenshots_path: "./fastlane/screenshots",
+      screenshots_path: "./fastlane/screenshots_final",
       skip_binary_upload: true,
       submit_for_review: false,
       automatic_release: false,

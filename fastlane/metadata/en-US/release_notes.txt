@@ -1,4 +1,4 @@
-What's New in 1.2:
+What's New in 1.3:
 
 • Listening experience upgraded — sentence-synced narration, background playback, and sleep timer
 • Full-text search now with single-character refinement for tracing every word to its source
