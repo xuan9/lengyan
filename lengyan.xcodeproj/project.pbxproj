@@ -45,7 +45,6 @@
 		133CABBC2364DDB700B61AC0 /* UIView+Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB792364D96900B61AC0 /* UIView+Common.swift */; };
 		133CABBD2364DDB700B61AC0 /* String+Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB9A2364D96900B61AC0 /* String+Common.swift */; };
 		133CABBE2364DDB700B61AC0 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133CAB9B2364D96900B61AC0 /* Utils.swift */; };
-		A1B2C3D4E5F6000000000010 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* L10n.swift */; };
 		1350CB901D440ACB00FE07D5 /* SutraPageContentViewControllera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */; };
 		135D605D1D16FA4A00029090 /* SutraPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D605C1D16FA4A00029090 /* SutraPageViewController.swift */; };
 		135D60631D173B1B00029090 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135D60621D173B1B00029090 /* Book.swift */; };
@@ -55,10 +54,7 @@
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
 		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* BookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* BookTests.swift */; };
-		CB1B21E22EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21E12EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift */; };
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
-		A1B2C3D4E5F6000000000001 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000002 /* SnapshotHelper.swift */; };
-		A1B2C3D4E5F6000000000003 /* SutraSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000004 /* SutraSnapshotTests.swift */; };
 		1390734C1D109284003A3333 /* data in Resources */ = {isa = PBXBuildFile; fileRef = 1390734B1D109284003A3333 /* data */; };
 		13978CCD1D2028E5005031EE /* Prefers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13978CCC1D2028E5005031EE /* Prefers.swift */; };
 		13CA80F11EAB3BF600589E8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13CA80F01EAB3BF600589E8F /* Assets.xcassets */; };
@@ -91,6 +87,9 @@
 		87D1ECE90E034EB3906ECCB1 /* DailyVerseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61446741A3764C48A56C80B4 /* DailyVerseWidget.swift */; };
 		88E94BDF895BD780748A3751 /* NavigationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B4DEA8ED2555B51E3976F /* NavigationHelper.swift */; };
 		927EE1F0882A4B54BD07EC6A /* DailyVerseProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C71E0A9097A94FEB961AE65F /* DailyVerseProvider.swift */; };
+		A1B2C3D4E5F6000000000001 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000002 /* SnapshotHelper.swift */; };
+		A1B2C3D4E5F6000000000003 /* SutraSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000004 /* SutraSnapshotTests.swift */; };
+		A1B2C3D4E5F6000000000010 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* L10n.swift */; };
 		A68C1C994600674BC5F7FB08 /* SutraAcknowledgmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */; };
 		AC0AD1957DE54E5A8579DA52 /* SutraCardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4022B9FDC584D739E1402D4 /* SutraCardRenderer.swift */; };
 		ADD297E8BFA3460927DBAC9C /* ReadingStayTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67420AAD4331AD62D8214EFA /* ReadingStayTimer.swift */; };
@@ -101,6 +100,7 @@
 		CB1B21C62EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */; };
 		CB1B21C72EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */; };
 		CB1B21C82EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */; };
+		CB1B21E22EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B21E12EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift */; };
 		CB8A4D43265EE85700D1E7B9 /* ReaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */; };
 		CB8A4D54265EE92000D1E7B9 /* ModernAudioPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */; };
 		CB8A4D5A265EE96000D1E7B9 /* ModernFavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */; };
@@ -187,7 +187,6 @@
 		133CAB992364D96900B61AC0 /* RATreeView_ClassExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RATreeView_ClassExtension.h; sourceTree = "<group>"; };
 		133CAB9A2364D96900B61AC0 /* String+Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Common.swift"; sourceTree = "<group>"; };
 		133CAB9B2364D96900B61AC0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6000000000011 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		1350CB8F1D440ACB00FE07D5 /* SutraPageContentViewControllera.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = SutraPageContentViewControllera.swift; sourceTree = "<group>"; tabWidth = 4; };
 		135D605C1D16FA4A00029090 /* SutraPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SutraPageViewController.swift; sourceTree = "<group>"; };
 		135D60621D173B1B00029090 /* Book.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
@@ -202,12 +201,9 @@
 		1390731A1D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390731F1D109194003A3333 /* lengyanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		139073231D109194003A3333 /* BookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTests.swift; sourceTree = "<group>"; };
-		CB1B21E12EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataSyncTests.swift; sourceTree = "<group>"; };
 		139073251D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390732A1D109194003A3333 /* lengyanUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390732E1D109194003A3333 /* lengyanUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lengyanUITests.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6000000000002 /* SnapshotHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6000000000004 /* SutraSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraSnapshotTests.swift; sourceTree = "<group>"; };
 		139073301D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390734B1D109284003A3333 /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = data; sourceTree = "<group>"; };
 		139073521D1093D8003A3333 /* lengyan-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "lengyan-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -240,6 +236,9 @@
 		76EC4C008D2B36D010BCB7E9 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SearchService.swift; path = lengyan/Domain/SearchService.swift; sourceTree = SOURCE_ROOT; };
 		907A22FA1F1E31ABD4FF6C6B /* SutraAdaptiveLayout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SutraAdaptiveLayout.swift; sourceTree = "<group>"; };
 		949148079D94DAE6258ED83C /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FeedbackView.swift; path = lengyan/SwiftUI/FeedbackView.swift; sourceTree = SOURCE_ROOT; };
+		A1B2C3D4E5F6000000000002 /* SnapshotHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000004 /* SutraSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraSnapshotTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000011 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LengyanWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B09045C2B7C615CA798CD05F /* MediaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaModels.swift; path = lengyan/Domain/MediaModels.swift; sourceTree = SOURCE_ROOT; };
 		B4022B9FDC584D739E1402D4 /* SutraCardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraCardRenderer.swift; sourceTree = "<group>"; };
@@ -248,6 +247,8 @@
 		CB1B21B92EBB1C8D00A1ADB7 /* DesignSystem+Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Accessibility.swift"; sourceTree = "<group>"; };
 		CB1B21BE2EBB1C8D00A1ADB7 /* DesignSystem+Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Spacing.swift"; sourceTree = "<group>"; };
 		CB1B21C12EBB1C8D00A1ADB7 /* DesignSystem+Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignSystem+Typography.swift"; sourceTree = "<group>"; };
+		CB1B21E02EBB1C8D00A1ADB7 /* lengyan.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = lengyan.entitlements; sourceTree = "<group>"; };
+		CB1B21E12EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataSyncTests.swift; sourceTree = "<group>"; };
 		CB1B4DEA8ED2555B51E3976F /* NavigationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NavigationHelper.swift; path = lengyan/Util/NavigationHelper.swift; sourceTree = SOURCE_ROOT; };
 		CB8A4D42265EE85700D1E7B9 /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
 		CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernAudioPlayerView.swift; sourceTree = "<group>"; };
@@ -259,7 +260,6 @@
 		E3092BA60DE2421295F0CD61 /* SharedVerseData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedVerseData.swift; sourceTree = "<group>"; };
 		ECCA46FDC3ABD938BBAAF304 /* ZenTabHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZenTabHeaderView.swift; sourceTree = "<group>"; };
 		EF6B6B533C8E41C5B905D48A /* LengyanWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LengyanWidget.entitlements; sourceTree = "<group>"; };
-		CB1B21E02EBB1C8D00A1ADB7 /* lengyan.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = lengyan.entitlements; sourceTree = "<group>"; };
 		FBDCAC2906D74E67A86FDF14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDesignTokens.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1018,8 +1018,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = lengyan/lengyan.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 15;
 				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -1027,10 +1029,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
 				MARKETING_VERSION = 1.3;
-				CURRENT_PROJECT_VERSION = 13;
-				CODE_SIGN_ENTITLEMENTS = lengyan/lengyan.entitlements;
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1047,8 +1047,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = lengyan/lengyan.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 15;
 				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -1056,10 +1058,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
 				MARKETING_VERSION = 1.3;
-				CURRENT_PROJECT_VERSION = 13;
-				CODE_SIGN_ENTITLEMENTS = lengyan/lengyan.entitlements;
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1159,7 +1159,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = LengyanWidget/LengyanWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = A37UYHPM4V;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LengyanWidget/Info.plist;
@@ -1190,7 +1190,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = LengyanWidget/LengyanWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = A37UYHPM4V;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LengyanWidget/Info.plist;

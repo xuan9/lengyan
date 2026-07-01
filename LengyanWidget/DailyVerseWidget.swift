@@ -4,8 +4,8 @@
 //
 //  今日读经小组件 — 可读经文 + 主题感知
 //  支持三种桌面尺寸 + 一种 Lock Screen/StandBy 经文卡片：
-//    小：经文金句（≤20字）+ 出处
-//    中：经文段落 + 法卷金线 + 出处
+//    小：短段经文
+//    中：经文段落
 //    大：完整经文段落（~300字）+ 出处 + 「点击阅读」引导
 //    accessoryRectangular — 锁屏经句卡片
 //
@@ -206,21 +206,21 @@ struct SmallVerseView: View {
                 GeometryReader { proxy in
                     let horizontalPadding: CGFloat = 12
                     let verticalPadding: CGFloat = 10
-                    let sutra = entry.smallText
+                    let sutra = entry.compactText
                     let size = dynamicFontSize(
                         charCount: sutra.count,
                         availableWidth: max(CGFloat(80), proxy.size.width - horizontalPadding * 2),
                         availableHeight: max(CGFloat(80), proxy.size.height - verticalPadding * 2),
-                        lineSpacing: 5,
-                        minSize: 16,
-                        maxSize: 26
+                        lineSpacing: 4,
+                        minSize: 13,
+                        maxSize: 17
                     )
                     Text(sutra)
                         .font(WidgetTokens.sutraFont(size: size))
                         .foregroundColor(WidgetTokens.sutraText)
-                        .lineSpacing(5)
+                        .lineSpacing(4)
                         .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.82)
+                        .minimumScaleFactor(0.9)
                         .padding(.horizontal, horizontalPadding)
                         .padding(.vertical, verticalPadding)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -252,8 +252,8 @@ struct MediumVerseView: View {
                         availableWidth: max(CGFloat(240), proxy.size.width - horizontalPadding * 2),
                         availableHeight: max(CGFloat(110), proxy.size.height - verticalPadding * 2),
                         lineSpacing: 5,
-                        minSize: 15,
-                        maxSize: 25
+                        minSize: 14,
+                        maxSize: 18
                     )
                     Text(sutra)
                         .font(WidgetTokens.sutraFont(size: size))
@@ -424,25 +424,9 @@ private extension DailyVerseEntry {
         (fullText.isEmpty ? text : fullText).normalized
     }
 
-    /// Small 专用：完整首句金句，目标 ≤22 字
-    /// 按「句号/问号/感叹号」切分取首个完整句（含「阿难，…」呼语），
-    /// 不再按逗号切分——否则会把「阿难，」呼语当首句只剩二字。
-    /// 超长则在末个逗号处优雅截断，末尾补 …。
-    var smallText: String {
-        let src = fullBodyText
-        // 先取第一个完整句（以 。；！？ 结尾），呼语逗号自然保留在句内
-        let firstSentence = src.components(separatedBy: CharacterSet(charactersIn: "。；！？;!?"))
-            .first?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? src
-        if firstSentence.count <= 22 { return firstSentence }
-        // 首句过长：回退到 22 字内最后一个逗号处截断，保语义完整
-        let head = String(firstSentence.prefix(22))
-        if let lastComma = head.lastIndex(where: { $0 == "，" || $0 == "、" }) {
-            return String(head[..<lastComma]) + "…"
-        }
-        // 无逗号可切：硬截断
-        let end = firstSentence.index(firstSentence.startIndex, offsetBy: 20, limitedBy: firstSentence.endIndex) ?? firstSentence.endIndex
-        return String(firstSentence[..<end]) + "…"
+    /// Small 专用：短段经文。小组件空间有限，但不要做成大字标语。
+    var compactText: String {
+        clippedFullText(limit: 46)
     }
 
     /// Medium 专用：约 120 字完整段落，减少中号组件无意义空白。
