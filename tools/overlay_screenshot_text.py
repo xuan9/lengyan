@@ -130,10 +130,10 @@ def process_one(src_path, out_path, title, subtitle, clean_ipad_background=False
 
 
 def main():
-    # === iPhone 17 Pro Max output, composed from iPhone 13 Pro Max raw captures ===
+    # === iPhone 13 Pro Max: App Store accepted 6.5" screenshot size 1284x2778 ===
     process_device(
-        device_prefix="iPhone 17 Pro Max",
-        canvas=(1320, 2868),
+        device_prefix="iPhone 13 Pro Max",
+        canvas=(1284, 2778),
         header_height=390,
         title_size=76,
         subtitle_size=42,

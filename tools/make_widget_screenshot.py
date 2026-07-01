@@ -51,12 +51,12 @@ def paste_scaled(canvas: Image.Image, source: Image.Image, target_width: int, to
 def build_iphone(lang: str) -> Image.Image:
     copy = COPY[lang]
     source = Image.open(RAW_IMAGE[lang]).convert("RGB")
-    canvas = Image.new("RGB", (1320, 2868), BG)
+    canvas = Image.new("RGB", (1284, 2778), BG)
     draw = ImageDraw.Draw(canvas)
 
-    centered_text(draw, copy["title"], font(78, True), INK, canvas.width // 2, 310)
-    centered_text(draw, copy["subtitle"], font(42), SUB, canvas.width // 2, 435)
-    paste_scaled(canvas, source, target_width=1080, top_y=530)
+    centered_text(draw, copy["title"], font(76, True), INK, canvas.width // 2, 300)
+    centered_text(draw, copy["subtitle"], font(42), SUB, canvas.width // 2, 425)
+    paste_scaled(canvas, source, target_width=1050, top_y=515)
 
     return canvas
 
@@ -84,7 +84,7 @@ def save(lang: str, device: str, image: Image.Image) -> None:
 
 def main() -> None:
     for lang in ("zh-Hans", "zh-Hant"):
-        save(lang, "iPhone 17 Pro Max", build_iphone(lang))
+        save(lang, "iPhone 13 Pro Max", build_iphone(lang))
         save(lang, "iPad Pro 13-inch (M5)", build_ipad(lang))
 
 
