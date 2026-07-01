@@ -261,7 +261,7 @@ struct ModernSettingsView: View {
             if #available(iOS 16.0, *) {
                 lockScreenInstalled = matchingWidgets.contains { info in
                     switch info.family {
-                    case .accessoryInline, .accessoryRectangular, .accessoryCircular:
+                    case .accessoryRectangular:
                         return true
                     default:
                         return false

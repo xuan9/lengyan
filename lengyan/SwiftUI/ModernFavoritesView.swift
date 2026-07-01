@@ -484,6 +484,7 @@ struct ModernFavoritesView: View {
                             .font(.system(size: 10, weight: .light, design: .serif))
                             .foregroundColor(SutraDesignSystem.color(.textSecondary).opacity(0.7))
                             .lineLimit(1)
+                            .trackingIfAvailable(0.5)
                     }
                 }
                 .padding(.leading, 12)
@@ -618,6 +619,17 @@ struct ModernFavoritesView: View {
                 from: rootVC,
                 barButtonItem: nil
             )
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func trackingIfAvailable(_ amount: CGFloat) -> some View {
+        if #available(iOS 16.0, *) {
+            self.tracking(amount)
+        } else {
+            self
         }
     }
 }

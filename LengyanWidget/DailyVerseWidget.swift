@@ -2,12 +2,11 @@
 //  DailyVerseWidget.swift
 //  LengyanWidget
 //
-//  今日读经桌面小组件 — 可读经文 + 主题感知
-//  支持三种尺寸 + 两种 Lock Screen/StandBy 配件：
+//  今日读经小组件 — 可读经文 + 主题感知
+//  支持三种桌面尺寸 + 一种 Lock Screen/StandBy 经文卡片：
 //    小：经文金句（≤20字）+ 出处
 //    中：经文段落 + 法卷金线 + 出处
 //    大：完整经文段落（~300字）+ 出处 + 「点击阅读」引导
-//    accessoryInline    — 锁屏顶部一行经句
 //    accessoryRectangular — 锁屏经句卡片
 //
 //  数据源：主App通过 App Group UserDefaults 写入
@@ -547,7 +546,7 @@ struct DailyVerseWidget: Widget {
     private var supportedFamilies: [WidgetFamily] {
         var families: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
         if #available(iOS 16.0, iOSApplicationExtension 16.0, *) {
-            families.append(contentsOf: [.accessoryInline, .accessoryRectangular])
+            families.append(.accessoryRectangular)
         }
         return families
     }
@@ -575,8 +574,6 @@ struct WidgetEntryView: View {
                 MediumVerseView(entry: entry)
             case .systemLarge:
                 LargeVerseView(entry: entry)
-            case .accessoryInline:
-                InlineVerseView(entry: entry)
             case .accessoryRectangular:
                 RectangularVerseView(entry: entry)
             default:
@@ -614,10 +611,6 @@ struct DailyVerseWidget_Previews: PreviewProvider {
             LargeVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
                 .previewDisplayName("大尺寸")
-
-            InlineVerseView(entry: .placeholder)
-                .previewContext(WidgetPreviewContext(family: .accessoryInline))
-                .previewDisplayName("锁屏·行内")
 
             RectangularVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
