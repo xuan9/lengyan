@@ -256,7 +256,7 @@ struct ModernSettingsView: View {
             let matchingWidgets = configurations.filter { $0.kind == Self.widgetKind }
             let desktopInstalled = matchingWidgets.contains { info in
                 switch info.family {
-                case .systemSmall, .systemMedium, .systemLarge, .systemExtraLarge:
+                case .systemMedium, .systemLarge, .systemExtraLarge:
                     return true
                 default:
                     return false

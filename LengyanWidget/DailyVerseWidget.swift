@@ -539,7 +539,7 @@ struct DailyVerseWidget: Widget {
     }
 
     private var supportedFamilies: [WidgetFamily] {
-        var families: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
+        var families: [WidgetFamily] = [.systemMedium, .systemLarge]
         if #available(iOS 16.0, iOSApplicationExtension 16.0, *) {
             families.append(.accessoryRectangular)
         }
@@ -595,10 +595,6 @@ struct WidgetEntryView: View {
 struct DailyVerseWidget_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            SmallVerseView(entry: .placeholder)
-                .previewContext(WidgetPreviewContext(family: .systemSmall))
-                .previewDisplayName("小尺寸")
-
             MediumVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
                 .previewDisplayName("中尺寸")
@@ -612,9 +608,9 @@ struct DailyVerseWidget_Previews: PreviewProvider {
                 .previewDisplayName("锁屏·卡片")
 
             // 空态预览
-            SmallVerseView(entry: .onboarding)
-                .previewContext(WidgetPreviewContext(family: .systemSmall))
-                .previewDisplayName("空态·小")
+            MediumVerseView(entry: .onboarding)
+                .previewContext(WidgetPreviewContext(family: .systemMedium))
+                .previewDisplayName("空态·中")
         }
     }
 }
