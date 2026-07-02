@@ -10,6 +10,7 @@ import UIKit
 
 protocol PrefersProtocol {
     var likes:[String]{get}
+    var userLikes:[String]{get}
     var lastPlayFile:[String]?{get set}
     var lastPlayMode:Int?{get set}
     var fontSizeLevel: Int { get set }
@@ -53,48 +54,66 @@ class Prefers: NSObject, PrefersProtocol {
 
     private override init() {
         self.userDefaults = UserDefaults.standard
-        self.likesCache = userDefaults.stringArray(forKey: Prefers.likesKey) ?? DEFAULT_STARTS
+        self.likesCache = Prefers.loadUserLikes(from: userDefaults)
         super.init()
     }
 
+    /// 用户个人收藏（不含系统精选）
     var likes: [String] {
         return likesCache
     }
 
     /// 用户个人收藏（不含系统精选）
     var userLikes: [String] {
-        return userDefaults.stringArray(forKey: Prefers.userLikesKey) ?? []
+        return likesCache
     }
 
     func like(_ path: String) {
         guard !likesCache.contains(path) else { return }
         likesCache.insert(path, at: 0)
-        userDefaults.set(likesCache, forKey: Prefers.likesKey)
-
-        // 同步到用户个人收藏
-        var ul = userDefaults.stringArray(forKey: Prefers.userLikesKey) ?? []
-        if !ul.contains(path) {
-            ul.insert(path, at: 0)
-            userDefaults.set(ul, forKey: Prefers.userLikesKey)
-        }
+        persistUserLikes()
     }
 
     func unlike(_ path: String) {
-        if let index = likesCache.firstIndex(of: path) {
-            likesCache.remove(at: index)
-            userDefaults.set(likesCache, forKey: Prefers.likesKey)
-        }
-
-        // 从用户个人收藏移除
-        var ul = userDefaults.stringArray(forKey: Prefers.userLikesKey) ?? []
-        if let idx = ul.firstIndex(of: path) {
-            ul.remove(at: idx)
-            userDefaults.set(ul, forKey: Prefers.userLikesKey)
-        }
+        guard let index = likesCache.firstIndex(of: path) else { return }
+        likesCache.remove(at: index)
+        persistUserLikes()
     }
 
     func isLike(_ path: String) -> Bool {
         return likesCache.contains(path)
+    }
+
+    private func persistUserLikes() {
+        likesCache = Prefers.uniquePaths(likesCache)
+        userDefaults.set(likesCache, forKey: Prefers.userLikesKey)
+        userDefaults.set(likesCache, forKey: Prefers.likesKey)
+    }
+
+    private static func loadUserLikes(from userDefaults: UserDefaults) -> [String] {
+        if let storedUserLikes = userDefaults.stringArray(forKey: userLikesKey) {
+            let paths = uniquePaths(storedUserLikes)
+            userDefaults.set(paths, forKey: userLikesKey)
+            userDefaults.set(paths, forKey: likesKey)
+            return paths
+        }
+
+        if let legacyLikes = userDefaults.stringArray(forKey: likesKey) {
+            let curatedPaths = Set(DEFAULT_STARTS)
+            let paths = uniquePaths(legacyLikes.filter { !curatedPaths.contains($0) })
+            userDefaults.set(paths, forKey: userLikesKey)
+            userDefaults.set(paths, forKey: likesKey)
+            return paths
+        }
+
+        userDefaults.set([], forKey: userLikesKey)
+        userDefaults.set([], forKey: likesKey)
+        return []
+    }
+
+    private static func uniquePaths(_ paths: [String]) -> [String] {
+        var seen = Set<String>()
+        return paths.filter { seen.insert($0).inserted }
     }
 
     func updateReadingProgress(_ progress: [Int: CGFloat]) {

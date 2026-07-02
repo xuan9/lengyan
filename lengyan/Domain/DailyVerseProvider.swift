@@ -150,7 +150,7 @@ final class DailyVerseProvider {
         let text = semanticTruncate(rawFullText, maxLength: 55)
         
         let source = buildSource(for: item, path: path)
-        let isBookmarked = Prefers.shared.likes.contains(path)
+        let isBookmarked = Prefers.shared.isLike(path)
 
         return DailyVerse(
             path: path,

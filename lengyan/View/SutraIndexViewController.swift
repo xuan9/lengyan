@@ -212,17 +212,20 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         if(!Prefers.shared.isLike(path!)){
             firstAction = UIAlertAction(title: L10n.str("menu_add_curated"), style: .default) { (alert: UIAlertAction!) -> Void in
                 Prefers.shared.like(self.path!)
+                NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
                 self.updateHeader();
             }
         } else {
             firstAction = UIAlertAction(title: L10n.str("menu_remove_curated"), style: .destructive) { (alert: UIAlertAction!) -> Void in
                 Prefers.shared.unlike(self.path!)
+                NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
                 self.updateHeader();
             }
         }
         
         let secondAction = UIAlertAction(title: L10n.str("menu_like"), style: .default) { (alert: UIAlertAction!) -> Void in
             Prefers.shared.like(self.path!)
+            NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
         }
         
         let cancelAction = UIAlertAction(title: NSLocalizedString("cancel", comment: ""), style: .cancel) { (alert: UIAlertAction!) -> Void in

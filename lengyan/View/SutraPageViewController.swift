@@ -143,12 +143,14 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         HapticManager.shared.bookmarkToggle()
         Prefers.shared.like(self.path!)
         self.setTitle()
+        NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
     }
     
     @objc func unlike() {
         HapticManager.shared.bookmarkToggle()
         Prefers.shared.unlike(self.path!)
         self.setTitle()
+        NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
     }
     
     @objc func close() {
@@ -182,7 +184,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let shareIcon = UIImage(systemName: "square.and.arrow.up")
         let shareButton = UIBarButtonItem(image: shareIcon, style: .plain, target: self, action: #selector(share))
 
-        let isLiked = Prefers.shared.likes.contains(path!)
+        let isLiked = Prefers.shared.isLike(path!)
         let bookmarkIcon = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
         let bookmarkButton = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: isLiked ? #selector(unlike) : #selector(like))
 

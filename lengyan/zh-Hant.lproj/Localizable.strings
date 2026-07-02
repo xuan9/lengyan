@@ -167,6 +167,6 @@
 "search_accessibility_fill_hint" = "填入搜尋框";
 "search_accessibility_back" = "返回";
 
-"menu_add_curated" = "★加入精選";
-"menu_remove_curated" = "☆移除精選";
+"menu_add_curated" = "加入收藏";
+"menu_remove_curated" = "取消收藏";
 "menu_like" = "👍讚";

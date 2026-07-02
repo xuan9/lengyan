@@ -223,7 +223,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.navigationItem.leftBarButtonItems = leftButtons
 
         // 🌿 更新收藏状态 (直接修改同一按钮，杜绝闪烁)
-        let isLiked = Prefers.shared.likes.contains(path)
+        let isLiked = Prefers.shared.isLike(path)
         bookmarkButton?.image = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
         bookmarkButton?.tintColor = isLiked ? bookmarkColor : secondaryColor
         bookmarkButton?.target = self
@@ -290,12 +290,14 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         HapticManager.shared.bookmarkToggle()
         Prefers.shared.like(self.path!)
         self.updateNavigationBarState()
+        NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
     }
     
     @objc func unlike() {
         HapticManager.shared.bookmarkToggle()
         Prefers.shared.unlike(self.path!)
         self.updateNavigationBarState()
+        NotificationCenter.default.post(name: .favoritesDidChange, object: nil)
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?

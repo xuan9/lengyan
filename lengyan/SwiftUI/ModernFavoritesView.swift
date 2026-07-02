@@ -593,7 +593,7 @@ struct ModernFavoritesView: View {
     }
 
     private func isLiked(_ item: FavoriteItem) -> Bool {
-        Prefers.shared.likes.contains(item.path)
+        Prefers.shared.isLike(item.path)
     }
 
     private func toggleBookmark(for item: FavoriteItem) {
