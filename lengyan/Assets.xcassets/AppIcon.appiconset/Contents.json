@@ -13,6 +13,7 @@
       "size" : "20x20"
     },
     {
+      "filename" : "Icon-29@2x.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "29x29"
@@ -102,7 +103,7 @@
       "size" : "83.5x83.5"
     },
     {
-      "filename" : "佛.jpg",
+      "filename" : "fo_new.jpg",
       "idiom" : "ios-marketing",
       "scale" : "1x",
       "size" : "1024x1024"
