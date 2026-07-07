@@ -260,7 +260,15 @@ class AudioManager: ObservableObject {
                         debugLog("play cond OK file=\(file) -> playAudio")
                         self.playAudio(url: url, name: name, autoplay: autoplay)
                     } else {
-                        debugLog("play cond FAIL file=\(file) -> fallback downloadMedia")
+                        debugLog("play cond FAIL file=\(file) -> clear request & fallback downloadMedia")
+                        
+                        // ⚠️ 关键修复：清除失效的旧请求，释放访问引用，以便重新触发全新下载
+                        request.endAccessingResources()
+                        if self.resourceRequests[file] === request {
+                            self.resourceRequests[file] = nil
+                        }
+                        self.downloadStatus[file] = .notDownloaded
+                        
                         // 如果状态有误，回退到标准下载流程
                         self.downloadMedia(name: name, file: file, fileExtension: fileExtension)
                     }
@@ -520,10 +528,23 @@ class AudioManager: ObservableObject {
 
                         request.beginAccessingResources { error in
                             DispatchQueue.main.async {
-                                if error == nil {
+                                if let error = error {
+                                    print("❌ Prefetch error for \(nextFile): \(error)")
+                                    self.resourceRequests[nextFile]?.endAccessingResources()
+                                    self.resourceRequests[nextFile] = nil
+                                    
+                                    // 如果用户在预取中途点击了播放（变成了下载状态），标记为错误以驱动 UI
+                                    if self.downloadStatus[nextFile] == .downloading {
+                                        self.downloadStatus[nextFile] = .error
+                                        let msg = self.getODRErrorMessage(error as NSError)
+                                        self.downloadErrorMessage = msg
+                                    } else {
+                                        self.downloadStatus[nextFile] = .notDownloaded
+                                    }
+                                } else {
                                     self.downloadStatus[nextFile] = .downloaded
                                 }
-                                // 预取静默完成，不影响 UI
+                                // 预取完成，释放或同步状态
                             }
                         }
                     }

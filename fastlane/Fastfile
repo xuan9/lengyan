@@ -107,7 +107,7 @@ end
 
 platform :ios do
   before_all do
-    # Set up environment variables if needed
+    ENV["FASTLANE_DISABLE_XCPRETTY"] = "true"
   end
 
   desc "Push a new beta build to TestFlight"
@@ -132,7 +132,7 @@ platform :ios do
 
   desc "Generate localized App Store screenshots (zh-Hans / zh-Hant, iPhone + iPad)"
   lane :screenshots do
-    ensure_snapshot_simulator_available("iPhone 13 Pro Max")
+    ensure_snapshot_simulator_available("iPhone 17 Pro Max")
     patch_snapshot_destinations_to_use_udids
 
     capture_screenshots(

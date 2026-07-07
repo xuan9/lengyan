@@ -68,7 +68,7 @@ class SutraSnapshotTests: XCTestCase {
         let settingsTab = tabBar.buttons.element(boundBy: 3)
         if settingsTab.exists {
             settingsTab.tap()
-            Thread.sleep(forTimeInterval: 1.5)
+            Thread.sleep(forTimeInterval: 3.0)  // 增加等待时间，避免崩溃
             snapshot("04_Settings")
         }
 
@@ -125,7 +125,7 @@ class SutraSnapshotTests: XCTestCase {
     private func selectAudioTrackForSnapshot() {
         let trackNames = ["楞严经 卷一", "楞嚴經 卷一"]
         for name in trackNames {
-            let track = app.staticTexts[name]
+            let track = app.staticTexts.matching(identifier: name).firstMatch
             guard track.waitForExistence(timeout: 1.5) else { continue }
             track.tap()
             waitForAudioReadyForSnapshot()
