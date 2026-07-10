@@ -87,10 +87,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     private func setupMainUI() {
         // Create main window
         let window = UIWindow(frame: UIScreen.main.bounds)
+        let backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        window.backgroundColor = backgroundColor
         self.window = window
 
         // Create and setup the main tab bar controller
         let tabBarController = UITabBarController()
+        tabBarController.view.backgroundColor = backgroundColor
         
         // 强制禁用 iOS 18 iPadOS 顶部悬浮 TabBar
         // 通过重写 horizontalSizeClass 为 compact，系统会回退使用经典的底部 TabBar
@@ -124,14 +127,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     private func setupTabs(for tabBarController: UITabBarController) {
+        let iconConfiguration = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        let selectedIconConfiguration = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+
         // Setup Reading Tab
         let sutraFrontVC = SutraFrontViewController()
         let readingNavController = UINavigationController(rootViewController: sutraFrontVC)
         readingNavController.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 消除 push 转场白色闪现
         readingNavController.tabBarItem = UITabBarItem(
             title: L10n.str("reading_tab_title"),
-            image: UIImage(systemName: "book")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
-            selectedImage: UIImage(systemName: "book.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+            image: UIImage(systemName: "book")?.withConfiguration(iconConfiguration),
+            selectedImage: UIImage(systemName: "book.fill")?.withConfiguration(selectedIconConfiguration)
         )
 
         // Setup Listening Tab — 听经是最高优先级的学习方式
@@ -140,8 +146,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let listeningNavController = UINavigationController(rootViewController: audioHostingController)
         listeningNavController.tabBarItem = UITabBarItem(
             title: L10n.str("media_tab_title"),
-            image: UIImage(systemName: "headphones")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
-            selectedImage: UIImage(systemName: "headphones.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+            image: UIImage(systemName: "headphones")?.withConfiguration(iconConfiguration),
+            selectedImage: UIImage(systemName: "headphones.fill")?.withConfiguration(selectedIconConfiguration)
         )
         listeningNavController.navigationBar.isHidden = true
 
@@ -151,8 +157,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let favoritesNavController = UINavigationController(rootViewController: favoritesHostingController)
         favoritesNavController.tabBarItem = UITabBarItem(
             title: L10n.str("star_tab_title"),
-            image: UIImage(systemName: "heart")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
-            selectedImage: UIImage(systemName: "heart.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+            image: UIImage(systemName: "heart")?.withConfiguration(iconConfiguration),
+            selectedImage: UIImage(systemName: "heart.fill")?.withConfiguration(selectedIconConfiguration)
         )
         favoritesNavController.navigationBar.isHidden = true
 
@@ -162,8 +168,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let settingsNavController = UINavigationController(rootViewController: settingsHostingController)
         settingsNavController.tabBarItem = UITabBarItem(
             title: L10n.str("settings_tab_title"),
-            image: UIImage(systemName: "gearshape")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)),
-            selectedImage: UIImage(systemName: "gearshape.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+            image: UIImage(systemName: "gearshape")?.withConfiguration(iconConfiguration),
+            selectedImage: UIImage(systemName: "gearshape.fill")?.withConfiguration(selectedIconConfiguration)
         )
         settingsNavController.navigationBar.isHidden = true
 
@@ -213,59 +219,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     private func setupZenTabBarAppearance() {
-        // Enhanced Zen TabBar styling with better visual hierarchy
-        let appearance = UITabBarAppearance()
-
-        // Create zen-inspired colors
         let designSystem = SutraDesignTokens.shared
-
-        // Background with subtle zen transparency
-        appearance.backgroundColor = designSystem.color(for: .background)
-        appearance.backgroundEffect = UIBlurEffect(style: .light)
-
-        // 微妙金色分隔线
-        appearance.shadowColor = designSystem.color(for: .decorativeGold).withAlphaComponent(0.15)
-        appearance.shadowImage = UIImage()
-
-        // TabBar 文字 — 小巧协调，与图标同色
-        let tabBarFont = UIFont.systemFont(ofSize: 10, weight: .thin)
-        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .font: tabBarFont,
-            .foregroundColor: designSystem.color(for: .textTertiary)
-        ]
-
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-            .font: tabBarFont,
-            .foregroundColor: designSystem.color(for: .primary)
-        ]
-
-        // Increase vertical position offset to prevent text-icon overlap
-        appearance.stackedLayoutAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 3)
-        appearance.stackedLayoutAppearance.selected.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 3)
-
-        // Icon appearance with zen colors
-        appearance.stackedLayoutAppearance.normal.iconColor = designSystem.color(for: .textTertiary)
-        appearance.stackedLayoutAppearance.selected.iconColor = designSystem.color(for: .primary)
-
-        // Compact appearance for smaller devices
-        appearance.compactInlineLayoutAppearance.normal.titleTextAttributes = appearance.stackedLayoutAppearance.normal.titleTextAttributes
-        appearance.compactInlineLayoutAppearance.selected.titleTextAttributes = appearance.stackedLayoutAppearance.selected.titleTextAttributes
-        appearance.compactInlineLayoutAppearance.normal.iconColor = appearance.stackedLayoutAppearance.normal.iconColor
-        appearance.compactInlineLayoutAppearance.selected.iconColor = appearance.stackedLayoutAppearance.selected.iconColor
-
-        // Inline appearance for newer iOS versions
-        if #available(iOS 15.0, *) {
-            appearance.inlineLayoutAppearance.normal.titleTextAttributes = appearance.stackedLayoutAppearance.normal.titleTextAttributes
-            appearance.inlineLayoutAppearance.selected.titleTextAttributes = appearance.stackedLayoutAppearance.selected.titleTextAttributes
-            appearance.inlineLayoutAppearance.normal.iconColor = appearance.stackedLayoutAppearance.normal.iconColor
-            appearance.inlineLayoutAppearance.selected.iconColor = appearance.stackedLayoutAppearance.selected.iconColor
-        }
+        let appearance = designSystem.makeTabBarAppearance()
 
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
+        UITabBar.appearance().tintColor = designSystem.color(for: .primary)
+        UITabBar.appearance().unselectedItemTintColor = designSystem.color(for: .textSecondary)
+        UITabBar.appearance().barTintColor = designSystem.color(for: .tabBar)
+        UITabBar.appearance().backgroundColor = designSystem.color(for: .tabBar)
 
-        // Ensure consistent translucency
-        UITabBar.appearance().isTranslucent = true
+        // Opaque material keeps footer labels readable over long scripture content.
+        UITabBar.appearance().isTranslucent = false
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

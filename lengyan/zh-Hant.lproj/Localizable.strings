@@ -91,14 +91,12 @@
 
 "widget_guide_styles" = "小元件樣式";
 "widget_guide_home_title" = "桌面";
-"widget_guide_home_subtitle" = "小中大尺寸";
+"widget_guide_home_subtitle" = "小號、中號、大號";
 "widget_guide_lock_title" = "鎖屏";
-"widget_guide_lock_subtitle" = "行內、矩形";
-"widget_guide_card_title" = "經文卡片";
-"widget_guide_card_subtitle" = "大號可讀段落";
+"widget_guide_lock_subtitle" = "矩形";
 "widget_guide_how_to_add" = "添加方式";
-"widget_guide_home_instruction" = "長按桌面空白處 → 點「+」→ 搜尋「楞嚴」→ 添加「今日讀經」。";
-"widget_guide_lock_instruction" = "鎖屏長按 → 自定 → 鎖屏 → 添加小元件 → 選擇「楞嚴」。";
+"widget_guide_home_instruction" = "長按桌面空白處至圖示晃動 → 點左上角「+」或「編輯」→「添加小元件」→ 搜尋「楞嚴」→ 添加「今日讀經」。";
+"widget_guide_lock_instruction" = "長按鎖屏 → 自定 → 鎖屏 → 點時間下方小元件區域或「添加小元件」→ 選擇「楞嚴」。";
 "widget_guide_usage" = "使用";
 "widget_guide_usage_instruction" = "小元件每日自動更新經文。點按經文，可回到 App 深讀。";
 "widget_status_both_added" = "已添加桌面與鎖屏";

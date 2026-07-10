@@ -92,14 +92,12 @@
 
 "widget_guide_styles" = "组件样式";
 "widget_guide_home_title" = "桌面";
-"widget_guide_home_subtitle" = "小中大尺寸";
+"widget_guide_home_subtitle" = "小号、中号、大号";
 "widget_guide_lock_title" = "锁屏";
-"widget_guide_lock_subtitle" = "行内、矩形";
-"widget_guide_card_title" = "经文卡片";
-"widget_guide_card_subtitle" = "大号可读段落";
+"widget_guide_lock_subtitle" = "矩形";
 "widget_guide_how_to_add" = "添加方式";
-"widget_guide_home_instruction" = "长按桌面空白处 → 点「+」→ 搜索「楞严」→ 添加「今日读经」。";
-"widget_guide_lock_instruction" = "锁屏长按 → 自定 → 锁屏 → 添加小组件 → 选择「楞严」。";
+"widget_guide_home_instruction" = "长按桌面空白处至图标晃动 → 点左上角「+」或「编辑」→「添加小组件」→ 搜索「楞严」→ 添加「今日读经」。";
+"widget_guide_lock_instruction" = "长按锁屏 → 自定 → 锁屏 → 点时间下方小组件区域或「添加小组件」→ 选择「楞严」。";
 "widget_guide_usage" = "使用";
 "widget_guide_usage_instruction" = "小组件每日自动更新经文。点按经文，可回到 App 深读。";
 "widget_status_both_added" = "已添加桌面与锁屏";

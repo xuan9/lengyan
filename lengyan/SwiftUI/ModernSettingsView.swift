@@ -256,7 +256,7 @@ struct ModernSettingsView: View {
             let matchingWidgets = configurations.filter { $0.kind == Self.widgetKind }
             let desktopInstalled = matchingWidgets.contains { info in
                 switch info.family {
-                case .systemMedium, .systemLarge, .systemExtraLarge:
+                case .systemSmall, .systemMedium, .systemLarge, .systemExtraLarge:
                     return true
                 default:
                     return false
@@ -458,7 +458,6 @@ struct WidgetGuideView: View {
                 LazyVGrid(columns: previewColumns, alignment: .leading, spacing: 12) {
                     WidgetPreviewTile(title: L10n.str("widget_guide_home_title"), subtitle: L10n.str("widget_guide_home_subtitle"), symbol: "rectangle.grid.2x2")
                     WidgetPreviewTile(title: L10n.str("widget_guide_lock_title"), subtitle: L10n.str("widget_guide_lock_subtitle"), symbol: "lock")
-                    WidgetPreviewTile(title: L10n.str("widget_guide_card_title"), subtitle: L10n.str("widget_guide_card_subtitle"), symbol: "text.alignleft")
                 }
                 .padding(.bottom, 32)
 

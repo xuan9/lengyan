@@ -10,89 +10,86 @@ struct ModernAudioPlayerView: View {
     @State private var showTrackList = true
     @State private var isListInteractive = true // 防止过渡动画期间误触
 
-    // 底部安全区在 onAppear 读一次缓存，避免在 body 里每帧读取 UIApplication.keyWindow
-    // （iPad 多窗口/快速重绘时该值不稳，会在播放器栏内形成 AttributeGraph 布局环，冻结 UI 更新）
-    @State private var bottomSafeArea: CGFloat = 0
-
-    private var tabBarHeight: CGFloat {
-        49 + bottomSafeArea + 8
-    }
-
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // 1. 全景沉浸式动态古画背景 + 启动画面风格的竖向书法标题
-            ZStack(alignment: .topTrailing) {
-                GeometryReader { geo in
-                    Image("sutra_splash")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .scaleEffect(audioObserver.isPlaying ? 1.03 : 1.0)
-                        .animation(.easeInOut(duration: 30).repeatForever(autoreverses: true), value: audioObserver.isPlaying)
-                        .clipped()
-                }
+        GeometryReader { rootGeo in
+            let tabBarOverlapHeight = tabBarOverlapHeight(in: rootGeo.frame(in: .global))
 
-                // 竖向排版已移至 immersivePlayerControls，这里只保留背景图片
-            }
-            .ignoresSafeArea()
-            .opacity(showTrackList ? 0.0 : 1.0) // 当列表出现时，佛画和文字一起彻底淡出消失
-            .animation(.easeInOut(duration: 0.8), value: showTrackList)
-            .onTapGesture {
-                // 点击佛画区域，立刻切回列表模式
-                if !showTrackList {
-                    withAnimation(.easeInOut(duration: 0.6)) {
-                        showTrackList = true
+            ZStack(alignment: .bottom) {
+                // 1. 全景沉浸式动态古画背景 + 启动画面风格的竖向书法标题
+                ZStack(alignment: .topTrailing) {
+                    GeometryReader { geo in
+                        Image("sutra_splash")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .scaleEffect(audioObserver.isPlaying ? 1.03 : 1.0)
+                            .animation(.easeInOut(duration: 30).repeatForever(autoreverses: true), value: audioObserver.isPlaying)
+                            .clipped()
+                    }
+
+                    // 竖向排版已移至 immersivePlayerControls，这里只保留背景图片
+                }
+                .ignoresSafeArea()
+                .opacity(showTrackList ? 0.0 : 1.0) // 当列表出现时，佛画和文字一起彻底淡出消失
+                .animation(.easeInOut(duration: 0.8), value: showTrackList)
+                .onTapGesture {
+                    // 点击佛画区域，立刻切回列表模式
+                    if !showTrackList {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            showTrackList = true
+                        }
                     }
                 }
-            }
 
-            // 2. 纯净背景色，列表模式下的绝对底色
-            Color(SutraDesignTokens.shared.color(for: .background))
+                // 2. 纯净背景色，列表模式下的绝对底色
+                Color(SutraDesignTokens.shared.color(for: .background))
+                    .opacity(showTrackList ? 1.0 : 0.0)
+                    .animation(.easeInOut(duration: 0.8), value: showTrackList)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    ZenTabHeaderView(titleKey: "media_tab_title", symbolName: "headphones")
+
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            if manager.isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
+                            } else {
+                                flatTrackList
+                            }
+
+                            // 归属署名 — 安静低调
+                            Text(L10n.str("audio_credit"))
+                                .font(SutraTypographyBridge.uiCaption(weight: .light))
+                                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
+                                .padding(.top, 36)
+                                .padding(.bottom, 8)
+                        }
+                        .padding(.bottom, audioObserver.showPlayerBar ? 260 : 120)
+                        .readingContentWidth()
+                    }
+                }
                 .opacity(showTrackList ? 1.0 : 0.0)
                 .animation(.easeInOut(duration: 0.8), value: showTrackList)
-                .ignoresSafeArea()
+                .allowsHitTesting(isListInteractive)
 
-            VStack(spacing: 0) {
-                ZenTabHeaderView(titleKey: "media_tab_title", symbolName: "headphones")
-
-                ScrollView {
-                    VStack(spacing: 0) {
-                        if manager.isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
+                if audioObserver.showPlayerBar {
+                    Group {
+                        if showTrackList {
+                            listModePlayerBar(tabBarOverlapHeight: tabBarOverlapHeight)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else {
-                            flatTrackList
+                            immersivePlayerControls
+                                .contentShape(Rectangle())
+                                .transition(.opacity)
                         }
-
-                        // 归属署名 — 安静低调
-                        Text(L10n.str("audio_credit"))
-                            .font(SutraTypographyBridge.uiCaption(weight: .light))
-                            .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
-                            .padding(.top, 36)
-                            .padding(.bottom, 8)
                     }
-                    .padding(.bottom, audioObserver.showPlayerBar ? 260 : 120)
-                    .readingContentWidth()
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: audioObserver.showPlayerBar)
                 }
             }
-            .opacity(showTrackList ? 1.0 : 0.0)
-            .animation(.easeInOut(duration: 0.8), value: showTrackList)
-            .allowsHitTesting(isListInteractive)
-
-            if audioObserver.showPlayerBar {
-                Group {
-                    if showTrackList {
-                        listModePlayerBar
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    } else {
-                        immersivePlayerControls
-                            .contentShape(Rectangle())
-                            .transition(.opacity)
-                    }
-                }
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: audioObserver.showPlayerBar)
-            }
+            .frame(width: rootGeo.size.width, height: rootGeo.size.height)
         }
         // 彻底无视底部安全区，防止 UIKit 隐藏 TabBar 时导致的 Layout 瞬间跳动
         .ignoresSafeArea(.all, edges: .bottom)
@@ -123,14 +120,6 @@ struct ModernAudioPlayerView: View {
             manager.setupAudioSession()
             manager.loadMediaData()  // loadMediaData 内部已调用 resumeLastPlayback
             audioObserver.showPlayerBar = true
-            // 缓存底部安全区（供 tabBarHeight 使用），避免在 body 里逐帧读取 UIApplication.keyWindow
-            if bottomSafeArea == 0 {
-                let window = UIApplication.shared.connectedScenes
-                    .compactMap({ $0 as? UIWindowScene })
-                    .flatMap({ $0.windows })
-                    .first(where: { $0.isKeyWindow })
-                bottomSafeArea = window?.safeAreaInsets.bottom ?? 0
-            }
         }
         .overlay {
             GeometryReader { overlayGeo in
@@ -289,7 +278,7 @@ struct ModernAudioPlayerView: View {
     }
 
     // MARK: - Layout 1: List Mode Player Bar (Glassmorphism Pill)
-    private var listModePlayerBar: some View {
+    private func listModePlayerBar(tabBarOverlapHeight: CGFloat) -> some View {
         VStack(spacing: 0) {
             // 播放器药丸主体
             VStack(spacing: 0) {
@@ -341,7 +330,7 @@ struct ModernAudioPlayerView: View {
             .shadow(color: Color.black.opacity(0.12), radius: 24, x: 0, y: 12)
             .padding(.horizontal, 16)
 
-            // 1. 透明防穿透遮罩（填满药丸和 TabBar 之间的 8pt 物理空隙，拦截点击事件防止穿透到下方的列表）
+            // 透明防穿透遮罩（填满药丸和 TabBar 之间的物理空隙，拦截点击事件防止穿透到下方的列表）
             Color.black.opacity(0.001)
                 .frame(height: 8)
                 .contentShape(Rectangle())
@@ -349,10 +338,39 @@ struct ModernAudioPlayerView: View {
                     // 空操作，专用于拦截点击事件，防止穿透
                 }
 
-            // 2. 底部 TabBar 占用高度（不含 8pt 空隙），此处用 Color.clear 保持点击穿透到 TabBar 本身
-            Color.clear
-                .frame(height: max(0, tabBarHeight - 8))
+            if tabBarOverlapHeight > 0 {
+                // 如果当前 SwiftUI 容器延伸到 TabBar 下方，只补真实重叠高度；非透明 TabBar 已占位时这里为 0。
+                Color.clear
+                    .frame(height: tabBarOverlapHeight)
+            }
         }
+    }
+
+    private func tabBarOverlapHeight(in viewFrame: CGRect) -> CGFloat {
+        guard
+            let tabBar = activeTabBar(),
+            !tabBar.isHidden,
+            tabBar.alpha > 0.01
+        else {
+            return 0
+        }
+
+        let tabBarFrame = tabBar.convert(tabBar.bounds, to: nil)
+        guard !tabBarFrame.isEmpty else { return 0 }
+
+        let overlap = viewFrame.intersection(tabBarFrame)
+        guard !overlap.isNull else { return 0 }
+
+        return max(0, min(tabBarFrame.height, overlap.height))
+    }
+
+    private func activeTabBar() -> UITabBar? {
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+
+        return (window?.rootViewController as? UITabBarController)?.tabBar
     }
 
     // MARK: - Layout 2: Immersive Buddha Mode Controls (Zen Single Column)

@@ -325,7 +325,7 @@ public final class SutraDesignTokens {
         setTheme(nextTheme)
 
         // Animate theme transition with cross-dissolve
-        if let window = UIApplication.shared.windows.first {
+        if let window = applicationWindows().first {
             UIView.transition(with: window,
                               duration: 0.3,
                               options: .transitionCrossDissolve,
@@ -341,10 +341,19 @@ public final class SutraDesignTokens {
             self.applyThemeToApp()
 
             // Also update interface style for views that don't use appearance proxies
-            UIApplication.shared.windows.forEach { window in
+            self.applicationWindows().forEach { window in
+                let backgroundColor = self.color(for: .background)
+                window.backgroundColor = backgroundColor
+                window.rootViewController?.view.backgroundColor = backgroundColor
                 window.overrideUserInterfaceStyle = self.interfaceStyle(for: theme)
             }
         }
+    }
+
+    private func applicationWindows() -> [UIWindow] {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
     }
 
     // MARK: - Global Theme Application (borrowed from SutraDesignSystem)
@@ -357,7 +366,6 @@ public final class SutraDesignTokens {
             separator: self.color(for: .separator),
             bookmarkStar: self.color(for: .bookmarkStar),
             textPrimary: self.color(for: .textPrimary),
-            accent: self.color(for: .accent),
             background: self.color(for: .background)
         )
 
@@ -400,25 +408,103 @@ public final class SutraDesignTokens {
             ]
         }
 
-        // World-class tab bar styling with proper icons
+        // Readable iOS tab bar styling with stable contrast across themes
         if #available(iOS 13.0, *) {
-            let tabBarAppearance = UITabBarAppearance()
-            tabBarAppearance.configureWithOpaqueBackground()
-            tabBarAppearance.backgroundColor = colors.tabBar
+            let tabBarAppearance = makeTabBarAppearance()
 
             UITabBar.appearance().standardAppearance = tabBarAppearance
             if #available(iOS 15.0, *) {
                 UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
             }
-            UITabBar.appearance().tintColor = colors.accent
+            UITabBar.appearance().tintColor = self.color(for: .primary)
+            UITabBar.appearance().unselectedItemTintColor = self.color(for: .textSecondary)
+            UITabBar.appearance().barTintColor = colors.tabBar
+            UITabBar.appearance().backgroundColor = colors.tabBar
+            UITabBar.appearance().isTranslucent = false
         } else {
             UITabBar.appearance().backgroundColor = colors.tabBar
             UITabBar.appearance().barTintColor = colors.tabBar
-            UITabBar.appearance().tintColor = colors.accent
+            UITabBar.appearance().tintColor = self.color(for: .primary)
+            UITabBar.appearance().unselectedItemTintColor = self.color(for: .textSecondary)
         }
 
         // NOTE: Removed UIView.appearance().backgroundColor - too aggressive
         // Individual views should set their own backgrounds using SutraDesignTokens
+    }
+
+    public func makeTabBarAppearance() -> UITabBarAppearance {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = color(for: .tabBar)
+        appearance.shadowColor = color(for: .separator)
+
+        let normalTitleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: color(for: .textSecondary)
+        ]
+
+        let selectedTitleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 11, weight: .semibold),
+            .foregroundColor: color(for: .textPrimary)
+        ]
+
+        let disabledTitleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 11, weight: .regular),
+            .foregroundColor: color(for: .textTertiary)
+        ]
+
+        configureTabBarItemAppearance(
+            appearance.stackedLayoutAppearance,
+            normalTitleAttributes: normalTitleAttributes,
+            selectedTitleAttributes: selectedTitleAttributes,
+            disabledTitleAttributes: disabledTitleAttributes,
+            titlePositionAdjustment: UIOffset(horizontal: 0, vertical: 2)
+        )
+
+        configureTabBarItemAppearance(
+            appearance.compactInlineLayoutAppearance,
+            normalTitleAttributes: normalTitleAttributes,
+            selectedTitleAttributes: selectedTitleAttributes,
+            disabledTitleAttributes: disabledTitleAttributes,
+            titlePositionAdjustment: .zero
+        )
+
+        if #available(iOS 15.0, *) {
+            configureTabBarItemAppearance(
+                appearance.inlineLayoutAppearance,
+                normalTitleAttributes: normalTitleAttributes,
+                selectedTitleAttributes: selectedTitleAttributes,
+                disabledTitleAttributes: disabledTitleAttributes,
+                titlePositionAdjustment: .zero
+            )
+        }
+
+        return appearance
+    }
+
+    private func configureTabBarItemAppearance(
+        _ itemAppearance: UITabBarItemAppearance,
+        normalTitleAttributes: [NSAttributedString.Key: Any],
+        selectedTitleAttributes: [NSAttributedString.Key: Any],
+        disabledTitleAttributes: [NSAttributedString.Key: Any],
+        titlePositionAdjustment: UIOffset
+    ) {
+        itemAppearance.normal.titleTextAttributes = normalTitleAttributes
+        itemAppearance.normal.iconColor = color(for: .textSecondary)
+
+        itemAppearance.selected.titleTextAttributes = selectedTitleAttributes
+        itemAppearance.selected.iconColor = color(for: .primary)
+
+        itemAppearance.disabled.titleTextAttributes = disabledTitleAttributes
+        itemAppearance.disabled.iconColor = color(for: .textTertiary)
+
+        itemAppearance.focused.titleTextAttributes = selectedTitleAttributes
+        itemAppearance.focused.iconColor = color(for: .primary)
+
+        itemAppearance.normal.titlePositionAdjustment = titlePositionAdjustment
+        itemAppearance.selected.titlePositionAdjustment = titlePositionAdjustment
+        itemAppearance.disabled.titlePositionAdjustment = titlePositionAdjustment
+        itemAppearance.focused.titlePositionAdjustment = titlePositionAdjustment
     }
 
     private func interfaceStyle(for theme: SutraTheme) -> UIUserInterfaceStyle {

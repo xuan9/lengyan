@@ -47,11 +47,12 @@ iOS 14+ 的 compact DatePicker：收起只占一行，点击弹出原生拨盘�
 | 位置/留白 | 强大 |
 | 颜色深浅 | **尽量不用**，只用两级 |
 
-## 6. TabBar 文字极小极细即优雅
+## 6. TabBar 文字要轻，但必须可读
 
-- 字号 10pt，字重 .thin
-- 未选中：textTertiary 色
-- 选中：primary 色（同图标）
+- 字号 11pt，未选中 .medium，选中 .semibold
+- 未选中：textSecondary 色，避免 textTertiary 在真机上过软
+- 选中：图标用 primary 色，文字用 textPrimary 保证阅读性
+- TabBar 背景使用不透内容的 tabBar 色，避免经文滚到下方时影响标签对比
 - 不需要去掉文字只留图标
 
 ## 7. 收藏卡片设计要点

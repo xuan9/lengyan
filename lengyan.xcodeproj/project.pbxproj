@@ -86,6 +86,7 @@
 		87D1ECE90E034EB3906ECCB0 /* DailyVerseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61446741A3764C48A56C80B4 /* DailyVerseWidget.swift */; };
 		87D1ECE90E034EB3906ECCB1 /* DailyVerseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61446741A3764C48A56C80B4 /* DailyVerseWidget.swift */; };
 		88E94BDF895BD780748A3751 /* NavigationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1B4DEA8ED2555B51E3976F /* NavigationHelper.swift */; };
+		B7D10B602EBD000100000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B7D10B602EBD000100000002 /* InfoPlist.strings */; };
 		927EE1F0882A4B54BD07EC6A /* DailyVerseProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C71E0A9097A94FEB961AE65F /* DailyVerseProvider.swift */; };
 		A1B2C3D4E5F6000000000001 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000002 /* SnapshotHelper.swift */; };
 		A1B2C3D4E5F6000000000003 /* SutraSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000004 /* SutraSnapshotTests.swift */; };
@@ -240,6 +241,8 @@
 		A1B2C3D4E5F6000000000004 /* SutraSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraSnapshotTests.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000011 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LengyanWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7D10B602EBD000100000003 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		B7D10B602EBD000100000004 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		B09045C2B7C615CA798CD05F /* MediaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaModels.swift; path = lengyan/Domain/MediaModels.swift; sourceTree = SOURCE_ROOT; };
 		B4022B9FDC584D739E1402D4 /* SutraCardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SutraCardRenderer.swift; sourceTree = "<group>"; };
 		C610B94F2962439384250E92 /* SharedVerseData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedVerseData.swift; sourceTree = "<group>"; };
@@ -499,6 +502,7 @@
 				FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */,
 				E3092BA60DE2421295F0CD61 /* SharedVerseData.swift */,
 				FBDCAC2906D74E67A86FDF14 /* Info.plist */,
+				B7D10B602EBD000100000002 /* InfoPlist.strings */,
 				EF6B6B533C8E41C5B905D48A /* LengyanWidget.entitlements */,
 			);
 			path = LengyanWidget;
@@ -732,6 +736,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B7D10B602EBD000100000001 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -892,6 +897,15 @@
 				139073181D109194003A3333 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		B7D10B602EBD000100000002 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B7D10B602EBD000100000003 /* zh-Hans */,
+				B7D10B602EBD000100000004 /* zh-Hant */,
+			);
+			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -1163,7 +1177,7 @@
 				DEVELOPMENT_TEAM = A37UYHPM4V;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LengyanWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "楞严 今日读经";
+				INFOPLIST_KEY_CFBundleDisplayName = "楞嚴 今日讀經";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1194,7 +1208,7 @@
 				DEVELOPMENT_TEAM = A37UYHPM4V;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LengyanWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "楞严 今日读经";
+				INFOPLIST_KEY_CFBundleDisplayName = "楞嚴 今日讀經";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (

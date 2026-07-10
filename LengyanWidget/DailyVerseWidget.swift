@@ -3,8 +3,8 @@
 //  LengyanWidget
 //
 //  今日读经小组件 — 可读经文 + 主题感知
-//  支持三种桌面尺寸 + 一种 Lock Screen/StandBy 经文卡片：
-//    小：短段经文
+//  支持三种桌面尺寸 + 一种 Lock Screen/StandBy 矩形配件：
+//    小：短句提醒 + 回到 App 深读入口
 //    中：经文段落
 //    大：完整经文段落（~300字）+ 出处 + 「点击阅读」引导
 //    accessoryRectangular — 锁屏经句卡片
@@ -15,6 +15,47 @@
 
 import WidgetKit
 import SwiftUI
+
+private enum WidgetL10n {
+    private static var usesSimplifiedChinese: Bool {
+        let preferred = Locale.preferredLanguages.first?.lowercased() ?? Locale.current.identifier.lowercased()
+        if preferred.contains("hans")
+            || preferred.contains("-cn")
+            || preferred.contains("_cn")
+            || preferred.contains("-sg")
+            || preferred.contains("_sg") {
+            return true
+        }
+        if preferred.contains("hant")
+            || preferred.contains("-tw")
+            || preferred.contains("_tw")
+            || preferred.contains("-hk")
+            || preferred.contains("_hk")
+            || preferred.contains("-mo")
+            || preferred.contains("_mo") {
+            return false
+        }
+        return false
+    }
+
+    private static func text(_ hans: String, _ hant: String) -> String {
+        usesSimplifiedChinese ? hans : hant
+    }
+
+    static var widgetDisplayName: String { text("今日读经", "今日讀經") }
+    static var widgetDescription: String { text("每天一段楞严经文，可放在桌面或锁屏。", "每天一段楞嚴經文，可放在桌面或鎖屏。") }
+    static var sutraHeader: String { text("大佛顶首楞严经", "大佛頂首楞嚴經") }
+    static var inlineOnboarding: String { text("楞严 · 待启卷", "楞嚴 · 待啟卷") }
+    static var lockTitle: String { text("楞严经", "楞嚴經") }
+    static var lockSubtitle: String { text("请先打开主 App 启卷", "請先打開主 App 啟卷") }
+    static var emptyTitle: String { "楞" }
+    static var emptySubtitle: String { text("请先打开楞严一次", "請先打開楞嚴一次") }
+    static var smallPreviewName: String { text("小尺寸", "小尺寸") }
+    static var mediumPreviewName: String { text("中尺寸", "中尺寸") }
+    static var largePreviewName: String { text("大尺寸", "大尺寸") }
+    static var lockPreviewName: String { text("锁屏·卡片", "鎖屏·卡片") }
+    static var emptyMediumPreviewName: String { text("空态·中", "空態·中") }
+}
 
 // MARK: - 动态字号计算
 
@@ -285,8 +326,8 @@ struct LargeVerseView: View {
             } else {
                 // 主内容 — 顶部题眉 + 正文 + 底部卷名页脚（细发丝线分隔）
                 VStack(alignment: .center, spacing: 0) {
-                    // 经卷题眉 — 全名「大佛顶首楞嚴經」，庄重不单薄
-                    Text("大佛顶首楞嚴經")
+                    // 经卷题眉 — 全名「大佛顶首楞严经」，庄重不单薄
+                    Text(WidgetL10n.sutraHeader)
                         .font(WidgetTokens.sutraFont(size: 13))
                         .foregroundColor(WidgetTokens.textTertiary)
                         .tracking(3)
@@ -357,7 +398,7 @@ struct InlineVerseView: View {
 
     var body: some View {
         if entry.needsOnboarding {
-            Text("楞严 · 待启卷")
+            Text(WidgetL10n.inlineOnboarding)
         } else {
             Text(entry.inlineText)
         }
@@ -371,9 +412,9 @@ struct RectangularVerseView: View {
     var body: some View {
         if entry.needsOnboarding {
             VStack(alignment: .leading, spacing: 4) {
-                Text("楞严经")
+                Text(WidgetL10n.lockTitle)
                     .font(.system(size: 13, weight: .semibold))
-                Text("请先打开主App启卷")
+                Text(WidgetL10n.lockSubtitle)
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -410,10 +451,10 @@ private struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: compact ? 6 : 10) {
             Spacer()
-            Text("楞")
+            Text(WidgetL10n.emptyTitle)
                 .font(WidgetTokens.sutraFont(size: compact ? 28 : 36))
                 .foregroundColor(WidgetTokens.decorativeGold.opacity(0.6))
-            Text("请先打开楞严一次")
+            Text(WidgetL10n.emptySubtitle)
                 .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
                 .foregroundColor(WidgetTokens.textTertiary)
                 .tracking(1)
@@ -532,14 +573,14 @@ struct DailyVerseWidget: Widget {
                 WidgetEntryView(entry: entry)
             }
         }
-        .configurationDisplayName("今日读经")
-        .description("每天一段楞严经文，可放在桌面或锁屏。")
+        .configurationDisplayName(WidgetL10n.widgetDisplayName)
+        .description(WidgetL10n.widgetDescription)
         .supportedFamilies(supportedFamilies)
         .disableContentMarginsIfNeeded()
     }
 
     private var supportedFamilies: [WidgetFamily] {
-        var families: [WidgetFamily] = [.systemMedium, .systemLarge]
+        var families: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
         if #available(iOS 16.0, iOSApplicationExtension 16.0, *) {
             families.append(.accessoryRectangular)
         }
@@ -595,22 +636,26 @@ struct WidgetEntryView: View {
 struct DailyVerseWidget_Previews: PreviewProvider {
     static var previews: some View {
         Group {
+            SmallVerseView(entry: .placeholder)
+                .previewContext(WidgetPreviewContext(family: .systemSmall))
+                .previewDisplayName(WidgetL10n.smallPreviewName)
+
             MediumVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
-                .previewDisplayName("中尺寸")
+                .previewDisplayName(WidgetL10n.mediumPreviewName)
 
             LargeVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
-                .previewDisplayName("大尺寸")
+                .previewDisplayName(WidgetL10n.largePreviewName)
 
             RectangularVerseView(entry: .placeholder)
                 .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
-                .previewDisplayName("锁屏·卡片")
+                .previewDisplayName(WidgetL10n.lockPreviewName)
 
             // 空态预览
             MediumVerseView(entry: .onboarding)
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
-                .previewDisplayName("空态·中")
+                .previewDisplayName(WidgetL10n.emptyMediumPreviewName)
         }
     }
 }

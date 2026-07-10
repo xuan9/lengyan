@@ -234,25 +234,119 @@ struct ModernFavoritesView: View {
         return width >= 768
     }
 
-    private var tabBarHeight: CGFloat {
-        let bottomInset = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap { $0.windows }
-            .first { $0.isKeyWindow }?.safeAreaInsets.bottom ?? 0
-        return 49 + bottomInset
-    }
-
     var body: some View {
-        let isSplitView = isWideScreen
-        
-        Group {
-            if isSplitView {
-                HStack(spacing: 0) {
-                    // Left Panel: Sidebar
+        GeometryReader { rootGeo in
+            let isSplitView = isWideScreen
+            let tabBarOverlapHeight = tabBarOverlapHeight(in: rootGeo.frame(in: .global))
+
+            Group {
+                if isSplitView {
+                    HStack(spacing: 0) {
+                        // Left Panel: Sidebar
+                        VStack(spacing: 0) {
+                            ZenTabHeaderView(titleKey: "star_tab_title", symbolName: "bookmark")
+
+                            // Sidebar Content List
+                            ScrollView {
+                                if viewModel.isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle())
+                                        .padding(.top, 60)
+                                } else {
+                                    VStack(spacing: 0) {
+                                        // Section 1: 我的收藏
+                                        SectionHeader(title: L10n.str("favorites_tab_personal"))
+
+                                        if viewModel.favorites.isEmpty {
+                                            personalEmptyCard
+                                                .padding(.horizontal, 10)
+                                        } else {
+                                            VStack(spacing: 14) {
+                                                ForEach(viewModel.favorites) { item in
+                                                    favoriteCard(item)
+                                                }
+                                            }
+                                            .padding(.horizontal, 10)
+                                        }
+
+                                        // Section 2: 编者精选
+                                        SectionHeader(title: L10n.str("favorites_tab_curated"))
+
+                                        VStack(spacing: 14) {
+                                            ForEach(viewModel.curatedItems) { item in
+                                                favoriteCard(item)
+                                            }
+                                        }
+                                        .padding(.horizontal, 10)
+                                    }
+                                    .padding(.bottom, tabBarOverlapHeight + 24)
+                                }
+                            }
+                        }
+                        .frame(width: 320)
+                        .background(SutraDesignSystem.backgroundColor())
+
+                        // Divider Line
+                        Rectangle()
+                            .fill(Color(uiColor: SutraDesignTokens.shared.color(for: .divider)).opacity(0.3))
+                            .frame(width: 0.5)
+                            .ignoresSafeArea(.all, edges: .vertical)
+
+                        // Right Panel: Detail view
+                        VStack(spacing: 0) {
+                            if viewModel.isLoading {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                Spacer()
+                            } else if let selected = activeSelectedItem {
+                                SwiftUISutraReader(path: selected.path, hasChildren: selected.hasChildren)
+                                    .id(selected.path)
+                                    .padding(.bottom, tabBarOverlapHeight)
+                            } else {
+                                // If selectedItem is nil (i.e. empty personal favorites)
+                                ZenPlaceholderView(
+                                    titleKey: "favorites_curated_empty",
+                                    descKey: "favorites_curated_title"
+                                )
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(SutraDesignSystem.backgroundColor())
+                    }
+                    .onAppear {
+                        viewModel.loadAll()
+                        hideNavBar()
+                        updateDefaultSelection()
+                    }
+                    .onChange(of: viewModel.isLoading) { isLoading in
+                        if !isLoading {
+                            updateDefaultSelection()
+                        }
+                    }
+                    .onChange(of: viewModel.favorites.count) { _ in
+                        if selectedItem == nil {
+                            updateDefaultSelection()
+                        }
+                    }
+                    .onChange(of: viewModel.curatedItems.count) { _ in
+                        if selectedItem == nil {
+                            updateDefaultSelection()
+                        }
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
+                        FavoritesCache.invalidateOnFavoriteChange()
+                        viewModel.loadAll()
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
+                        themeVersion += 1
+                    }
+                } else {
+                    // iPhone (Phone layout)
                     VStack(spacing: 0) {
                         ZenTabHeaderView(titleKey: "star_tab_title", symbolName: "bookmark")
 
-                        // Sidebar Content List
+                        // 内容
                         ScrollView {
                             if viewModel.isLoading {
                                 ProgressView()
@@ -262,10 +356,11 @@ struct ModernFavoritesView: View {
                                 VStack(spacing: 0) {
                                     // Section 1: 我的收藏
                                     SectionHeader(title: L10n.str("favorites_tab_personal"))
-                                    
+
                                     if viewModel.favorites.isEmpty {
                                         personalEmptyCard
                                             .padding(.horizontal, 10)
+                                            .readingContentWidth()
                                     } else {
                                         VStack(spacing: 14) {
                                             ForEach(viewModel.favorites) { item in
@@ -273,141 +368,68 @@ struct ModernFavoritesView: View {
                                             }
                                         }
                                         .padding(.horizontal, 10)
+                                        .readingContentWidth()
                                     }
-                                    
+
                                     // Section 2: 编者精选
                                     SectionHeader(title: L10n.str("favorites_tab_curated"))
-                                    
+
                                     VStack(spacing: 14) {
                                         ForEach(viewModel.curatedItems) { item in
                                             favoriteCard(item)
                                         }
                                     }
                                     .padding(.horizontal, 10)
-                                }
-                                .padding(.bottom, tabBarHeight + 24)
-                            }
-                        }
-                    }
-                    .frame(width: 320)
-                    .background(SutraDesignSystem.backgroundColor())
-
-                    // Divider Line
-                    Rectangle()
-                        .fill(Color(uiColor: SutraDesignTokens.shared.color(for: .divider)).opacity(0.3))
-                        .frame(width: 0.5)
-                        .ignoresSafeArea(.all, edges: .vertical)
-
-                    // Right Panel: Detail view
-                    VStack(spacing: 0) {
-                        if viewModel.isLoading {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                            Spacer()
-                        } else if let selected = activeSelectedItem {
-                            SwiftUISutraReader(path: selected.path, hasChildren: selected.hasChildren)
-                                .id(selected.path)
-                                .padding(.bottom, tabBarHeight)
-                        } else {
-                            // If selectedItem is nil (i.e. empty personal favorites)
-                            ZenPlaceholderView(
-                                titleKey: "favorites_curated_empty",
-                                descKey: "favorites_curated_title"
-                            )
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(SutraDesignSystem.backgroundColor())
-                }
-                .edgesIgnoringSafeArea(.bottom)
-                .onAppear {
-                    viewModel.loadAll()
-                    hideNavBar()
-                    updateDefaultSelection()
-                }
-                .onChange(of: viewModel.isLoading) { isLoading in
-                    if !isLoading {
-                        updateDefaultSelection()
-                    }
-                }
-                .onChange(of: viewModel.favorites.count) { _ in
-                    if selectedItem == nil {
-                        updateDefaultSelection()
-                    }
-                }
-                .onChange(of: viewModel.curatedItems.count) { _ in
-                    if selectedItem == nil {
-                        updateDefaultSelection()
-                    }
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
-                    FavoritesCache.invalidateOnFavoriteChange()
-                    viewModel.loadAll()
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
-                    themeVersion += 1
-                }
-            } else {
-                // iPhone (Phone layout)
-                VStack(spacing: 0) {
-                    ZenTabHeaderView(titleKey: "star_tab_title", symbolName: "bookmark")
-
-                    // 内容
-                    ScrollView {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .padding(.top, 60)
-                        } else {
-                            VStack(spacing: 0) {
-                                // Section 1: 我的收藏
-                                SectionHeader(title: L10n.str("favorites_tab_personal"))
-                                
-                                if viewModel.favorites.isEmpty {
-                                    personalEmptyCard
-                                        .padding(.horizontal, 10)
-                                        .readingContentWidth()
-                                } else {
-                                    VStack(spacing: 14) {
-                                        ForEach(viewModel.favorites) { item in
-                                            favoriteCard(item)
-                                        }
-                                    }
-                                    .padding(.horizontal, 10)
                                     .readingContentWidth()
                                 }
-                                
-                                // Section 2: 编者精选
-                                SectionHeader(title: L10n.str("favorites_tab_curated"))
-                                
-                                VStack(spacing: 14) {
-                                    ForEach(viewModel.curatedItems) { item in
-                                        favoriteCard(item)
-                                    }
-                                }
-                                .padding(.horizontal, 10)
-                                .readingContentWidth()
+                                .padding(.bottom, tabBarOverlapHeight + 24)
                             }
-                            .padding(.bottom, tabBarHeight + 24)
                         }
                     }
-                }
-                .background(SutraDesignSystem.backgroundColor())
-                .edgesIgnoringSafeArea(.bottom)
-                .onAppear {
-                    viewModel.loadAll()
-                    hideNavBar()
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
-                    FavoritesCache.invalidateOnFavoriteChange()
-                    viewModel.loadAll()
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
-                    themeVersion += 1
+                    .background(SutraDesignSystem.backgroundColor())
+                    .onAppear {
+                        viewModel.loadAll()
+                        hideNavBar()
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
+                        FavoritesCache.invalidateOnFavoriteChange()
+                        viewModel.loadAll()
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
+                        themeVersion += 1
+                    }
                 }
             }
+            .frame(width: rootGeo.size.width, height: rootGeo.size.height)
         }
+        .edgesIgnoringSafeArea(.bottom)
+    }
+
+    private func tabBarOverlapHeight(in viewFrame: CGRect) -> CGFloat {
+        guard
+            let tabBar = activeTabBar(),
+            !tabBar.isHidden,
+            tabBar.alpha > 0.01
+        else {
+            return 0
+        }
+
+        let tabBarFrame = tabBar.convert(tabBar.bounds, to: nil)
+        guard !tabBarFrame.isEmpty else { return 0 }
+
+        let overlap = viewFrame.intersection(tabBarFrame)
+        guard !overlap.isNull else { return 0 }
+
+        return max(0, min(tabBarFrame.height, overlap.height))
+    }
+
+    private func activeTabBar() -> UITabBar? {
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+
+        return (window?.rootViewController as? UITabBarController)?.tabBar
     }
 
     private var emptyView: some View {
@@ -543,6 +565,7 @@ struct ModernFavoritesView: View {
         )
         sutraVC.path = path
         sutraVC.isShowIndexButton = true
+        sutraVC.hidesBottomBarWhenPushed = true
         sutraVC.title = title
 
         sutraVC.onDismiss = {
@@ -568,6 +591,7 @@ struct ModernFavoritesView: View {
                 options: nil
             )
             pageVC.page = pageIndex
+            pageVC.hidesBottomBarWhenPushed = true
             pageVC.title = title
 
             navigationController.pushViewController(pageVC, animated: true)

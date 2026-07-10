@@ -65,58 +65,96 @@ struct ModernWisdomView: View {
     }
 }
 
+private enum WisdomTabBarLayout {
+    static func bottomPadding(in viewFrame: CGRect) -> CGFloat {
+        max(60, overlapHeight(in: viewFrame) + 16)
+    }
+
+    private static func overlapHeight(in viewFrame: CGRect) -> CGFloat {
+        guard
+            let tabBar = activeTabBar(),
+            !tabBar.isHidden,
+            tabBar.alpha > 0.01
+        else {
+            return 0
+        }
+
+        let tabBarFrame = tabBar.convert(tabBar.bounds, to: nil)
+        guard !tabBarFrame.isEmpty else { return 0 }
+
+        let overlap = viewFrame.intersection(tabBarFrame)
+        guard !overlap.isNull else { return 0 }
+
+        return max(0, min(tabBarFrame.height, overlap.height))
+    }
+
+    private static func activeTabBar() -> UITabBar? {
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+
+        return (window?.rootViewController as? UITabBarController)?.tabBar
+    }
+}
+
 // MARK: - Verse Card View
 struct WisdomVerseCard: View {
     let verse: DailyVerse
     
     var body: some View {
-        ZStack {
-            // Background
-            Color(uiColor: SutraDesignTokens.shared.color(for: .background))
-                .ignoresSafeArea()
-            
-            VStack(spacing: 40) {
-                // Header (Date)
-                Text(formattedDate(verse.date))
-                    .font(.system(size: 14, weight: .light, design: .serif))
-                    .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)).opacity(0.6))
-                    .tracking(2)
-                
-                Spacer()
-                
-                // Verse Text
-                Text(verse.text)
-                    .font(.custom("STKaiti", size: 28))
-                    .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textPrimary)))
-                    .lineSpacing(16)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 30)
-                
-                // Source
-                Text("── \(verse.source) ──")
-                    .font(.custom("STKaiti", size: 16))
-                    .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)))
-                    .padding(.top, 20)
-                
-                Spacer()
-                
-                // Footer (Action)
-                Button(action: {
-                    openSutra()
-                }) {
-                    Text(L10n.str("wisdom_enter_reading"))
+        GeometryReader { geo in
+            let bottomPadding = WisdomTabBarLayout.bottomPadding(in: geo.frame(in: .global))
+
+            ZStack {
+                // Background
+                Color(uiColor: SutraDesignTokens.shared.color(for: .background))
+                    .ignoresSafeArea()
+
+                VStack(spacing: 40) {
+                    // Header (Date)
+                    Text(formattedDate(verse.date))
+                        .font(.system(size: 14, weight: .light, design: .serif))
+                        .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)).opacity(0.6))
+                        .tracking(2)
+
+                    Spacer()
+
+                    // Verse Text
+                    Text(verse.text)
+                        .font(.custom("STKaiti", size: 28))
+                        .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textPrimary)))
+                        .lineSpacing(16)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 30)
+
+                    // Source
+                    Text("── \(verse.source) ──")
                         .font(.custom("STKaiti", size: 16))
-                        .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(uiColor: SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.3), lineWidth: 1)
-                        )
+                        .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)))
+                        .padding(.top, 20)
+
+                    Spacer()
+
+                    // Footer (Action)
+                    Button(action: {
+                        openSutra()
+                    }) {
+                        Text(L10n.str("wisdom_enter_reading"))
+                            .font(.custom("STKaiti", size: 16))
+                            .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(uiColor: SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.3), lineWidth: 1)
+                            )
+                    }
+                    .padding(.bottom, bottomPadding)
                 }
-                .padding(.bottom, 60)
+                .padding(.top, 60)
             }
-            .padding(.top, 60)
+            .frame(width: geo.size.width, height: geo.size.height)
         }
     }
     
@@ -139,52 +177,57 @@ struct WisdomLessonCompleteView: View {
     @State private var showingAlert = false
 
     var body: some View {
-        ZStack {
-            Color(uiColor: SutraDesignTokens.shared.color(for: .background))
-                .ignoresSafeArea()
-            
-            VStack(spacing: 30) {
-                Spacer()
-                
-                Text(L10n.str("wisdom_lesson_complete_title"))
-                    .font(.custom("STKaiti", size: 24))
-                    .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textPrimary)))
-                    .tracking(4)
-                
-                Text(L10n.str("wisdom_lesson_complete_subtitle"))
-                    .font(.custom("STKaiti", size: 16))
-                    .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)))
-                    .tracking(2)
-                
-                Spacer()
-                
-                if !isReminderOn {
-                    Button(action: {
-                        ReminderManager.shared.requestPermissionAndSchedule { granted in
-                            isReminderOn = granted
-                            if !granted {
-                                showingAlert = true
+        GeometryReader { geo in
+            let bottomPadding = WisdomTabBarLayout.bottomPadding(in: geo.frame(in: .global))
+
+            ZStack {
+                Color(uiColor: SutraDesignTokens.shared.color(for: .background))
+                    .ignoresSafeArea()
+
+                VStack(spacing: 30) {
+                    Spacer()
+
+                    Text(L10n.str("wisdom_lesson_complete_title"))
+                        .font(.custom("STKaiti", size: 24))
+                        .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textPrimary)))
+                        .tracking(4)
+
+                    Text(L10n.str("wisdom_lesson_complete_subtitle"))
+                        .font(.custom("STKaiti", size: 16))
+                        .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .textSecondary)))
+                        .tracking(2)
+
+                    Spacer()
+
+                    if !isReminderOn {
+                        Button(action: {
+                            ReminderManager.shared.requestPermissionAndSchedule { granted in
+                                isReminderOn = granted
+                                if !granted {
+                                    showingAlert = true
+                                }
                             }
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "bell")
+                                    .font(.system(size: 14))
+                                Text(L10n.str("wisdom_enable_daily_reminder"))
+                                    .font(.system(size: 14, weight: .light, design: .serif))
+                            }
+                            .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(
+                                Capsule()
+                                    .stroke(Color(uiColor: SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.4), lineWidth: 1)
+                            )
                         }
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "bell")
-                                .font(.system(size: 14))
-                            Text(L10n.str("wisdom_enable_daily_reminder"))
-                                .font(.system(size: 14, weight: .light, design: .serif))
-                        }
-                        .foregroundColor(Color(uiColor: SutraDesignTokens.shared.color(for: .accent)))
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(
-                            Capsule()
-                                .stroke(Color(uiColor: SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(0.4), lineWidth: 1)
-                        )
+                        .padding(.bottom, bottomPadding)
+                        .transition(.opacity)
                     }
-                    .padding(.bottom, 60)
-                    .transition(.opacity)
                 }
             }
+            .frame(width: geo.size.width, height: geo.size.height)
             .alert(L10n.str("settings_notification_alert_title"), isPresented: $showingAlert) {
                 Button(L10n.str("settings_notification_alert_open_settings")) {
                     if let url = URL(string: UIApplication.openSettingsURLString) {

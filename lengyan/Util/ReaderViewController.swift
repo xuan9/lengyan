@@ -621,6 +621,9 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         if isCurrent {
             AudioManager.shared.togglePlayPause()
         } else {
+            // Switching from another volume starts this volume from the beginning,
+            // not from an older saved listening position.
+            Prefers.shared.lastPlayTime = 0
             AudioManager.shared.handleMediaItemTap(name: name, file: file, fileExtension: ext)
         }
     }
