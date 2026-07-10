@@ -38,7 +38,7 @@ struct SutraCardRenderer {
     /// 使用默认竖版模板快速渲染（零摩擦分享路径）
     @MainActor
     static func renderDefault(text: String, source: String) -> UIImage? {
-        return render(text: text, source: source, template: .portrait)
+        return renderLongCard(text: text, source: source)
     }
 
     // MARK: - ImageRenderer
@@ -93,11 +93,16 @@ extension SutraCardRenderer {
         from viewController: UIViewController,
         barButtonItem: UIBarButtonItem? = nil
     ) {
-        guard let image = render(text: text, source: source, template: template) else { return }
+        let image: UIImage?
+        if template == .portrait {
+            image = renderLongCard(text: text, source: source)
+        } else {
+            image = render(text: text, source: source, template: template)
+        }
 
-        // 同时分享图片和文本（图片优先显示）
+        // 同时分享图片和文本（图片优先显示）；长图过大时仍分享全文文字。
         let shareText = "「\(text)」── \(source) ──"
-        let activityItems: [Any] = [image, shareText]
+        let activityItems: [Any] = image.map { [$0, shareText] } ?? [shareText]
 
         let activityVC = UIActivityViewController(
             activityItems: activityItems,
@@ -122,9 +127,12 @@ extension SutraCardRenderer {
     }
 }
 
-// MARK: - v1+v2：自适应字号 + 自动分多图 + 预览
+// MARK: - v1+v2：自适应字号 + 单张长图 + 预览
 
 extension SutraCardRenderer {
+
+    /// 2x 渲染时约 2160 x 24000 px，继续放大会明显增加内存和分享兼容风险。
+    static let maxLongShareImageHeight: CGFloat = 12000
 
     /// 按经文字数自适应正文字号基准：短句大、长文小（夹在 14~28）。用户无需选字号。
     static func verseFontBase(forCharCount count: Int) -> CGFloat {
@@ -135,26 +143,9 @@ extension SutraCardRenderer {
         return min(base, max(minBase, base * scale))
     }
 
-    /// 文本过长时按标点拆成多段（每段 ≤ maxChars），让每张图字号都舒适可读，而非缩到看不清
-    static func splitSutra(_ text: String, maxChars: Int = 480) -> [String] {
-        guard text.count > maxChars else { return [text] }
-        var chunks: [String] = []
-        var current = ""
-        let breaks: Set<Character> = ["。", "！", "？", "；", "，", "：", "．", "…", "\n"]
-        for ch in text {
-            current.append(ch)
-            if current.count >= maxChars && breaks.contains(ch) {
-                chunks.append(current)
-                current = ""
-            }
-        }
-        if !current.isEmpty { chunks.append(current) }
-        return chunks
-    }
-
-    /// 竖版宽度不变、高度随内容收缩地渲染单张卡片（短/中经文用，消除 9:16 画框的上下尴尬留白）。
+    /// 竖版宽度不变、高度随内容增长地渲染单张卡片（短文紧凑，长文生成长图）。
     /// 用 UIFont 度量经文块高度来定画框（SwiftUI ImageRenderer 对含弹性元素的视图测高不可靠），
-    /// 经文上下弹性留白将其居中；极短句用最小高度兜底，避免压成扁条。
+    /// 经文上下弹性留白将其居中；极短句用最小高度兜底，避免压成扁条；过长图片由 maximumHeight 拦截。
     @MainActor
     static func renderCompactPortrait(
         text: String,
@@ -162,19 +153,31 @@ extension SutraCardRenderer {
         verseFontBase: CGFloat,
         width: CGFloat = 1080,
         minHeightRatio: CGFloat = 0.72,
-        breathRatio: CGFloat = 0.08
+        breathRatio: CGFloat = 0.08,
+        maximumHeight: CGFloat? = nil
     ) -> UIImage? {
-        // 1) UIFont 精确估算经文块（引号+正文）高度——SwiftUI 弹性元素使 ImageRenderer 高度测量不可靠，
-        //    改用确定性的 NSString 文本度量，与字号/行距一致
-        let verseBlock = verseBlockHeight(text: text, base: verseFontBase, width: width)
-        // 2) 固定部分估算（页眉顶饰 + 经文上下间距 + 页脚来源/底饰 + 上下页边距），偏大防经文溢出
-        let extras = width * 0.42
-        let targetHeight = max(verseBlock + extras, width * minHeightRatio)
-        // 3) 渲染：经文上下弹性留白在 targetHeight 内将其推至视觉中部，header 紧贴顶、footer 紧贴底
+        let targetHeight = compactPortraitHeight(text: text, verseFontBase: verseFontBase, width: width, minHeightRatio: minHeightRatio)
+        if let maximumHeight, targetHeight > maximumHeight {
+            return nil
+        }
+
         let view = SutraShareCardView(text: text, source: source, template: .portrait,
                                       verseFontBase: verseFontBase, compact: true, compactBreath: width * breathRatio)
             .frame(width: width, height: targetHeight)
         return renderView(view: view, size: CGSize(width: width, height: targetHeight))
+    }
+
+    static func compactPortraitHeight(
+        text: String,
+        verseFontBase: CGFloat,
+        width: CGFloat = 1080,
+        minHeightRatio: CGFloat = 0.72
+    ) -> CGFloat {
+        // UIFont 精确估算经文块（引号+正文）高度，避免 SwiftUI 弹性布局导致测高不稳定。
+        let verseBlock = verseBlockHeight(text: text, base: verseFontBase, width: width)
+        // 固定部分估算：页眉顶饰、经文上下间距、页脚来源/底饰、上下页边距。偏大防经文溢出。
+        let extras = width * 0.42
+        return max(verseBlock + extras, width * minHeightRatio)
     }
 
     /// 用 UIFont 估算经文块（上引号 + 正文 + 下引号）的渲染高度，与 SutraShareCardView 的字号/行距一致。
@@ -201,44 +204,33 @@ extension SutraCardRenderer {
         return (quoteH * 2 + verseH + innerSpacing) * 1.1   // 10% 余量，吸收 boundingRect 与 SwiftUI 换行差异，防溢出
     }
 
-    /// 美图分享的图数上限：超过则不再渲染美图（省去一次性渲染十几张图的卡顿与内存；社交平台也不宜连发多图）
-    static let maxShareImageCount = 6
-
-    /// 渲染一组分享卡片：自动判断一张（自适应字号）或多张（超长自动分图）。
-    /// 注意：超 maxShareImageCount 的超长经文应在 presentPreview 中走纯文本路径，不调用本方法。
+    /// 渲染单张分享长图。过长时返回 nil，调用方保持全文文字分享/拷贝。
     @MainActor
-    static func renderCards(text: String, source: String) -> [UIImage] {
-        let chunks = splitSutra(text)
-        let single = chunks.count == 1
-        return chunks.compactMap { chunk in
-            let base = verseFontBase(forCharCount: chunk.count)
-            // 单张：竖版缩高贴合内容（消除短经文的上下留白）；多张分图：维持固定 9:16，浏览高度一致
-            if single {
-                return renderCompactPortrait(text: chunk, source: source, verseFontBase: base)
-            } else {
-                return render(text: chunk, source: source, template: .portrait, verseFontBase: base)
-            }
-        }
+    static func renderLongCard(text: String, source: String) -> UIImage? {
+        let base = verseFontBase(forCharCount: text.count)
+        return renderCompactPortrait(
+            text: text,
+            source: source,
+            verseFontBase: base,
+            maximumHeight: maxLongShareImageHeight
+        )
     }
 
-    /// 弹出预览页：≤ maxShareImageCount 张时展示美图（可选分享美图/文字/拷贝）；
-    /// 超长（> 上限）则不渲染图，只给「分享文字 + 拷贝」并提示经文较长（省渲染、社交友好）。
+    /// 兼容旧调用：现在最多只返回一张长图。
+    @MainActor
+    static func renderCards(text: String, source: String) -> [UIImage] {
+        renderLongCard(text: text, source: source).map { [$0] } ?? []
+    }
+
+    /// 弹出预览页：可安全生成时展示单张长图；超长则不渲染图，只给「分享文字 + 拷贝」。
     @MainActor
     static func presentPreview(text: String, source: String, from vc: UIViewController, barButtonItem: UIBarButtonItem? = nil) {
-        let chunks = splitSutra(text)
         let preview: SutraSharePreviewController
-        if chunks.count > maxShareImageCount {
+        if let image = renderLongCard(text: text, source: source) {
+            preview = SutraSharePreviewController(images: [image], fullText: text, longTextHint: nil)
+        } else {
             preview = SutraSharePreviewController(images: [], fullText: text,
                                                   longTextHint: String(format: L10n.str("share_long_text_hint_format"), text.count))
-        } else {
-            let images = chunks.compactMap { chunk in
-                let base = verseFontBase(forCharCount: chunk.count)
-                return chunks.count == 1
-                    ? renderCompactPortrait(text: chunk, source: source, verseFontBase: base)
-                    : render(text: chunk, source: source, template: .portrait, verseFontBase: base)
-            }
-            guard !images.isEmpty else { return }
-            preview = SutraSharePreviewController(images: images, fullText: text, longTextHint: nil)
         }
         preview.modalPresentationStyle = .pageSheet
         if let sheet = preview.sheetPresentationController {
@@ -249,7 +241,7 @@ extension SutraCardRenderer {
     }
 }
 
-// MARK: - 分享预览页（展示卡片 + 三选项）
+// MARK: - 分享预览页（展示长图 + 三选项）
 
 struct SutraSharePreviewView: View {
     let images: [UIImage]
@@ -257,7 +249,7 @@ struct SutraSharePreviewView: View {
     var onShareText: (() -> Void)?
     var onCopy: (() -> Void)?
     var onClose: (() -> Void)?
-    /// 非空 = 纯文本模式（经文过长未渲染美图）：展示提示、隐藏「分享美图」按钮
+    /// 非空 = 纯文本模式（长图过大未渲染）：展示提示、隐藏「分享美图」按钮
     var longTextHint: String? = nil
 
     var body: some View {
@@ -277,7 +269,7 @@ struct SutraSharePreviewView: View {
             .padding(.vertical, 14)
 
             if images.isEmpty {
-                // 纯文本模式：经文过长未渲染美图，给一句说明居中展示
+                // 纯文本模式：长图过大未渲染，给一句说明居中展示
                 VStack(spacing: 16) {
                     Image(systemName: "doc.text")
                         .font(.system(size: 44, weight: .ultraLight))

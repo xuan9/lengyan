@@ -261,7 +261,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         // 完整经文（不截断），来源只留《楞嚴經》（去掉科判后缀）
         let sutraText = Book.shared.getSutra(item)
 
-        // 走预览页：用户可选「分享美图（自动适配/分多图）/ 分享文字 / 拷贝」
+        // 走预览页：用户可选「分享美图（自动长图）/ 分享文字 / 拷贝」
         SutraCardRenderer.presentPreview(
             text: sutraText,
             source: bookTitle,
@@ -306,7 +306,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         
         if pageContent.path == nil { return nil}
         var previousPath:String?
-        let index = _paths.index(of: pageContent.path!)
+        let index = _paths.firstIndex(of: pageContent.path!)
         if index != nil && index! > 0 {
             previousPath = _paths[index! - 1]//found from cache
         } else {
@@ -329,7 +329,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     {
         let pageContent: SutraPurePageContentViewController = viewController as! SutraPurePageContentViewController
         if pageContent.path == nil { return nil}
-        let index = _paths.index(of: pageContent.path!)
+        let index = _paths.firstIndex(of: pageContent.path!)
         var nextPath:String?;
         if index != nil && index! < _paths.count - 1 {
             nextPath = _paths[index! + 1]//found from cache

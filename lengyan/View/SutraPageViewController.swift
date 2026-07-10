@@ -168,7 +168,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         // 完整经文（不截断），来源只留《楞嚴經》（去掉科判后缀）
         let sutraText = Book.shared.getSutra(item)
 
-        // 走预览页：用户可选「分享美图（自动适配/分多图）/ 分享文字 / 拷贝」
+        // 走预览页：用户可选「分享美图（自动长图）/ 分享文字 / 拷贝」
         SutraCardRenderer.presentPreview(
             text: sutraText,
             source: bookTitle,

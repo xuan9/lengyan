@@ -578,7 +578,7 @@ struct ModernFavoritesView: View {
 
     private func openSpecificPage(_ path: String, navigationController: UINavigationController) {
         if let pageIndex = Book.shared.index?.firstIndex(where: { item in
-            item["path"] as? String == path
+            item["path"] == path
         }) {
             let item = Book.shared.index?[pageIndex]
             let title = item?["name"] as? String ?? L10n.str("sutra")
@@ -688,7 +688,7 @@ struct SwiftUISutraReader: UIViewControllerRepresentable {
             childVC = sutraVC
         } else {
             let pageIndex = Book.shared.index?.firstIndex(where: { item in
-                item["path"] as? String == path
+                item["path"] == path
             }) ?? 0
             let pageVC = SutraPageViewController(
                 transitionStyle: .scroll,
