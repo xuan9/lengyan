@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import UIKit
 import AVFoundation
 import MediaPlayer
 @testable import lengyan
@@ -124,5 +125,91 @@ class lengyanTests: XCTestCase {
         XCTAssertEqual(observer.currentTrack, "Track 3")
         
         observer.cleanup()
+    }
+
+    func testShareLongImagePolicyMatchesCharacterAndHeightLimits() {
+        func repeatedSutraText(count: Int) -> String {
+            String(repeating: "一", count: count)
+        }
+
+        func renderScale(for count: Int) -> CGFloat? {
+            let text = repeatedSutraText(count: count)
+            let base = SutraCardRenderer.verseFontBase(forCharCount: text.count)
+            let height = SutraCardRenderer.compactPortraitHeight(text: text, verseFontBase: base)
+            return SutraCardRenderer.longImageRenderScale(characterCount: text.count, targetHeight: height)
+        }
+
+        let shortText = repeatedSutraText(count: 480)
+        let shortBase = SutraCardRenderer.verseFontBase(forCharCount: shortText.count)
+        let shortHeight = SutraCardRenderer.compactPortraitHeight(text: shortText, verseFontBase: shortBase)
+        XCTAssertLessThanOrEqual(shortText.count, SutraCardRenderer.highResolutionLongImageCharacterCount)
+        XCTAssertLessThanOrEqual(shortHeight, SutraCardRenderer.highResolutionLongImageHeight)
+        XCTAssertEqual(renderScale(for: shortText.count), 2.0)
+
+        let mediumText = repeatedSutraText(count: 1500)
+        let mediumBase = SutraCardRenderer.verseFontBase(forCharCount: mediumText.count)
+        let mediumHeight = SutraCardRenderer.compactPortraitHeight(text: mediumText, verseFontBase: mediumBase)
+        XCTAssertLessThanOrEqual(mediumText.count, SutraCardRenderer.maxLongShareImageCharacterCount)
+        XCTAssertLessThanOrEqual(mediumHeight, SutraCardRenderer.maxLongShareImageHeight)
+        XCTAssertEqual(renderScale(for: mediumText.count), 1.0)
+
+        let maxText = repeatedSutraText(count: SutraCardRenderer.maxLongShareImageCharacterCount)
+        let maxBase = SutraCardRenderer.verseFontBase(forCharCount: maxText.count)
+        let maxHeight = SutraCardRenderer.compactPortraitHeight(text: maxText, verseFontBase: maxBase)
+        XCTAssertLessThanOrEqual(maxHeight, SutraCardRenderer.maxLongShareImageHeight)
+        XCTAssertEqual(renderScale(for: maxText.count), 1.0)
+
+        XCTAssertNil(renderScale(for: SutraCardRenderer.maxLongShareImageCharacterCount + 1))
+    }
+
+    func testShareImageIsWrittenAsJPEGFile() {
+        let size = CGSize(width: 32, height: 32)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            UIColor.black.setFill()
+            context.fill(CGRect(x: 8, y: 8, width: 16, height: 16))
+        }
+
+        guard let url = SutraCardRenderer.writeShareJPEG(image: image) else {
+            XCTFail("Expected JPEG file URL")
+            return
+        }
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        XCTAssertEqual(url.pathExtension.lowercased(), "jpg")
+        let data = try? Data(contentsOf: url)
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.first, 0xFF)
+        XCTAssertEqual(data?.dropFirst().first, 0xD8)
+    }
+
+    @MainActor
+    func testShareLongImageRendersAndCompressesAsJPEG() {
+        let text = String(repeating: "一切眾生從無始來，", count: 100)
+
+        guard let plan = SutraCardRenderer.longCardRenderPlan(text: text, source: "《楞嚴經》") else {
+            XCTFail("Expected render plan for medium long share text")
+            return
+        }
+        XCTAssertEqual(plan.renderScale, 1.0)
+
+        guard let image = SutraCardRenderer.renderLongCard(plan: plan),
+              let cgImage = image.cgImage else {
+            XCTFail("Expected rendered long share image")
+            return
+        }
+
+        guard let url = SutraCardRenderer.writeShareJPEG(image: image) else {
+            XCTFail("Expected JPEG file URL")
+            return
+        }
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let jpegData = try? Data(contentsOf: url)
+        let rawBitmapBytes = cgImage.width * cgImage.height * 4
+        XCTAssertNotNil(jpegData)
+        XCTAssertLessThan(jpegData?.count ?? rawBitmapBytes, rawBitmapBytes / 2)
     }
 }

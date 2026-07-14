@@ -44,25 +44,25 @@ struct SutraCardRenderer {
     // MARK: - ImageRenderer
 
     @MainActor
-    private static func renderView<V: View>(view: V, size: CGSize) -> UIImage? {
+    private static func renderView<V: View>(view: V, size: CGSize, scale: CGFloat = 2.0) -> UIImage? {
         if #available(iOS 16.0, *) {
-            return renderWithImageRenderer(view: view, size: size)
+            return renderWithImageRenderer(view: view, size: size, scale: scale)
         } else {
-            return renderWithHostingController(view: view, size: size)
+            return renderWithHostingController(view: view, size: size, scale: scale)
         }
     }
 
     @available(iOS 16.0, *)
     @MainActor
-    private static func renderWithImageRenderer<V: View>(view: V, size: CGSize) -> UIImage? {
+    private static func renderWithImageRenderer<V: View>(view: V, size: CGSize, scale: CGFloat) -> UIImage? {
         let renderer = ImageRenderer(content: view)
-        renderer.scale = 2.0  // 2x 对于分享图足够清晰
+        renderer.scale = scale
         renderer.proposedSize = ProposedViewSize(width: size.width, height: size.height)
         return renderer.uiImage
     }
 
     @MainActor
-    private static func renderWithHostingController<V: View>(view: V, size: CGSize) -> UIImage? {
+    private static func renderWithHostingController<V: View>(view: V, size: CGSize, scale: CGFloat) -> UIImage? {
         let controller = UIHostingController(rootView: view)
         controller.view.bounds = CGRect(origin: .zero, size: size)
         controller.view.backgroundColor = .clear
@@ -70,7 +70,7 @@ struct SutraCardRenderer {
         controller.view.layoutIfNeeded()
 
         let format = UIGraphicsImageRendererFormat()
-        format.scale = 2.0
+        format.scale = scale
         format.opaque = false
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
         return renderer.image { _ in
@@ -78,6 +78,15 @@ struct SutraCardRenderer {
         }
     }
 
+}
+
+struct SutraShareCardRenderPlan {
+    let text: String
+    let source: String
+    let verseFontBase: CGFloat
+    let width: CGFloat
+    let height: CGFloat
+    let renderScale: CGFloat
 }
 
 // MARK: - Share Helper
@@ -102,7 +111,12 @@ extension SutraCardRenderer {
 
         // 同时分享图片和文本（图片优先显示）；长图过大时仍分享全文文字。
         let shareText = "「\(text)」── \(source) ──"
-        let activityItems: [Any] = image.map { [$0, shareText] } ?? [shareText]
+        let activityItems: [Any]
+        if let image, let imageURL = writeShareJPEG(image: image) {
+            activityItems = [imageURL, shareText]
+        } else {
+            activityItems = [shareText]
+        }
 
         let activityVC = UIActivityViewController(
             activityItems: activityItems,
@@ -131,8 +145,12 @@ extension SutraCardRenderer {
 
 extension SutraCardRenderer {
 
-    /// 2x 渲染时约 2160 x 24000 px，继续放大会明显增加内存和分享兼容风险。
-    static let maxLongShareImageHeight: CGFloat = 12000
+    /// 长图预览/分享的安全高度。长图用 1x 输出，约 1080 x 11000 px，避免预览白屏和内存尖峰。
+    static let maxLongShareImageHeight: CGFloat = 11000
+    static let maxLongShareImageCharacterCount = 3000
+    static let highResolutionLongImageCharacterCount = 520
+    static let highResolutionLongImageHeight: CGFloat = 2400
+    static let longShareJPEGQuality: CGFloat = 0.92
 
     /// 按经文字数自适应正文字号基准：短句大、长文小（夹在 14~28）。用户无需选字号。
     static func verseFontBase(forCharCount count: Int) -> CGFloat {
@@ -154,7 +172,8 @@ extension SutraCardRenderer {
         width: CGFloat = 1080,
         minHeightRatio: CGFloat = 0.72,
         breathRatio: CGFloat = 0.08,
-        maximumHeight: CGFloat? = nil
+        maximumHeight: CGFloat? = nil,
+        renderScale: CGFloat = 2.0
     ) -> UIImage? {
         let targetHeight = compactPortraitHeight(text: text, verseFontBase: verseFontBase, width: width, minHeightRatio: minHeightRatio)
         if let maximumHeight, targetHeight > maximumHeight {
@@ -164,7 +183,11 @@ extension SutraCardRenderer {
         let view = SutraShareCardView(text: text, source: source, template: .portrait,
                                       verseFontBase: verseFontBase, compact: true, compactBreath: width * breathRatio)
             .frame(width: width, height: targetHeight)
-        return renderView(view: view, size: CGSize(width: width, height: targetHeight))
+        guard let image = renderView(view: view, size: CGSize(width: width, height: targetHeight), scale: renderScale),
+              imageHasVisibleContent(image) else {
+            return nil
+        }
+        return image
     }
 
     static func compactPortraitHeight(
@@ -207,13 +230,102 @@ extension SutraCardRenderer {
     /// 渲染单张分享长图。过长时返回 nil，调用方保持全文文字分享/拷贝。
     @MainActor
     static func renderLongCard(text: String, source: String) -> UIImage? {
+        guard let plan = longCardRenderPlan(text: text, source: source) else {
+            return nil
+        }
+        return renderLongCard(plan: plan)
+    }
+
+    static func longCardRenderPlan(text: String, source: String) -> SutraShareCardRenderPlan? {
         let base = verseFontBase(forCharCount: text.count)
-        return renderCompactPortrait(
+        let targetHeight = compactPortraitHeight(text: text, verseFontBase: base)
+        guard let renderScale = longImageRenderScale(characterCount: text.count, targetHeight: targetHeight) else {
+            return nil
+        }
+        return SutraShareCardRenderPlan(
             text: text,
             source: source,
             verseFontBase: base,
-            maximumHeight: maxLongShareImageHeight
+            width: 1080,
+            height: targetHeight,
+            renderScale: renderScale
         )
+    }
+
+    @MainActor
+    static func renderLongCard(plan: SutraShareCardRenderPlan) -> UIImage? {
+        return renderCompactPortrait(
+            text: plan.text,
+            source: plan.source,
+            verseFontBase: plan.verseFontBase,
+            width: plan.width,
+            maximumHeight: maxLongShareImageHeight,
+            renderScale: plan.renderScale
+        )
+    }
+
+    static func longImageRenderScale(characterCount: Int, targetHeight: CGFloat) -> CGFloat? {
+        if characterCount > maxLongShareImageCharacterCount || targetHeight > maxLongShareImageHeight {
+            return nil
+        }
+
+        if characterCount > highResolutionLongImageCharacterCount || targetHeight > highResolutionLongImageHeight {
+            return 1.0
+        }
+
+        return 2.0
+    }
+
+    static func writeShareJPEG(image: UIImage) -> URL? {
+        guard let data = image.jpegData(compressionQuality: longShareJPEGQuality) else {
+            return nil
+        }
+
+        let fileManager = FileManager.default
+        let directory = fileManager.temporaryDirectory.appendingPathComponent("LengyanShare", isDirectory: true)
+
+        do {
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+            let fileName = "lengyan-share-\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString).jpg"
+            let url = directory.appendingPathComponent(fileName)
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            return nil
+        }
+    }
+
+    private static func imageHasVisibleContent(_ image: UIImage) -> Bool {
+        guard let cgImage = image.cgImage else { return false }
+
+        let width = 12
+        let height = 12
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return false
+        }
+
+        context.interpolationQuality = .low
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var minLuminance = 255
+        var maxLuminance = 0
+        for offset in stride(from: 0, to: pixels.count, by: 4) {
+            let luminance = (Int(pixels[offset]) + Int(pixels[offset + 1]) + Int(pixels[offset + 2])) / 3
+            minLuminance = min(minLuminance, luminance)
+            maxLuminance = max(maxLuminance, luminance)
+        }
+
+        return maxLuminance - minLuminance > 8
     }
 
     /// 兼容旧调用：现在最多只返回一张长图。
@@ -226,10 +338,10 @@ extension SutraCardRenderer {
     @MainActor
     static func presentPreview(text: String, source: String, from vc: UIViewController, barButtonItem: UIBarButtonItem? = nil) {
         let preview: SutraSharePreviewController
-        if let image = renderLongCard(text: text, source: source) {
-            preview = SutraSharePreviewController(images: [image], fullText: text, longTextHint: nil)
+        if let plan = longCardRenderPlan(text: text, source: source) {
+            preview = SutraSharePreviewController(cardPlan: plan, fullText: text, longTextHint: nil)
         } else {
-            preview = SutraSharePreviewController(images: [], fullText: text,
+            preview = SutraSharePreviewController(cardPlan: nil, fullText: text,
                                                   longTextHint: String(format: L10n.str("share_long_text_hint_format"), text.count))
         }
         preview.modalPresentationStyle = .pageSheet
@@ -244,7 +356,7 @@ extension SutraCardRenderer {
 // MARK: - 分享预览页（展示长图 + 三选项）
 
 struct SutraSharePreviewView: View {
-    let images: [UIImage]
+    let cardPlan: SutraShareCardRenderPlan?
     var onShareImage: (() -> Void)?
     var onShareText: (() -> Void)?
     var onCopy: (() -> Void)?
@@ -268,7 +380,34 @@ struct SutraSharePreviewView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
 
-            if images.isEmpty {
+            if let cardPlan {
+                ScrollView {
+                    GeometryReader { geo in
+                        let previewWidth = min(cardPlan.width, max(240, geo.size.width - 48))
+                        let previewScale = previewWidth / cardPlan.width
+                        HStack {
+                            Spacer(minLength: 0)
+                            SutraShareCardView(
+                                text: cardPlan.text,
+                                source: cardPlan.source,
+                                template: .portrait,
+                                verseFontBase: cardPlan.verseFontBase,
+                                compact: true,
+                                compactBreath: cardPlan.width * 0.08
+                            )
+                            .frame(width: cardPlan.width, height: cardPlan.height)
+                            .scaleEffect(previewScale, anchor: .top)
+                            .frame(width: previewWidth, height: cardPlan.height * previewScale)
+                            .cornerRadius(14)
+                            .shadow(color: .black.opacity(0.12), radius: 16, y: 8)
+                            Spacer(minLength: 0)
+                        }
+                    }
+                    .frame(height: max(1, cardPlan.height * min(cardPlan.width, UIScreen.main.bounds.width - 48) / cardPlan.width))
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 16)
+                }
+            } else {
                 // 纯文本模式：长图过大未渲染，给一句说明居中展示
                 VStack(spacing: 16) {
                     Image(systemName: "doc.text")
@@ -281,27 +420,13 @@ struct SutraSharePreviewView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, 32)
-            } else {
-                ScrollView {
-                    VStack(spacing: 18) {
-                        ForEach(images.indices, id: \.self) { i in
-                            Image(uiImage: images[i])
-                                .resizable()
-                                .scaledToFit()
-                                .cornerRadius(14)
-                                .shadow(color: .black.opacity(0.12), radius: 16, y: 8)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
-                }
             }
 
             HStack(spacing: 10) {
-                if !images.isEmpty {
+                if cardPlan != nil {
                     actionButton(title: L10n.str("share_image"), systemName: "photo", action: { onShareImage?() }, primary: true)
                 }
-                actionButton(title: L10n.str("share_text"), systemName: "text.alignleft", action: { onShareText?() }, primary: images.isEmpty)
+                actionButton(title: L10n.str("share_text"), systemName: "text.alignleft", action: { onShareText?() }, primary: cardPlan == nil)
                 actionButton(title: L10n.str("copy"), systemName: "doc.on.doc", action: { onCopy?() }, primary: false)
             }
             .padding(.horizontal, 16)
@@ -332,16 +457,23 @@ struct SutraSharePreviewView: View {
 }
 
 final class SutraSharePreviewController: UIHostingController<SutraSharePreviewView> {
-    private let images: [UIImage]
+    private let cardPlan: SutraShareCardRenderPlan?
     private let fullText: String
+    private var temporaryShareURLs: [URL] = []
 
-    init(images: [UIImage], fullText: String, longTextHint: String? = nil) {
-        self.images = images
+    init(cardPlan: SutraShareCardRenderPlan?, fullText: String, longTextHint: String? = nil) {
+        self.cardPlan = cardPlan
         self.fullText = fullText
-        super.init(rootView: SutraSharePreviewView(images: images, longTextHint: longTextHint))
+        super.init(rootView: SutraSharePreviewView(cardPlan: cardPlan, longTextHint: longTextHint))
     }
 
     required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    deinit {
+        for url in temporaryShareURLs {
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -360,7 +492,17 @@ final class SutraSharePreviewController: UIHostingController<SutraSharePreviewVi
         present(vc, animated: true)
     }
 
-    private func shareImages() { presentActivity(images) }
+    private func shareImages() {
+        guard let cardPlan,
+              let image = SutraCardRenderer.renderLongCard(plan: cardPlan),
+              let imageURL = SutraCardRenderer.writeShareJPEG(image: image) else {
+            presentActivity([fullText])
+            return
+        }
+
+        temporaryShareURLs.append(imageURL)
+        presentActivity([imageURL])
+    }
     private func shareText() { presentActivity([fullText]) }
 
     private func copyText() {

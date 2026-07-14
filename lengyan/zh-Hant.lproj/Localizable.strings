@@ -143,7 +143,7 @@
 "wisdom_lesson_complete_subtitle" = "請安心生活，明日再來";
 "wisdom_enable_daily_reminder" = "開啟每日提醒，每天讀一段經文";
 
-"share_long_text_hint_format" = "經文較長（約 %d 字），長圖可能過大，已為你備妥全文";
+"share_long_text_hint_format" = "經文較長（約 %d 字），長圖可能過大或生成失敗，已為你備妥全文";
 "share_preview_title" = "預覽";
 "share_image" = "分享美圖";
 "share_text" = "分享文字";
