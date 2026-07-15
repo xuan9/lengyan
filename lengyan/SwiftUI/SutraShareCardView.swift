@@ -53,6 +53,8 @@ struct SutraShareCardView: View {
     var compact: Bool = false
     /// 紧凑模式上下边缘留白高度（由渲染器按测量出的内容高度计算传入）
     var compactBreath: CGFloat = 0
+    /// 紧凑模式经文块上下间距。必须是固定值，避免长图预览/导出出现大片空白。
+    var compactVerseGap: CGFloat = 0
 
     var body: some View {
         if compact {
@@ -78,7 +80,7 @@ struct SutraShareCardView: View {
     /// watermark 用 overlay 贴右下——不进 ZStack，避免其 Spacer/maxHeight 撑破自然高度测量。
     private var compactBody: some View {
         let size = CGSize(width: 1080, height: 1080)
-        return ZStack {
+        return ZStack(alignment: .top) {
             cardBackground
             cardContent(size: size)
         }
@@ -90,12 +92,17 @@ struct SutraShareCardView: View {
     /// 固定模板仍用弹性 Spacer 撑满 9:16 画框。
     @ViewBuilder
     private var edgeSpacer: some View {
-        if compact { Spacer().frame(height: compactBreath) } else { Spacer() }
+        if compact { Color.clear.frame(height: compactBreath) } else { Spacer() }
     }
 
     /// 经文上下留白：弹性 minHeight，短句时撑开让经文居中、长文时自动收紧
+    @ViewBuilder
     private func verseEdgeGap(size: CGSize) -> some View {
-        Spacer().frame(minHeight: ratio(size, 0.05))
+        if compact {
+            Color.clear.frame(height: compactVerseGap)
+        } else {
+            Spacer().frame(minHeight: ratio(size, 0.05))
+        }
     }
 
     // MARK: - Background
@@ -159,30 +166,42 @@ struct SutraShareCardView: View {
 
     // MARK: - Verse Content
 
+    @ViewBuilder
     private func verseContent(size: CGSize) -> some View {
-        VStack(spacing: ratio(size, 0.02)) {
-            // 开引号
-            HStack {
-                Text("「")
-                    .font(.system(size: fontSize(for: size, base: 32), weight: .ultraLight))
-                    .foregroundColor(SutraDesignSystem.color(.decorativeGold).opacity(0.5))
-                Spacer()
-            }
-
-            // 经文
-            Text(text)
+        if compact {
+            Text("「\(text)」")
                 .font(shareFont(size: size))
                 .foregroundColor(SutraDesignSystem.color(.sutraText))
                 .lineSpacing(fontSize(for: size, base: 14))
-                .multilineTextAlignment(.center)
+                .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            VStack(spacing: ratio(size, 0.02)) {
+                // 开引号
+                HStack {
+                    Text("「")
+                        .font(.system(size: fontSize(for: size, base: 32), weight: .ultraLight))
+                        .foregroundColor(SutraDesignSystem.color(.decorativeGold).opacity(0.5))
+                    Spacer()
+                }
 
-            // 闭引号
-            HStack {
-                Spacer()
-                Text("」")
-                    .font(.system(size: fontSize(for: size, base: 32), weight: .ultraLight))
-                    .foregroundColor(SutraDesignSystem.color(.decorativeGold).opacity(0.5))
+                // 经文
+                Text(text)
+                    .font(shareFont(size: size))
+                    .foregroundColor(SutraDesignSystem.color(.sutraText))
+                    .lineSpacing(fontSize(for: size, base: 14))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .center)
+
+                // 闭引号
+                HStack {
+                    Spacer()
+                    Text("」")
+                        .font(.system(size: fontSize(for: size, base: 32), weight: .ultraLight))
+                        .foregroundColor(SutraDesignSystem.color(.decorativeGold).opacity(0.5))
+                }
             }
         }
     }
@@ -248,6 +267,9 @@ struct SutraShareCardView: View {
 
     private func shareFont(size: CGSize) -> Font {
         let sz = fontSize(for: size, base: verseFontBase)
+        if compact {
+            return .system(size: sz, weight: .regular)
+        }
         // 优先楷体
         if let _ = UIFont(name: "STKaiti", size: sz) {
             return .custom("STKaiti", size: sz)

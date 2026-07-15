@@ -145,6 +145,7 @@
 "wisdom_enable_daily_reminder" = "开启每日提醒，每天读一段经文";
 
 "share_long_text_hint_format" = "经文较长（约 %d 字），长图可能过大或生成失败，已为你备妥全文";
+"share_paginated_image_hint_format" = "经文较长（约 %d 字），将分页为 %d 张图片";
 "share_preview_title" = "预览";
 "share_image" = "分享美图";
 "share_text" = "分享文字";
