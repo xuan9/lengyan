@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "139073081D109193003A3333"
+               BlueprintIdentifier = "139073081D109194003A3333"
                BuildableName = "lengyan.app"
                BlueprintName = "lengyan"
                ReferencedContainer = "container:lengyan.xcodeproj">
@@ -53,7 +53,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "139073081D109193003A3333"
+            BlueprintIdentifier = "139073081D109194003A3333"
             BuildableName = "lengyan.app"
             BlueprintName = "lengyan"
             ReferencedContainer = "container:lengyan.xcodeproj">
@@ -77,7 +77,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "139073081D109193003A3333"
+            BlueprintIdentifier = "139073081D109194003A3333"
             BuildableName = "lengyan.app"
             BlueprintName = "lengyan"
             ReferencedContainer = "container:lengyan.xcodeproj">

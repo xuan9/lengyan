@@ -10,6 +10,16 @@ import UIKit
 
 class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, UIGestureRecognizerDelegate {
 
+    private struct TextPositionAnchor {
+        let character: Int
+        let lineDelta: CGFloat
+    }
+
+    private struct PendingTextLayoutPosition {
+        let anchor: TextPositionAnchor?
+        let contentOffset: CGPoint
+    }
+
     var onDismiss: (() -> Void)?
     var isShowIndexButton = false;
     weak var parentReader: SutraPurePageViewController?
@@ -19,6 +29,9 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
 
     var sutraView: UITextView? = nil;
     private var lastContentOffset: CGFloat = 0
+    private var lastLaidOutWidth: CGFloat = 0
+    private var pendingTextLayoutPosition: PendingTextLayoutPosition?
+    private var stableTextLayoutPosition: PendingTextLayoutPosition?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -84,6 +97,32 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
         self.sutraView = sutraTextView
     }
     
+    override func viewWillTransition(
+        to size: CGSize,
+        with coordinator: UIViewControllerTransitionCoordinator
+    ) {
+        if abs(size.width - view.bounds.width) > 0.5 {
+            captureTextPositionForPendingLayoutIfNeeded()
+        }
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: nil) { [weak self] context in
+            guard let self else { return }
+            if context.isCancelled
+                || abs(self.view.bounds.width - self.lastLaidOutWidth) <= 0.5 {
+                self.pendingTextLayoutPosition = nil
+            }
+        }
+    }
+
+    override func viewWillLayoutSubviews() {
+        let newWidth = view.bounds.width
+        if lastLaidOutWidth > 0,
+           abs(newWidth - lastLaidOutWidth) > 0.5 {
+            captureTextPositionForPendingLayoutIfNeeded()
+        }
+        super.viewWillLayoutSubviews()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         // 核心：让文字内容优雅地居中在 optimalReadingWidth 内，同时保持外层 textView 满屏
@@ -92,6 +131,28 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
             containerHeight: view.bounds.height
         )
         sutraView?.textContainerInset = UIEdgeInsets(top: 12, left: horizontalInset, bottom: 24, right: horizontalInset)
+
+        let newWidth = view.bounds.width
+        let widthChanged = lastLaidOutWidth > 0
+            && abs(newWidth - lastLaidOutWidth) > 0.5
+        let pendingPosition = widthChanged ? pendingTextLayoutPosition : nil
+        if widthChanged {
+            // Consume the old-width anchor before layoutIfNeeded can re-enter
+            // this method and mistake it for another resize.
+            pendingTextLayoutPosition = nil
+        }
+        if newWidth > 0 {
+            lastLaidOutWidth = newWidth
+        }
+        if let pendingPosition, let sutraView {
+            sutraView.layoutIfNeeded()
+            restoreTextPosition(
+                anchor: pendingPosition.anchor,
+                fallbackOffset: pendingPosition.contentOffset,
+                in: sutraView
+            )
+        }
+        updateStableTextPosition()
     }
 
     // 移除手动计算偏移量来隐藏标题栏的逻辑，
@@ -108,26 +169,179 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
             targetNavController?.setNavigationBarHidden(true, animated: false)
         }
 
+        // UIPageViewController can deliver repeated appearance transitions while
+        // preloading neighbours. Keep exactly one observer for each preference.
+        NotificationCenter.default.removeObserver(self, name: .themeDidChange, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .fontSizeDidChange, object: nil)
         NotificationCenter.default.addObserver(
             self, selector: #selector(themeDidChangeEvent),
             name: .themeDidChange, object: nil
         )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(fontSizeDidChangeEvent),
+            name: .fontSizeDidChange, object: nil
+        )
+        refreshContentForCurrentPreferences()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         NotificationCenter.default.removeObserver(self, name: .themeDidChange, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .fontSizeDidChange, object: nil)
     }
 
     @objc private func themeDidChangeEvent() {
         UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
             self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
             self.sutraView?.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-            // attributedText的foregroundColor优先级高于textColor，需重建整段文字
-            if let item = self.item {
-                self.sutraView?.attributedText = Book.shared.getSutraAttributeString(item)
-            }
+            // attributedText 的 foregroundColor 优先级高于 textColor，需重建整段文字
+            self.refreshContentForCurrentPreferences()
         }, completion: nil)
+    }
+
+    @objc private func fontSizeDidChangeEvent() {
+        refreshContentForCurrentPreferences()
+        if let item {
+            updateHeader(item)
+        }
+    }
+
+    private func refreshContentForCurrentPreferences() {
+        guard let item, let sutraView else { return }
+        let anchor = visibleTextAnchor(in: sutraView)
+        let previousOffset = sutraView.contentOffset
+        sutraView.attributedText = Book.shared.getSutraAttributeString(item)
+        view.layoutIfNeeded()
+
+        let requestedY: CGFloat
+        if let anchor, let anchoredY = contentOffsetY(for: anchor, in: sutraView) {
+            requestedY = anchoredY
+        } else {
+            requestedY = previousOffset.y
+        }
+        restoreTextPosition(
+            requestedY: requestedY,
+            fallbackOffset: previousOffset,
+            in: sutraView
+        )
+    }
+
+    /// A character index is stable across typography changes; the small line
+    /// delta keeps a partially visible first line at the same visual position.
+    private func visibleTextAnchor(in textView: UITextView) -> TextPositionAnchor? {
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        guard layoutManager.numberOfGlyphs > 0 else { return nil }
+
+        layoutManager.ensureLayout(for: textContainer)
+        let visibleTextY = textView.contentOffset.y
+            + textView.adjustedContentInset.top
+            - textView.textContainerInset.top
+        let visibleRect = CGRect(
+            x: 0,
+            y: visibleTextY,
+            width: max(textContainer.size.width, 1),
+            height: max(textView.bounds.height, 1)
+        )
+        let visibleGlyphs = layoutManager.glyphRange(
+            forBoundingRect: visibleRect,
+            in: textContainer
+        )
+        guard visibleGlyphs.location != NSNotFound else { return nil }
+        let glyph = min(visibleGlyphs.location, layoutManager.numberOfGlyphs - 1)
+        let character = layoutManager.characterIndexForGlyph(at: glyph)
+        let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil)
+        return TextPositionAnchor(
+            character: character,
+            lineDelta: lineRect.minY - visibleTextY
+        )
+    }
+
+    private func contentOffsetY(
+        for anchor: TextPositionAnchor,
+        in textView: UITextView
+    ) -> CGFloat? {
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        guard layoutManager.numberOfGlyphs > 0, textView.textStorage.length > 0 else { return nil }
+
+        layoutManager.ensureLayout(for: textContainer)
+        let character = min(max(anchor.character, 0), textView.textStorage.length - 1)
+        let glyph = min(
+            layoutManager.glyphIndexForCharacter(at: character),
+            layoutManager.numberOfGlyphs - 1
+        )
+        let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil)
+        let visibleTextY = lineRect.minY - anchor.lineDelta
+        return visibleTextY
+            + textView.textContainerInset.top
+            - textView.adjustedContentInset.top
+    }
+
+    private func restoreTextPosition(
+        anchor: TextPositionAnchor?,
+        fallbackOffset: CGPoint,
+        in textView: UITextView
+    ) {
+        let requestedY = anchor.flatMap { contentOffsetY(for: $0, in: textView) }
+            ?? fallbackOffset.y
+        restoreTextPosition(
+            requestedY: requestedY,
+            fallbackOffset: fallbackOffset,
+            in: textView
+        )
+    }
+
+    private func restoreTextPosition(
+        requestedY: CGFloat,
+        fallbackOffset: CGPoint,
+        in textView: UITextView
+    ) {
+        let minimumOffsetY = -textView.adjustedContentInset.top
+        let maximumOffsetY = max(
+            minimumOffsetY,
+            textView.contentSize.height
+                - textView.bounds.height
+                + textView.adjustedContentInset.bottom
+        )
+        let restoredY = min(max(requestedY, minimumOffsetY), maximumOffsetY)
+        textView.setContentOffset(
+            CGPoint(x: fallbackOffset.x, y: restoredY),
+            animated: false
+        )
+    }
+
+    private func captureTextPositionForPendingLayoutIfNeeded() {
+        guard pendingTextLayoutPosition == nil,
+              let sutraView,
+              sutraView.bounds.width > 0 else { return }
+        // Autoresizing can change the text view before viewWillLayoutSubviews.
+        // Prefer the last semantic position captured with known-stable geometry.
+        pendingTextLayoutPosition = stableTextLayoutPosition
+            ?? PendingTextLayoutPosition(
+                anchor: visibleTextAnchor(in: sutraView),
+                contentOffset: sutraView.contentOffset
+            )
+    }
+
+    private func updateStableTextPosition() {
+        guard pendingTextLayoutPosition == nil,
+              lastLaidOutWidth > 0,
+              abs(view.bounds.width - lastLaidOutWidth) <= 0.5,
+              let sutraView,
+              sutraView.bounds.width > 0 else { return }
+        stableTextLayoutPosition = PendingTextLayoutPosition(
+            anchor: visibleTextAnchor(in: sutraView),
+            contentOffset: sutraView.contentOffset
+        )
+    }
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        updateStableTextPosition()
+    }
+
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        parentReader?.confirmReadingInteraction()
     }
 
     func updateHeader(_ item:[String:Any]){

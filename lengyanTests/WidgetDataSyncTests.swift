@@ -15,7 +15,12 @@ class WidgetDataSyncTests: XCTestCase {
         super.setUp()
         // Ensure book data is loaded for testing DailyVerseProvider
         let expectation = self.expectation(description: "Book data loaded")
-        Book.shared.loadDataWithCompletionHandler {
+        Book.shared.loadDataWithCompletionHandler { result in
+            guard case .success = result else {
+                XCTFail("Expected bundled corpus to load: \(result)")
+                expectation.fulfill()
+                return
+            }
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5.0)

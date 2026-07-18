@@ -5,10 +5,23 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
 
     private let contentView = UIScrollView()
     private var textViews: [UITextView] = []
-    let content:NSAttributedString;
+    private var content: NSAttributedString
     private let chapter: Int
     private let restoreOffset: CGFloat?
+    private let restoreCharacterIndex: Int?
     private var hasRestoredOffset = false
+    private let readingCheckpoint = ReadingCheckpointGate()
+    private var isReaderVisible = false
+    private var needsPreferenceRebuild = false
+    private var paginatedSize = CGSize.zero
+    private var pendingLayoutCharacterIndex: Int?
+    private var isRepaginating = false
+    private var currentCharacterAnchor: Int?
+    private var layoutRepaginationGeneration = 0
+    /// A programmatic paging animation can be between two physical pages when
+    /// the app backgrounds. Keep its destination separate from the persisted
+    /// anchor until UIScrollView confirms that the animation finished.
+    private var pendingScrollingAnimationCharacterAnchor: Int?
     
     // 导航栏双行标题：卷名（醒目）+ 页码（极淡，始终可见）
     private let titleLabel = UILabel()
@@ -24,10 +37,17 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     private var progressRingLayer: CAShapeLayer?
 
 
-    init(title:String, content:NSAttributedString, chapter: Int, restoreOffset: CGFloat? = nil) {
+    init(
+        title: String,
+        content: NSAttributedString,
+        chapter: Int,
+        restoreOffset: CGFloat? = nil,
+        restoreCharacterIndex: Int? = nil
+    ) {
         self.content = content
         self.chapter = chapter
         self.restoreOffset = restoreOffset
+        self.restoreCharacterIndex = restoreCharacterIndex
         super.init(nibName: nil, bundle: nil)
         self.title = title
       }
@@ -39,6 +59,7 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        view.accessibilityIdentifier = "reader.chapter"
         view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
 
         self.navigationController?.hidesBarsOnTap = true;
@@ -92,6 +113,8 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         setupContentView()
         setupPlayButton()
         setupThemeObserver()
+        setupFontSizeObserver()
+        setupApplicationLifecycleObservers()
     }
 
     // MARK: - 导航栏双行标题（卷名 + 页码）
@@ -107,6 +130,7 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
         pageLabel.font = SutraTypographyManager.shared.uiFont(for: .uiSmall, weight: .light).withSize(11)
         pageLabel.textColor = SutraDesignTokens.shared.color(for: .textSecondary).withAlphaComponent(0.7)
         pageLabel.textAlignment = .center
+        pageLabel.accessibilityIdentifier = "reader.pageLabel"
         // 用一个空格占位：保证 titleView 安装时就预留好页码行的高度，
         // 否则导航栏会按「无页码行」缓存尺寸，后续填入文字也不重新布局、页码被裁掉
         pageLabel.text = " "
@@ -124,8 +148,9 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     /// 计算当前页 / 总页数（页码从 1 起，按 contentOffset 物理分页）
     private func currentPageInfo() -> (page: Int, total: Int)? {
         let total = textViews.count
-        guard total > 0, contentView.bounds.width > 0 else { return nil }
-        let page = Int(round(contentView.contentOffset.x / contentView.bounds.width)) + 1
+        let pageWidth = paginatedSize.width
+        guard total > 0, pageWidth > 0 else { return nil }
+        let page = Int(round(contentView.contentOffset.x / pageWidth)) + 1
         let clamped = min(max(page, 1), total)
         return (clamped, total)
     }
@@ -155,35 +180,101 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        isReaderVisible = true
+
+        if needsPreferenceRebuild,
+           rebuildReaderContentPreservingPosition() {
+            needsPreferenceRebuild = false
+            applyThemeAppearance(animated: false)
+        }
+
         showSwipeGuideIfNeeded()
         // 布局全部就绪后再刷新一次页码，确保首次进入即显示
         updatePageLabel()
+        resumeReadingCheckpointIfNeeded()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        // Capture against the still-stable reader geometry before restoring
+        // surrounding navigation chrome changes the available page size.
+        pauseReadingCheckpointIfNeeded()
         self.tabBarController?.tabBar.isHidden = false
         if #available(iOS 18.0, *) {
             self.tabBarController?.setTabBarHidden(false, animated: false)
         }
         self.navigationController?.hidesBarsOnTap = false
-        saveProgress()
+        isReaderVisible = false
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        guard textViews.isEmpty else { return }
+        let layoutSize = contentView.bounds.size
+        guard hasUsablePaginationSize(layoutSize) else { return }
+
+        if !textViews.isEmpty {
+            guard paginationSizeChanged(to: layoutSize) else { return }
+            if pendingLayoutCharacterIndex == nil {
+                pendingLayoutCharacterIndex = preferredCharacterAnchorForRepagination()
+            }
+            scheduleLayoutRepagination()
+            return
+        }
+
         setupReader()
 
-        // 恢复上次阅读位置（只执行一次）
-        if !hasRestoredOffset, let offset = restoreOffset, offset > 0 {
-            contentView.setContentOffset(CGPoint(x: offset, y: 0), animated: false)
+        // Prefer a character anchor because it survives width/font changes;
+        // keep the legacy pixel offset only as an upgrade fallback.
+        if !hasRestoredOffset {
+            let restoredOffset: CGFloat
+            if let characterIndex = restoreCharacterIndex, characterIndex > 0 {
+                let safeCharacterIndex = clampedCharacterLocation(characterIndex)
+                currentCharacterAnchor = safeCharacterIndex
+                let page = pageIndex(containingCharacterAt: safeCharacterIndex)
+                restoredOffset = normalizedProgressOffset(
+                    CGFloat(page) * contentView.bounds.width
+                )
+            } else if let offset = restoreOffset, offset > 0 {
+                restoredOffset = normalizedProgressOffset(offset)
+            } else {
+                restoredOffset = 0
+            }
+            contentView.setContentOffset(CGPoint(x: restoredOffset, y: 0), animated: false)
+            if currentCharacterAnchor == nil {
+                currentCharacterAnchor = currentVisibleCharacterLocation()
+            }
             hasRestoredOffset = true
-            showResumeToast()
+            if restoredOffset > 0 {
+                showResumeToast()
+            }
         }
 
         // 分页布局完成后，填入初始页码
         updatePageLabel()
+    }
+
+    override func viewWillTransition(
+        to size: CGSize,
+        with coordinator: UIViewControllerTransitionCoordinator
+    ) {
+        if !textViews.isEmpty {
+            // Capture against the old pagination before Auto Layout changes the
+            // scroll-view width. The new page number may differ after reflow,
+            // but the visible scripture character remains stable. If the user
+            // has already asked to return to page one, preserve that intent
+            // across a rotation instead of restoring the page being left.
+            pendingLayoutCharacterIndex = preferredCharacterAnchorForRepagination()
+        }
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: nil) { [weak self] context in
+            guard let self else { return }
+            // A cancelled/no-op transition does not reach the size-change path
+            // in viewDidLayoutSubviews, so do not leave an old anchor pending.
+            if context.isCancelled
+                || !self.paginationSizeChanged(to: self.contentView.bounds.size) {
+                self.pendingLayoutCharacterIndex = nil
+            }
+        }
     }
 
     @objc func close(){
@@ -191,15 +282,52 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     }
 
     @objc private func goToFirstPage() {
-        contentView.setContentOffset(.zero, animated: true)
+        if abs(contentView.contentOffset.x) <= 0.5 {
+            pendingScrollingAnimationCharacterAnchor = nil
+            currentCharacterAnchor = 0
+            contentView.setContentOffset(.zero, animated: false)
+            confirmReadingAndSaveProgress()
+        } else {
+            pendingScrollingAnimationCharacterAnchor = 0
+            contentView.setContentOffset(.zero, animated: true)
+        }
         hasRestoredOffset = true
         updateRightBarButtonItems()
     }
 
     // MARK: - UIScrollViewDelegate
 
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        // A direct gesture cancels/replaces any programmatic destination. The
+        // drag/deceleration callbacks below will establish the actual anchor.
+        pendingScrollingAnimationCharacterAnchor = nil
+        // Confirm at gesture start so an immediate back/background while the
+        // scroll view is still decelerating cannot discard explicit intent.
+        confirmReadingAndSaveProgress()
+    }
+
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        saveProgress()
+        pendingLayoutCharacterIndex = nil
+        currentCharacterAnchor = currentVisibleCharacterLocation()
+        confirmReadingAndSaveProgress()
+    }
+
+    func scrollViewDidEndDragging(
+        _ scrollView: UIScrollView,
+        willDecelerate decelerate: Bool
+    ) {
+        guard !decelerate else { return }
+        pendingLayoutCharacterIndex = nil
+        currentCharacterAnchor = currentVisibleCharacterLocation()
+        confirmReadingAndSaveProgress()
+    }
+
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        pendingLayoutCharacterIndex = nil
+        currentCharacterAnchor = pendingScrollingAnimationCharacterAnchor
+            ?? currentVisibleCharacterLocation()
+        pendingScrollingAnimationCharacterAnchor = nil
+        confirmReadingAndSaveProgress()
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -218,9 +346,107 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
 
     // MARK: - Progress
 
+    private func confirmReadingAndSaveProgress() {
+        readingCheckpoint.commit { [weak self] in
+            self?.saveProgress()
+        }
+    }
+
     private func saveProgress() {
-        Prefers.shared.lastReadChapter = chapter
-        Prefers.shared.lastReadChapterOffset = contentView.contentOffset.x
+        guard
+            readingCheckpoint.isConfirmed,
+            isReaderVisible,
+            !isRepaginating,
+            !paginationSizeChanged(to: contentView.bounds.size)
+        else { return }
+        let characterIndex: Int
+        if pendingScrollingAnimationCharacterAnchor != nil
+            || contentView.isTracking
+            || contentView.isDragging
+            || contentView.isDecelerating {
+            // Lifecycle callbacks can arrive before scrollViewDidEnd…; keep the
+            // character anchor aligned with the physical page/offset being
+            // persisted. A pending programmatic destination is not current
+            // until scrollViewDidEndScrollingAnimation fires.
+            characterIndex = currentVisibleCharacterLocation()
+            currentCharacterAnchor = characterIndex
+            pendingLayoutCharacterIndex = nil
+        } else {
+            characterIndex = currentCharacterAnchor
+                ?? currentVisibleCharacterLocation()
+        }
+        Prefers.shared.recordChapterReading(
+            chapter: chapter,
+            offset: normalizedProgressOffset(contentView.contentOffset.x),
+            characterIndex: characterIndex,
+            pageIndex: currentPageInfo().map { $0.page - 1 }
+        )
+    }
+
+    private func normalizedProgressOffset(_ offset: CGFloat) -> CGFloat {
+        let pageWidth = paginatedSize.width
+        let maximumOffset = max(
+            contentView.contentSize.width - pageWidth,
+            0
+        )
+        return ReadingResumeResolver.snappedChapterOffset(
+            offset,
+            pageWidth: pageWidth,
+            maximumOffset: maximumOffset
+        )
+    }
+
+    private func setupApplicationLifecycleObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationWillResignActive),
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc private func applicationWillResignActive() {
+        guard isReaderVisible else { return }
+        pauseReadingCheckpointIfNeeded()
+    }
+
+    @objc private func applicationDidEnterBackground() {
+        guard isReaderVisible else { return }
+        pauseReadingCheckpointIfNeeded()
+    }
+
+    @objc private func applicationDidBecomeActive() {
+        resumeReadingCheckpointIfNeeded()
+    }
+
+    private func resumeReadingCheckpointIfNeeded() {
+        guard
+            isReaderVisible,
+            UIApplication.shared.applicationState == .active
+        else { return }
+        // Only foreground time counts toward passive-reading confirmation.
+        readingCheckpoint.resume { [weak self] in
+            guard let self, self.isReaderVisible else { return }
+            self.saveProgress()
+        }
+    }
+
+    private func pauseReadingCheckpointIfNeeded() {
+        readingCheckpoint.pause { [weak self] in
+            self?.saveProgress()
+        }
     }
 
     private func setupContentView() {
@@ -256,7 +482,10 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
 
         let viewSize = contentView.bounds.size
         // 自适应 margins：iPad 上留出更宽的呼吸空间
-        let margin = SutraAdaptiveLayout.readingHorizontalInsets(containerWidth: viewSize.width)
+        let margin = SutraAdaptiveLayout.readingHorizontalInsets(
+            containerWidth: viewSize.width,
+            containerHeight: viewSize.height
+        )
         // 🌿 核心改造：将上下 margins (32pt) 从 textContainerInset 中剥离，改在 UITextView 的 Frame 层面进行约束偏移。这使得 UITextView 的 contentSize.height 严格等于 bounds.height，从物理底层彻底消灭垂直滚动，同时不破坏原生文本选择的 hit-test coordinate space
         let textInsets = UIEdgeInsets(top: 0, left: margin, bottom: 0, right: margin)
         
@@ -315,6 +544,175 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
             width: viewSize.width * CGFloat(textViews.count),
             height: viewSize.height
         )
+        paginatedSize = viewSize
+    }
+
+    // MARK: - Font Size Updates
+
+    private func setupFontSizeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(fontSizeDidChange),
+            name: .fontSizeDidChange,
+            object: nil
+        )
+    }
+
+    /// Re-paginate the open volume immediately while keeping the first visible
+    /// character on screen. A page number alone is not stable when font metrics
+    /// change, so the character location is used as the restore anchor.
+    @objc private func fontSizeDidChange() {
+        guard isReaderVisible else {
+            needsPreferenceRebuild = true
+            return
+        }
+
+        if rebuildReaderContentPreservingPosition() {
+            confirmReadingAndSaveProgress()
+        } else {
+            needsPreferenceRebuild = true
+        }
+    }
+
+    @discardableResult
+    private func rebuildReaderContentPreservingPosition() -> Bool {
+        let characterLocation = preferredCharacterAnchorForRepagination()
+        return rebuildReaderContent(
+            preservingCharacterAt: characterLocation,
+            refreshAttributedContent: true
+        )
+    }
+
+    @discardableResult
+    private func rebuildReaderContent(
+        preservingCharacterAt characterLocation: Int,
+        refreshAttributedContent: Bool
+    ) -> Bool {
+        guard
+            isViewLoaded,
+            hasUsablePaginationSize(contentView.bounds.size),
+            !isRepaginating
+        else {
+            return false
+        }
+
+        isRepaginating = true
+        defer { isRepaginating = false }
+
+        let safeCharacterLocation = clampedCharacterLocation(characterLocation)
+        if refreshAttributedContent {
+            content = Book.shared.getSutraAttributeString(text: content.string)
+        }
+
+        textViews.forEach { $0.removeFromSuperview() }
+        textViews.removeAll()
+        pendingScrollingAnimationCharacterAnchor = nil
+        contentView.contentOffset = .zero
+        contentView.contentSize = .zero
+        setupReader()
+
+        let targetPage = pageIndex(containingCharacterAt: safeCharacterLocation)
+        let targetOffset = normalizedProgressOffset(
+            CGFloat(targetPage) * contentView.bounds.width
+        )
+        contentView.setContentOffset(CGPoint(x: targetOffset, y: 0), animated: false)
+        currentCharacterAnchor = safeCharacterLocation
+        hasRestoredOffset = true
+        updatePageLabel()
+        return true
+    }
+
+    private func currentVisibleCharacterLocation() -> Int {
+        let pageWidth = paginatedSize.width
+        guard !textViews.isEmpty, pageWidth > 0 else { return 0 }
+        let page = min(
+            max(Int(round(contentView.contentOffset.x / pageWidth)), 0),
+            textViews.count - 1
+        )
+        return characterRange(for: textViews[page]).location
+    }
+
+    private func clampedCharacterLocation(_ location: Int) -> Int {
+        min(max(location, 0), max(content.length - 1, 0))
+    }
+
+    private func hasUsablePaginationSize(_ size: CGSize) -> Bool {
+        size.width.isFinite && size.width > 0
+            && size.height.isFinite && size.height > 64
+    }
+
+    /// Coalesces the many intermediate bounds emitted while an iPad split-view
+    /// divider or rotation animation is moving. Progress remains protected by
+    /// the stale-geometry guard until the final pagination is ready.
+    private func scheduleLayoutRepagination() {
+        layoutRepaginationGeneration &+= 1
+        let generation = layoutRepaginationGeneration
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self, generation == self.layoutRepaginationGeneration else {
+                return
+            }
+            self.repaginateForCurrentLayoutIfNeeded()
+        }
+    }
+
+    private func repaginateForCurrentLayoutIfNeeded() {
+        let layoutSize = contentView.bounds.size
+        guard hasUsablePaginationSize(layoutSize) else { return }
+        guard paginationSizeChanged(to: layoutSize) else {
+            pendingLayoutCharacterIndex = nil
+            return
+        }
+
+        let characterIndex = pendingLayoutCharacterIndex
+            ?? preferredCharacterAnchorForRepagination()
+        pendingLayoutCharacterIndex = nil
+        if rebuildReaderContent(
+            preservingCharacterAt: characterIndex,
+            refreshAttributedContent: false
+        ) {
+            saveProgress()
+        }
+    }
+
+    private func paginationSizeChanged(to size: CGSize) -> Bool {
+        guard hasUsablePaginationSize(size), hasUsablePaginationSize(paginatedSize) else {
+            return true
+        }
+        return abs(size.width - paginatedSize.width) > 0.5
+            || abs(size.height - paginatedSize.height) > 0.5
+    }
+
+    /// A pending programmatic destination represents the user's latest intent.
+    /// Repagination is instantaneous, so complete that intent rather than
+    /// restoring the physical page sampled midway through its animation.
+    private func preferredCharacterAnchorForRepagination() -> Int {
+        if contentView.isTracking
+            || contentView.isDragging
+            || contentView.isDecelerating {
+            return currentVisibleCharacterLocation()
+        }
+        return pendingScrollingAnimationCharacterAnchor
+            ?? currentCharacterAnchor
+            ?? currentVisibleCharacterLocation()
+    }
+
+    private func pageIndex(containingCharacterAt location: Int) -> Int {
+        guard !textViews.isEmpty else { return 0 }
+        for (index, textView) in textViews.enumerated() {
+            let range = characterRange(for: textView)
+            if NSLocationInRange(location, range) {
+                return index
+            }
+        }
+        return textViews.count - 1
+    }
+
+    private func characterRange(for textView: UITextView) -> NSRange {
+        let glyphRange = textView.layoutManager.glyphRange(for: textView.textContainer)
+        return textView.layoutManager.characterRange(
+            forGlyphRange: glyphRange,
+            actualGlyphRange: nil
+        )
     }
 
     // MARK: - Toast
@@ -322,8 +720,8 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     private func showResumeToast() {
         let total = textViews.count
         var pageText = ""
-        if total > 0, contentView.bounds.width > 0 {
-            let page = Int(round(contentView.contentOffset.x / contentView.bounds.width)) + 1
+        if total > 0, paginatedSize.width > 0 {
+            let page = Int(round(contentView.contentOffset.x / paginatedSize.width)) + 1
             pageText = " [\(page)/\(total)]"
         }
         
@@ -647,7 +1045,21 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
     }
 
     @objc private func themeDidChange() {
-        UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
+        guard isReaderVisible else {
+            needsPreferenceRebuild = true
+            return
+        }
+
+        // The text storage owns explicit foreground-color attributes, so simply
+        // changing UITextView.textColor is insufficient for dark mode.
+        if !rebuildReaderContentPreservingPosition() {
+            needsPreferenceRebuild = true
+        }
+        applyThemeAppearance(animated: true)
+    }
+
+    private func applyThemeAppearance(animated: Bool) {
+        let updates = {
             self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
             
             // 刷新导航栏外观
@@ -694,7 +1106,19 @@ final class ReaderViewController: UIViewController, UIScrollViewDelegate {
 
             // 重新同步播放按钮状态（图标 / 下载圆环）与色调
             self.refreshPlayButton()
-        }, completion: nil)
+        }
+
+        if animated {
+            UIView.transition(
+                with: self.view,
+                duration: 0.4,
+                options: [.transitionCrossDissolve, .curveEaseInOut],
+                animations: updates,
+                completion: nil
+            )
+        } else {
+            updates()
+        }
     }
 
     deinit {

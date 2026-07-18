@@ -6,9 +6,15 @@
 //  Copyright © 2016年 xuan. All rights reserved.
 //
 
+import UIKit
 import XCTest
 
 class lengyanUITests: XCTestCase {
+
+    private enum HomeReadingState {
+        case start
+        case outlineResume
+    }
         
     override func setUp() {
         super.setUp()
@@ -17,13 +23,60 @@ class lengyanUITests: XCTestCase {
         
         // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-        // UI tests must launch the application that they test. Doing this in setup will make sure it happens for each test method.
-        XCUIApplication().launch()
-
     }
     
     override func tearDown() {
         super.tearDown()
+    }
+
+    /// UserDefaults' argument domain overrides any progress left by another UI
+    /// test without adding production-only reset hooks to the app.
+    private func launchHomeApp(readingState: HomeReadingState) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.terminate()
+
+        var arguments = [
+            "--uitesting",
+            "-AppleLanguages", "(zh-Hans)",
+            "-AppleLocale", "zh_Hans_CN",
+            "-selectedTheme", "sepia",
+            "-fontSizeLevel", "2",
+            "-hasSeenDailyReminderPrompt", "YES",
+            "-readingResumeSnapshotV2", "invalid",
+            "-chapterResumeSnapshotV2", "invalid",
+            "-pagedResumeSnapshotV2", "invalid",
+            "-treeResumeSnapshotV2", "invalid",
+            "-lastReadPage", "0",
+            "-lastReadChapter", "0",
+            "-lastReadChapterOffset", "0",
+            "-playFile", "invalid",
+            "-lastPlayTime", "0",
+        ]
+        switch readingState {
+        case .start:
+            arguments += ["-lastReadPath", "", "-lastReadMode", ""]
+        case .outlineResume:
+            arguments += [
+                "-lastReadPath", "/A1/B1/C1",
+                "-lastReadMode", "tree",
+            ]
+        }
+        app.launchArguments = arguments
+        app.launch()
+        return app
+    }
+
+    private func waitForCondition(
+        timeout: TimeInterval,
+        pollInterval: TimeInterval = 0.05,
+        _ condition: () -> Bool
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if condition() { return true }
+            RunLoop.current.run(until: Date().addingTimeInterval(pollInterval))
+        } while Date() < deadline
+        return condition()
     }
     
     func testComprehensiveAllNavigationPaths() {
@@ -139,8 +192,20 @@ class lengyanUITests: XCTestCase {
         ]
 
         for (index, track) in audioTracks.enumerated() {
-            let trackElement = app.staticTexts[track]
-            if trackElement.exists {
+            // The mini player repeats the current track title outside the list.
+            // Scope the query to the track ScrollView so persisted playback state
+            // cannot make a single-label lookup ambiguous between those elements.
+            let trackElement = app.scrollViews.staticTexts[track].firstMatch
+            if trackElement.waitForExistence(timeout: 2) {
+                var scrollAttempts = 0
+                while !trackElement.isHittable, scrollAttempts < 6 {
+                    app.scrollViews.firstMatch.swipeUp()
+                    scrollAttempts += 1
+                }
+                guard trackElement.isHittable else {
+                    XCTFail("Audio track is present but not reachable: \(track)")
+                    return
+                }
                 print("   Testing audio track \(index + 1)/\(audioTracks.count): \(track)")
                 trackElement.tap()
                 Thread.sleep(forTimeInterval: 2.0)
@@ -378,24 +443,242 @@ class lengyanUITests: XCTestCase {
     }
     
     func testIndexReading() {
-        let app = XCUIApplication()
-        app.launch()
-        
-        // Tap 开经偈 to open Index
-        let kaiJingJiButton = app.buttons.matching(NSPredicate(format: "label CONTAINS '无上甚深微妙法'")).firstMatch
-        if kaiJingJiButton.exists {
-            kaiJingJiButton.tap()
-            Thread.sleep(forTimeInterval: 1.5)
-            
-            // Verify index is open
-            XCTAssertTrue(app.navigationBars.firstMatch.exists, "Index navigation bar should exist")
-            
-            // Go back
-            let backButton = app.navigationBars.buttons.firstMatch
-            if backButton.exists {
-                backButton.tap()
+        let app = launchHomeApp(readingState: .start)
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        XCTAssertTrue(fullOutlineButton.waitForExistence(timeout: 3))
+        fullOutlineButton.tap()
+        XCTAssertTrue(
+            app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3),
+            "The explicit outline action should replace the old hidden verse tap"
+        )
+    }
+
+    func testHomeUsesOutlineResumeAndChapterGridWithoutDuplicateShortcut() {
+        let app = launchHomeApp(readingState: .outlineResume)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3), "Tab bar should exist")
+        tabBar.buttons.element(boundBy: 0).tap()
+
+        let chapterResumeButton = app.buttons["home.chapterResumeButton"]
+        let outlineResumeButton = app.buttons["home.outlineResumeButton"]
+        let listeningButton = app.buttons["home.listeningButton"]
+        let searchButton = app.buttons["home.searchButton"]
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        XCTAssertTrue(outlineResumeButton.waitForExistence(timeout: 3))
+        XCTAssertFalse(chapterResumeButton.exists)
+        XCTAssertTrue(outlineResumeButton.isHittable)
+        XCTAssertTrue(listeningButton.exists)
+        XCTAssertTrue(listeningButton.isHittable)
+        XCTAssertTrue(searchButton.exists)
+        XCTAssertTrue(searchButton.isHittable)
+        XCTAssertTrue(fullOutlineButton.exists)
+        XCTAssertTrue(fullOutlineButton.isHittable)
+
+        let chapterTenButton = app.buttons["卷十"]
+        let chapterOneButton = app.buttons["卷一"]
+        XCTAssertTrue(chapterTenButton.exists)
+        XCTAssertTrue(chapterOneButton.exists)
+
+        let expectsSingleRow = UIDevice.current.userInterfaceIdiom == .pad
+            && app.frame.width >= 720
+        if expectsSingleRow {
+            func assertSingleRowAlignment() {
+                let actionMidYs = [
+                    outlineResumeButton.frame.midY,
+                    fullOutlineButton.frame.midY,
+                    listeningButton.frame.midY,
+                    searchButton.frame.midY,
+                ]
+                XCTAssertLessThanOrEqual(actionMidYs.max()! - actionMidYs.min()!, 1)
+                XCTAssertEqual(outlineResumeButton.frame.minX, chapterOneButton.frame.minX, accuracy: 1)
+                XCTAssertEqual(fullOutlineButton.frame.maxX, chapterTenButton.frame.maxX, accuracy: 1)
+                XCTAssertGreaterThan(outlineResumeButton.frame.width, listeningButton.frame.width)
+                XCTAssertLessThan(outlineResumeButton.frame.minX, listeningButton.frame.minX)
+                XCTAssertLessThan(listeningButton.frame.minX, searchButton.frame.minX)
+                XCTAssertLessThan(searchButton.frame.minX, fullOutlineButton.frame.minX)
+                let gaps = [
+                    listeningButton.frame.minX - outlineResumeButton.frame.maxX,
+                    searchButton.frame.minX - listeningButton.frame.maxX,
+                    fullOutlineButton.frame.minX - searchButton.frame.maxX,
+                ]
+                XCTAssertGreaterThanOrEqual(gaps.min()!, 7.5)
+                XCTAssertLessThanOrEqual(gaps.max()! - gaps.min()!, 1)
             }
+
+            assertSingleRowAlignment()
+            defer { XCUIDevice.shared.orientation = .portrait }
+            XCUIDevice.shared.orientation = .landscapeLeft
+            XCTAssertTrue(waitForCondition(timeout: 5) {
+                app.frame.width > app.frame.height
+            })
+            XCTAssertTrue(outlineResumeButton.waitForExistence(timeout: 3))
+            assertSingleRowAlignment()
+
+            XCUIDevice.shared.orientation = .portrait
+            XCTAssertTrue(waitForCondition(timeout: 5) {
+                app.frame.height > app.frame.width
+            })
+            XCTAssertTrue(outlineResumeButton.waitForExistence(timeout: 3))
+            assertSingleRowAlignment()
+        } else {
+            XCTAssertEqual(outlineResumeButton.frame.minX, chapterOneButton.frame.minX, accuracy: 1)
+            XCTAssertEqual(listeningButton.frame.minX, chapterOneButton.frame.minX, accuracy: 1)
+            XCTAssertEqual(fullOutlineButton.frame.maxX, chapterTenButton.frame.maxX, accuracy: 1)
+            XCTAssertEqual(searchButton.frame.maxX, fullOutlineButton.frame.maxX, accuracy: 1)
+            XCTAssertGreaterThan(outlineResumeButton.frame.width, fullOutlineButton.frame.width)
+            XCTAssertGreaterThan(listeningButton.frame.width, searchButton.frame.width)
+            XCTAssertEqual(outlineResumeButton.frame.minY, fullOutlineButton.frame.minY, accuracy: 1)
+            XCTAssertEqual(listeningButton.frame.minY, searchButton.frame.minY, accuracy: 1)
+            XCTAssertLessThan(fullOutlineButton.frame.minY, searchButton.frame.minY)
         }
+
+        XCTAssertTrue(chapterOneButton.isHittable)
+        chapterOneButton.tap()
+        let chapterReader = app.otherElements["reader.chapter"]
+        XCTAssertTrue(
+            chapterReader.waitForExistence(timeout: 3),
+            "The chapter grid should remain the volume-reader entry"
+        )
+
+        let backButton = app.navigationBars.buttons.firstMatch
+        XCTAssertTrue(backButton.waitForExistence(timeout: 3))
+        backButton.tap()
+        XCTAssertTrue(outlineResumeButton.waitForExistence(timeout: 3))
+
+        outlineResumeButton.tap()
+        XCTAssertTrue(
+            app.otherElements["reader.tree"].waitForExistence(timeout: 3),
+            "The seeded tree-reading history should resume its exact reader mode"
+        )
+        XCTAssertFalse(chapterReader.exists)
+    }
+
+    func testHomeSingleRowDistributesShortResumeSpaceAcrossEqualGaps() throws {
+        let app = launchHomeApp(readingState: .start)
+        guard UIDevice.current.userInterfaceIdiom == .pad,
+              app.frame.width >= 720 else {
+            throw XCTSkip("Content-aware single-row spacing is an iPad layout")
+        }
+
+        let startReadingButton = app.buttons["home.startReadingButton"]
+        let listeningButton = app.buttons["home.listeningButton"]
+        let searchButton = app.buttons["home.searchButton"]
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        let chapterOneButton = app.buttons["卷一"]
+        let chapterTenButton = app.buttons["卷十"]
+        XCTAssertTrue(startReadingButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(listeningButton.exists)
+        XCTAssertTrue(searchButton.exists)
+        XCTAssertTrue(fullOutlineButton.exists)
+
+        let gaps = [
+            listeningButton.frame.minX - startReadingButton.frame.maxX,
+            searchButton.frame.minX - listeningButton.frame.maxX,
+            fullOutlineButton.frame.minX - searchButton.frame.maxX,
+        ]
+        XCTAssertGreaterThan(gaps.min()!, 8)
+        XCTAssertLessThanOrEqual(gaps.max()! - gaps.min()!, 1)
+        XCTAssertEqual(startReadingButton.frame.minX, chapterOneButton.frame.minX, accuracy: 1)
+        XCTAssertEqual(fullOutlineButton.frame.maxX, chapterTenButton.frame.maxX, accuracy: 1)
+    }
+
+    func testHomeStartReadingOpensFirstScriptureInsteadOfOutline() {
+        let app = launchHomeApp(readingState: .start)
+        let startReadingButton = app.buttons["home.startReadingButton"]
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        XCTAssertTrue(startReadingButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(fullOutlineButton.exists)
+
+        startReadingButton.tap()
+        XCTAssertTrue(app.otherElements["reader.tree"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.otherElements["reader.outlineIndex"].exists)
+    }
+
+    func testHomeFullOutlineButtonOpensCompleteOutline() {
+        let app = launchHomeApp(readingState: .start)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+        tabBar.buttons.element(boundBy: 0).tap()
+
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        XCTAssertTrue(fullOutlineButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(fullOutlineButton.isHittable)
+        fullOutlineButton.tap()
+
+        XCTAssertTrue(app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3))
+    }
+
+    func testNightReadingThemeIsNotExposed() {
+        let app = launchHomeApp(readingState: .start)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+        tabBar.buttons.element(boundBy: 3).tap()
+
+        XCTAssertTrue(app.staticTexts["主题"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["夜读"].exists)
+        XCTAssertFalse(app.buttons["夜讀"].exists)
+    }
+
+    func testChapterReaderPreservesPageAcrossRotation() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("Chapter pagination rotation coverage is iPad-only")
+        }
+        let app = launchHomeApp(readingState: .start)
+        defer { XCUIDevice.shared.orientation = .portrait }
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+        tabBar.buttons.element(boundBy: 0).tap()
+
+        let chapterButton = app.buttons["卷一"]
+        XCTAssertTrue(chapterButton.waitForExistence(timeout: 3))
+        chapterButton.tap()
+
+        let reader = app.otherElements["reader.chapter"]
+        let pageLabel = app.staticTexts["reader.pageLabel"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 3))
+        XCTAssertTrue(pageLabel.waitForExistence(timeout: 3))
+
+        reader.swipeLeft()
+        Thread.sleep(forTimeInterval: 0.6)
+        reader.swipeLeft()
+        Thread.sleep(forTimeInterval: 0.6)
+
+        let portraitPage = pageLabel.label
+        let portraitPageNumber = Int(
+            portraitPage.split(separator: "/").first?
+                .trimmingCharacters(in: .whitespaces) ?? ""
+        )
+        XCTAssertNotNil(portraitPageNumber)
+        XCTAssertGreaterThanOrEqual(portraitPageNumber ?? 0, 2)
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let didEnterLandscape = waitForCondition(timeout: 5) {
+            app.frame.width > app.frame.height
+        }
+        guard didEnterLandscape else {
+            throw XCTSkip("The simulator did not acknowledge the landscape orientation request")
+        }
+        XCTAssertTrue(pageLabel.waitForExistence(timeout: 3))
+
+        XCUIDevice.shared.orientation = .portrait
+        let didReturnToPortrait = waitForCondition(timeout: 5) {
+            app.frame.height > app.frame.width
+        }
+        guard didReturnToPortrait else {
+            throw XCTSkip("The simulator did not acknowledge the portrait orientation request")
+        }
+
+        let restoredPage = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label == %@", portraitPage),
+            object: pageLabel
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [restoredPage], timeout: 5), .completed)
+        XCTAssertEqual(
+            pageLabel.label,
+            portraitPage,
+            "Returning to the original size should return to the same scripture page"
+        )
     }
 
     // MARK: - Enhanced Design System Tests
@@ -496,10 +779,10 @@ class lengyanUITests: XCTestCase {
             }
         }
 
-        // 3. Test Index view navigation via 开经偈 button
-        let kaiJingJiButton = app.buttons.matching(NSPredicate(format: "label CONTAINS '无上甚深微妙法'")).firstMatch
-        if kaiJingJiButton.exists {
-            kaiJingJiButton.tap()
+        // 3. Test the explicit complete-outline entry.
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        if fullOutlineButton.exists {
+            fullOutlineButton.tap()
             Thread.sleep(forTimeInterval: 1.5)
             takeAndAttachScreenshot(name: "3_IndexView")
 

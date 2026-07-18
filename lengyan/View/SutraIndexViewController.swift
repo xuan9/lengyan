@@ -21,6 +21,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.accessibilityIdentifier = "reader.outlineIndex"
         let bounds:CGRect = self.view.bounds;
         self.navigationController?.isNavigationBarHidden = false
 
@@ -131,16 +132,26 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         
     }
     func loadRootTree(){
-        Book.shared.loadDataWithCompletionHandler { () in
+        Book.shared.loadDataWithCompletionHandler { result in
+            guard case .success = result else {
+                self.tree = [:]
+                self.treeView.reloadData()
+                self.updateHeader()
+                return
+            }
             self.tree = Book.shared.tree
             if self.path == nil || self.path == "/" {
-                self.path = Prefers.shared.lastReadPath ?? (self.tree!["path"] as? String)
-            }
-            DispatchQueue.main.async{
-                self.treeView.reloadData()
-                if let currentPath = self.path {
-                    self.openPath(currentPath)
+                switch Prefers.shared.outlineResumeTarget {
+                case let .paged(path, _), let .tree(path):
+                    self.path = path
+                case .chapter, nil:
+                    self.path = self.tree?["path"] as? String
                 }
+            }
+            self.treeView.reloadData()
+            self.updateHeader()
+            if let currentPath = self.path {
+                self.openPath(currentPath)
             }
         }
     }
@@ -168,8 +179,11 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func updateHeader(){
-        if(tree != nil) {
-            self.title = tree?["name"] as? String ?? ""
+        if let tree = tree {
+            let path = tree["path"] as? String ?? ""
+            self.title = path.isEmpty || path == "/"
+                ? L10n.str("home_full_outline")
+                : (tree["name"] as? String ?? "")
         }
         let navBarColor = SutraDesignTokens.shared.color(for: .navigationBar)
         self.navigationController?.navigationBar.backgroundColor = navBarColor
@@ -335,8 +349,13 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
 
-        let mode = Prefers.shared.lastReadMode ?? "paged"
-        if mode == "tree" {
+        let resumesInTreeMode: Bool
+        if case .tree? = Prefers.shared.outlineResumeTarget {
+            resumesInTreeMode = true
+        } else {
+            resumesInTreeMode = false
+        }
+        if resumesInTreeMode {
             let purePageVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
             purePageVC.path = path
             purePageVC.hidesBottomBarWhenPushed = true

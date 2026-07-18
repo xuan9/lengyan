@@ -15,7 +15,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     var path:String?
     var _paths:[String] = [];
     var isShowIndexButton = true;
-    private var stayTimer = ReadingStayTimer()
+    private let readingCheckpoint = ReadingCheckpointGate()
+    private var isReaderVisible = false
     var isEmbedded = false
 
 
@@ -27,6 +28,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.accessibilityIdentifier = "reader.tree"
+        setupApplicationLifecycleObservers()
         self.navigationController?.hidesBarsOnSwipe = false;
         self.navigationController?.hidesBarsOnTap = false;
         self.navigationController?.hidesBarsWhenVerticallyCompact = true;
@@ -48,9 +51,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         self.setViewControllers([getViewControllerAtPath(newPath)] as [UIViewController], direction: .forward, animated: false, completion: nil)
         updateNavigationBarState()
         
-        // Save progress
-        Prefers.shared.lastReadPath = newPath
-        Prefers.shared.lastReadMode = "tree"
+        // Programmatic target changes are explicit navigation requests.
+        recordCurrentReading()
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -59,7 +61,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        stayTimer.start()
         if !isEmbedded {
             self.tabBarController?.tabBar.isHidden = true
             if #available(iOS 18.0, *) {
@@ -78,6 +79,12 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         updateNavigationBarState()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        isReaderVisible = true
+        resumeReadingCheckpointIfNeeded()
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         if !isEmbedded {
@@ -87,10 +94,78 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             }
         }
         self.navigationController?.hidesBarsOnTap = false
-        if let path = self.path, stayTimer.isValidReading {
-            Prefers.shared.lastReadPath = path
-            Prefers.shared.lastReadMode = "tree"
+        pauseReadingCheckpointIfNeeded()
+        isReaderVisible = false
+    }
+
+    private func setupApplicationLifecycleObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationWillResignActive),
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc private func applicationWillResignActive() {
+        guard isReaderVisible else { return }
+        pauseReadingCheckpointIfNeeded()
+    }
+
+    @objc private func applicationDidEnterBackground() {
+        guard isReaderVisible else { return }
+        pauseReadingCheckpointIfNeeded()
+    }
+
+    @objc private func applicationDidBecomeActive() {
+        resumeReadingCheckpointIfNeeded()
+    }
+
+    private func resumeReadingCheckpointIfNeeded() {
+        guard
+            isReaderVisible,
+            UIApplication.shared.applicationState == .active
+        else { return }
+        // Background time must not satisfy the passive-reading threshold.
+        readingCheckpoint.resume { [weak self] in
+            guard let self, self.isReaderVisible else { return }
+            self.persistCurrentReading()
         }
+    }
+
+    private func pauseReadingCheckpointIfNeeded() {
+        readingCheckpoint.pause { [weak self] in
+            self?.persistCurrentReading()
+        }
+    }
+
+    private func recordCurrentReading() {
+        readingCheckpoint.commit { [weak self] in
+            self?.persistCurrentReading()
+        }
+    }
+
+    /// Called by the visible content page when the user deliberately scrolls
+    /// inside a long outline node. This intent should bypass mis-tap filtering.
+    func confirmReadingInteraction() {
+        recordCurrentReading()
+    }
+
+    private func persistCurrentReading() {
+        guard let path = self.path, !path.isEmpty else { return }
+        Prefers.shared.recordTreeReading(path: path)
     }
 
     deinit {
@@ -380,10 +455,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             self.updateNavigationBarState()
 
             // 每次翻页完成即保存进度
-            if let path = self.path {
-                Prefers.shared.lastReadPath = path
-                Prefers.shared.lastReadMode = "tree"
-            }
+            recordCurrentReading()
         }
     }
 }

@@ -8,14 +8,130 @@
 
 import Foundation
 import UIKit
-import SwiftUI
 import UserNotifications
+
+private enum HomeActionAlignment {
+    case leading
+    case center
+    case trailing
+}
+
+/// A quiet text action with a fixed marker column. Keeping the symbol outside
+/// UIButton's title layout avoids per-symbol frame nudges and gives all four
+/// home actions the same optical starting point.
+private final class HomeActionButton: UIButton {
+    private let markerSlot = UIView()
+    private let markerView = UIImageView()
+    private let actionLabel = UILabel()
+    private let contentStack = UIStackView()
+    private var horizontalConstraints: [NSLayoutConstraint] = []
+
+    init(
+        text: String,
+        symbolName: String,
+        font: UIFont,
+        iconSize: CGFloat,
+        markerSlotWidth: CGFloat,
+        bodyColor: UIColor,
+        iconOpticalScale: CGFloat,
+        alignment: HomeActionAlignment
+    ) {
+        super.init(frame: .zero)
+
+        markerSlot.translatesAutoresizingMaskIntoConstraints = false
+        markerSlot.isUserInteractionEnabled = false
+
+        let configuration = UIImage.SymbolConfiguration(
+            pointSize: iconSize,
+            weight: .regular,
+            scale: .small
+        )
+        markerView.image = UIImage(systemName: symbolName, withConfiguration: configuration)
+            ?? UIImage(systemName: "circle.fill", withConfiguration: configuration)
+        // Use the label's ink tone at lower emphasis. Decorative gold never
+        // reaches enough contrast on paper backgrounds for these tiny symbols.
+        markerView.tintColor = bodyColor.withAlphaComponent(0.68)
+        markerView.contentMode = .scaleAspectFit
+        markerView.transform = CGAffineTransform(
+            scaleX: iconOpticalScale,
+            y: iconOpticalScale
+        )
+        markerView.translatesAutoresizingMaskIntoConstraints = false
+        markerView.isUserInteractionEnabled = false
+        markerSlot.addSubview(markerView)
+
+        actionLabel.text = text
+        actionLabel.font = font
+        actionLabel.textColor = bodyColor
+        actionLabel.numberOfLines = 1
+        actionLabel.lineBreakMode = .byTruncatingTail
+        actionLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        actionLabel.isUserInteractionEnabled = false
+
+        contentStack.axis = .horizontal
+        contentStack.alignment = .center
+        contentStack.spacing = 6
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        contentStack.isUserInteractionEnabled = false
+        contentStack.addArrangedSubview(markerSlot)
+        contentStack.addArrangedSubview(actionLabel)
+        addSubview(contentStack)
+
+        NSLayoutConstraint.activate([
+            markerSlot.widthAnchor.constraint(equalToConstant: markerSlotWidth),
+            markerSlot.heightAnchor.constraint(equalToConstant: max(iconSize, 16)),
+            markerView.leadingAnchor.constraint(equalTo: markerSlot.leadingAnchor),
+            markerView.trailingAnchor.constraint(equalTo: markerSlot.trailingAnchor),
+            markerView.topAnchor.constraint(equalTo: markerSlot.topAnchor),
+            markerView.bottomAnchor.constraint(equalTo: markerSlot.bottomAnchor),
+            contentStack.centerYAnchor.constraint(equalTo: centerYAnchor),
+            contentStack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor),
+            contentStack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
+        ])
+        setContentAlignment(alignment)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func setContentAlignment(
+        _ alignment: HomeActionAlignment,
+        edgeInset: CGFloat = 0
+    ) {
+        NSLayoutConstraint.deactivate(horizontalConstraints)
+        switch alignment {
+        case .leading:
+            horizontalConstraints = [
+                contentStack.leadingAnchor.constraint(
+                    equalTo: leadingAnchor,
+                    constant: edgeInset
+                )
+            ]
+        case .center:
+            horizontalConstraints = [contentStack.centerXAnchor.constraint(equalTo: centerXAnchor)]
+        case .trailing:
+            horizontalConstraints = [
+                contentStack.trailingAnchor.constraint(
+                    equalTo: trailingAnchor,
+                    constant: -edgeInset
+                )
+            ]
+        }
+        NSLayoutConstraint.activate(horizontalConstraints)
+    }
+
+    override var isHighlighted: Bool {
+        didSet {
+            contentStack.alpha = isHighlighted ? 0.52 : 1
+        }
+    }
+}
 
 class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
     
     fileprivate var treeView: RATreeView!
     internal var tree:[[String]]?;
-    fileprivate var sutraIndexButtons = [String]();
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -70,7 +186,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // Refresh design system on appearance
         applyZenTempleSerenityDesignSystem()
 
-        // Rebuild header to refresh "续读" text with latest reading progress
+        // Rebuild header to refresh both reading-resume entries.
         setupHeaderView(self.view.bounds.size)
 
         // 设置导航栏外观（隐藏状态下设置，供子页面返回时使用）
@@ -110,45 +226,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.setNavigationBarHidden(false, animated: animated)
     }
 
-    // Deprecated: Floating theme switch button removed for a calmer, unified front view.
-    private func addThemeSwitchingButton() {
-        let themeButton = UIButton(type: .system)
-        themeButton.setTitle("🎨", for: .normal)
-        themeButton.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .medium)
-        themeButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(themeButton)
-
-        NSLayoutConstraint.activate([
-            themeButton.widthAnchor.constraint(equalToConstant: 44),
-            themeButton.heightAnchor.constraint(equalToConstant: 44),
-            themeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            themeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
-        ])
-
-        // Use semantic navigation colors
-        themeButton.setTitleColor(SutraDesignTokens.shared.color(for: .navigationBar), for: .normal)
-        themeButton.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-        themeButton.layer.cornerRadius = 22
-        themeButton.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
-        themeButton.layer.shadowOffset = CGSize(width: 0, height: 2)
-        themeButton.layer.shadowOpacity = 0.2
-        themeButton.layer.shadowRadius = 4
-
-        themeButton.addTarget(self, action: #selector(themeButtonTapped), for: .touchUpInside)
-    }
-
-    @objc private func themeButtonTapped() {
-        // Use animated theme cycling (borrowed from SutraDesignSystem)
-        SutraDesignTokens.shared.cycleToNextTheme()
-
-        // Provide haptic feedback
-        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-        impactFeedback.impactOccurred()
-
-        // Refresh the UI with current design tokens
-        applyZenTempleSerenityDesignSystem()
-    }
-
     // MARK: - Zen Temple Serenity Design System Application
     private func applyZenTempleSerenityDesignSystem() {
         print("🏛️ APPLYING ZEN TEMPLE SERENITY DESIGN SYSTEM")
@@ -168,7 +245,11 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     private func setupThemeObserverForView() {
-        // TODO: Add theme observer if needed
+        NotificationCenter.default.removeObserver(
+            self,
+            name: .themeDidChange,
+            object: nil
+        )
         NotificationCenter.default.addObserver(self, selector: #selector(themeDidChangeForFrontViewController), name: .themeDidChange, object: nil)
     }
 
@@ -196,300 +277,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         treeView.separatorStyle = RATreeViewCellSeparatorStyleNone
     }
 
-    private func setupZenBackgroundGradient() {
-        // Remove any existing background views
-        for subview in view.subviews {
-            if subview.tag == 999 {
-                subview.removeFromSuperview()
-            }
-        }
-
-        // Create zen gradient background using unified color system
-        let backgroundView = UIView(frame: view.bounds)
-        backgroundView.tag = 999
-        backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.frame = backgroundView.bounds
-
-        // Use semantic colors from design system
-        let bgColor = SutraDesignTokens.shared.color(for: .background)
-        let surfaceColor = SutraDesignTokens.shared.color(for: .surface)
-
-        gradientLayer.colors = [
-            bgColor.cgColor,
-            surfaceColor.cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0.2, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 0.8, y: 1)
-        gradientLayer.locations = [0.0, 0.6, 1.0]
-
-        backgroundView.layer.addSublayer(gradientLayer)
-        view.insertSubview(backgroundView, at: 0)
-    }
-
-    private func setupZenTreeViewStyling() {
-        treeView.backgroundColor = .clear
-
-        // Simple approach - only use what we know works
-        // The crash is caused by KVC on properties that don't exist or expect different types
-        // So we'll keep it minimal and safe
-
-        treeView.rowHeight = max(44, SutraDesignTokens.shared.responsiveSpacing(50))
-    }
-
-    // Deprecated: Legacy recursive chapter button restyling removed to rely on makeSutraChapterButton styling.
-    private func enhanceChapterButtons() {
-        // Find all chapter buttons and enhance them
-        for subview in view.subviews {
-            if subview is RATreeView {
-                for cellSubview in subview.subviews {
-                    enhanceButtonsInView(cellSubview)
-                }
-            }
-        }
-    }
-
-    private func enhanceButtonsInView(_ view: UIView) {
-        for subview in view.subviews {
-            if let button = subview as? UIButton {
-                // Comprehensive zen enhancement for all buttons
-                enhanceButtonWithCompleteZenStyling(button)
-            }
-            enhanceButtonsInView(subview)
-        }
-    }
-
-    private func enhanceButtonWithCompleteZenStyling(_ button: UIButton) {
-        let buttonText = button.titleLabel?.text ?? ""
-
-        // 🏯 Sacred Temple Styling - 神圣寺庙样式
-        if buttonText.contains("卷") || buttonText.contains("品") {
-            // Chapter button - golden sacred temple styling
-            button.backgroundColor = SutraDesignTokens.shared.color(for: .card)
-            button.setTitleColor(SutraDesignTokens.shared.color(for: .chapterTitle), for: .normal)
-            button.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .bold)
-
-            // Sacred temple styling with enhanced visual impact
-            button.layer.cornerRadius = 20
-            button.layer.borderWidth = 3
-            button.layer.borderColor = SutraDesignTokens.shared.color(for: .bookmark).cgColor  // 鎏金边框
-            button.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
-            button.layer.shadowOffset = CGSize(width: 0, height: 4)
-            button.layer.shadowRadius = 8
-            button.layer.shadowOpacity = 0.3
-
-            // Add sacred gradient background
-            addSacredGradientToButton(button)
-
-        } else if buttonText.contains("楞嚴經") || buttonText.contains("首楞嚴經") {
-            // Main title - divine sutra title styling
-            button.backgroundColor = .clear
-            button.setTitleColor(SutraDesignTokens.shared.color(for: .sutraText), for: .normal)
-            button.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .heavy)
-            button.titleLabel?.textAlignment = .center
-            button.titleLabel?.numberOfLines = 0
-
-            // Add enhanced divine glow effect with multiple layers
-            addDivineGlowToTitle(button)
-
-        } else {
-            // Other buttons - elegant zen styling
-            button.backgroundColor = SutraDesignTokens.shared.color(for: .surface)
-            button.setTitleColor(SutraDesignTokens.shared.color(for: .textSecondary), for: .normal)
-            button.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
-            button.layer.cornerRadius = 12
-            button.layer.borderWidth = 1
-            button.layer.borderColor = SutraDesignTokens.shared.color(for: .border).cgColor
-            button.layer.shadowColor = SutraDesignTokens.shared.color(for: .shadow).cgColor
-            button.layer.shadowOffset = CGSize(width: 0, height: 2)
-            button.layer.shadowRadius = 4
-            button.layer.shadowOpacity = 0.2
-        }
-
-        // Enhanced touch feedback for all buttons
-        enhanceButtonTouchFeedback(button)
-    }
-
-    private func addSacredGradientToButton(_ button: UIButton) {
-        // Remove existing gradient if any
-        button.layer.sublayers?.removeAll { $0 is CAGradientLayer }
-
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.frame = button.bounds
-
-        // 🌅 Enhanced Sacred gradient with multiple divine colors
-        let sacredGold = SutraDesignTokens.shared.color(for: .bookmark)  // 鎏金色
-        let divineLight = SutraDesignTokens.shared.color(for: .surface)   // 佛光色
-        let pureWhite = SutraDesignTokens.shared.color(for: .card)       // 纯净色
-        let zenGreen = SutraDesignTokens.shared.color(for: .primary)      // 竹翠绿
-
-        // Multi-stop gradient for divine effect
-        gradientLayer.colors = [
-            pureWhite.cgColor,
-            divineLight.cgColor,
-            sacredGold.withAlphaComponent(0.4).cgColor,
-            zenGreen.withAlphaComponent(0.2).cgColor,
-            pureWhite.cgColor
-        ]
-
-        // Enhanced gradient animation
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.locations = [0.0, 0.3, 0.5, 0.7, 1.0]
-        gradientLayer.cornerRadius = button.layer.cornerRadius
-
-        // Replace existing background if present
-        if let sublayers = button.layer.sublayers,
-           let existingLayer = sublayers.first(where: { $0 is CAGradientLayer }) {
-            existingLayer.removeFromSuperlayer()
-        }
-
-        button.layer.insertSublayer(gradientLayer, at: 0)
-        button.clipsToBounds = true
-    }
-
-    private func enhanceButtonTouchFeedback(_ button: UIButton) {
-        // Preserve existing touch targets (like onSutraChapterButtonTouchUp)
-        // Add zen-style touch feedback
-        button.addTarget(self, action: #selector(zenButtonTouchDown(_:)), for: .touchDown)
-        button.addTarget(self, action: #selector(zenButtonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
-        button.addTarget(self, action: #selector(zenButtonTapped(_:)), for: .touchUpInside)
-    }
-
-    @objc private func zenButtonTouchDown(_ button: UIButton) {
-        // Enhanced sacred touch down animation
-        UIView.animate(withDuration: 0.15, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseOut]) {
-            button.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-            button.alpha = 0.85
-
-            // Enhanced sacred glow effect on touch
-            button.layer.shadowRadius = 12
-            button.layer.shadowOpacity = 0.4
-            button.layer.shadowColor = SutraDesignTokens.shared.color(for: .bookmark).cgColor
-        }
-
-        // Haptic feedback for sacred interaction
-        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-        impactFeedback.impactOccurred()
-    }
-
-    @objc private func zenButtonTouchUp(_ button: UIButton) {
-        // Enhanced sacred touch up animation with bounce
-        UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.8, options: [.curveEaseOut]) {
-            button.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
-            button.alpha = 1.0
-
-            // Restore enhanced shadow
-            button.layer.shadowRadius = 8
-            button.layer.shadowOpacity = 0.3
-        }
-
-        // Return to normal after bounce
-        UIView.animate(withDuration: 0.1, delay: 0.2, options: [.curveEaseOut]) {
-            button.transform = .identity
-            button.layer.shadowRadius = 4
-            button.layer.shadowOpacity = 0.2
-        }
-    }
-
-    @objc private func zenButtonTapped(_ button: UIButton) {
-        // Sacred haptic feedback for divine interaction
-        let selectionFeedback = UISelectionFeedbackGenerator()
-        selectionFeedback.selectionChanged()
-
-        // Additional haptic feedback for sacred confirmation
-        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-        impactFeedback.impactOccurred()
-    }
-
-    // MARK: - Serene Cell Styling - 宁静单元格样式
-    private func enhanceCellWithSacredStyling(_ cell: UITableViewCell) {
-        let name = cell.textLabel?.text ?? ""
-
-        if name.contains("卷") || name.contains("品") {
-            // 🍃 Chapter cell - 宁静清透，摒弃一切底色与边框
-            cell.backgroundColor = .clear
-
-            // 优雅平和的文本样式
-            cell.textLabel?.textColor = SutraDesignTokens.shared.color(for: .chapterTitle)
-            cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular)
-
-        } else if name.contains("楞嚴經") || name.contains("首楞嚴經") {
-            // 🌸 Main title cell - 宁静而庄重
-            cell.backgroundColor = .clear
-            cell.textLabel?.textColor = SutraDesignTokens.shared.color(for: .sutraText)
-            cell.textLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .medium)
-        }
-    }
-
-
-
-    // MARK: - Divine Glow Effects - 神圣光辉效果
-    private func addDivineGlowToTitle(_ button: UIButton) {
-        // Remove existing glow layers
-        button.layer.sublayers?.removeAll { $0.name == "divineGlow" }
-
-        let sacredGold = SutraDesignTokens.shared.color(for: .bookmark)  // 鎏金色
-
-        // 仅保留极其微弱单层光晕，退却红尘浮光
-        let glowLayers: [(radius: CGFloat, opacity: Float, color: UIColor)] = [
-            (radius: 12, opacity: 0.25, color: sacredGold)
-        ]
-
-        for glow in glowLayers {
-            let glowLayer = CALayer()
-            glowLayer.name = "divineGlow"
-            glowLayer.frame = button.bounds
-            glowLayer.backgroundColor = glow.color.cgColor
-            glowLayer.cornerRadius = 8
-            glowLayer.opacity = glow.opacity
-
-            // Create glow mask
-            let glowMask = CAShapeLayer()
-            glowMask.path = UIBezierPath(roundedRect: button.bounds, cornerRadius: 8).cgPath
-            glowLayer.mask = glowMask
-
-            // Apply blur effect for glow
-            if let blurFilter = CIFilter(name: "CIGaussianBlur") {
-                blurFilter.setValue(glow.radius, forKey: kCIInputRadiusKey)
-                glowLayer.filters = [blurFilter]
-            }
-
-            // Insert behind button content
-            button.layer.insertSublayer(glowLayer, at: 0)
-        }
-
-        // Add subtle pulse animation to glow
-        addPulseAnimationToGlow(button)
-    }
-
-    private func addPulseAnimationToGlow(_ button: UIButton) {
-        let pulseAnimation = CABasicAnimation(keyPath: "opacity")
-        pulseAnimation.duration = 2.0
-        pulseAnimation.fromValue = 0.8
-        pulseAnimation.toValue = 1.2
-        pulseAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        pulseAnimation.autoreverses = true
-        pulseAnimation.repeatCount = .infinity
-
-        // Apply to all glow layers
-        button.layer.sublayers?.forEach { layer in
-            if layer.name == "divineGlow" {
-                layer.add(pulseAnimation, forKey: "divinePulse")
-            }
-        }
-    }
-
-    private func getCurrentColors() -> (background: UIColor, accent: UIColor) {
-        // Unified with SutraDesignTokens for consistency
-        return (
-            background: SutraDesignTokens.shared.color(for: .background),
-            accent: SutraDesignTokens.shared.color(for: .accent)
-        )
-    }
-
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
         setupHeaderView(size)
         setupFooterView(size)
     }
@@ -501,11 +290,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
         // iPad: 限制内容宽度并居中
-        let cx = SutraAdaptiveLayout.readingHorizontalInsets(
-            containerWidth: width,
-            maxWidth: SutraAdaptiveLayout.homeContentWidth,
-            minMargin: 0
-        )
+        let cx = SutraAdaptiveLayout.homeHorizontalInsets(containerSize: size)
         let cw = width - (cx * 2)
 
         // 🏛️ Sacred header - 含经题 + 开经偈 + 今日读经 + 卷章按钮 + 功能行
@@ -513,21 +298,33 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let titleTopPadding: CGFloat = rs(isPad ? 20 : 14)
         let titleHeight: CGFloat = rs(isPad ? 34 : 28)
         let titleLineGap: CGFloat = rs(4)
-        let verseHeight: CGFloat = rs(isPad ? 56 : 44)
+        let verseFont = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .light)
+        let verseLineSpacing = rs(6)
+        let verseHeight = SutraAdaptiveLayout.homeOpeningVerseHeight(
+            fontLineHeight: verseFont.lineHeight,
+            lineSpacing: verseLineSpacing,
+            minimumHeight: rs(isPad ? 56 : 44)
+        )
         let verseGap: CGFloat = rs(isPad ? 20 : 12)            // 开经偈上方呼吸空间
         let buttonSectionTopGap: CGFloat = rs(isPad ? 22 : 10) // 开经偈到卷章按钮间距
         let buttonHeight: CGFloat = isPad ? 64 : max(44, rs(44))
         let verticalSpacing: CGFloat = rs(isPad ? 14 : 4)
-        let toolRowPadding: CGFloat = rs(isPad ? 26 : 18)
-        let toolRowHeight: CGFloat = isPad ? 56 : max(44, rs(44))
+        let toolRowPadding: CGFloat = isPad ? 16 : 12
+        // Fixed UI typography does not grow with the user's reading font size,
+        // so these touch rows should not inherit responsive reading spacing.
+        let actionRowHeight: CGFloat = isPad ? 48 : 44
+        // A compact transition is enough: the outline content explains itself.
+        let outlineTransitionHeight: CGFloat = 12
+        // Keep the divider on the same leading axis as the first-level outline
+        // rows on both phone and iPad.
+        let outlineListLeading: CGFloat = 24
 
         // Check if there is playback progress
         let lastPlayFile = Prefers.shared.lastPlayFile?.first
         let hasListening = lastPlayFile != nil && !lastPlayFile!.isEmpty
-        let toolRowCount: CGFloat = isPad ? 1 : 2 // iPad：续读/续听/搜索 同行；iPhone：仍两行
-        let actualToolRowHeight = toolRowHeight * toolRowCount
+        let maximumToolRowHeight = actionRowHeight * 2
 
-        let headerHeight = titleTopPadding + titleHeight + titleLineGap + verseGap + verseHeight + buttonSectionTopGap + buttonHeight * 2 + verticalSpacing + toolRowPadding + actualToolRowHeight
+        let headerHeight = titleTopPadding + titleHeight + titleLineGap + verseGap + verseHeight + buttonSectionTopGap + buttonHeight * 2 + verticalSpacing + toolRowPadding + maximumToolRowHeight + outlineTransitionHeight
 
         let header:UIView = UIView(frame: CGRect(x: 0, y:0, width: width, height: headerHeight))
         header.backgroundColor = backgroundColor
@@ -553,27 +350,25 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         header.addSubview(titleLine)
 
         // 📜 开经偈 - 分为匀称的两行
-        let subTitle = UIButton.init(type: .custom)
+        let subTitle = UILabel()
         let verseY = titleLineY + verseGap
         subTitle.frame = CGRect(x: cx + rs(16), y: verseY, width: cw - rs(32), height: verseHeight)
         let subTitleText = L10n.str("kai_jing_ji")
-        subTitle.setTitle(subTitleText, for: .normal)
-        subTitle.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .light)
-        subTitle.titleLabel?.numberOfLines = 2
+        subTitle.font = verseFont
+        subTitle.numberOfLines = 2
 
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = rs(6)
+        paragraphStyle.lineSpacing = verseLineSpacing
         paragraphStyle.alignment = .center
         let attributedSubTitle = NSAttributedString(string: subTitleText, attributes: [
-            .font: SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .light),
+            .font: verseFont,
             .foregroundColor: SutraDesignTokens.shared.color(for: .textSecondary),
             .paragraphStyle: paragraphStyle
         ])
-        subTitle.setAttributedTitle(attributedSubTitle, for: .normal)
-        subTitle.addTarget(self, action: #selector(self.openRootIndex), for: .touchUpInside)
+        subTitle.attributedText = attributedSubTitle
         header.addSubview(subTitle)
 
-        var nextY = verseY + verseHeight + buttonSectionTopGap
+        let nextY = verseY + verseHeight + buttonSectionTopGap
 
         // 🏋️ 卷章按钮网格
         let horizontalPadding: CGFloat = rs(isPad ? 24 : 20)
@@ -582,6 +377,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let chapterButtonWidth = (cw - totalSpacing) / 5
 
         let indexes = UIView(frame: CGRect(x: cx, y: nextY, width: cw, height: buttonHeight * 2 + verticalSpacing))
+        var chapterTenButton: UIButton?
 
         for i in 1...10 {
             let row = (i - 1) / 5
@@ -591,116 +387,314 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
             let btn = self.makeSutraChapterButton(i - 1, frame: CGRect(x: x, y: y, width: chapterButtonWidth, height: buttonHeight))
             indexes.addSubview(btn)
+            if i == 10 {
+                chapterTenButton = btn
+            }
         }
         header.addSubview(indexes)
 
         // ✨ 底部边界装饰性细线
-        let dividerFrame = CGRect(x: cx + rs(32), y: header.frame.height - rs(25), width: cw - rs(64), height: 0.5)
+        let dividerFrame = CGRect(
+            x: outlineListLeading,
+            y: header.frame.height - 0.5,
+            width: width - outlineListLeading * 2,
+            height: 0.5
+        )
         let dividerLine = UIView(frame: dividerFrame)
         dividerLine.backgroundColor = decorativeGold.withAlphaComponent(0.2)
+        dividerLine.autoresizingMask = [.flexibleWidth]
         header.addSubview(dividerLine)
 
-        // ── 合并功能行：续读（左）+ 搜索（右）──
+        // ── 首页操作：科判续读 + 续听 + 搜索 + 科判 ──
         let toolRowY = indexes.frame.maxY + toolRowPadding
-        let toolRow = UIView(frame: CGRect(x: cx, y: toolRowY, width: cw, height: actualToolRowHeight))
+        let toolRow = UIView(frame: CGRect(x: cx, y: toolRowY, width: cw, height: maximumToolRowHeight))
+        // UITableView may normalize its header to a slightly wider internal
+        // width. Keep this row on the same fixed leading axis as the chapter
+        // grid; rotations and split-view changes rebuild the entire header.
+        toolRow.autoresizingMask = [.flexibleRightMargin]
 
-        // 续读 — 始终显示，有进度时显示章节名，无进度时引导开始读经
         let bodyColor = SutraDesignTokens.shared.color(for: .textSecondary)
-        let primaryColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        let goldColor = SutraDesignTokens.shared.color(for: .decorativeGold)
-        let continueLabel = UIButton(type: .system)
-        let toolFont = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
-        let hasProgress = Prefers.shared.lastReadPath != nil
-        
-        let isSimplified = Book.shared.isSimplifiedChinese
-        let continueText = hasProgress ? (isSimplified ? "续读" : "續讀") : (isSimplified ? "开始读经" : "開始讀經")
-        let continueAttr = makeToolDotTitle(
-            text: continueText,
-            font: toolFont,
-            bodyColor: bodyColor,
-            goldColor: goldColor
-        )
-        if let lastPath = Prefers.shared.lastReadPath {
-            let itemName = Book.shared.itemOfPath(lastPath)["name"] as? String ?? ""
-            if !itemName.isEmpty {
-                let sepAttr = NSMutableAttributedString(string: "·", attributes: [
-                    .font: SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .regular),
-                    .foregroundColor: bodyColor
-                ])
-                let titleAttr = NSMutableAttributedString(string: "\(itemName) →", attributes: [
-                    .font: SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .semibold),
-                    .foregroundColor: bodyColor
-                ])
-                continueAttr.append(sepAttr)
-                continueAttr.append(titleAttr)
-            }
+        let baseToolFont = SutraTypographyManager.shared.uiFont(for: .buttonMedium, weight: .medium)
+        let toolFont = isPad ? baseToolFont.withSize(22) : baseToolFont
+        let toolIconSize: CGFloat = isPad ? 14 : 12
+        let markerSlotWidth: CGFloat = isPad ? 18 : 16
+        let outlineTarget = validatedOutlineResumeTarget()
+        let outlineText: String
+        let outlineAccessibilityLabel: String
+        switch outlineTarget {
+        case let .paged(path, _), let .tree(path):
+            let name = Book.shared.itemOfPath(path)["name"] as? String ?? ""
+            let fullOutlineDetail = name.isEmpty
+                ? L10n.str("home_resume_unknown")
+                : name
+            outlineText = String(
+                format: L10n.str("home_resume_format"),
+                fullOutlineDetail
+            )
+            outlineAccessibilityLabel = String(
+                format: L10n.str("home_resume_accessibility_format"),
+                fullOutlineDetail
+            )
+        case .chapter, nil:
+            outlineText = L10n.str("home_start_reading")
+            outlineAccessibilityLabel = L10n.str("home_start_reading_accessibility")
         }
-        continueLabel.setAttributedTitle(continueAttr, for: .normal)
-        let btnHeight = max(44, rs(32))
-        let btnY = (toolRowHeight - btnHeight) / 2
-        let searchWidth: CGFloat = rs(72)
-        // iPad 同行：续读靠左、续听居中（屏幕中线）、搜索靠右。续听用居中宽槽容下完整文字，
-        // 两侧对称窄槽，保证续听真正落在 cw/2
-        let listenSlotW: CGFloat = isPad ? (cw * 0.42) : 0
-        let sideSlotW: CGFloat = isPad ? ((cw - listenSlotW - rs(40)) / 2) : 0
-        let continueWidth: CGFloat = isPad ? sideSlotW : (cw * 0.65)
-        let continueSlot = CGRect(x: rs(20), y: btnY, width: continueWidth, height: btnHeight)
-        fitToolButton(continueLabel, in: continueSlot, alignment: .left, extraTapPadding: rs(12))
-        continueLabel.tag = 9991
-        continueLabel.addTarget(self, action: #selector(continueReading), for: .touchUpInside)
-        toolRow.addSubview(continueLabel)
 
-        // 搜索 — 左对齐卷十按钮的右边缘
-        let colTenRight = horizontalPadding + (chapterButtonWidth + buttonSpacing) * 4 + chapterButtonWidth
-        let searchBtn = UIButton(type: .system)
-        
-        let searchText = isSimplified ? "搜索" : "搜尋"
-        let searchAttr = makeToolIconTitle(
-            symbolName: "magnifyingglass",
-            text: searchText,
+        let outlineResumeButton = makeHomeActionButton(
+            text: outlineText,
+            // A quiet scripture scroll is square at phone size and carries
+            // nearly the same optical weight as the enlarged play symbol.
+            symbolName: "scroll",
+            alignment: .leading,
             font: toolFont,
-            bodyColor: bodyColor,
-            goldColor: goldColor
+            iconSize: toolIconSize,
+            markerSlotWidth: markerSlotWidth,
+            bodyColor: bodyColor
         )
-        searchBtn.setAttributedTitle(searchAttr, for: .normal)
-        let searchX: CGFloat = isPad ? (cw - rs(20) - sideSlotW) : (colTenRight - searchWidth)
-        let searchSlot = CGRect(x: searchX, y: btnY, width: isPad ? sideSlotW : searchWidth, height: btnHeight)
-        fitToolButton(searchBtn, in: searchSlot, alignment: .right, extraTapPadding: rs(12))
-        searchBtn.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
-        toolRow.addSubview(searchBtn)
+        outlineResumeButton.accessibilityIdentifier = outlineTarget == nil
+            ? "home.startReadingButton"
+            : "home.outlineResumeButton"
+        outlineResumeButton.accessibilityLabel = outlineAccessibilityLabel
+        outlineResumeButton.addTarget(self, action: #selector(continueOutlineReading), for: .touchUpInside)
+        toolRow.addSubview(outlineResumeButton)
 
-        // 续听 — 始终显示，位于第二行
-        let continueListeningLabel = UIButton(type: .system)
         let listeningText: String
+        let listeningAccessibilityLabel: String
         
         if hasListening, let trackInfo = getLastPlayTrackInfo() {
             let seconds = Prefers.shared.lastPlayTime
             if seconds >= 1.0 {
-                let prefix = isSimplified ? "续听·" : "續聽·"
-                listeningText = "\(prefix)\(trackInfo.name)（\(trackInfo.formattedTime)） →"
+                listeningText = String(
+                    format: L10n.str("home_continue_listening_with_time_format"),
+                    trackInfo.name,
+                    trackInfo.formattedTime
+                )
+                listeningAccessibilityLabel = String(
+                    format: L10n.str("home_continue_listening_accessibility_with_time_format"),
+                    trackInfo.name,
+                    trackInfo.formattedTime
+                )
             } else {
-                let prefix = isSimplified ? "续听·" : "續聽·"
-                listeningText = "\(prefix)\(trackInfo.name) →"
+                listeningText = String(
+                    format: L10n.str("home_continue_listening_format"),
+                    trackInfo.name
+                )
+                listeningAccessibilityLabel = String(
+                    format: L10n.str("home_continue_listening_accessibility_format"),
+                    trackInfo.name
+                )
             }
         } else {
-            listeningText = isSimplified ? "开始听经" : "開始聽經"
+            listeningText = L10n.str("home_start_listening")
+            listeningAccessibilityLabel = L10n.str("home_start_listening")
         }
         
-        let continueListeningAttr = makeToolIconTitle(
-            symbolName: "play.fill",
+        let continueListeningButton = makeHomeActionButton(
             text: listeningText,
+            symbolName: "play.fill",
+            alignment: .leading,
             font: toolFont,
+            iconSize: toolIconSize,
+            markerSlotWidth: markerSlotWidth,
             bodyColor: bodyColor,
-            goldColor: goldColor
+            // A filled triangle occupies much less area than the open-book
+            // silhouette at the same symbol box. Scale it optically, without
+            // introducing the visual weight of a play-circle button.
+            iconOpticalScale: 1.14
         )
-        continueListeningLabel.setAttributedTitle(continueListeningAttr, for: .normal)
-        let listeningY: CGFloat = isPad ? btnY : (toolRowHeight + (toolRowHeight - btnHeight) / 2)
-        let listeningX: CGFloat = isPad ? (rs(20) + sideSlotW) : rs(20)
-        let listeningW: CGFloat = isPad ? listenSlotW : (cw - rs(40))
-        let listeningSlot = CGRect(x: listeningX, y: listeningY, width: listeningW, height: btnHeight)
-        fitToolButton(continueListeningLabel, in: listeningSlot, alignment: isPad ? .center : .left, extraTapPadding: rs(12))
-        continueListeningLabel.addTarget(self, action: #selector(continueListening), for: .touchUpInside)
-        toolRow.addSubview(continueListeningLabel)
+        continueListeningButton.accessibilityIdentifier = "home.listeningButton"
+        continueListeningButton.accessibilityLabel = listeningAccessibilityLabel
+        continueListeningButton.addTarget(self, action: #selector(continueListening), for: .touchUpInside)
+        toolRow.addSubview(continueListeningButton)
+
+        let searchText = L10n.str("home_search")
+        let searchButton = makeHomeActionButton(
+            text: searchText,
+            symbolName: "magnifyingglass",
+            alignment: .trailing,
+            font: toolFont,
+            iconSize: toolIconSize,
+            markerSlotWidth: markerSlotWidth,
+            bodyColor: bodyColor
+        )
+        searchButton.accessibilityIdentifier = "home.searchButton"
+        searchButton.accessibilityLabel = L10n.str("home_search_accessibility")
+        searchButton.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
+        toolRow.addSubview(searchButton)
+
+        let fullOutlineText = L10n.str("home_outline_button")
+        let fullOutlineButton = makeHomeActionButton(
+            text: fullOutlineText,
+            symbolName: "list.bullet",
+            alignment: .trailing,
+            font: toolFont,
+            iconSize: toolIconSize,
+            markerSlotWidth: markerSlotWidth,
+            bodyColor: bodyColor
+        )
+        fullOutlineButton.accessibilityIdentifier = "home.fullOutlineButton"
+        fullOutlineButton.accessibilityLabel = L10n.str("home_full_outline_accessibility")
+        fullOutlineButton.addTarget(self, action: #selector(openRootIndex), for: .touchUpInside)
+        toolRow.addSubview(fullOutlineButton)
+
+        // Layout topology depends only on the container. Saved node/audio names
+        // truncate inside stable slots and can never make the same iPad jump
+        // between one and two rows.
+        // AppDelegate intentionally overrides the tab bar's horizontal size class to
+        // compact on newer iPadOS versions. Use the real container width here so a
+        // full-width iPad still gets one row, while split/compact windows use two.
+        let usesSingleActionRow = isPad && size.width >= 720
+        let actionLeading = horizontalPadding
+        let actionTrailing = chapterTenButton?.frame.maxX ?? (cw - horizontalPadding)
+        let availableWidth = max(0, actionTrailing - actionLeading)
+        // Chapter titles are centered inside generous tap targets. Inset the
+        // outer actions by the same amount so their visible ink, rather than
+        // only their invisible UIButton bounds, aligns with 卷一 and 卷十.
+        let chapterTitleWidth = chapterTenButton?.titleLabel?.sizeThatFits(
+            CGSize(width: chapterButtonWidth, height: buttonHeight)
+        ).width ?? chapterButtonWidth
+        let chapterTitleInset = max(
+            0,
+            (chapterButtonWidth - min(chapterButtonWidth, chapterTitleWidth)) / 2
+        )
+        toolRow.accessibilityIdentifier = usesSingleActionRow
+            ? "home.actions.singleRow"
+            : "home.actions.twoRows"
+
+        if usesSingleActionRow {
+            let minimumActionGap: CGFloat = 8
+            // The trailing optical inset aligns the visible content with 卷十,
+            // but it also consumes usable width. Size this slot from its actual
+            // icon + label so the iPad single-row layout never truncates 科判.
+            let fullOutlineContentWidth = markerSlotWidth
+                + 6
+                + ceil((fullOutlineText as NSString).size(withAttributes: [.font: toolFont]).width)
+            let fullOutlineWidth = max(
+                104,
+                fullOutlineContentWidth + chapterTitleInset
+            )
+            let searchContentWidth = markerSlotWidth
+                + 6
+                + ceil((searchText as NSString).size(withAttributes: [.font: toolFont]).width)
+            let searchWidth = max(72, searchContentWidth + 4)
+            let listeningContentWidth = markerSlotWidth
+                + 6
+                + ceil((listeningText as NSString).size(withAttributes: [.font: toolFont]).width)
+            let primaryWidths = SutraAdaptiveLayout.homeSingleRowPrimaryWidths(
+                availableWidth: availableWidth,
+                reservedWidth: minimumActionGap * 3 + fullOutlineWidth + searchWidth,
+                preferredListeningWidth: listeningContentWidth
+            )
+            let resumeContentWidth = markerSlotWidth
+                + 6
+                + ceil((outlineText as NSString).size(withAttributes: [.font: toolFont]).width)
+            let contentDistribution = SutraAdaptiveLayout.homeSingleRowContentDistribution(
+                maximumResumeWidth: primaryWidths.resume,
+                initialListeningWidth: primaryWidths.listening,
+                preferredResumeWidth: resumeContentWidth + chapterTitleInset,
+                preferredListeningWidth: listeningContentWidth,
+                minimumGap: minimumActionGap
+            )
+            let actionGap = contentDistribution.gap
+
+            outlineResumeButton.frame = CGRect(
+                x: actionLeading,
+                y: 0,
+                width: contentDistribution.resume,
+                height: actionRowHeight
+            )
+            continueListeningButton.frame = CGRect(
+                x: outlineResumeButton.frame.maxX + actionGap,
+                y: 0,
+                width: contentDistribution.listening,
+                height: actionRowHeight
+            )
+            searchButton.frame = CGRect(
+                x: continueListeningButton.frame.maxX + actionGap,
+                y: 0,
+                width: searchWidth,
+                height: actionRowHeight
+            )
+            fullOutlineButton.frame = CGRect(
+                x: actionTrailing - fullOutlineWidth,
+                y: 0,
+                width: fullOutlineWidth,
+                height: actionRowHeight
+            )
+
+            outlineResumeButton.setContentAlignment(.leading, edgeInset: chapterTitleInset)
+            continueListeningButton.setContentAlignment(.center)
+            searchButton.setContentAlignment(.center)
+            fullOutlineButton.setContentAlignment(.trailing, edgeInset: chapterTitleInset)
+            toolRow.accessibilityElements = [
+                outlineResumeButton,
+                continueListeningButton,
+                searchButton,
+                fullOutlineButton,
+            ]
+        } else {
+            let columnGap: CGFloat = 16
+            // 科判／搜索只需要稳定的紧凑宽度。把其余空间交给会随
+            // 阅读与播放位置变化的续读／续听，避免在空间充足时仍过早省略。
+            let trailingLabelWidth = max(
+                (fullOutlineText as NSString).size(withAttributes: [.font: toolFont]).width,
+                (searchText as NSString).size(withAttributes: [.font: toolFont]).width
+            )
+            let trailingContentWidth = markerSlotWidth + 6 + ceil(trailingLabelWidth)
+            let preferredTrailingWidth = max(
+                72,
+                trailingContentWidth + chapterTitleInset
+            )
+            let actionWidths = SutraAdaptiveLayout.homeTwoRowActionWidths(
+                availableWidth: availableWidth,
+                columnGap: columnGap,
+                preferredTrailingWidth: preferredTrailingWidth
+            )
+            let trailingColumnWidth = actionWidths.trailing
+            let primaryColumnWidth = actionWidths.primary
+            let trailingColumnX = actionTrailing - trailingColumnWidth
+
+            outlineResumeButton.frame = CGRect(
+                x: actionLeading,
+                y: 0,
+                width: primaryColumnWidth,
+                height: actionRowHeight
+            )
+            fullOutlineButton.frame = CGRect(
+                x: trailingColumnX,
+                y: 0,
+                width: trailingColumnWidth,
+                height: actionRowHeight
+            )
+            continueListeningButton.frame = CGRect(
+                x: actionLeading,
+                y: actionRowHeight,
+                width: primaryColumnWidth,
+                height: actionRowHeight
+            )
+            searchButton.frame = CGRect(
+                x: trailingColumnX,
+                y: actionRowHeight,
+                width: trailingColumnWidth,
+                height: actionRowHeight
+            )
+
+            outlineResumeButton.setContentAlignment(.leading, edgeInset: chapterTitleInset)
+            fullOutlineButton.setContentAlignment(.trailing, edgeInset: chapterTitleInset)
+            continueListeningButton.setContentAlignment(.leading, edgeInset: chapterTitleInset)
+            searchButton.setContentAlignment(.trailing, edgeInset: chapterTitleInset)
+            toolRow.accessibilityElements = [
+                outlineResumeButton,
+                fullOutlineButton,
+                continueListeningButton,
+                searchButton,
+            ]
+        }
+
+        let finalToolRowHeight = actionRowHeight * (usesSingleActionRow ? 1 : 2)
+        toolRow.frame.size.height = finalToolRowHeight
+        header.frame.size.height = headerHeight - maximumToolRowHeight + finalToolRowHeight
+        dividerLine.frame.origin.y = header.frame.height - 0.5
 
         header.addSubview(toolRow)
 
@@ -714,11 +708,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let decorativeGold = SutraDesignTokens.shared.color(for: .decorativeGold)
 
         // iPad: 限制内容宽度并居中
-        let cx = SutraAdaptiveLayout.readingHorizontalInsets(
-            containerWidth: width,
-            maxWidth: SutraAdaptiveLayout.homeContentWidth,
-            minMargin: 0
-        )
+        let cx = SutraAdaptiveLayout.homeHorizontalInsets(containerSize: size)
         let cw = width - (cx * 2)
 
         let bottomPadding = rs(80)
@@ -782,6 +772,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         btn.layer.shadowOpacity = 0
 
         if isCurrentChapter {
+            btn.accessibilityTraits.insert(.selected)
             addCurrentChapterIndicator(to: btn)
         }
 
@@ -789,15 +780,39 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     private func currentChapterForHomeButtons() -> Int? {
-        let savedChapter = Prefers.shared.lastReadChapter
-        if (0..<10).contains(savedChapter) {
-            return savedChapter
-        }
-
-        guard let lastPath = Prefers.shared.lastReadPath else {
+        guard case let .chapter(chapter, _)? = Prefers.shared.chapterResumeTarget else {
             return nil
         }
-        return Book.shared.getChapterOfPath(lastPath)
+        return chapter
+    }
+
+    private func validatedOutlineResumeTarget() -> ReadingResumeTarget? {
+        guard let target = Prefers.shared.outlineResumeTarget else { return nil }
+        switch target {
+        case .chapter:
+            return nil
+        case let .paged(path, _), let .tree(path):
+            return isValidResumePath(path) ? target : nil
+        }
+    }
+
+    /// The first leaf carrying scripture text sits under 序分. The home label
+    /// names that section, while the destination itself is an immediately
+    /// readable page rather than another outline browser.
+    private func initialReadableOutlinePath() -> String? {
+        Book.shared.index?.first(where: { item in
+            guard let path = item["path"], isValidResumePath(path) else {
+                return false
+            }
+            return Book.shared.contents?[path]?.contains(where: { section in
+                section["type"] == "sutra"
+                    && !(section["content"]?.isEmpty ?? true)
+            }) == true
+        })?["path"]
+    }
+
+    private func isValidResumePath(_ path: String) -> Bool {
+        Book.shared.isValidResumePath(path)
     }
 
     private func addCurrentChapterIndicator(to button: UIButton) {
@@ -819,87 +834,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         button.addSubview(indicator)
     }
 
-    // MARK: - 古卷经题（签名时刻）
-    /// 如古卷印章，经题从右至左横排，配以金线框装饰
-    private func makeVerticalSutraTitle() -> UIView {
-        let sutraName = "大佛頂首楞嚴經"
-        let containerWidth: CGFloat = 240
-        let container = UIView(frame: CGRect(x: 0, y: 0, width: containerWidth, height: 40))
-
-        // 从右到左排列（传统直排方向）
-        let chars = Array(sutraName).reversed()
-        let fullText = String(chars)
-
-        let titleLabel = UILabel()
-        titleLabel.text = fullText
-        titleLabel.font = SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular)
-        titleLabel.textColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        titleLabel.textAlignment = .center
-        titleLabel.frame = CGRect(x: 0, y: 4, width: containerWidth, height: 32)
-        // 适度字距，七字疏朗有致
-        titleLabel.attributedText = NSAttributedString(string: fullText, attributes: [
-            .font: SutraTypographyManager.shared.uiFont(for: .uiHeading, weight: .regular),
-            .foregroundColor: SutraDesignTokens.shared.color(for: .textPrimary),
-            .kern: 4.0
-        ])
-        container.addSubview(titleLabel)
-
-        // 金线框装饰
-        let linePadding: CGFloat = 20
-        let lineWidth = containerWidth - linePadding * 2
-        let topLine = UIView(frame: CGRect(x: linePadding, y: 0, width: lineWidth, height: 0.5))
-        topLine.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.35)
-        container.addSubview(topLine)
-
-        let bottomLine = UIView(frame: CGRect(x: linePadding, y: 39.5, width: lineWidth, height: 0.5))
-        bottomLine.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.35)
-        container.addSubview(bottomLine)
-
-        return container
-    }
-
-    func makeSutraIndexButton(_ path:String, frame:CGRect?) ->UIButton {
-        let btn = UIButton.init(type: .custom);
-        if(frame != nil) {
-            btn.frame = frame!
-        }
-        if let name = Book.shared.itemOfPath(path)["name"] as? String {
-            btn.setTitle(name, for: .normal)
-        }
-        btn.addTarget(self, action: #selector(onSutraIndexButtonTouchUp(_:)), for: .touchUpInside)
-        let count = sutraIndexButtons.count;
-        btn.tag = count
-        btn.titleLabel?.adjustsFontSizeToFitWidth = true;
-
-        // 🏛️ 首页经题 - 回归墨色，与经卷传统一致；金色退居装饰角色
-        let titleColor = SutraDesignTokens.shared.color(for: .textPrimary)
-        btn.setTitleColor(titleColor, for: .normal)
-        btn.titleLabel?.font = SutraTypographyManager.shared.uiFont(for: .uiTitle, weight: .medium)
-        
-        let titleText = btn.title(for: .normal) ?? ""
-        if titleText.count > 0 {
-            // 给导航栏文字上方增加一条细金线装饰 (贴近文字顶端，减小悬空感)
-            let topBorder = UIView()
-            topBorder.backgroundColor = SutraDesignTokens.shared.color(for: .decorativeGold).withAlphaComponent(0.4)
-            topBorder.translatesAutoresizingMaskIntoConstraints = false
-            btn.addSubview(topBorder)
-            NSLayoutConstraint.activate([
-                topBorder.leadingAnchor.constraint(equalTo: btn.leadingAnchor, constant: 6),
-                topBorder.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -6),
-                topBorder.topAnchor.constraint(equalTo: btn.topAnchor, constant: -2),
-                topBorder.heightAnchor.constraint(equalToConstant: 0.5)
-            ])
-        }
-
-        sutraIndexButtons.append(path)
-        return btn;
-    }
-    
-    @objc func onSutraIndexButtonTouchUp(_ sender:UIButton){
-        let path = sutraIndexButtons[sender.tag]
-        self.openIndex(Book.shared.itemOfPath(path))
-    }
-
     // MARK: - Chapter Button Touch Feedback
     @objc private func chapterTouchDown(_ sender: UIButton) {
         UIView.animate(withDuration: 0.12) {
@@ -919,27 +853,28 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     @objc func onSutraChapterButtonTouchUp(_ sender:UIButton){
         let chapter = sender.tag
-        // 有进度且是同一卷时恢复位置，否则从第一页开始
-        let offset: CGFloat? = (Prefers.shared.lastReadChapter == chapter && Prefers.shared.lastReadChapterOffset > 0)
-            ? Prefers.shared.lastReadChapterOffset : nil
-        self.openChapter(chapter: chapter, restoreOffset: offset)
+        // Only the most recently read volume has a retained position. Tapping
+        // any other volume starts that volume at its beginning.
+        let offset: CGFloat?
+        if case let .chapter(savedChapter, savedOffset)? = Prefers.shared.chapterResumeTarget,
+           savedChapter == chapter,
+           savedOffset.isFinite,
+           savedOffset > 0 {
+            offset = savedOffset
+        } else {
+            offset = nil
+        }
+        let characterIndex = Prefers.shared.chapterResumeCharacterIndex(for: chapter)
+        self.openChapter(
+            chapter: chapter,
+            restoreOffset: offset,
+            restoreCharacterIndex: characterIndex
+        )
     }
 
     
     @objc func openRootIndex() {
         self.openIndex(Book.shared.itemOfPath(""))
-    }
-    
-    @objc func openDrbaLink(_ sender:UIButton) {
-        if let url = URL(string: "https://www.drbachinese.org/online_reading/sutra_explanation/Shu/contents.htm") {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-        }
-    }
-    
-    @objc func openAcknowledgments() {
-        let hostingController = UIHostingController(rootView: SutraAcknowledgmentsView())
-        hostingController.title = L10n.str("settings_acknowledgments")
-        self.navigationController?.pushViewController(hostingController, animated: true)
     }
 
     private func getLastPlayTrackInfo() -> (name: String, formattedTime: String)? {
@@ -991,79 +926,26 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         return name
     }
 
-    private func fitToolButton(_ button: UIButton, in slot: CGRect, alignment: UIControl.ContentHorizontalAlignment, extraTapPadding: CGFloat) {
-        let titleWidth = ceil(button.attributedTitle(for: .normal)?.size().width ?? button.intrinsicContentSize.width)
-        let width = min(slot.width, max(44, titleWidth + extraTapPadding * 2))
-        let x: CGFloat
-
-        switch alignment {
-        case .right, .trailing:
-            x = slot.maxX - width
-        case .center, .fill:
-            x = slot.midX - width / 2
-        default:
-            x = slot.minX
-        }
-
-        button.frame = CGRect(x: x, y: slot.minY, width: width, height: slot.height)
-        button.contentHorizontalAlignment = alignment == .fill ? .center : alignment
-    }
-
-    private func makeToolIconTitle(symbolName: String, text: String, font: UIFont, bodyColor: UIColor, goldColor: UIColor) -> NSAttributedString {
-        let title = NSMutableAttributedString()
-
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 10.5, weight: .light, scale: .small)
-        if let image = UIImage(systemName: symbolName, withConfiguration: symbolConfig)?
-            .withTintColor(goldColor.withAlphaComponent(0.68), renderingMode: .alwaysOriginal) {
-            let attachment = NSTextAttachment()
-            attachment.image = image
-            attachment.bounds = CGRect(x: 0, y: -1, width: 10.5, height: 10.5)
-            title.append(NSAttributedString(attachment: attachment))
-            title.append(NSAttributedString(string: "  ", attributes: [
-                .font: font,
-                .foregroundColor: bodyColor
-            ]))
-        } else {
-            title.append(NSAttributedString(string: "•  ", attributes: [
-                .font: font,
-                .foregroundColor: goldColor
-            ]))
-        }
-
-        title.append(NSAttributedString(string: text, attributes: [
-            .font: font,
-            .foregroundColor: bodyColor
-        ]))
-        return title
-    }
-
-    private func makeToolDotTitle(text: String, font: UIFont, bodyColor: UIColor, goldColor: UIColor) -> NSMutableAttributedString {
-        let title = NSMutableAttributedString()
-        let dotDiameter: CGFloat = 6.2
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: dotDiameter, height: dotDiameter))
-        let dotImage = renderer.image { context in
-            goldColor.withAlphaComponent(0.78).setFill()
-            context.cgContext.fillEllipse(in: CGRect(origin: .zero, size: CGSize(width: dotDiameter, height: dotDiameter)))
-        }
-
-        let attachment = NSTextAttachment()
-        attachment.image = dotImage
-        attachment.bounds = CGRect(
-            x: 0,
-            y: (font.capHeight - dotDiameter) / 2,
-            width: dotDiameter,
-            height: dotDiameter
+    private func makeHomeActionButton(
+        text: String,
+        symbolName: String,
+        alignment: HomeActionAlignment,
+        font: UIFont,
+        iconSize: CGFloat,
+        markerSlotWidth: CGFloat,
+        bodyColor: UIColor,
+        iconOpticalScale: CGFloat = 1
+    ) -> HomeActionButton {
+        HomeActionButton(
+            text: text,
+            symbolName: symbolName,
+            font: font,
+            iconSize: iconSize,
+            markerSlotWidth: markerSlotWidth,
+            bodyColor: bodyColor,
+            iconOpticalScale: iconOpticalScale,
+            alignment: alignment
         )
-        title.append(NSAttributedString(attachment: attachment))
-        title.append(NSAttributedString(string: "  ", attributes: [
-            .font: font,
-            .foregroundColor: bodyColor
-        ]))
-        title.append(NSAttributedString(string: text, attributes: [
-            .font: font,
-            .foregroundColor: bodyColor
-        ]))
-        return title
     }
 
     @objc private func continueListening() {
@@ -1100,7 +982,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     private var shouldShowDailyReminderPrompt: Bool {
         guard !Prefers.shared.isDailyReminderOn else { return false }
         guard !Prefers.shared.hasSeenDailyReminderPrompt else { return false }
-        return Prefers.shared.lastReadPath != nil || Prefers.shared.lastReadChapter >= 0
+        return Prefers.shared.hasValidReadingProgress
     }
 
     private func presentDailyReminderPrompt() {
@@ -1146,19 +1028,32 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         String(format: "%02d:%02d", Prefers.shared.reminderHour, Prefers.shared.reminderMinute)
     }
 
-    // MARK: - 合并行功能
+    // MARK: - Home resume actions
 
-    @objc func continueReading() {
-        guard let lastPath = Prefers.shared.lastReadPath else {
-            // 首次用户：打开卷一开始读经
-            openChapter(chapter: 0)
+    @objc private func continueOutlineReading() {
+        if let target = validatedOutlineResumeTarget() {
+            openResumeTarget(target)
             return
         }
-        let mode = Prefers.shared.lastReadMode ?? "paged"
+        if let firstPath = initialReadableOutlinePath() {
+            openResumeTarget(.tree(path: firstPath))
+        } else {
+            // A degraded corpus can still expose its outline for diagnosis.
+            openRootIndex()
+        }
+    }
 
+    private func openResumeTarget(_ resumeTarget: ReadingResumeTarget) {
         self.navigationController?.setNavigationBarHidden(false, animated: false)
 
-        if mode == "tree" {
+        switch resumeTarget {
+        case let .chapter(chapter, offset):
+            openChapter(
+                chapter: chapter,
+                restoreOffset: offset > 0 ? offset : nil,
+                restoreCharacterIndex: Prefers.shared.chapterResumeCharacterIndex(for: chapter)
+            )
+        case let .tree(lastPath):
             // 科判式阅读
             let sutraVC = SutraPurePageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
             sutraVC.path = lastPath
@@ -1167,11 +1062,20 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 self?.navigationController?.setNavigationBarHidden(false, animated: false)
             }
             self.navigationController?.pushViewController(sutraVC, animated: true)
-        } else {
-            // 卷式翻页阅读
+        case let .paged(lastPath, savedPageIndex):
+            // 按科判节点翻页阅读；恢复时保留用户原先使用的阅读样式。
             let pageVC = SutraPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
             pageVC.hidesBottomBarWhenPushed = true
-            if let pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == lastPath }) {
+            let pageIndex: Int?
+            if let index = Book.shared.index,
+               index.indices.contains(savedPageIndex),
+               index[savedPageIndex]["path"] == lastPath {
+                pageIndex = savedPageIndex
+            } else {
+                pageIndex = Book.shared.index?.firstIndex(where: { $0["path"] == lastPath })
+            }
+
+            if let pageIndex = pageIndex {
                 pageVC.page = pageIndex
             } else {
                 // path 找不到对应页，fallback 到科判式
@@ -1285,10 +1189,20 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
-    func openChapter(chapter:Int, restoreOffset: CGFloat? = nil){
+    func openChapter(
+        chapter: Int,
+        restoreOffset: CGFloat? = nil,
+        restoreCharacterIndex: Int? = nil
+    ) {
         let content = Book.shared.getSutraAttributeString(text: Book.shared.getChapterSutra(chapter: chapter))
         let title = NSLocalizedString("chapter_\(chapter + 1)", comment: "chapter_name");
-        let pageVC = ReaderViewController(title: title, content: content, chapter: chapter, restoreOffset: restoreOffset)
+        let pageVC = ReaderViewController(
+            title: title,
+            content: content,
+            chapter: chapter,
+            restoreOffset: restoreOffset,
+            restoreCharacterIndex: restoreCharacterIndex
+        )
         pageVC.hidesBottomBarWhenPushed = true
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(pageVC, animated: true)
@@ -1330,7 +1244,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         let primaryTextColor = SutraDesignTokens.shared.color(for: .textPrimary)
         let accentColor = SutraDesignTokens.shared.color(for: .accent)
-        let cardColor = SutraDesignTokens.shared.color(for: .card)
 
         cell.backgroundColor = backgroundColor
         cell.textLabel?.textColor = primaryTextColor
@@ -1339,10 +1252,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         cell.tintColor = accentColor
         cell.accessoryView?.tintColor = accentColor
 
-        // 🏯 Apply sacred styling to cell content view
-        enhanceCellWithSacredStyling(cell)
-
-  
         // 🧹 扫除强烈的凡俗卡片边框与阴影，仅保留纯粹的底色与文字交互
         cell.layer.cornerRadius = 0
         cell.layer.shadowOpacity = 0
@@ -1402,23 +1311,4 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         super.didReceiveMemoryWarning()
     }
 
-    // MARK: - Enhanced Design System Integration
-    // TODO: Migrate theme system - private var currentTheme: SutraTheme { return SutraDesignTokens.shared.currentTheme }
-
-    enum Theme {
-        case light, sepia, dark
-    }
-
-    private func setupEnhancedDesign() {
-        print("🎨 Applying enhanced design")
-
-        // Apply enhanced colors using design tokens - 禅意色彩哲学
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-        treeView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
-
-        // Enhanced navigation bar styling - 禅意色彩
-        navigationController?.navigationBar.backgroundColor = SutraDesignTokens.shared.color(for: .navigationBar)
-        navigationController?.navigationBar.barTintColor = SutraDesignTokens.shared.color(for: .navigationBar)
-     
-        }
-    }
+}

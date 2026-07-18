@@ -54,6 +54,9 @@
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
 		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* BookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* BookTests.swift */; };
+		A7C2E4F10000000000000002 /* ReadingResumeStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C2E4F10000000000000001 /* ReadingResumeStateTests.swift */; };
+		A11CE0000000000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A11CE0000000000000000001 /* PrivacyInfo.xcprivacy */; };
+		A11CE0000000000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A11CE0000000000000000003 /* PrivacyInfo.xcprivacy */; };
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
 		1390734C1D109284003A3333 /* data in Resources */ = {isa = PBXBuildFile; fileRef = 1390734B1D109284003A3333 /* data */; };
 		13978CCD1D2028E5005031EE /* Prefers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13978CCC1D2028E5005031EE /* Prefers.swift */; };
@@ -202,7 +205,10 @@
 		1390731A1D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390731F1D109194003A3333 /* lengyanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		139073231D109194003A3333 /* BookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTests.swift; sourceTree = "<group>"; };
+		A7C2E4F10000000000000001 /* ReadingResumeStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingResumeStateTests.swift; sourceTree = "<group>"; };
 		139073251D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A11CE0000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A11CE0000000000000000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1390732A1D109194003A3333 /* lengyanUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390732E1D109194003A3333 /* lengyanUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lengyanUITests.swift; sourceTree = "<group>"; };
 		139073301D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -436,6 +442,7 @@
 				139073171D109194003A3333 /* LaunchScreen.storyboard */,
 				13CA80F01EAB3BF600589E8F /* Assets.xcassets */,
 				1390731A1D109194003A3333 /* Info.plist */,
+				A11CE0000000000000000001 /* PrivacyInfo.xcprivacy */,
 				CB1B21E02EBB1C8D00A1ADB7 /* lengyan.entitlements */,
 				132014771F12B9850081FDDB /* Localizable.strings */,
 				1361D0831F647C6A00426DB6 /* InfoPlist.strings */,
@@ -451,6 +458,7 @@
 			isa = PBXGroup;
 			children = (
 				139073231D109194003A3333 /* BookTests.swift */,
+				A7C2E4F10000000000000001 /* ReadingResumeStateTests.swift */,
 				CB1B21E12EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift */,
 				139073251D109194003A3333 /* Info.plist */,
 			);
@@ -502,6 +510,7 @@
 				FC269197DEC44264A48F49A6 /* WidgetDesignTokens.swift */,
 				E3092BA60DE2421295F0CD61 /* SharedVerseData.swift */,
 				FBDCAC2906D74E67A86FDF14 /* Info.plist */,
+				A11CE0000000000000000003 /* PrivacyInfo.xcprivacy */,
 				B7D10B602EBD000100000002 /* InfoPlist.strings */,
 				EF6B6B533C8E41C5B905D48A /* LengyanWidget.entitlements */,
 			);
@@ -715,6 +724,7 @@
 				4AD063821EA3802200751922 /* ly10.m4a in Resources */,
 				1390734C1D109284003A3333 /* data in Resources */,
 				4AD0637C1EA3801D00751922 /* ly03.m4a in Resources */,
+				A11CE0000000000000000002 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -737,6 +747,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B7D10B602EBD000100000001 /* InfoPlist.strings in Resources */,
+				A11CE0000000000000000004 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -831,6 +842,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				139073241D109194003A3333 /* BookTests.swift in Sources */,
+				A7C2E4F10000000000000002 /* ReadingResumeStateTests.swift in Sources */,
 				CB1B21E22EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1065,7 +1077,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 19;
-				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = NO;
 				INFOPLIST_FILE = lengyan/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -18,22 +18,78 @@ class SutraTitleContainerView: UIView {
 
 class Book: NSObject {
     static let shared:Book = Book()
-    
-    //data loaded from json
-    var tree:[String:Any]? = nil
-    var index:[[String:String]]? = nil
-    var contents:[String:[[String:String]]]? = nil
-    var media:[[String:Any]]? = nil
-    var chapterMap: [String: [String]]? = nil
-    private var allPaths:[String]? = nil
 
-    //loading state
-    var loaded = false
+    typealias ResourceDataProvider = (_ resourceName: String, _ fileExtension: String) -> Foundation.Data?
+
+    enum LoadError: Error, Equatable, LocalizedError {
+        case missingOrInvalidResources([String])
+
+        var errorDescription: String? {
+            switch self {
+            case let .missingOrInvalidResources(resources):
+                return "Book data is missing or invalid: \(resources.joined(separator: ", "))"
+            }
+        }
+    }
+
+    enum LoadState: Equatable {
+        case idle
+        case loading
+        case loaded
+        case failed(LoadError)
+    }
+
+    private struct Corpus {
+        let tree: [String: Any]
+        let index: [[String: String]]
+        let contents: [String: [[String: String]]]
+        let media: [[String: Any]]
+        let chapterMap: [String: [String]]
+        let allPaths: [String]
+    }
+    
+    // Loading is serialized so multiple callers cannot partially overwrite the
+    // singleton with different parses of the same corpus.
+    private let loadQueue = DispatchQueue(label: "com.dhyana.lengyan.book-loader", qos: .userInitiated)
+    private let loadQueueKey = DispatchSpecificKey<Void>()
+    private let stateLock = NSLock()
+    private let resourceDataProvider: ResourceDataProvider
+    private var storedLoadState: LoadState = .idle
+    private var storedCorpus: Corpus?
+
+    // All five views come from one immutable corpus replacement. Readers can
+    // therefore observe either the old complete value or the new complete
+    // value, never a partially published mix of JSON resources.
+    var tree: [String: Any]? { corpusValue(\.tree) }
+    var index: [[String: String]]? { corpusValue(\.index) }
+    var contents: [String: [[String: String]]]? { corpusValue(\.contents) }
+    var media: [[String: Any]]? { corpusValue(\.media) }
+    var chapterMap: [String: [String]]? { corpusValue(\.chapterMap) }
+
+    var loadState: LoadState {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return storedLoadState
+    }
+
+    var loaded: Bool { loadState == .loaded }
     //Chinsese lanaguage style: simplified or traditional, based on system locale, default simplified
     var isSimplifiedChinese = true
 
-    //init language based on system locale
-    override init(){
+    // Init language based on system locale. Tests can inject resource bytes so
+    // missing/corrupt bundles and retry behavior are exercised deterministically.
+    override convenience init() {
+        self.init(resourceDataProvider: Book.bundledResourceData)
+    }
+
+    init(resourceDataProvider: @escaping ResourceDataProvider) {
+        self.resourceDataProvider = resourceDataProvider
+        super.init()
+        loadQueue.setSpecific(key: loadQueueKey, value: ())
+        configureLanguage()
+    }
+
+    private func configureLanguage() {
         // 优先响应 -AppleLanguages 启动参数（fastlane snapshot / UITest 通过 app.launchArguments 注入）
         let launchArgs = ProcessInfo.processInfo.arguments
         if let idx = launchArgs.firstIndex(of: "-AppleLanguages"), idx + 1 < launchArgs.count {
@@ -57,100 +113,259 @@ class Book: NSObject {
             }
         }
     }
+
+    private static func bundledResourceData(
+        _ resourceName: String,
+        _ fileExtension: String
+    ) -> Foundation.Data? {
+        guard let url = Bundle.main.url(
+            forResource: resourceName,
+            withExtension: fileExtension
+        ) else { return nil }
+        return try? Foundation.Data(contentsOf: url)
+    }
     
     //MARK: Loading data from json files
-    func loadDataSyncWithCompletionHandler(_ handler:@escaping ()->Void) {
+
+    /// Synchronously loads the bundled corpus. The completion runs on the
+    /// caller's thread and receives an explicit success/failure result.
+    @discardableResult
+    func loadDataSyncWithCompletionHandler(
+        _ handler: (Result<Void, LoadError>) -> Void
+    ) -> Result<Void, LoadError> {
+        let result = loadCorpusIfNeeded()
+        handler(result)
+        return result
+    }
+
+    /// Asynchronously loads once and always completes on the main queue.
+    /// Calls arriving while a load is queued are serialized and reuse its
+    /// published result instead of parsing and mutating shared state in parallel.
+    func loadDataWithCompletionHandler(
+        _ handler: @escaping (Result<Void, LoadError>) -> Void
+    ) {
+        loadQueue.async {
+            let result = self.loadCorpusIfNeededOnLoadQueue()
+            DispatchQueue.main.async {
+                handler(result)
+            }
+        }
+    }
+
+    /// Explicit retry entry point for a genuine resource failure. Normal calls
+    /// return the recorded failure rather than repeatedly re-reading the bundle.
+    func retryLoading(_ handler: @escaping (Result<Void, LoadError>) -> Void) {
+        loadQueue.async {
+            let result: Result<Void, LoadError>
+            switch self.loadState {
+            case .loaded:
+                result = .success(())
+            case .failed:
+                self.setLoadState(.idle)
+                result = self.loadCorpusIfNeededOnLoadQueue()
+            case .idle, .loading:
+                result = self.loadCorpusIfNeededOnLoadQueue()
+            }
+            DispatchQueue.main.async {
+                handler(result)
+            }
+        }
+    }
+
+    private func loadCorpusIfNeeded() -> Result<Void, LoadError> {
+        if DispatchQueue.getSpecific(key: loadQueueKey) != nil {
+            return loadCorpusIfNeededOnLoadQueue()
+        }
+        return loadQueue.sync {
+            loadCorpusIfNeededOnLoadQueue()
+        }
+    }
+
+    private func loadCorpusIfNeededOnLoadQueue() -> Result<Void, LoadError> {
+        switch loadState {
+        case .loaded:
+            return .success(())
+        case let .failed(error):
+            return .failure(error)
+        case .idle, .loading:
+            break
+        }
+
+        setLoadState(.loading)
+        let result = parseBundledCorpus()
+        switch result {
+        case let .success(corpus):
+            publishLoaded(corpus)
+            return .success(())
+        case let .failure(error):
+            publishFailure(error)
+            print("⚠️ \(error.localizedDescription)")
+            return .failure(error)
+        }
+    }
+
+    private func parseBundledCorpus() -> Result<Corpus, LoadError> {
         var path = "data/"
         if self.isSimplifiedChinese {
             path = "data/simplified/"
         }
-        let treeFileURL = Bundle.main.url(forResource: path + "lengyanjing-index-tree", withExtension: "json")
-        if let treeFileURL = treeFileURL,
-           let data = try? Foundation.Data(contentsOf: treeFileURL) {
-            do {
-                self.tree = try (JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? NSDictionary as? [String: Any]
-            } catch _ {
-                self.tree = [:]
-            }
+
+        var missingResources: [String] = []
+
+        let parsedTree: [String: Any]
+        if let data = resourceDataProvider(path + "lengyanjing-index-tree", "json"),
+           let value = try? JSONSerialization.jsonObject(with: data, options: .allowFragments),
+           let tree = value as? [String: Any],
+           !tree.isEmpty {
+            parsedTree = tree
         } else {
-            self.tree = [:]
+            parsedTree = [:]
+            missingResources.append("index tree")
         }
 
-        let contentFile = Bundle.main.url(forResource:  path + "lengyanjing-content", withExtension: "json")
-        if let contentFile = contentFile,
-           let contentData = try? Foundation.Data(contentsOf: contentFile) {
-            do {
-                self.contents = try (JSONSerialization.jsonObject(with: contentData, options: .allowFragments)) as? NSDictionary
-                    as? [String:[[String:String]]]
-            } catch _ {
-                self.contents  = [:]
-            }
+        let parsedContents: [String: [[String: String]]]
+        if let contentData = resourceDataProvider(path + "lengyanjing-content", "json"),
+           let value = try? JSONSerialization.jsonObject(with: contentData, options: .allowFragments),
+           let contents = value as? [String: [[String: String]]],
+           !contents.isEmpty {
+            parsedContents = contents
         } else {
-            self.contents = [:]
+            parsedContents = [:]
+            missingResources.append("content")
         }
 
-        let indexFile = Bundle.main.url(forResource:  path + "lengyanjing-index", withExtension: "json")
-        if let indexFile = indexFile,
-           let indexData = try? Foundation.Data(contentsOf: indexFile) {
-            do {
-                let indexArray = try (JSONSerialization.jsonObject(with: indexData, options: .allowFragments)) as? NSArray
-                self.index = indexArray as? [[String:String]]
-            } catch _ {
-                self.index = []
-            }
+        let parsedIndex: [[String: String]]
+        if let indexData = resourceDataProvider(path + "lengyanjing-index", "json"),
+           let value = try? JSONSerialization.jsonObject(with: indexData, options: .allowFragments),
+           let index = value as? [[String: String]],
+           !index.isEmpty {
+            parsedIndex = index
         } else {
-            self.index = []
+            parsedIndex = []
+            missingResources.append("index")
         }
 
-        let mediaFile = Bundle.main.url(forResource:  path + "lengyanjing-media", withExtension: "json")
-        if let mediaFile = mediaFile,
-           let mediaData = try? Foundation.Data(contentsOf: mediaFile) {
-            do {
-                self.media = try (JSONSerialization.jsonObject(with: mediaData, options: .allowFragments)) as? NSArray
-                    as? [[String:Any]]
-            } catch _ {
-                self.media  = []
-            }
+        let parsedMedia: [[String: Any]]
+        if let mediaData = resourceDataProvider(path + "lengyanjing-media", "json"),
+           let value = try? JSONSerialization.jsonObject(with: mediaData, options: .allowFragments),
+           let media = value as? [[String: Any]],
+           media.allSatisfy({ item in
+               guard let files = item["files"] as? [String],
+                     let names = item["names"] as? [String],
+                     item["name"] is String,
+                     item["extension"] is String else { return false }
+               return !files.isEmpty && files.count == names.count
+           }) {
+            // Audio metadata is optional for the core reading corpus. Publishing
+            // an empty array keeps reading/search usable in a degraded build.
+            parsedMedia = media
         } else {
-            self.media = []
+            parsedMedia = []
+            print("⚠️ Optional Book resource unavailable: media")
         }
 
-        let chapterMapFile = Bundle.main.url(forResource: "data/lengyanjing-chapter-map", withExtension: "json")
-        if let chapterMapFile = chapterMapFile,
-           let chapterMapData = try? Foundation.Data(contentsOf: chapterMapFile) {
-            do {
-                self.chapterMap = try (JSONSerialization.jsonObject(with: chapterMapData, options: .allowFragments)) as? [String: [String]]
-            } catch _ {
-                self.chapterMap = [:]
-            }
+        let parsedChapterMap: [String: [String]]
+        if let chapterMapData = resourceDataProvider("data/lengyanjing-chapter-map", "json"),
+           let value = try? JSONSerialization.jsonObject(with: chapterMapData, options: .allowFragments),
+           let chapterMap = value as? [String: [String]],
+           !chapterMap.isEmpty {
+            parsedChapterMap = chapterMap
         } else {
-            self.chapterMap = [:]
+            parsedChapterMap = [:]
+            missingResources.append("chapter map")
         }
 
-        self.loaded = true
+        if !missingResources.isEmpty {
+            return .failure(.missingOrInvalidResources(missingResources))
+        }
+
+        let treePaths = collectValidatedTreePaths(from: parsedTree)
+        if treePaths == nil {
+            missingResources.append("index tree structure")
+        }
+        if parsedIndex.contains(where: {
+            guard let path = $0["path"], let name = $0["name"] else { return true }
+            return name.isEmpty || !(treePaths?.contains(path) ?? false)
+        }) {
+            missingResources.append("index structure")
+        }
+        if parsedContents.contains(where: { path, entries in
+            !((treePaths?.contains(path) ?? false)
+                && !entries.isEmpty
+                && entries.allSatisfy {
+                    guard let type = $0["type"], let content = $0["content"] else { return false }
+                    return !type.isEmpty && !content.isEmpty
+                })
+        }) {
+            missingResources.append("content structure")
+        }
+        let expectedChapterKeys = Set((1...10).map(String.init))
+        if Set(parsedChapterMap.keys) != expectedChapterKeys
+            || parsedChapterMap.values.contains(where: { paths in
+                paths.isEmpty || paths.contains(where: { !(treePaths?.contains($0) ?? false) })
+            }) {
+            missingResources.append("chapter map structure")
+        }
+        if !missingResources.isEmpty {
+            return .failure(.missingOrInvalidResources(missingResources))
+        }
+
+        return .success(Corpus(
+            tree: parsedTree,
+            index: parsedIndex,
+            contents: parsedContents,
+            media: parsedMedia,
+            chapterMap: parsedChapterMap,
+            allPaths: parsedIndex.compactMap { $0["path"] }
+        ))
     }
-    
-    func loadDataWithCompletionHandler(_ handler:@escaping ()->Void) {
-        if self.loaded {
-            handler()
-            return
-        }
-        
-        DispatchQueue.global(qos:DispatchQoS.QoSClass.userInteractive).async{
-            if self.loaded {
-                handler()
-                return
+
+    private func collectValidatedTreePaths(from node: [String: Any]) -> Set<String>? {
+        guard let id = node["id"] as? String, !id.isEmpty,
+              let name = node["name"] as? String, !name.isEmpty,
+              let path = node["path"] as? String else { return nil }
+
+        var paths: Set<String> = [path]
+        if let rawChildren = node["children"] {
+            guard let children = rawChildren as? [[String: Any]], !children.isEmpty else { return nil }
+            for child in children {
+                guard let childPaths = collectValidatedTreePaths(from: child),
+                      paths.isDisjoint(with: childPaths) else { return nil }
+                paths.formUnion(childPaths)
             }
-            self.loadDataSyncWithCompletionHandler(handler)
         }
+        return paths
+    }
+
+    private func corpusValue<Value>(_ keyPath: KeyPath<Corpus, Value>) -> Value? {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return storedCorpus?[keyPath: keyPath]
+    }
+
+    private func publishLoaded(_ corpus: Corpus) {
+        stateLock.lock()
+        storedCorpus = corpus
+        storedLoadState = .loaded
+        stateLock.unlock()
+    }
+
+    private func publishFailure(_ error: LoadError) {
+        stateLock.lock()
+        storedCorpus = nil
+        storedLoadState = .failed(error)
+        stateLock.unlock()
+    }
+
+    private func setLoadState(_ state: LoadState) {
+        stateLock.lock()
+        storedLoadState = state
+        stateLock.unlock()
     }
     
     //MARK: Path, item and relations in the tree
     func getAllPaths()->[String]{
-        if self.allPaths == nil {
-            self.allPaths = self.index?.compactMap({ $0["path"] }) ?? []
-        }
-        return self.allPaths ?? []
+        corpusValue(\.allPaths) ?? []
     }
 
     func getKeyItems() ->[[String]]{
@@ -174,6 +389,26 @@ class Book: NSObject {
             node = children.first(where: { ($0["id"] as? String) == id })
         }
         return node ?? [:]
+    }
+
+    /// Returns true only for a non-root corpus node whose canonical path is an
+    /// exact match. The root aliases (`""` and `"/"`) are useful for browsing
+    /// the full outline, but are never a meaningful persisted resume target.
+    func isValidResumePath(_ path: String) -> Bool {
+        guard !path.isEmpty,
+              path != "/",
+              let resolvedPath = itemOfPath(path)["path"] as? String,
+              !resolvedPath.isEmpty,
+              resolvedPath != "/" else {
+            return false
+        }
+        return resolvedPath == path
+    }
+
+    /// Compatibility name for callers that have not yet adopted the more
+    /// precise resume-path terminology.
+    func isValidReadingPath(_ path: String) -> Bool {
+        isValidResumePath(path)
     }
 
     func parentOfItem(_ item:[String:Any]) -> [String:Any]? {
@@ -405,10 +640,11 @@ class Book: NSObject {
         var sutraContents = [String]()
         let children = item["children"]
         if (children == nil) {
-            let content = Book.shared.contents?[item["path"] as! String]
-            if content != nil {
+            guard let path = item["path"] as? String else { return "" }
+            let content = Book.shared.contents?[path]
+            if let content {
                 var length = 0
-                for c in content! {
+                for c in content {
                     if c["type"] == "sutra" {
                         let sutra = c["content"]!
                         if length + sutra.count + 3 <= maxLength {

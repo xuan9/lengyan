@@ -68,6 +68,8 @@ struct ModernSettingsView: View {
                     versionRow
                 }
 
+                privacyPolicyFooter
+
                 Text("✧ ❀ ✧")
                     .font(.system(size: 11))
                     .foregroundColor(SutraDesignSystem.color(.primary).opacity(0.25))
@@ -423,6 +425,19 @@ struct ModernSettingsView: View {
         .padding(.vertical, 16)
     }
 
+    private var privacyPolicyFooter: some View {
+        Button(action: openPrivacyPolicy) {
+            Text(L10n.str("settings_privacy_policy"))
+                .font(SutraTypographyBridge.uiSmall(weight: .regular))
+                .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(minHeight: 44)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .padding(.top, 20)
+    }
+
     // MARK: - Navigation (delegates to NavigationHelper)
 
     private func openAcknowledgments() {
@@ -433,9 +448,80 @@ struct ModernSettingsView: View {
         NavigationHelper.pushSwiftUIView(FeedbackView(), title: L10n.str("settings_feedback"))
     }
 
+    private func openPrivacyPolicy() {
+        NavigationHelper.pushSwiftUIView(
+            PrivacyPolicyView(),
+            title: L10n.str("settings_privacy_policy")
+        )
+    }
+
     private func openAppStoreRating() {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
         SKStoreReviewController.requestReview(in: scene)
+    }
+}
+
+struct PrivacyPolicyView: View {
+    private var dividerColor: Color {
+        SutraDesignSystem.color(.primary).opacity(0.12)
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                policySection(title: L10n.str("privacy_policy_local_title")) {
+                    policyParagraph(L10n.str("privacy_policy_local_body"))
+                }
+
+                Rectangle()
+                    .fill(dividerColor)
+                    .frame(height: 0.5)
+                    .padding(.vertical, 28)
+
+                policySection(title: L10n.str("privacy_policy_feedback_title")) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        policyParagraph(L10n.str("privacy_policy_feedback_body"))
+                        policyParagraph(L10n.str("privacy_policy_retention_body"))
+                    }
+                }
+
+                Text(L10n.str("privacy_policy_updated"))
+                    .font(SutraTypographyBridge.uiSmall(weight: .light))
+                    .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                    .padding(.top, 36)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 28)
+            .padding(.top, 32)
+            .padding(.bottom, 80)
+            .readingContentWidth()
+            .textSelection(.enabled)
+        }
+        .background(SutraDesignSystem.backgroundColor())
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func policySection<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(title)
+                .font(SutraTypographyBridge.uiCaption(weight: .semibold))
+                .tracking(2.5)
+                .foregroundColor(SutraDesignSystem.color(.primary))
+                .accessibilityAddTraits(.isHeader)
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func policyParagraph(_ text: String) -> some View {
+        Text(text)
+            .font(SutraTypographyBridge.uiBody(weight: .regular))
+            .foregroundColor(SutraDesignSystem.color(.textPrimary))
+            .lineSpacing(7)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 

@@ -1,5 +1,5 @@
-lengyan.xcodeproj/project.xcworkspace/xcuserdata/fuxuang.xcuserdatad
-lengyan.xcodeproj/xcuserdata
+# Xcode per-user UI/debugger state (independent of local account name)
+**/xcuserdata/
 DerivedData
 TestResults.xcresult
 screenshots/
@@ -21,6 +21,18 @@ build/
 .swiftpm/
 .build/
 Package.resolved
+
+# Cloudflare Wrangler local account/cache state
+**/.wrangler/
+**/node_modules/
+
+# Local environment and Worker secret files (examples may be committed)
+**/.dev.vars
+**/.dev.vars.*
+**/.env
+**/.env.*
+!**/.dev.vars.example
+!**/.env.example
 
 # vim 交换文件 & CLI 缓存
 *.swp

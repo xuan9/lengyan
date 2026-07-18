@@ -108,7 +108,14 @@ final class DailyVerseProvider {
         }
         
         var pool = buildPool()
-        if let lastRead = Prefers.shared.lastReadPath {
+        let lastRead: String?
+        switch Prefers.shared.outlineResumeTarget {
+        case let .paged(path, _), let .tree(path):
+            lastRead = path
+        case .chapter, nil:
+            lastRead = nil
+        }
+        if let lastRead {
             pool.removeAll { $0 == lastRead }
         }
         if pool.isEmpty {

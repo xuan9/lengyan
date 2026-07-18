@@ -17,7 +17,7 @@ struct SharedVerseData: Codable {
     let source: String       // 来源标注 "卷二 · 十番显见"
     let path: String         // 科判路径，用于深链
     let dateString: String   // "2026-05-08"，用于判断是否过期
-    let theme: String?       // "light" | "sepia" | "dark"
+    let theme: String?       // "light" | "sepia"; legacy "dark" falls back to sepia
 
     /// App Group identifier
     static let appGroupID = "group.org.fuxuan.books"

@@ -160,9 +160,15 @@ class SutraTableViewCell: UITableViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         
+        // A cell's own height is only the current paragraph height and cannot
+        // identify the reading window's orientation. Prefer the scene window;
+        // before attachment, use a square fallback so a tall iPad is never
+        // mistaken for landscape during self-sizing.
+        let readingContainerHeight = window?.bounds.height
+            ?? max(contentView.bounds.width, contentView.bounds.height)
         let horizontalInset = SutraAdaptiveLayout.readingHorizontalInsets(
             containerWidth: contentView.bounds.width,
-            containerHeight: contentView.bounds.height
+            containerHeight: readingContainerHeight
         )
         containerLeadingConstraint.constant = horizontalInset
         containerTrailingConstraint.constant = -horizontalInset
@@ -227,6 +233,16 @@ class SutraTableViewCell: UITableViewCell {
 
 class SutraPageContentViewController: UITableViewController, SutraPage{
 
+    private struct TablePositionAnchor {
+        let row: Int
+        let fractionThroughRow: CGFloat
+    }
+
+    private struct PendingTableLayoutPosition {
+        let anchor: TablePositionAnchor?
+        let contentOffset: CGPoint
+    }
+
     internal var pageIndex = 0;
     var meta:[String:Any] = [:];
     var contents:[[String:String]] = [];
@@ -236,6 +252,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     // Zen design properties
     private let zenBackgroundView = UIView()
     private let statusBarOverlay = UIView()
+    private var lastLaidOutWidth: CGFloat = 0
+    private var pendingTableLayoutPosition: PendingTableLayoutPosition?
+    private var stableTableLayoutPosition: PendingTableLayoutPosition?
     var sutraFont:UIFont? = nil, comentFont:UIFont? = nil, indexFont:UIFont? = nil;
 
     // Enhanced properties for SutraEnhancedPageViewController
@@ -317,10 +336,20 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     private func setupThemeObserverForView() {
+        // viewWillAppear can re-apply the design system; remove first so each
+        // controller owns exactly one observer for each appearance setting.
+        NotificationCenter.default.removeObserver(self, name: .themeDidChange, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .fontSizeDidChange, object: nil)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(themeDidChangeForViewController),
             name: .themeDidChange,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(fontSizeDidChangeForViewController),
+            name: .fontSizeDidChange,
             object: nil
         )
     }
@@ -331,6 +360,89 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             self.configureTableViewWithDesignSystem()
             self.tableView.reloadData()
         }, completion: nil)
+    }
+
+    @objc private func fontSizeDidChangeForViewController() {
+        let anchor = currentTablePositionAnchor()
+        let previousOffset = tableView.contentOffset
+        initFontsWithDesignSystem()
+        tableView.reloadData()
+        tableView.layoutIfNeeded()
+        restoreTablePosition(anchor: anchor, fallbackOffset: previousOffset)
+        updateStableTablePosition()
+    }
+
+    /// Preserve the same paragraph and the approximate position within it.
+    /// Row height scales with typography, while a raw y offset does not.
+    private func currentTablePositionAnchor() -> TablePositionAnchor? {
+        let visibleY = tableView.contentOffset.y + tableView.adjustedContentInset.top
+        let point = CGPoint(x: tableView.bounds.midX, y: visibleY + 1)
+        guard let indexPath = tableView.indexPathForRow(at: point) ?? tableView.indexPathsForVisibleRows?.first else {
+            return nil
+        }
+
+        let rowRect = tableView.rectForRow(at: indexPath)
+        guard rowRect.height > 0 else {
+            return TablePositionAnchor(row: indexPath.row, fractionThroughRow: 0)
+        }
+        let fraction = (visibleY - rowRect.minY) / rowRect.height
+        return TablePositionAnchor(
+            row: indexPath.row,
+            fractionThroughRow: min(max(fraction, 0), 1)
+        )
+    }
+
+    private func restoreTablePosition(
+        anchor: TablePositionAnchor?,
+        fallbackOffset: CGPoint
+    ) {
+        let requestedY: CGFloat
+        if let anchor, anchor.row < tableView.numberOfRows(inSection: 0) {
+            let newRect = tableView.rectForRow(
+                at: IndexPath(row: anchor.row, section: 0)
+            )
+            let visibleY = newRect.minY
+                + newRect.height * anchor.fractionThroughRow
+            requestedY = visibleY - tableView.adjustedContentInset.top
+        } else {
+            requestedY = fallbackOffset.y
+        }
+        let minY = -tableView.adjustedContentInset.top
+        let maxY = max(
+            minY,
+            tableView.contentSize.height
+                - tableView.bounds.height
+                + tableView.adjustedContentInset.bottom
+        )
+        let restoredY = min(max(requestedY, minY), maxY)
+        tableView.setContentOffset(
+            CGPoint(x: fallbackOffset.x, y: restoredY),
+            animated: false
+        )
+    }
+
+    private func captureTablePositionForPendingLayoutIfNeeded() {
+        guard pendingTableLayoutPosition == nil,
+              isViewLoaded,
+              tableView.bounds.width > 0 else { return }
+        // By the time viewWillLayoutSubviews runs, autoresizing may already
+        // have changed the table width and invalidated its old row heights.
+        // Prefer the last position captured while the old geometry was stable.
+        pendingTableLayoutPosition = stableTableLayoutPosition
+            ?? PendingTableLayoutPosition(
+                anchor: currentTablePositionAnchor(),
+                contentOffset: tableView.contentOffset
+            )
+    }
+
+    private func updateStableTablePosition() {
+        guard isViewLoaded,
+              tableView.bounds.width > 0,
+              pendingTableLayoutPosition == nil else { return }
+        stableTableLayoutPosition = PendingTableLayoutPosition(
+            anchor: currentTablePositionAnchor(),
+            contentOffset: tableView.contentOffset
+        )
     }
 
     deinit {
@@ -394,6 +506,32 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         configureZenNavigationBar()
     }
 
+    override func viewWillTransition(
+        to size: CGSize,
+        with coordinator: UIViewControllerTransitionCoordinator
+    ) {
+        if abs(size.width - view.bounds.width) > 0.5 {
+            captureTablePositionForPendingLayoutIfNeeded()
+        }
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: nil) { [weak self] context in
+            guard let self else { return }
+            if context.isCancelled
+                || abs(self.view.bounds.width - self.lastLaidOutWidth) <= 0.5 {
+                self.pendingTableLayoutPosition = nil
+            }
+        }
+    }
+
+    override func viewWillLayoutSubviews() {
+        let newWidth = view.bounds.width
+        if lastLaidOutWidth > 0,
+           abs(newWidth - lastLaidOutWidth) > 0.5 {
+            captureTablePositionForPendingLayoutIfNeeded()
+        }
+        super.viewWillLayoutSubviews()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
@@ -412,6 +550,38 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             bottom: 40,
             right: 0
         )
+
+        let newWidth = view.bounds.width
+        let widthChanged = lastLaidOutWidth > 0
+            && abs(newWidth - lastLaidOutWidth) > 0.5
+        let pendingPosition = widthChanged ? pendingTableLayoutPosition : nil
+        if widthChanged {
+            // Commit the new geometry before forcing another layout pass. This
+            // prevents re-entrant layout from recapturing the just-consumed
+            // old-width anchor.
+            pendingTableLayoutPosition = nil
+        }
+        if newWidth > 0 {
+            lastLaidOutWidth = newWidth
+        }
+        if let pendingPosition {
+            tableView.layoutIfNeeded()
+            restoreTablePosition(
+                anchor: pendingPosition.anchor,
+                fallbackOffset: pendingPosition.contentOffset
+            )
+        }
+        updateStableTablePosition()
+    }
+
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard lastLaidOutWidth > 0,
+              abs(view.bounds.width - lastLaidOutWidth) <= 0.5 else { return }
+        updateStableTablePosition()
+    }
+
+    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        parentReader?.confirmReadingInteraction()
     }
 
     override func viewWillDisappear(_ animated: Bool) {

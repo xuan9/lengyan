@@ -265,8 +265,14 @@ public final class SutraDesignTokens {
     public static let shared = SutraDesignTokens()
     private init() {}
 
+    /// Dark colors stay implemented for possible future work, but night reading
+    /// is intentionally unavailable in the current release.
+    static func enabledTheme(_ theme: SutraTheme) -> SutraTheme {
+        theme == .dark ? .sepia : theme
+    }
+
     // MARK: - Current Theme
-    public var currentTheme: SutraTheme = .sepia {
+    public private(set) var currentTheme: SutraTheme = .sepia {
         didSet {
             UserDefaults.standard.set(currentTheme.rawValue, forKey: "selectedTheme")
             applyTheme(currentTheme)
@@ -278,11 +284,13 @@ public final class SutraDesignTokens {
 
     // MARK: - Theme Persistence
     public func loadSavedTheme() {
+        // Normalize a historical dark preference to sepia while loading it.
         if let savedTheme = UserDefaults.standard.string(forKey: "selectedTheme"),
            let theme = SutraTheme(rawValue: savedTheme) {
-            currentTheme = theme
+            currentTheme = Self.enabledTheme(theme)
         } else {
-            currentTheme = determineAutoTheme()
+            // Night reading remains intentionally unavailable.
+            currentTheme = .sepia
         }
 
         // Force immediate theme application
@@ -292,13 +300,11 @@ public final class SutraDesignTokens {
         NotificationCenter.default.post(name: .themeDidChange, object: nil)
     }
 
-    private func determineAutoTheme() -> SutraTheme {
-        return .sepia
-    }
-
     // MARK: - Theme Management
     public func setTheme(_ theme: SutraTheme) {
-        currentTheme = theme
+        // Keep the dark palette implemented but unreachable until night reading
+        // is deliberately enabled in a future release.
+        currentTheme = Self.enabledTheme(theme)
     }
 
     public func toggleTheme() {

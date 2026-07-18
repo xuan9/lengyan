@@ -7,57 +7,109 @@
 
 import SwiftUI
 
+enum FeedbackLengthState: Equatable {
+    /// Keep the normal form quiet, then leave enough notice for a short
+    /// paragraph before reaching the service limit.
+    static let warningWindow = 200
+
+    case hidden
+    case remaining(Int)
+    case limitReached
+    case overLimit(Int)
+
+    static func resolve(contentLength: Int, maximum: Int) -> FeedbackLengthState {
+        let count = max(0, contentLength)
+        if count > maximum {
+            return .overLimit(count - maximum)
+        }
+        if count == maximum {
+            return .limitReached
+        }
+        let remaining = maximum - count
+        if remaining <= min(warningWindow, maximum) {
+            return .remaining(remaining)
+        }
+        return .hidden
+    }
+
+    static func accessibilityAnnouncementLevel(
+        contentLength: Int,
+        maximum: Int
+    ) -> Int {
+        if contentLength > maximum { return 3 }
+        if contentLength == maximum { return 2 }
+        let remaining = maximum - max(0, contentLength)
+        if remaining <= warningWindow { return 1 }
+        return 0
+    }
+}
+
 struct FeedbackView: View {
-    @AppStorage("feedbackDraft") private var content = ""
+    // Feedback can contain sensitive text, so keep it only for this form's lifetime.
+    @State private var content = ""
     @State private var isSending = false
     @State private var sendSucceeded = false
     @State private var errorMessage: String?
+    @State private var showContent = false
+    @State private var hasConsumedLegacyDraft = false
+    @State private var lastLengthAnnouncementLevel = 0
     @Environment(\.dismiss) private var dismiss
 
+    private var normalizedContent: String {
+        FeedbackService.normalizedContent(content)
+    }
+
+    private var contentLength: Int {
+        normalizedContent.count
+    }
+
     private var isEmpty: Bool {
-        content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        normalizedContent.isEmpty
+    }
+
+    private var isTooLong: Bool {
+        contentLength > FeedbackService.maximumContentLength
     }
 
     var body: some View {
-        if sendSucceeded {
-            successView
-        } else {
-            formView
+        Group {
+            if sendSucceeded {
+                successView
+            } else {
+                formView
+            }
         }
+        .onAppear(perform: consumeLegacyDraftIfNeeded)
+        .onChange(of: contentLength, perform: announceLengthMilestoneIfNeeded)
     }
 
     // MARK: - 致谢页
-
-    @State private var showContent = false
 
     private var successView: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            // 莲花意象 — 内敛而庄严
             Image(systemName: "leaf.circle")
                 .font(.system(size: 48, weight: .ultraLight))
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .decorativeGold)).opacity(showContent ? 0.6 : 0))
+                .foregroundColor(
+                    Color(SutraDesignTokens.shared.color(for: .decorativeGold))
+                        .opacity(showContent ? 0.6 : 0)
+                )
                 .padding(.bottom, 24)
 
-            // 主文：感恩
             Text(L10n.str("feedback_success_title"))
                 .font(SutraTypographyBridge.uiBody(weight: .medium))
                 .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
                 .opacity(showContent ? 1 : 0)
                 .padding(.bottom, 12)
 
-            // 副文：珍重
             Text(L10n.str("feedback_success_subtitle"))
                 .font(SutraTypographyBridge.uiCaption(weight: .light))
                 .foregroundColor(SutraDesignSystem.color(.textTertiary))
                 .opacity(showContent ? 1 : 0)
                 .padding(.bottom, 48)
 
-            // 手动完成按钮 — 稳重、清晰、体面
-            Button(action: {
-                dismiss()
-            }) {
+            Button(action: dismiss.callAsFunction) {
                 Text(L10n.str("done"))
                     .font(.system(size: 16, weight: .medium, design: .serif))
                     .tracking(3)
@@ -76,7 +128,6 @@ struct FeedbackView: View {
         .frame(maxWidth: .infinity)
         .background(SutraDesignSystem.backgroundColor())
         .onAppear {
-            // 淡入动画，让致谢有仪式感
             withAnimation(.easeInOut(duration: 0.8)) {
                 showContent = true
             }
@@ -87,33 +138,33 @@ struct FeedbackView: View {
 
     private var formView: some View {
         GeometryReader { geo in
-            VStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: 0) {
-                    headerSection
-                        .padding(.bottom, 20)
+            ScrollView {
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        headerSection
+                            .padding(.bottom, 20)
 
-                    if let err = errorMessage {
-                        errorBanner(err)
-                            .padding(.bottom, 16)
+                        if let err = errorMessage {
+                            errorBanner(err)
+                                .padding(.bottom, 16)
+                        }
+
+                        textSection(frameHeight: geo.size.height - 260)
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
 
-                    textSection(frameHeight: geo.size.height - 260)
+                    Spacer(minLength: 0)
+
+                    sendButton
+                    footerText
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-
-                Spacer()
-
-                sendButton
-
-                footerText
+                .frame(minHeight: geo.size.height)
+                .readingContentWidth()
             }
-            .readingContentWidth()
             .background(SutraDesignSystem.backgroundColor())
         }
     }
-
-    // MARK: - 标题
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -127,8 +178,6 @@ struct FeedbackView: View {
         }
     }
 
-    // MARK: - 错误提示
-
     private func errorBanner(_ message: String) -> some View {
         Text(message)
             .font(SutraTypographyBridge.uiCaption(weight: .regular))
@@ -141,30 +190,36 @@ struct FeedbackView: View {
             )
     }
 
-    // MARK: - 文本输入
-
     private func textSection(frameHeight: CGFloat) -> some View {
-        ZStack(alignment: .topLeading) {
-            // 背景：纯净宣纸色，微妙区分输入区域，跟随主题
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(SutraDesignTokens.shared.color(for: .card)))
+        VStack(alignment: .trailing, spacing: 6) {
+            ZStack(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(SutraDesignTokens.shared.color(for: .card)))
 
-            if content.isEmpty {
-                Text(L10n.str("feedback_placeholder"))
-                    .font(SutraTypographyBridge.uiBody(weight: .light))
-                    .foregroundColor(SutraDesignSystem.color(.textTertiary).opacity(0.5))
-                    .padding(16)
+                if content.isEmpty {
+                    Text(L10n.str("feedback_placeholder"))
+                        .font(SutraTypographyBridge.uiBody(weight: .light))
+                        .foregroundColor(SutraDesignSystem.color(.textTertiary).opacity(0.5))
+                        .padding(16)
+                }
+
+                hideTextEditorBackground(TextEditor(text: $content))
+                    .font(SutraTypographyBridge.uiBody(weight: .regular))
+                    .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
+                    .frame(minHeight: max(160, frameHeight))
+                    .padding(12)
+                    .accessibilityHint(editorAccessibilityHint)
             }
 
-            hideTextEditorBackground(TextEditor(text: $content))
-                .font(SutraTypographyBridge.uiBody(weight: .regular))
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
-                .frame(minHeight: max(160, frameHeight))
-                .padding(12)
+            if shouldShowContentLength {
+                Text(contentLengthText)
+                    .font(SutraTypographyBridge.uiSmall(weight: .regular))
+                    .monospacedDigit()
+                    .foregroundColor(isTooLong ? .red : SutraDesignSystem.color(.textTertiary))
+                    .accessibilityLabel(contentLengthText)
+            }
         }
     }
-
-    // MARK: - 发送按钮
 
     private var sendButton: some View {
         Button(action: sendFeedback) {
@@ -182,18 +237,18 @@ struct FeedbackView: View {
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isEmpty
-                        ? Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.3)
-                        : Color(SutraDesignTokens.shared.color(for: .primary)))
+                    .fill(
+                        isEmpty || isTooLong
+                            ? Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.3)
+                            : Color(SutraDesignTokens.shared.color(for: .primary))
+                    )
             )
         }
-        .disabled(isEmpty || isSending)
+        .disabled(isEmpty || isTooLong || isSending)
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
         .background(SutraDesignSystem.backgroundColor())
     }
-
-    // MARK: - 底部文字
 
     private var footerText: some View {
         Text(L10n.str("feedback_footer"))
@@ -206,8 +261,12 @@ struct FeedbackView: View {
     // MARK: - 发送
 
     private func sendFeedback() {
-        let text = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = normalizedContent
         guard !text.isEmpty else { return }
+        guard text.count <= FeedbackService.maximumContentLength else {
+            errorMessage = contentTooLongMessage
+            return
+        }
 
         errorMessage = nil
         isSending = true
@@ -218,11 +277,89 @@ struct FeedbackView: View {
                 case .success:
                     content = ""
                     sendSucceeded = true
-                case .failure:
-                    errorMessage = L10n.str("feedback_send_failed")
+                case let .failure(error):
+                    switch error {
+                    case .contentTooLong:
+                        errorMessage = contentTooLongMessage
+                    case .rateLimited:
+                        errorMessage = L10n.str("feedback_rate_limited_error")
+                    case .invalidRequest, .transportFailed, .serverRejected:
+                        errorMessage = L10n.str("feedback_send_failed")
+                    }
                 }
             }
         }
+    }
+
+    private func consumeLegacyDraftIfNeeded() {
+        guard !hasConsumedLegacyDraft else { return }
+        hasConsumedLegacyDraft = true
+        let legacyDraft = FeedbackService.consumeLegacyDraft()
+        if content.isEmpty {
+            content = legacyDraft
+        }
+    }
+
+    private func announceLengthMilestoneIfNeeded(_ length: Int) {
+        let level = FeedbackLengthState.accessibilityAnnouncementLevel(
+            contentLength: length,
+            maximum: FeedbackService.maximumContentLength
+        )
+        if level < lastLengthAnnouncementLevel {
+            lastLengthAnnouncementLevel = level
+            return
+        }
+        guard level > lastLengthAnnouncementLevel,
+              SutraAccessibilityManager.shared.isVoiceOverRunning else { return }
+        lastLengthAnnouncementLevel = level
+        SutraAccessibilityManager.shared.announce(contentLengthText)
+    }
+
+    private var contentLengthText: String {
+        let maximum = FeedbackService.maximumContentLength
+        switch FeedbackLengthState.resolve(
+            contentLength: contentLength,
+            maximum: maximum
+        ) {
+        case .hidden:
+            return ""
+        case let .remaining(remaining):
+            return String(
+                format: L10n.str("feedback_content_remaining_format"),
+                remaining
+            )
+        case .limitReached:
+            return String(
+                format: L10n.str("feedback_content_limit_reached_format"),
+                maximum
+            )
+        case let .overLimit(excess):
+            return String(
+                format: L10n.str("feedback_content_over_limit_format"),
+                excess
+            )
+        }
+    }
+
+    private var shouldShowContentLength: Bool {
+        FeedbackLengthState.resolve(
+            contentLength: contentLength,
+            maximum: FeedbackService.maximumContentLength
+        ) != .hidden
+    }
+
+    private var editorAccessibilityHint: String {
+        String(
+            format: L10n.str("feedback_editor_accessibility_hint_format"),
+            FeedbackService.maximumContentLength
+        )
+    }
+
+    private var contentTooLongMessage: String {
+        String(
+            format: L10n.str("feedback_content_too_long_error_format"),
+            FeedbackService.maximumContentLength
+        )
     }
 }
 

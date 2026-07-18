@@ -1,8 +1,70 @@
 name = "lengyan-feedback"
 main = "worker.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-07-18"
+
+# Configure secrets outside source control before deploying:
+#   npx wrangler secret put ADMIN_PASSWORD
+#   npx wrangler secret put ADMIN_SESSION_SECRET
+
+[secrets]
+required = ["ADMIN_PASSWORD", "ADMIN_SESSION_SECRET"]
+
+[triggers]
+crons = ["17 * * * *"]
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+# Request invocation logs can contain network/request metadata. Keep only the
+# Worker's explicit, generic custom errors and scheduled cleanup failures.
+invocation_logs = false
+
+[observability.traces]
+# Keep tracing explicitly off. This service needs only sparse generic error logs,
+# and must stay within the Workers Free feature set.
+enabled = false
+
+# Per-source counters use a server-side HMAC of CF-Connecting-IP, with separate
+# route-wide ceilings per Cloudflare location. Raw addresses and counter keys
+# are never written to D1 or custom Worker logs.
+# Requires Wrangler >= 4.36.0. Namespace IDs must be unique in the account.
+[[ratelimits]]
+name = "SUBMIT_ACTOR_RATE_LIMITER"
+namespace_id = "716202601"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
+[[ratelimits]]
+name = "LOGIN_ACTOR_RATE_LIMITER"
+namespace_id = "716202602"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60
+
+[[ratelimits]]
+name = "SUBMIT_LOCATION_RATE_LIMITER"
+namespace_id = "716202603"
+
+  [ratelimits.simple]
+  limit = 60
+  period = 60
+
+[[ratelimits]]
+name = "LOGIN_LOCATION_RATE_LIMITER"
+namespace_id = "716202604"
+
+  [ratelimits.simple]
+  limit = 30
+  period = 60
 
 [[d1_databases]]
 binding = "DB"
 database_name = "lengyan-feedback-db"
 database_id = "6ca59d63-8478-4e69-a93b-3d08e083f74b"
+migrations_dir = "migrations"

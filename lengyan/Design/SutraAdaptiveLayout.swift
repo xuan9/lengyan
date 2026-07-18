@@ -8,7 +8,9 @@ enum SutraAdaptiveLayout {
     // MARK: - 核心常量
     /// Apple HIG 推荐的舒适阅读上限（用于计算或 SwiftUI 回退时）
     static let optimalReadingWidth: CGFloat = 680
-    static let homeContentWidth: CGFloat = 720
+    /// Slightly wider than the reading column so the chapter grid can breathe
+    /// while any extra toolbar width flows to the potentially long resume title.
+    static let homeContentWidth: CGFloat = 768
     /// 横屏阅读上限：iPad 横屏时放宽经文宽度，减少两侧留白空洞感
     static let landscapeReadingWidth: CGFloat = 960
 
@@ -38,7 +40,7 @@ enum SutraAdaptiveLayout {
     /// 横屏宽屏时自动放宽至 landscapeReadingWidth，减少 iPad 横屏留白空洞。
     static func readingHorizontalInsets(
         containerWidth: CGFloat,
-        containerHeight: CGFloat = 0,
+        containerHeight: CGFloat,
         maxWidth: CGFloat = optimalReadingWidth,
         minMargin: CGFloat = 20
     ) -> CGFloat {
@@ -49,6 +51,128 @@ enum SutraAdaptiveLayout {
             return floor((containerWidth - effectiveWidth) / 2)
         }
         return minMargin
+    }
+
+    /// Home content stays compact in portrait and expands only in a genuinely
+    /// wide landscape window. Requiring the complete size prevents a tall
+    /// 13-inch iPad from being mistaken for landscape when height is omitted.
+    static func homeHorizontalInsets(containerSize: CGSize) -> CGFloat {
+        readingHorizontalInsets(
+            containerWidth: containerSize.width,
+            containerHeight: containerSize.height,
+            maxWidth: homeContentWidth,
+            minMargin: 0
+        )
+    }
+
+    /// Splits the compact/two-row home actions into a flexible primary column
+    /// and a content-sized trailing column while preserving the shared outer
+    /// edges used by the chapter grid.
+    static func homeTwoRowActionWidths(
+        availableWidth: CGFloat,
+        columnGap: CGFloat,
+        preferredTrailingWidth: CGFloat,
+        minimumTapWidth: CGFloat = 44
+    ) -> (primary: CGFloat, trailing: CGFloat) {
+        let maximumTrailingWidth = max(
+            minimumTapWidth,
+            availableWidth - columnGap - minimumTapWidth
+        )
+        let trailingWidth = min(
+            max(minimumTapWidth, preferredTrailingWidth),
+            maximumTrailingWidth
+        )
+        let primaryWidth = max(
+            minimumTapWidth,
+            availableWidth - columnGap - trailingWidth
+        )
+        return (primaryWidth, trailingWidth)
+    }
+
+    /// In the iPad single-row toolbar, listening has a predictable compact
+    /// label while the outline resume target can be much longer. Give listening
+    /// its intrinsic width (within a cap) and let resume absorb the remainder.
+    static func homeSingleRowPrimaryWidths(
+        availableWidth: CGFloat,
+        reservedWidth: CGFloat,
+        preferredListeningWidth: CGFloat,
+        minimumTapWidth: CGFloat = 44,
+        maximumListeningFraction: CGFloat = 0.45
+    ) -> (resume: CGFloat, listening: CGFloat) {
+        let flexibleWidth = max(availableWidth - reservedWidth, 0)
+        guard flexibleWidth > 0 else { return (0, 0) }
+
+        let minimumWidth = min(
+            max(minimumTapWidth, 0),
+            flexibleWidth / 2
+        )
+        let fraction = min(max(maximumListeningFraction, 0), 1)
+        let maximumListeningWidth = min(
+            max(minimumWidth, flexibleWidth * fraction),
+            max(flexibleWidth - minimumWidth, minimumWidth)
+        )
+        let listeningWidth = min(
+            max(preferredListeningWidth, minimumWidth),
+            maximumListeningWidth
+        )
+        let resumeWidth = max(flexibleWidth - listeningWidth, minimumWidth)
+        return (resumeWidth, listeningWidth)
+    }
+
+    /// Uses the resume slot only as far as its content needs. A long outline
+    /// keeps the full slot and truncates at the available edge. Once resume is
+    /// complete, spare width first finishes listening and then expands all
+    /// three gaps equally, avoiding one oversized invisible button.
+    static func homeSingleRowContentDistribution(
+        maximumResumeWidth: CGFloat,
+        initialListeningWidth: CGFloat,
+        preferredResumeWidth: CGFloat,
+        preferredListeningWidth: CGFloat,
+        minimumTapWidth: CGFloat = 44,
+        minimumGap: CGFloat = 8
+    ) -> (resume: CGFloat, listening: CGFloat, gap: CGFloat) {
+        let capacity = maximumResumeWidth.isFinite
+            ? max(maximumResumeWidth, 0)
+            : 0
+        let listeningWidth = initialListeningWidth.isFinite
+            ? max(initialListeningWidth, 0)
+            : 0
+        let resumePreference = preferredResumeWidth.isFinite
+            ? max(preferredResumeWidth, 0)
+            : 0
+        let listeningPreference = preferredListeningWidth.isFinite
+            ? max(preferredListeningWidth, 0)
+            : 0
+        let minimumWidth = min(max(minimumTapWidth, 0), capacity)
+        let resumeWidth = min(
+            max(resumePreference, minimumWidth),
+            capacity
+        )
+        var unusedWidth = max(capacity - resumeWidth, 0)
+        let listeningIncrease = min(
+            max(listeningPreference - listeningWidth, 0),
+            unusedWidth
+        )
+        unusedWidth -= listeningIncrease
+        let gap = max(minimumGap, 0) + unusedWidth / 3
+        return (
+            resumeWidth,
+            listeningWidth + listeningIncrease,
+            gap
+        )
+    }
+
+    /// A two-line opening verse needs both font line boxes plus the explicit
+    /// paragraph spacing. The fixed minimum preserves the existing iPad rhythm.
+    static func homeOpeningVerseHeight(
+        fontLineHeight: CGFloat,
+        lineSpacing: CGFloat,
+        minimumHeight: CGFloat
+    ) -> CGFloat {
+        max(
+            minimumHeight,
+            ceil(max(fontLineHeight, 0) * 2 + max(lineSpacing, 0))
+        )
     }
 
     // MARK: - 导航与交互

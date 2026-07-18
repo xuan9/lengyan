@@ -23,7 +23,13 @@ class lengyanTests: XCTestCase {
     }
     
     func testBookLoading() {
-        Book.shared.loadDataWithCompletionHandler { () in
+        let expectation = expectation(description: "Book load completes")
+        Book.shared.loadDataWithCompletionHandler { result in
+            guard case .success = result else {
+                XCTFail("Expected bundled corpus to load: \(result)")
+                expectation.fulfill()
+                return
+            }
             XCTAssertNotNil(Book.shared.tree)
             XCTAssertNotNil(Book.shared.index)
             XCTAssertNotNil(Book.shared.contents)
@@ -33,16 +39,608 @@ class lengyanTests: XCTestCase {
             XCTAssertEqual(Book.shared.index![0]["path"], "")
             XCTAssertEqual(Book.shared.contents!["/A1/B1/C1"]![0]["type"], "sutra")
             XCTAssertEqual(Book.shared.media![0]["extension"] as! String, "m4a")
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 5)
+    }
+
+    func testSynchronousBookLoadingInvokesCompletionAndMarksCompleteCorpusLoaded() {
+        var didComplete = false
+
+        let result = Book.shared.loadDataSyncWithCompletionHandler { result in
+            didComplete = true
+            guard case .success = result else {
+                XCTFail("Expected bundled corpus to load: \(result)")
+                return
+            }
+        }
+
+        XCTAssertTrue(didComplete)
+        guard case .success = result else {
+            XCTFail("Expected successful synchronous load")
+            return
+        }
+        XCTAssertTrue(Book.shared.loaded)
+        XCTAssertFalse(Book.shared.tree?.isEmpty ?? true)
+        XCTAssertFalse(Book.shared.index?.isEmpty ?? true)
+        XCTAssertFalse(Book.shared.contents?.isEmpty ?? true)
+        XCTAssertFalse(Book.shared.media?.isEmpty ?? true)
+        XCTAssertFalse(Book.shared.chapterMap?.isEmpty ?? true)
+    }
+
+    func testBookLoadFailureCanRetryAfterResourcesBecomeAvailable() {
+        let providerLock = NSLock()
+        var resourcesAvailable = false
+        let book = Book { resourceName, fileExtension in
+            providerLock.lock()
+            let available = resourcesAvailable
+            providerLock.unlock()
+            guard available else { return nil }
+            return bundledBookResourceData(resourceName, fileExtension)
+        }
+        book.isSimplifiedChinese = true
+
+        let firstResult = book.loadDataSyncWithCompletionHandler { _ in }
+        guard case let .failure(.missingOrInvalidResources(resources)) = firstResult else {
+            XCTFail("Expected a deterministic missing-resource failure")
+            return
+        }
+        XCTAssertTrue(resources.contains("index tree"))
+        XCTAssertNil(book.tree)
+
+        providerLock.lock()
+        resourcesAvailable = true
+        providerLock.unlock()
+
+        let retried = expectation(description: "Book retry completes")
+        book.retryLoading { result in
+            guard case .success = result else {
+                XCTFail("Expected retry to publish the complete corpus: \(result)")
+                retried.fulfill()
+                return
+            }
+            XCTAssertTrue(book.loaded)
+            XCTAssertNotNil(book.tree)
+            XCTAssertNotNil(book.contents)
+            retried.fulfill()
+        }
+        wait(for: [retried], timeout: 5)
+    }
+
+    func testBookRejectsCorruptRequiredResource() {
+        let book = Book { resourceName, fileExtension in
+            if resourceName.hasSuffix("lengyanjing-content") {
+                return Foundation.Data("{".utf8)
+            }
+            return bundledBookResourceData(resourceName, fileExtension)
+        }
+        book.isSimplifiedChinese = true
+
+        let result = book.loadDataSyncWithCompletionHandler { _ in }
+        guard case let .failure(.missingOrInvalidResources(resources)) = result else {
+            XCTFail("Expected corrupt content JSON to fail atomically")
+            return
+        }
+        XCTAssertTrue(resources.contains("content"))
+        XCTAssertFalse(book.loaded)
+        XCTAssertNil(book.tree)
+        XCTAssertNil(book.contents)
+    }
+
+    func testBookDegradesMalformedOptionalMediaWithoutBlockingReading() {
+        let book = Book { resourceName, fileExtension in
+            if resourceName.hasSuffix("lengyanjing-media") {
+                return Foundation.Data("""
+                [{"name":"invalid","extension":"m4a","files":["ly01"],"names":[]}]
+                """.utf8)
+            }
+            return bundledBookResourceData(resourceName, fileExtension)
+        }
+        book.isSimplifiedChinese = true
+
+        let result = book.loadDataSyncWithCompletionHandler { _ in }
+        guard case .success = result else {
+            XCTFail("Optional audio metadata must not disable the reading corpus")
+            return
+        }
+        XCTAssertTrue(book.loaded)
+        XCTAssertEqual(book.media?.count, 0)
+        XCTAssertFalse(book.tree?.isEmpty ?? true)
+        XCTAssertFalse(book.contents?.isEmpty ?? true)
+    }
+
+    func testConcurrentBookLoadersParseAndPublishOnce() {
+        let providerLock = NSLock()
+        var providerCallCount = 0
+        let book = Book { resourceName, fileExtension in
+            providerLock.lock()
+            providerCallCount += 1
+            providerLock.unlock()
+            return bundledBookResourceData(resourceName, fileExtension)
+        }
+        book.isSimplifiedChinese = true
+
+        let completed = expectation(description: "Concurrent Book loads complete")
+        completed.expectedFulfillmentCount = 8
+        for _ in 0..<8 {
+            book.loadDataWithCompletionHandler { result in
+                guard case .success = result else {
+                    XCTFail("Expected every queued caller to share the successful load")
+                    completed.fulfill()
+                    return
+                }
+                completed.fulfill()
+            }
+        }
+        wait(for: [completed], timeout: 5)
+
+        providerLock.lock()
+        let finalCallCount = providerCallCount
+        providerLock.unlock()
+        XCTAssertEqual(finalCallCount, 5, "The five corpus resources should be parsed once")
+        XCTAssertTrue(book.loaded)
+    }
+
+    func testResumePathValidationRejectsRootAliasesAndMalformedPaths() {
+        let result = Book.shared.loadDataSyncWithCompletionHandler { _ in }
+        guard case .success = result else {
+            XCTFail("Expected bundled corpus to load")
+            return
+        }
+
+        XCTAssertTrue(Book.shared.isValidResumePath("/A1/B1/C1"))
+        XCTAssertFalse(Book.shared.isValidResumePath(""))
+        XCTAssertFalse(Book.shared.isValidResumePath("/"))
+        XCTAssertFalse(Book.shared.isValidResumePath("/A1//B1/C1"))
+        XCTAssertFalse(Book.shared.isValidResumePath("/A1/B1/C1/"))
+        XCTAssertFalse(Book.shared.isValidResumePath("/missing/path"))
+    }
+
+    func testReadingStayTimerAccumulatesOnlyForegroundIntervals() {
+        let baseline = Date(timeIntervalSince1970: 1_000)
+        var timer = ReadingStayTimer(threshold: 10)
+
+        timer.start(at: baseline)
+        timer.pause(at: baseline.addingTimeInterval(8))
+        XCTAssertFalse(timer.isValidReading(at: baseline.addingTimeInterval(100)))
+
+        timer.start(at: baseline.addingTimeInterval(100))
+        XCTAssertFalse(timer.isValidReading(at: baseline.addingTimeInterval(101.99)))
+        XCTAssertTrue(timer.isValidReading(at: baseline.addingTimeInterval(102)))
+
+        var passiveTimer = ReadingStayTimer()
+        passiveTimer.start(at: baseline)
+        XCTAssertFalse(passiveTimer.isValidReading(at: baseline.addingTimeInterval(2.99)))
+        XCTAssertTrue(passiveTimer.isValidReading(at: baseline.addingTimeInterval(3)))
+    }
+
+    func testReadingCheckpointGateAutomaticallyCommitsAtPassiveThreshold() {
+        let committed = expectation(description: "Passive reading is checkpointed")
+        let gate = ReadingCheckpointGate(threshold: 0.05)
+
+        gate.resume {
+            committed.fulfill()
+        }
+
+        wait(for: [committed], timeout: 1)
+        XCTAssertTrue(gate.isConfirmed)
+    }
+
+    func testReadingCheckpointGateExplicitActionCommitsImmediately() {
+        let staleThreshold = expectation(description: "Cancelled threshold does not fire")
+        staleThreshold.isInverted = true
+        let gate = ReadingCheckpointGate(threshold: 0.05)
+        var checkpointCount = 0
+
+        gate.resume {
+            staleThreshold.fulfill()
+        }
+        gate.commit {
+            checkpointCount += 1
+        }
+
+        XCTAssertTrue(gate.isConfirmed)
+        XCTAssertEqual(checkpointCount, 1)
+        wait(for: [staleThreshold], timeout: 0.1)
+    }
+
+    func testReadingCheckpointGateExcludesPausedBackgroundTime() {
+        let paused = expectation(description: "Gate pauses before threshold")
+        let backgroundElapsed = expectation(description: "Background interval elapses")
+        let committed = expectation(description: "Remaining foreground time commits")
+        let staleThreshold = expectation(description: "Pre-pause threshold is cancelled")
+        staleThreshold.isInverted = true
+        let gate = ReadingCheckpointGate(threshold: 0.12)
+
+        gate.resume {
+            staleThreshold.fulfill()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            gate.pause {}
+            paused.fulfill()
+        }
+        wait(for: [paused], timeout: 1)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            XCTAssertFalse(gate.isConfirmed)
+            gate.resume {
+                committed.fulfill()
+            }
+            backgroundElapsed.fulfill()
+        }
+        wait(for: [backgroundElapsed, committed], timeout: 1, enforceOrder: true)
+        XCTAssertTrue(gate.isConfirmed)
+        wait(for: [staleThreshold], timeout: 0.05)
+    }
+
+    func testFeedbackPayloadIsMinimal() {
+        let payload = FeedbackService.makePayload(
+            content: "页面无法翻页",
+            appVersion: "1.3"
+        )
+
+        XCTAssertEqual(payload, [
+            "content": "页面无法翻页",
+            "appVersion": "1.3",
+        ])
+        XCTAssertNil(payload["type"])
+        XCTAssertNil(payload["device"])
+        XCTAssertNil(payload["deviceFamily"])
+        XCTAssertNil(payload["osVersion"])
+        XCTAssertNil(payload["build"])
+    }
+
+    func testFeedbackLengthUsesTheSubmittedTrimmedContent() {
+        let normalized = FeedbackService.normalizedContent(" \n反馈内容\t ")
+        XCTAssertEqual(normalized, "反馈内容")
+        XCTAssertEqual(normalized.count, 4)
+    }
+
+    func testFeedbackLengthGuidanceAppearsOnlyForFinalTwoHundredCharacters() {
+        let maximum = FeedbackService.maximumContentLength
+
+        XCTAssertEqual(
+            FeedbackLengthState.resolve(contentLength: 0, maximum: maximum),
+            .hidden
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.resolve(contentLength: maximum - 201, maximum: maximum),
+            .hidden
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.resolve(contentLength: maximum - 200, maximum: maximum),
+            .remaining(200)
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.resolve(contentLength: maximum - 1, maximum: maximum),
+            .remaining(1)
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.resolve(contentLength: maximum, maximum: maximum),
+            .limitReached
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.resolve(contentLength: maximum + 23, maximum: maximum),
+            .overLimit(23)
+        )
+
+        XCTAssertEqual(
+            FeedbackLengthState.accessibilityAnnouncementLevel(
+                contentLength: maximum - 201,
+                maximum: maximum
+            ),
+            0
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.accessibilityAnnouncementLevel(
+                contentLength: maximum - 200,
+                maximum: maximum
+            ),
+            1
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.accessibilityAnnouncementLevel(
+                contentLength: maximum - 100,
+                maximum: maximum
+            ),
+            1
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.accessibilityAnnouncementLevel(
+                contentLength: maximum,
+                maximum: maximum
+            ),
+            2
+        )
+        XCTAssertEqual(
+            FeedbackLengthState.accessibilityAnnouncementLevel(
+                contentLength: maximum + 1,
+                maximum: maximum
+            ),
+            3
+        )
+    }
+
+    func testLegacyFeedbackDraftIsConsumedAndRemoved() {
+        let suiteName = "FeedbackDraftTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set("尚未发送的反馈", forKey: "feedbackDraft")
+
+        XCTAssertEqual(
+            FeedbackService.consumeLegacyDraft(from: defaults),
+            "尚未发送的反馈"
+        )
+        XCTAssertNil(defaults.object(forKey: "feedbackDraft"))
+        XCTAssertEqual(FeedbackService.consumeLegacyDraft(from: defaults), "")
+    }
+
+    func testFeedbackReferenceValidation() {
+        let validReference = "0123456789abcdef0123456789abcdef"
+        XCTAssertEqual(
+            FeedbackService.normalizedReference("  \(validReference)\n"),
+            validReference
+        )
+        XCTAssertNil(FeedbackService.normalizedReference("LY-abcd_1234"))
+        XCTAssertNil(FeedbackService.normalizedReference(validReference.uppercased()))
+        XCTAssertNil(FeedbackService.normalizedReference(String(validReference.dropLast())))
+    }
+
+    func testFeedbackSubmissionResultDistinguishesLimitFailures() {
+        if case .failure(.contentTooLong) = FeedbackService.submissionResult(
+            statusCode: 413,
+            data: nil
+        ) {
+            // Expected.
+        } else {
+            XCTFail("HTTP 413 should produce a content-length error")
+        }
+
+        if case .failure(.rateLimited) = FeedbackService.submissionResult(
+            statusCode: 429,
+            data: nil
+        ) {
+            // Expected.
+        } else {
+            XCTFail("HTTP 429 should produce a rate-limit error")
+        }
+    }
+
+    func testFeedbackSubmissionResultRequiresAValidSuccessReference() {
+        let reference = "0123456789abcdef0123456789abcdef"
+        let validResponse = Foundation.Data(
+            "{\"ok\":true,\"reference\":\"\(reference)\"}".utf8
+        )
+
+        guard case let .success(returnedReference) = FeedbackService.submissionResult(
+            statusCode: 200,
+            data: validResponse
+        ) else {
+            XCTFail("A valid Worker success response should be accepted")
+            return
+        }
+        XCTAssertEqual(returnedReference, reference)
+
+        let invalidResponse = Foundation.Data(
+            "{\"ok\":true,\"reference\":\"not-a-reference\"}".utf8
+        )
+        if case .failure(.serverRejected) = FeedbackService.submissionResult(
+            statusCode: 200,
+            data: invalidResponse
+        ) {
+            // Expected.
+        } else {
+            XCTFail("A malformed success response must fail closed")
+        }
+    }
+
+    func testNightReadingThemeRemainsUnavailable() {
+        let defaults = UserDefaults.standard
+        let key = "selectedTheme"
+        let previousStoredValue = defaults.object(forKey: key)
+        let previousTheme = SutraDesignTokens.shared.currentTheme
+        defer {
+            SutraDesignTokens.shared.setTheme(previousTheme)
+            if let previousStoredValue {
+                defaults.set(previousStoredValue, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+
+        XCTAssertEqual(
+            SutraDesignTokens.enabledTheme(.dark).rawValue,
+            SutraTheme.sepia.rawValue
+        )
+        XCTAssertEqual(
+            SutraDesignTokens.enabledTheme(.light).rawValue,
+            SutraTheme.light.rawValue
+        )
+
+        defaults.set(SutraTheme.dark.rawValue, forKey: key)
+        SutraDesignTokens.shared.loadSavedTheme()
+        XCTAssertEqual(SutraDesignTokens.shared.currentTheme.rawValue, SutraTheme.sepia.rawValue)
+        XCTAssertEqual(defaults.string(forKey: key), SutraTheme.sepia.rawValue)
+
+        SutraDesignTokens.shared.setTheme(.dark)
+        XCTAssertEqual(SutraDesignTokens.shared.currentTheme.rawValue, SutraTheme.sepia.rawValue)
+    }
+
+    func testAdaptiveReadingWidthsDistinguishLargeIPadPortraitAndLandscape() {
+        XCTAssertEqual(
+            SutraAdaptiveLayout.homeHorizontalInsets(
+                containerSize: CGSize(width: 1_024, height: 1_366)
+            ),
+            128
+        )
+        XCTAssertEqual(
+            SutraAdaptiveLayout.homeHorizontalInsets(
+                containerSize: CGSize(width: 820, height: 1_180)
+            ),
+            26
+        )
+        XCTAssertEqual(
+            SutraAdaptiveLayout.homeHorizontalInsets(
+                containerSize: CGSize(width: 1_366, height: 1_024)
+            ),
+            203
+        )
+        XCTAssertEqual(
+            SutraAdaptiveLayout.readingHorizontalInsets(
+                containerWidth: 1_024,
+                containerHeight: 1_366
+            ),
+            172
+        )
+        XCTAssertEqual(
+            SutraAdaptiveLayout.readingHorizontalInsets(
+                containerWidth: 1_366,
+                containerHeight: 1_024
+            ),
+            203
+        )
+
+        let splitIPadActions = SutraAdaptiveLayout.homeTwoRowActionWidths(
+            availableWidth: 500,
+            columnGap: 16,
+            preferredTrailingWidth: 88
+        )
+        XCTAssertEqual(splitIPadActions.primary, 396)
+        XCTAssertEqual(splitIPadActions.trailing, 88)
+        XCTAssertGreaterThan(splitIPadActions.primary, splitIPadActions.trailing)
+        XCTAssertEqual(splitIPadActions.primary + 16 + splitIPadActions.trailing, 500)
+
+        let iPhoneActions = SutraAdaptiveLayout.homeTwoRowActionWidths(
+            availableWidth: 342,
+            columnGap: 16,
+            preferredTrailingWidth: 72
+        )
+        XCTAssertEqual(iPhoneActions.primary, 254)
+        XCTAssertEqual(iPhoneActions.trailing, 72)
+        XCTAssertGreaterThan(iPhoneActions.primary, iPhoneActions.trailing)
+        XCTAssertEqual(iPhoneActions.primary + 16 + iPhoneActions.trailing, 342)
+
+        let singleRowActions = SutraAdaptiveLayout.homeSingleRowPrimaryWidths(
+            availableWidth: 700,
+            reservedWidth: 200,
+            preferredListeningWidth: 160
+        )
+        XCTAssertEqual(singleRowActions.resume, 340)
+        XCTAssertEqual(singleRowActions.listening, 160)
+        XCTAssertGreaterThan(singleRowActions.resume, singleRowActions.listening)
+
+        let widerSingleRowActions = SutraAdaptiveLayout.homeSingleRowPrimaryWidths(
+            availableWidth: 748,
+            reservedWidth: 200,
+            preferredListeningWidth: 160
+        )
+        XCTAssertEqual(widerSingleRowActions.resume, 388)
+        XCTAssertEqual(widerSingleRowActions.listening, 160)
+        XCTAssertEqual(
+            widerSingleRowActions.resume - singleRowActions.resume,
+            48
+        )
+
+        let longResumeDistribution = SutraAdaptiveLayout.homeSingleRowContentDistribution(
+            maximumResumeWidth: 340,
+            initialListeningWidth: 160,
+            preferredResumeWidth: 500,
+            preferredListeningWidth: 160
+        )
+        XCTAssertEqual(longResumeDistribution.resume, 340)
+        XCTAssertEqual(longResumeDistribution.listening, 160)
+        XCTAssertEqual(longResumeDistribution.gap, 8)
+
+        let shortResumeDistribution = SutraAdaptiveLayout.homeSingleRowContentDistribution(
+            maximumResumeWidth: 340,
+            initialListeningWidth: 160,
+            preferredResumeWidth: 196,
+            preferredListeningWidth: 160
+        )
+        XCTAssertEqual(shortResumeDistribution.resume, 196)
+        XCTAssertEqual(shortResumeDistribution.listening, 160)
+        XCTAssertEqual(shortResumeDistribution.gap, 56)
+        XCTAssertEqual(
+            shortResumeDistribution.resume
+                + shortResumeDistribution.listening
+                + shortResumeDistribution.gap * 3,
+            longResumeDistribution.resume
+                + longResumeDistribution.listening
+                + longResumeDistribution.gap * 3
+        )
+
+        let shortResumeLongListening = SutraAdaptiveLayout.homeSingleRowContentDistribution(
+            maximumResumeWidth: 340,
+            initialListeningWidth: 160,
+            preferredResumeWidth: 196,
+            preferredListeningWidth: 250
+        )
+        XCTAssertEqual(shortResumeLongListening.resume, 196)
+        XCTAssertEqual(shortResumeLongListening.listening, 250)
+        XCTAssertEqual(shortResumeLongListening.gap, 26)
+        XCTAssertEqual(
+            shortResumeLongListening.resume
+                + shortResumeLongListening.listening
+                + shortResumeLongListening.gap * 3,
+            longResumeDistribution.resume
+                + longResumeDistribution.listening
+                + longResumeDistribution.gap * 3
+        )
+
+        let longListeningActions = SutraAdaptiveLayout.homeSingleRowPrimaryWidths(
+            availableWidth: 700,
+            reservedWidth: 200,
+            preferredListeningWidth: 400
+        )
+        XCTAssertEqual(longListeningActions.resume, 275)
+        XCTAssertEqual(longListeningActions.listening, 225)
+
+        XCTAssertEqual(
+            SutraAdaptiveLayout.homeOpeningVerseHeight(
+                fontLineHeight: 22,
+                lineSpacing: 6,
+                minimumHeight: 44
+            ),
+            50
+        )
+        XCTAssertNotNil(UIImage(systemName: "scroll"))
+    }
+
+    func testOpeningVerseLocalizationsPreserveTwoLines() throws {
+        for localization in ["Base", "zh-Hans", "zh-Hant"] {
+            let path = try XCTUnwrap(
+                Bundle.main.path(forResource: localization, ofType: "lproj"),
+                "Missing \(localization) localization"
+            )
+            let bundle = try XCTUnwrap(Bundle(path: path))
+            let verse = bundle.localizedString(
+                forKey: "kai_jing_ji",
+                value: nil,
+                table: nil
+            )
+            XCTAssertEqual(
+                verse.components(separatedBy: "\n").count,
+                2,
+                "\(localization) opening verse should render as two deliberate lines"
+            )
         }
     }
     
     func testPaging(){
-        Book.shared.loadDataWithCompletionHandler { () in
+        let expectation = expectation(description: "Book load completes")
+        Book.shared.loadDataWithCompletionHandler { result in
+            guard case .success = result else {
+                XCTFail("Expected bundled corpus to load: \(result)")
+                expectation.fulfill()
+                return
+            }
             XCTAssertEqual(Book.shared.getPreviousPagePath("/A2/B1/C2/D1/E2/F1/G1/H2/I1"), "/A2/B1/C2/D1/E2/F1/G1/H1/I3")
             XCTAssertEqual(Book.shared.getPreviousPagePath("/A2/B1/C2/D1/E2/F1/G1/H2/I1/J1"), "/A2/B1/C2/D1/E2/F1/G1/H1/I3")
             XCTAssertEqual(Book.shared.getNextPagePath("/A2/B1/C2/D1/E2/F1/G1/H1/I3"), "/A2/B1/C2/D1/E2/F1/G1/H2/I1" )
             XCTAssertEqual(Book.shared.getBelongingKeyPagePath("/A2/B1/C2/D1/E2/F1/G1/H1/I3/J2"), "/A2/B1/C2/D1/E2/F1/G1/H1/I3")
+            expectation.fulfill()
         }
+        wait(for: [expectation], timeout: 5)
     }
     
     func testAudioSeekMethod() {
@@ -340,6 +938,183 @@ class lengyanTests: XCTestCase {
         }
     }
 
+    @MainActor
+    func testPureReaderKeepsVisibleCharacterWhenWidthChanges() throws {
+        guard case .success = Book.shared.loadDataSyncWithCompletionHandler({ _ in }) else {
+            XCTFail("Expected bundled corpus to load")
+            return
+        }
+        let path = "/A2/B1/C2/D1/E3/F2/G2/H2/I2/J1/K3/L1"
+        XCTAssertTrue(Book.shared.isValidReadingPath(path))
+
+        let reader = SutraPurePageContentViewController()
+        reader.path = path
+        reader.loadViewIfNeeded()
+        let window = host(reader, size: CGSize(width: 390, height: 800))
+        defer { window.isHidden = true }
+
+        let textView = try XCTUnwrap(reader.sutraView)
+        let minimumY = -textView.adjustedContentInset.top
+        let maximumY = max(
+            minimumY,
+            textView.contentSize.height
+                - textView.bounds.height
+                + textView.adjustedContentInset.bottom
+        )
+        XCTAssertGreaterThan(maximumY - minimumY, 200)
+        textView.setContentOffset(
+            CGPoint(x: 0, y: minimumY + min(240, (maximumY - minimumY) * 0.25)),
+            animated: false
+        )
+        let characterBeforeResize = try XCTUnwrap(firstVisibleCharacter(in: textView))
+
+        layout(reader, in: window, size: CGSize(width: 700, height: 650))
+
+        let firstLineAfterResize = try XCTUnwrap(
+            firstVisibleLineCharacterRange(in: textView)
+        )
+        XCTAssertTrue(
+            NSLocationInRange(characterBeforeResize, firstLineAfterResize),
+            "Width reflow should keep the previous anchor in the first visible line"
+        )
+    }
+
+    @MainActor
+    func testPagedReaderKeepsRowPositionWhenWidthChanges() throws {
+        guard case .success = Book.shared.loadDataSyncWithCompletionHandler({ _ in }) else {
+            XCTFail("Expected bundled corpus to load")
+            return
+        }
+        let path = "/A2/B1/C2/D1/E3/F2/G2/H2/I2/J1/K3/L1"
+        let pageIndex = try XCTUnwrap(
+            Book.shared.index?.firstIndex(where: { $0["path"] == path })
+        )
+
+        let reader = SutraPageContentViewController()
+        reader.pageIndex = pageIndex
+        reader.loadViewIfNeeded()
+        let window = host(reader, size: CGSize(width: 390, height: 800))
+        defer { window.isHidden = true }
+
+        let tableView = reader.tableView!
+        let minimumY = -tableView.adjustedContentInset.top
+        let maximumY = max(
+            minimumY,
+            tableView.contentSize.height
+                - tableView.bounds.height
+                + tableView.adjustedContentInset.bottom
+        )
+        XCTAssertGreaterThan(maximumY - minimumY, 200)
+        tableView.setContentOffset(
+            CGPoint(x: 0, y: minimumY + min(240, (maximumY - minimumY) * 0.2)),
+            animated: false
+        )
+        let positionBeforeResize = try XCTUnwrap(visibleTablePosition(in: tableView))
+
+        layout(reader, in: window, size: CGSize(width: 700, height: 650))
+
+        let positionAfterResize = try XCTUnwrap(visibleTablePosition(in: tableView))
+        XCTAssertEqual(positionAfterResize.row, positionBeforeResize.row)
+        XCTAssertEqual(
+            positionAfterResize.fraction,
+            positionBeforeResize.fraction,
+            accuracy: 0.03,
+            "Width reflow should retain the same position within the visible paragraph"
+        )
+    }
+
+    @MainActor
+    private func host(_ controller: UIViewController, size: CGSize) -> UIWindow {
+        let window = UIWindow(frame: CGRect(origin: .zero, size: size))
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        layout(controller, in: window, size: size)
+        return window
+    }
+
+    @MainActor
+    private func layout(
+        _ controller: UIViewController,
+        in window: UIWindow,
+        size: CGSize
+    ) {
+        window.frame = CGRect(origin: .zero, size: size)
+        controller.view.frame = CGRect(origin: .zero, size: size)
+        controller.view.setNeedsLayout()
+        controller.view.layoutIfNeeded()
+        window.setNeedsLayout()
+        window.layoutIfNeeded()
+    }
+
+    @MainActor
+    private func firstVisibleCharacter(in textView: UITextView) -> Int? {
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        guard layoutManager.numberOfGlyphs > 0 else { return nil }
+        layoutManager.ensureLayout(for: textContainer)
+        let visibleTextY = textView.contentOffset.y
+            + textView.adjustedContentInset.top
+            - textView.textContainerInset.top
+        let glyphRange = layoutManager.glyphRange(
+            forBoundingRect: CGRect(
+                x: 0,
+                y: visibleTextY,
+                width: max(textContainer.size.width, 1),
+                height: max(textView.bounds.height, 1)
+            ),
+            in: textContainer
+        )
+        guard glyphRange.location != NSNotFound else { return nil }
+        return layoutManager.characterIndexForGlyph(at: glyphRange.location)
+    }
+
+    @MainActor
+    private func firstVisibleLineCharacterRange(in textView: UITextView) -> NSRange? {
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        guard layoutManager.numberOfGlyphs > 0 else { return nil }
+        layoutManager.ensureLayout(for: textContainer)
+        let visibleTextY = textView.contentOffset.y
+            + textView.adjustedContentInset.top
+            - textView.textContainerInset.top
+        let visibleGlyphs = layoutManager.glyphRange(
+            forBoundingRect: CGRect(
+                x: 0,
+                y: visibleTextY,
+                width: max(textContainer.size.width, 1),
+                height: max(textView.bounds.height, 1)
+            ),
+            in: textContainer
+        )
+        guard visibleGlyphs.location != NSNotFound else { return nil }
+        let glyph = min(visibleGlyphs.location, layoutManager.numberOfGlyphs - 1)
+        var lineGlyphRange = NSRange()
+        layoutManager.lineFragmentRect(
+            forGlyphAt: glyph,
+            effectiveRange: &lineGlyphRange
+        )
+        return layoutManager.characterRange(
+            forGlyphRange: lineGlyphRange,
+            actualGlyphRange: nil
+        )
+    }
+
+    @MainActor
+    private func visibleTablePosition(
+        in tableView: UITableView
+    ) -> (row: Int, fraction: CGFloat)? {
+        let visibleY = tableView.contentOffset.y + tableView.adjustedContentInset.top
+        let point = CGPoint(x: tableView.bounds.midX, y: visibleY + 1)
+        guard let indexPath = tableView.indexPathForRow(at: point)
+                ?? tableView.indexPathsForVisibleRows?.first else { return nil }
+        let rowRect = tableView.rectForRow(at: indexPath)
+        guard rowRect.height > 0 else { return (indexPath.row, 0) }
+        return (
+            indexPath.row,
+            min(max((visibleY - rowRect.minY) / rowRect.height, 0), 1)
+        )
+    }
+
     private func sutraText(characterCount: Int) -> String {
         let seed = "一切眾生從無始來，生死相續，皆由不知常住真心，性淨明體，用諸妄想，此想不真，故有輪轉。"
         var text = ""
@@ -396,4 +1171,15 @@ class lengyanTests: XCTestCase {
 
         return (CGFloat(topRow), CGFloat(sampleHeight - 1 - bottomRow))
     }
+}
+
+private func bundledBookResourceData(
+    _ resourceName: String,
+    _ fileExtension: String
+) -> Foundation.Data? {
+    guard let url = Bundle.main.url(
+        forResource: resourceName,
+        withExtension: fileExtension
+    ) else { return nil }
+    return try? Foundation.Data(contentsOf: url)
 }

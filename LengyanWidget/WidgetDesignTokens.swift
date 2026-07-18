@@ -3,7 +3,7 @@
 //  LengyanWidget
 //
 //  Widget 主题感知设计令牌
-//  三套色彩：Light / Sepia / Dark，与主 App 保持一致
+//  Light / Sepia are currently available; Dark remains reserved.
 //  通过 App Group UserDefaults 读取用户当前主题
 //
 
@@ -26,9 +26,12 @@ enum WidgetTokens {
     /// 从 SharedVerseData 的主题字段解析
     static func resolveTheme(from themeString: String?) {
         if let str = themeString,
-           let theme = WidgetTheme(rawValue: str) {
+           let theme = WidgetTheme(rawValue: str),
+           theme != .dark {
             currentTheme = theme
         } else {
+            // Old shared data may still contain "dark". Night reading is not
+            // enabled in this release, so migrate it to the sepia presentation.
             currentTheme = .sepia
         }
     }

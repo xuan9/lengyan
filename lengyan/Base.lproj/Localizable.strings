@@ -5,11 +5,39 @@
  Created by Xuan on 2017/7/9.
  Copyright © 2017年 xuan. All rights reserved.
  */
-"kai_jing_ji" = "無上甚深微妙法 百千萬劫難遭遇 我今見聞得受持 願解如來真實義";
+"kai_jing_ji" = "無上甚深微妙法 百千萬劫難遭遇\n我今見聞得受持 願解如來真實義";
 "footer_txt_1" = "南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！\n南無楞嚴會上佛菩薩！";
 "footer_homage" = "☸️ 南無楞嚴會上佛菩薩";
 "footer_txt_2" = "經文和科判均選自法界佛教總會《大佛頂首楞嚴經》淺釋網站";
-"footer_txt_3" = "感恩法界佛教總會！\n本屏所列為部分關鍵科判以方便檢索，可點擊經名打開完整科判。";
+"footer_txt_3" = "感恩法界佛教總會！\n本屏所列為部分關鍵科判，完整科判可由首頁入口打開。";
+"home_full_outline" = "完整科判";
+"home_outline_button" = "科判";
+"home_full_outline_accessibility" = "打開完整科判目錄";
+"home_resume_format" = "續讀 · %@";
+"home_resume_accessibility_format" = "續讀，科判閱讀，%@";
+"home_resume_unknown" = "上次位置";
+"home_start_reading" = "開始閱讀 · 序分";
+"home_start_reading_accessibility" = "開始閱讀，序分";
+"home_continue_listening_format" = "續聽 · %@";
+"home_continue_listening_with_time_format" = "續聽 · %@ %@";
+"home_continue_listening_accessibility_format" = "續聽，%@";
+"home_continue_listening_accessibility_with_time_format" = "續聽，%@，%@";
+"home_start_listening" = "開始聽經";
+"home_search" = "搜尋";
+"home_search_accessibility" = "搜尋經文和科判";
+"settings_privacy_policy" = "隱私政策";
+"privacy_policy_updated" = "更新日期：2026 年 7 月 18 日";
+"privacy_policy_local_title" = "日常使用";
+"privacy_policy_local_body" = "閱讀進度、書籤、收藏、播放進度和顯示設定僅保留在裝置本機。App 不含廣告、分析或跨 App 追蹤。";
+"privacy_policy_feedback_title" = "主動回饋";
+"privacy_policy_feedback_body" = "送出回饋時，我們會收到回饋內容和送出時間；App 內回饋還包含 App 版本號。這些資料僅用於處理回饋和改進 App。";
+"privacy_policy_retention_body" = "回饋將於 30 天內刪除。如需提前刪除，可透過「回饋」聯絡我們。";
+"feedback_content_remaining_format" = "還可輸入 %d 字";
+"feedback_content_limit_reached_format" = "已達 %d 字上限";
+"feedback_content_over_limit_format" = "超出 %d 字，請精簡";
+"feedback_editor_accessibility_hint_format" = "最多可輸入 %d 字";
+"feedback_content_too_long_error_format" = "回饋內容最多 %d 字，請精簡後重試。";
+"feedback_rate_limited_error" = "送出得有些頻繁，請稍後再試";
 
 "lengyan_book_title" = "《楞嚴經》";
 "media_tab_title" = "聽經";
@@ -40,5 +68,3 @@
 "start_qi" = "起";
 "done" = "完成";
 "continue_listening_format" = "•  續聽·%@（%@） →";
-
-
