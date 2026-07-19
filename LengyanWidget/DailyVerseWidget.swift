@@ -43,7 +43,7 @@ private enum WidgetL10n {
     }
 
     static var widgetDisplayName: String { text("今日读经", "今日讀經") }
-    static var widgetDescription: String { text("每天一段楞严经文，可放在桌面或锁屏。", "每天一段楞嚴經文，可放在桌面或鎖屏。") }
+    static var widgetDescription: String { text("每天一段楞严经文，抬眼可见，点按深读。", "每天一段楞嚴經文，抬眼可見，點按深讀。") }
     static var sutraHeader: String { text("大佛顶首楞严经", "大佛頂首楞嚴經") }
     static var inlineOnboarding: String { text("楞严 · 待启卷", "楞嚴 · 待啟卷") }
     static var lockTitle: String { text("楞严经", "楞嚴經") }
@@ -167,18 +167,26 @@ struct DailyVerseTimelineProvider: TimelineProvider {
         var entries: [DailyVerseEntry] = []
         let calendar = Calendar.current
         let today = Date()
+        let scheduleByDate = Dictionary(
+            SharedVerseData.loadAll().map { ($0.dateString, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
 
-        for offset in 0..<7 {
+        for offset in 0..<SharedVerseData.scheduleDays {
             guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { continue }
             let entryDate = offset == 0 ? today : calendar.startOfDay(for: date)
 
-            if let entry = loadEntry(for: date, entryDate: entryDate) {
+            if let entry = loadEntry(
+                for: date,
+                entryDate: entryDate,
+                cachedSchedule: scheduleByDate
+            ) {
                 entries.append(entry)
             } else if offset == 0 {
                 // 今日数据缺失：若 App Group 完全为空，显示空态引导；
                 // 否则用 fallback 经文保持 Widget 气质
                 let entry: DailyVerseEntry
-                if SharedVerseData.isEmpty {
+                if scheduleByDate.isEmpty {
                     entry = DailyVerseEntry.onboarding.copyWith(date: entryDate)
                 } else {
                     entry = DailyVerseEntry.fallback.copyWith(date: entryDate)
@@ -200,8 +208,20 @@ struct DailyVerseTimelineProvider: TimelineProvider {
     }
 
     /// 从 App Group UserDefaults 加载特定日期的经文
-    private func loadEntry(for lookupDate: Date, entryDate: Date? = nil) -> DailyVerseEntry? {
-        guard let data = SharedVerseData.load(for: lookupDate) else { return nil }
+    private func loadEntry(
+        for lookupDate: Date,
+        entryDate: Date? = nil,
+        cachedSchedule: [String: SharedVerseData]? = nil
+    ) -> DailyVerseEntry? {
+        let data: SharedVerseData?
+        if let cachedSchedule {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            data = cachedSchedule[formatter.string(from: lookupDate)]
+        } else {
+            data = SharedVerseData.load(for: lookupDate)
+        }
+        guard let data else { return nil }
         WidgetTokens.resolveTheme(from: data.theme)
         return DailyVerseEntry(
             date: entryDate ?? lookupDate,
@@ -238,7 +258,7 @@ struct SmallVerseView: View {
 
     var body: some View {
         ZStack {
-            WidgetTokens.background
+            LegacyWidgetBackground()
 
             if entry.needsOnboarding {
                 EmptyStateView(compact: true)
@@ -268,7 +288,6 @@ struct SmallVerseView: View {
                 }
             }
         }
-        .widgetURL(entry.url)
     }
 }
 
@@ -279,7 +298,7 @@ struct MediumVerseView: View {
 
     var body: some View {
         ZStack {
-            WidgetTokens.background
+            LegacyWidgetBackground()
 
             if entry.needsOnboarding {
                 EmptyStateView(compact: false)
@@ -308,7 +327,6 @@ struct MediumVerseView: View {
                 }
             }
         }
-        .widgetURL(entry.url)
     }
 }
 
@@ -319,7 +337,7 @@ struct LargeVerseView: View {
 
     var body: some View {
         ZStack(alignment: .leading) {
-            WidgetTokens.background
+            LegacyWidgetBackground()
 
             if entry.needsOnboarding {
                 EmptyStateView(compact: false)
@@ -356,7 +374,6 @@ struct LargeVerseView: View {
                 .padding(.trailing, 18)
             }
         }
-        .widgetURL(entry.url)
     }
 
     /// 卷名页脚上方的细发丝线 — 克制装饰，不抢经文
@@ -598,6 +615,7 @@ struct WidgetEntryView: View {
         return Group {
             widgetContent
         }
+        .widgetURL(entry.url)
     }
 
     @ViewBuilder
@@ -630,32 +648,76 @@ struct WidgetEntryView: View {
     }
 }
 
+/// iOS 17+ lets WidgetKit remove or adapt the container background for
+/// StandBy and iPad Lock Screen. Older Home Screen widgets still need their
+/// own full-bleed background inside the view hierarchy.
+private struct LegacyWidgetBackground: View {
+    @ViewBuilder
+    var body: some View {
+        if #available(iOS 17.0, iOSApplicationExtension 17.0, *) {
+            Color.clear
+        } else {
+            WidgetTokens.background
+        }
+    }
+}
+
 // MARK: - Preview
 
 #if DEBUG
 struct DailyVerseWidget_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            SmallVerseView(entry: .placeholder)
+            WidgetPreviewContainer {
+                SmallVerseView(entry: .placeholder)
+            }
                 .previewContext(WidgetPreviewContext(family: .systemSmall))
                 .previewDisplayName(WidgetL10n.smallPreviewName)
 
-            MediumVerseView(entry: .placeholder)
+            WidgetPreviewContainer {
+                MediumVerseView(entry: .placeholder)
+            }
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
                 .previewDisplayName(WidgetL10n.mediumPreviewName)
 
-            LargeVerseView(entry: .placeholder)
+            WidgetPreviewContainer {
+                LargeVerseView(entry: .placeholder)
+            }
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
                 .previewDisplayName(WidgetL10n.largePreviewName)
 
-            RectangularVerseView(entry: .placeholder)
+            WidgetPreviewContainer {
+                RectangularVerseView(entry: .placeholder)
+            }
                 .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
                 .previewDisplayName(WidgetL10n.lockPreviewName)
 
             // 空态预览
-            MediumVerseView(entry: .onboarding)
+            WidgetPreviewContainer {
+                MediumVerseView(entry: .onboarding)
+            }
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
                 .previewDisplayName(WidgetL10n.emptyMediumPreviewName)
+        }
+    }
+}
+
+private struct WidgetPreviewContainer<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    @ViewBuilder
+    var body: some View {
+        if #available(iOS 17.0, iOSApplicationExtension 17.0, *) {
+            content
+                .containerBackground(for: .widget) {
+                    WidgetTokens.background
+                }
+        } else {
+            content
         }
     }
 }

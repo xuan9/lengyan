@@ -726,6 +726,46 @@ class lengyanUITests: XCTestCase {
         self.add(attachment)
     }
 
+    func testWidgetGuideForFirstTimeUser() throws {
+        let majorVersion = ProcessInfo.processInfo.operatingSystemVersion.majorVersion
+        let lockScreenIsSupported = majorVersion >= (
+            UIDevice.current.userInterfaceIdiom == .pad ? 17 : 16
+        )
+        guard lockScreenIsSupported else {
+            throw XCTSkip("Lock Screen widgets are unavailable on this destination")
+        }
+
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--uitesting",
+            "-AppleLanguages", "(zh-Hans)",
+            "-AppleLocale", "zh_Hans_CN",
+            "-selectedTheme", "sepia",
+            "-hasSeenDailyReminderPrompt", "YES",
+            "--widget-guide-empty-state",
+        ]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
+        tabBar.buttons.element(boundBy: 3).tap()
+
+        let guideRow = app.buttons["settings_widget_guide_row"]
+        XCTAssertTrue(guideRow.waitForExistence(timeout: 5))
+        guideRow.tap()
+
+        let header = app.descendants(matching: .any)["widget_guide_header"]
+        XCTAssertTrue(header.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["添加到锁定屏幕"].waitForExistence(timeout: 3))
+        takeAndAttachScreenshot(name: "WidgetGuide_LockScreen")
+
+        let homeTab = app.buttons["widget_guide_home_tab"]
+        XCTAssertTrue(homeTab.waitForExistence(timeout: 3))
+        homeTab.tap()
+        XCTAssertTrue(app.staticTexts["添加到主屏幕"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["让今日经文常驻主屏幕"].waitForExistence(timeout: 3))
+    }
+
     func testCompleteUserFlow() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting"]

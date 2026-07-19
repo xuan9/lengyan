@@ -12,6 +12,8 @@ import Foundation
 /// Widget 与 App 共享的经文数据
 /// 编码为 JSON 存入 App Group UserDefaults
 struct SharedVerseData: Codable {
+    static let scheduleDays = 60
+
     let text: String         // 短文本 ~40字（小/中 Widget）
     let fullText: String?    // 长文本 ~300字（大 Widget 可读段落）
     let source: String       // 来源标注 "卷二 · 十番显见"
@@ -27,12 +29,7 @@ struct SharedVerseData: Codable {
 
     /// 从 App Group 读取特定日期的经文
     static func load(for date: Date = Date()) -> SharedVerseData? {
-        guard let defaults = UserDefaults(suiteName: appGroupID),
-              let data = defaults.data(forKey: defaultsKey),
-              let array = try? JSONDecoder().decode([SharedVerseData].self, from: data) else {
-            return nil
-        }
-
+        let array = loadAll()
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let targetStr = formatter.string(from: date)
@@ -40,15 +37,20 @@ struct SharedVerseData: Codable {
         return array.first { $0.dateString == targetStr }
     }
 
-    /// App Group 是否完全为空 — 区分「未授记」与「当日数据缺失」
-    /// 为空表示用户尚未打开过主App，Widget 应显示优雅空态而非伪数据
-    static var isEmpty: Bool {
+    /// Decode the shared schedule once when a caller needs several dates.
+    static func loadAll() -> [SharedVerseData] {
         guard let defaults = UserDefaults(suiteName: appGroupID),
               let data = defaults.data(forKey: defaultsKey),
               let array = try? JSONDecoder().decode([SharedVerseData].self, from: data) else {
-            return true
+            return []
         }
-        return array.isEmpty
+        return array
+    }
+
+    /// App Group 是否完全为空 — 区分「未授记」与「当日数据缺失」
+    /// 为空表示用户尚未打开过主App，Widget 应显示优雅空态而非伪数据
+    static var isEmpty: Bool {
+        loadAll().isEmpty
     }
 
     /// 批量写入未来多天的经文到 App Group

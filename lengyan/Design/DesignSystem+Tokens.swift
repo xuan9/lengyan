@@ -272,18 +272,24 @@ public final class SutraDesignTokens {
     }
 
     // MARK: - Current Theme
+    private var isRestoringSavedTheme = false
+
     public private(set) var currentTheme: SutraTheme = .sepia {
         didSet {
             UserDefaults.standard.set(currentTheme.rawValue, forKey: "selectedTheme")
             applyTheme(currentTheme)
             NotificationCenter.default.post(name: .themeDidChange, object: currentTheme)
-            // 同步主题到 Widget（Widget 从 SharedVerseData 读取主题）
-            DailyVerseProvider.shared.syncWidgetData()
+            // AppDelegate performs the initial sync after restoring the theme.
+            // Later user changes refresh Widget data once, off the UI thread.
+            if !isRestoringSavedTheme, oldValue != currentTheme {
+                DailyVerseProvider.shared.syncWidgetDataAsync()
+            }
         }
     }
 
     // MARK: - Theme Persistence
     public func loadSavedTheme() {
+        isRestoringSavedTheme = true
         // Normalize a historical dark preference to sepia while loading it.
         if let savedTheme = UserDefaults.standard.string(forKey: "selectedTheme"),
            let theme = SutraTheme(rawValue: savedTheme) {
@@ -292,6 +298,7 @@ public final class SutraDesignTokens {
             // Night reading remains intentionally unavailable.
             currentTheme = .sepia
         }
+        isRestoringSavedTheme = false
 
         // Force immediate theme application
         applyThemeToApp()

@@ -109,4 +109,72 @@ class WidgetDataSyncTests: XCTestCase {
             XCTAssertEqual(data.theme, SutraDesignTokens.shared.currentTheme.rawValue)
         }
     }
+
+    func testWidgetDataSyncProvidesSixtyDayOfflineHorizon() {
+        let provider = DailyVerseProvider.shared
+        provider.syncWidgetData()
+
+        let verses = SharedVerseData.loadAll()
+
+        XCTAssertEqual(verses.count, DailyVerseProvider.widgetScheduleDays)
+        XCTAssertEqual(Set(verses.map(\.dateString)).count, DailyVerseProvider.widgetScheduleDays)
+
+        let calendar = Calendar.current
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dates = verses.compactMap { formatter.date(from: $0.dateString) }
+        XCTAssertEqual(dates.count, DailyVerseProvider.widgetScheduleDays)
+        for (current, next) in zip(dates, dates.dropFirst()) {
+            XCTAssertEqual(calendar.dateComponents([.day], from: current, to: next).day, 1)
+        }
+    }
+}
+
+final class WidgetGuidePlatformTests: XCTestCase {
+    func testLockScreenWidgetAvailabilityMatchesPhoneAndPadIntroductions() {
+        XCTAssertFalse(WidgetGuidePlatform.supportsLockScreenWidget(
+            systemMajorVersion: 15,
+            isPad: false
+        ))
+        XCTAssertTrue(WidgetGuidePlatform.supportsLockScreenWidget(
+            systemMajorVersion: 16,
+            isPad: false
+        ))
+        XCTAssertFalse(WidgetGuidePlatform.supportsLockScreenWidget(
+            systemMajorVersion: 16,
+            isPad: true
+        ))
+        XCTAssertTrue(WidgetGuidePlatform.supportsLockScreenWidget(
+            systemMajorVersion: 17,
+            isPad: true
+        ))
+    }
+
+    func testWidgetGuideStartsWithTheMostUsefulMissingPlacement() {
+        XCTAssertEqual(
+            WidgetGuidePlatform.preferredPlacement(
+                installation: nil,
+                supportsLockScreen: true
+            ),
+            .lockScreen
+        )
+        XCTAssertEqual(
+            WidgetGuidePlatform.preferredPlacement(
+                installation: WidgetInstallationState(
+                    hasStandardSize: false,
+                    hasLockScreenAccessory: true
+                ),
+                supportsLockScreen: true
+            ),
+            .homeScreen
+        )
+        XCTAssertEqual(
+            WidgetGuidePlatform.preferredPlacement(
+                installation: .empty,
+                supportsLockScreen: false
+            ),
+            .homeScreen
+        )
+    }
 }

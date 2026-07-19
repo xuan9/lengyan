@@ -23,7 +23,29 @@ struct DailyVerse {
 /// 每日经文提供者
 /// 基于日期的确定性轮换算法，同一天总是返回同一句经文
 final class DailyVerseProvider {
+    private struct VerseSelectionSnapshot {
+        let userLikes: [String]
+        let lastReadPath: String?
+
+        func contains(_ path: String) -> Bool {
+            userLikes.contains(path)
+        }
+    }
+
+    private struct WidgetSyncSnapshot {
+        let theme: String
+        let selection: VerseSelectionSnapshot
+    }
+
     static let shared = DailyVerseProvider()
+    private static let widgetSyncQueue = DispatchQueue(
+        label: "org.fuxuan.lengyan.widget-data-sync",
+        qos: .utility
+    )
+    /// Keep the Lock Screen useful even when the reader does not open the App
+    /// for a while. This matches the 60-day reminder horizon.
+    static let widgetScheduleDays = SharedVerseData.scheduleDays
+    private let scheduleLock = NSLock()
     private init() {}
 
     // MARK: - Public API
@@ -52,16 +74,30 @@ final class DailyVerseProvider {
 
     /// 主动同步到 Widget（AppDelegate 启动时调用）
     func syncWidgetData() {
+        let snapshot = captureWidgetSyncSnapshot()
+        Self.widgetSyncQueue.sync {
+            performWidgetDataSync(snapshot: snapshot)
+        }
+    }
+
+    /// Refresh Widget data without retaining or racing mutable preferences.
+    func syncWidgetDataAsync() {
+        let snapshot = captureWidgetSyncSnapshot()
+        Self.widgetSyncQueue.async { [self] in
+            performWidgetDataSync(snapshot: snapshot)
+        }
+    }
+
+    private func performWidgetDataSync(snapshot: WidgetSyncSnapshot) {
         var verses: [SharedVerseData] = []
         let calendar = Calendar.current
         let today = Date()
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        let currentTheme = SutraDesignTokens.shared.currentTheme.rawValue
-        
-        for offset in 0..<14 {
+
+        for offset in 0..<Self.widgetScheduleDays {
             guard let date = calendar.date(byAdding: .day, value: offset, to: today),
-                  let v = verse(for: date) else { continue }
+                  let v = verse(for: date, selection: snapshot.selection) else { continue }
             
             let shared = SharedVerseData(
                 text: v.text,
@@ -69,7 +105,7 @@ final class DailyVerseProvider {
                 source: v.source,
                 path: v.path,
                 dateString: formatter.string(from: date),
-                theme: currentTheme
+                theme: snapshot.theme
             )
             verses.append(shared)
         }
@@ -98,6 +134,13 @@ final class DailyVerseProvider {
 
     /// 获取特定日期的锁定路径，供内部和 ReminderManager 使用
     func getPath(for date: Date) -> String {
+        getPath(for: date, selection: captureVerseSelectionSnapshot())
+    }
+
+    private func getPath(for date: Date, selection: VerseSelectionSnapshot) -> String {
+        scheduleLock.lock()
+        defer { scheduleLock.unlock() }
+
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let dateStr = formatter.string(from: date)
@@ -107,15 +150,8 @@ final class DailyVerseProvider {
             return savedPath
         }
         
-        var pool = buildPool()
-        let lastRead: String?
-        switch Prefers.shared.outlineResumeTarget {
-        case let .paged(path, _), let .tree(path):
-            lastRead = path
-        case .chapter, nil:
-            lastRead = nil
-        }
-        if let lastRead {
+        var pool = buildPool(userLikes: selection.userLikes)
+        if let lastRead = selection.lastReadPath {
             pool.removeAll { $0 == lastRead }
         }
         if pool.isEmpty {
@@ -144,10 +180,14 @@ final class DailyVerseProvider {
 
     /// 为指定日期选取经文
     private func verse(for date: Date) -> DailyVerse? {
+        verse(for: date, selection: captureVerseSelectionSnapshot())
+    }
+
+    private func verse(for date: Date, selection: VerseSelectionSnapshot) -> DailyVerse? {
         guard Book.shared.loaded else { return nil }
 
         // 获取确定性的路径
-        let path = getPath(for: date)
+        let path = getPath(for: date, selection: selection)
 
         let item = Book.shared.itemOfPath(path)
         let rawFullText = Book.shared.getSutra(item, maxLength: 300)
@@ -157,7 +197,7 @@ final class DailyVerseProvider {
         let text = semanticTruncate(rawFullText, maxLength: 55)
         
         let source = buildSource(for: item, path: path)
-        let isBookmarked = Prefers.shared.isLike(path)
+        let isBookmarked = selection.contains(path)
 
         return DailyVerse(
             path: path,
@@ -172,15 +212,49 @@ final class DailyVerseProvider {
     // MARK: - Pool Construction
 
     /// 构建经文池：精选 + 用户收藏（去重）
-    private func buildPool() -> [String] {
+    private func buildPool(userLikes: [String]) -> [String] {
         var pool = DEFAULT_STARTS
-        let userBookmarks = Prefers.shared.userLikes
-        for bookmark in userBookmarks {
+        for bookmark in userLikes {
             if !pool.contains(bookmark) {
                 pool.append(bookmark)
             }
         }
         return pool
+    }
+
+    private func captureWidgetSyncSnapshot() -> WidgetSyncSnapshot {
+        let capture = {
+            WidgetSyncSnapshot(
+                theme: SutraDesignTokens.shared.currentTheme.rawValue,
+                selection: self.makeVerseSelectionSnapshot()
+            )
+        }
+        if Thread.isMainThread {
+            return capture()
+        }
+        return DispatchQueue.main.sync(execute: capture)
+    }
+
+    private func captureVerseSelectionSnapshot() -> VerseSelectionSnapshot {
+        let capture = { self.makeVerseSelectionSnapshot() }
+        if Thread.isMainThread {
+            return capture()
+        }
+        return DispatchQueue.main.sync(execute: capture)
+    }
+
+    private func makeVerseSelectionSnapshot() -> VerseSelectionSnapshot {
+        let lastReadPath: String?
+        switch Prefers.shared.outlineResumeTarget {
+        case let .paged(path, _), let .tree(path):
+            lastReadPath = path
+        case .chapter, nil:
+            lastReadPath = nil
+        }
+        return VerseSelectionSnapshot(
+            userLikes: Prefers.shared.userLikes,
+            lastReadPath: lastReadPath
+        )
     }
 
     // MARK: - Date Hashing
