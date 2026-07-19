@@ -29,6 +29,7 @@ Package.resolved
 # Cloudflare Wrangler local account/cache state
 **/.wrangler/
 **/node_modules/
+CloudflareAudioFallback/public/
 
 # Local environment and Worker secret files (examples may be committed)
 **/.dev.vars

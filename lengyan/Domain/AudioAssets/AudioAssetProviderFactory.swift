@@ -48,11 +48,23 @@ enum AudioAssetProviderFactory {
             policy: policy
         )
 
+        let primary: any AudioAssetProvider
         if #available(iOS 26.0, *), backend == .managedBackgroundAssets {
             demoteLegacyODRTagsIfNeeded()
-            return ManagedBackgroundAssetsAudioAssetProvider()
+            primary = ManagedBackgroundAssetsAudioAssetProvider()
+        } else {
+            primary = LegacyODRAudioAssetProvider()
         }
-        return LegacyODRAudioAssetProvider()
+
+        guard let fallbackConfiguration = CDNAudioFallbackConfiguration.production else {
+            return primary
+        }
+        let fallback = CDNAudioAssetProvider(configuration: fallbackConfiguration)
+        return FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: fallbackConfiguration.stallTimeout
+        )
     }
 
     static func shouldDemoteLegacyODRTags(

@@ -22,6 +22,7 @@ final class AudioManager: ObservableObject {
     @Published var downloadStatus: [String: MediaItem.MediaStatus] = [:]
     @Published var downloadErrorMessage: String?
     @Published private(set) var pendingTrackName: String?
+    @Published private(set) var pendingUsesFallback = false
 
     private let assetCoordinator: AudioAssetCoordinator
     private var playCount = 0
@@ -130,6 +131,7 @@ final class AudioManager: ObservableObject {
             requestedAssetID = file
             pendingAssetID = nil
             pendingTrackName = nil
+            pendingUsesFallback = false
             prefetchTriggeredGeneration = nil
             let cancelledPendingSelection = supersededPendingID != nil
                 && supersededPendingID != file
@@ -197,6 +199,7 @@ final class AudioManager: ObservableObject {
         requestedAssetID = file
         pendingAssetID = file
         pendingTrackName = name
+        pendingUsesFallback = false
         resumableAssetID = file
         downloadErrorMessage = nil
 
@@ -255,6 +258,9 @@ final class AudioManager: ObservableObject {
         case .queued:
             guard selectionGeneration == generation else { return }
             downloadStatus[descriptor.id] = .downloading
+        case .fallbackActivated:
+            guard selectionGeneration == generation else { return }
+            pendingUsesFallback = true
         case .progress(let fraction):
             guard selectionGeneration == generation else { return }
             downloadProgress[descriptor.id] = min(max(fraction, 0), 1)
@@ -312,6 +318,7 @@ final class AudioManager: ObservableObject {
         playingAssetID = descriptor.id
         pendingAssetID = nil
         pendingTrackName = nil
+        pendingUsesFallback = false
         playbackGeneration = generation
         prefetchTriggeredGeneration = nil
         audioObserver.currentTrack = name
@@ -343,6 +350,7 @@ final class AudioManager: ObservableObject {
         guard selectionGeneration == generation else { return }
         pendingAssetID = nil
         pendingTrackName = nil
+        pendingUsesFallback = false
         downloadStatus[assetID] = .error
         downloadProgress.removeValue(forKey: assetID)
         if !isCancellation(error) {
@@ -545,6 +553,7 @@ final class AudioManager: ObservableObject {
         requestedAssetID = nil
         pendingAssetID = nil
         pendingTrackName = nil
+        pendingUsesFallback = false
         playingAssetID = nil
         audioObserver.currentTrack = nil
         audioObserver.showPlayerBar = false

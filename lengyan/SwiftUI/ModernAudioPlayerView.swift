@@ -220,7 +220,11 @@ struct ModernAudioPlayerView: View {
     private var pendingPreparationText: String? {
         guard let name = manager.pendingTrackName else { return nil }
         return String(
-            format: L10n.str("audio_preparing_track_format"),
+            format: L10n.str(
+                manager.pendingUsesFallback
+                    ? "audio_preparing_fallback_track_format"
+                    : "audio_preparing_track_format"
+            ),
             name,
             Int((manager.pendingTrackProgress * 100).rounded())
         )

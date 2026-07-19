@@ -31,3 +31,8 @@ After creating an Archive, verify the ODR and Managed sides together:
 ```sh
 scripts/verify-dual-stack-archive.sh /path/to/lengyan.xcarchive
 ```
+
+The optional zero-overage Cloudflare emergency source is documented separately
+in [`CLOUDFLARE_FALLBACK.md`](CLOUDFLARE_FALLBACK.md). Its assets-only
+`workers.dev` route must pass the public verifier before the production plist
+is enabled.

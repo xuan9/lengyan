@@ -24,6 +24,8 @@
 		BAA100000000000000000107 /* ManagedBackgroundAssetsAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000007 /* ManagedBackgroundAssetsAudioAssetProvider.swift */; };
 		BAA100000000000000000108 /* AudioStorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000008 /* AudioStorageSettingsView.swift */; };
 		BAA100000000000000000109 /* AudioAssetCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000009 /* AudioAssetCoordinatorTests.swift */; };
+		BAA10000000000000000010A /* CDNAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA10000000000000000000A /* CDNAudioAssetProvider.swift */; };
+		BAA10000000000000000010B /* FailoverAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA10000000000000000000B /* FailoverAudioAssetProvider.swift */; };
 		0D1E4CD8B4C5D928013BAF33 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D284D40A58BBA43F939040A /* AudioManager.swift */; };
 		0EF37E68574D4E54B045E5F3 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FAE489C5AC4CCBB3066315 /* HapticManager.swift */; };
 		130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */; };
@@ -203,6 +205,8 @@
 		BAA100000000000000000007 /* ManagedBackgroundAssetsAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedBackgroundAssetsAudioAssetProvider.swift; sourceTree = "<group>"; };
 		BAA100000000000000000008 /* AudioStorageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioStorageSettingsView.swift; sourceTree = "<group>"; };
 		BAA100000000000000000009 /* AudioAssetCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetCoordinatorTests.swift; sourceTree = "<group>"; };
+		BAA10000000000000000000A /* CDNAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CDNAudioAssetProvider.swift; sourceTree = "<group>"; };
+		BAA10000000000000000000B /* FailoverAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailoverAudioAssetProvider.swift; sourceTree = "<group>"; };
 		062F8B58456A40C09C663C10 /* lengyan/View/Modern/ModernWisdomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lengyan/View/Modern/ModernWisdomView.swift; sourceTree = "<group>"; };
 		0D284D40A58BBA43F939040A /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioManager.swift; path = lengyan/Domain/AudioManager.swift; sourceTree = SOURCE_ROOT; };
 		0D89740455934B739168A0A8 /* ModernSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernSettingsView.swift; sourceTree = "<group>"; };
@@ -402,6 +406,8 @@
 				BAA100000000000000000005 /* AudioAssetCoordinator.swift */,
 				BAA100000000000000000006 /* LegacyODRAudioAssetProvider.swift */,
 				BAA100000000000000000007 /* ManagedBackgroundAssetsAudioAssetProvider.swift */,
+				BAA10000000000000000000A /* CDNAudioAssetProvider.swift */,
+				BAA10000000000000000000B /* FailoverAudioAssetProvider.swift */,
 			);
 			path = AudioAssets;
 			sourceTree = "<group>";
@@ -894,6 +900,8 @@
 				BAA100000000000000000105 /* AudioAssetCoordinator.swift in Sources */,
 				BAA100000000000000000106 /* LegacyODRAudioAssetProvider.swift in Sources */,
 				BAA100000000000000000107 /* ManagedBackgroundAssetsAudioAssetProvider.swift in Sources */,
+				BAA10000000000000000010A /* CDNAudioAssetProvider.swift in Sources */,
+				BAA10000000000000000010B /* FailoverAudioAssetProvider.swift in Sources */,
 				BAA100000000000000000108 /* AudioStorageSettingsView.swift in Sources */,
 				BA0000000000000000000002 /* ManagedAssetPackM0POCView.swift in Sources */,
 				2D1FA1B8FB3A4F9FA9BB2367 /* lengyan/View/Modern/ModernWisdomView.swift in Sources */,

@@ -15,6 +15,9 @@ struct AudioAssetDescriptor: Hashable, Sendable {
     let odrTag: String
     let managedPackID: String
     let managedRelativePath: String
+    let cdnRelativePath: String
+    let contentSHA256: String
+    let contentByteCount: Int64
 }
 
 enum AudioAssetIntent: Equatable, Sendable {
@@ -24,6 +27,7 @@ enum AudioAssetIntent: Equatable, Sendable {
 
 enum AudioAssetEvent: Sendable {
     case queued
+    case fallbackActivated
     case progress(Double)
     case ready(AudioAssetLease)
 }
@@ -49,6 +53,7 @@ final class AudioAssetLease: @unchecked Sendable {
 enum AudioAssetBackendKind: String, Sendable {
     case legacyODR
     case managedBackgroundAssets
+    case cloudflareCDN
 }
 
 enum AudioAssetEvictionResult: Sendable {
@@ -59,6 +64,9 @@ enum AudioAssetEvictionResult: Sendable {
 enum AudioAssetError: LocalizedError, Sendable {
     case unknownAsset(String)
     case missingLocalFile(String)
+    case invalidDownloadedFile(String)
+    case invalidRemoteResponse(Int)
+    case insecureRemoteResponse
     case cancelled
     case packIsInUse(String)
 
@@ -68,6 +76,12 @@ enum AudioAssetError: LocalizedError, Sendable {
             return "Unknown audio asset: \(id)"
         case .missingLocalFile(let path):
             return "Audio asset is not readable at \(path)"
+        case .invalidDownloadedFile(let id):
+            return "Downloaded audio asset failed integrity validation: \(id)"
+        case .invalidRemoteResponse(let statusCode):
+            return "Audio fallback server returned HTTP \(statusCode)"
+        case .insecureRemoteResponse:
+            return "Audio fallback server redirected to an insecure URL"
         case .cancelled:
             return "Audio asset request was cancelled"
         case .packIsInUse(let id):

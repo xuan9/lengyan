@@ -3,6 +3,7 @@
 //  lengyanTests
 //
 
+import CryptoKit
 import XCTest
 @testable import lengyan
 
@@ -110,6 +111,393 @@ final class AudioAssetCoordinatorTests: XCTestCase {
             Set(AudioAssetCatalog.descriptors.map(\.managedRelativePath)).count,
             11
         )
+        XCTAssertEqual(
+            Set(AudioAssetCatalog.descriptors.map(\.cdnRelativePath)).count,
+            11
+        )
+        XCTAssertTrue(
+            AudioAssetCatalog.descriptors.allSatisfy {
+                $0.contentSHA256.count == 64 && $0.contentByteCount > 0
+            }
+        )
+    }
+
+    func testCDNConfigurationRejectsNonHTTPSAndBuildsImmutableURL() throws {
+        XCTAssertNil(CDNAudioFallbackConfiguration.validatedBaseURL(""))
+        XCTAssertNil(CDNAudioFallbackConfiguration.validatedBaseURL("http://audio.example.com"))
+        XCTAssertNil(CDNAudioFallbackConfiguration.validatedBaseURL("https://user:pass@audio.example.com"))
+        let baseURL = try XCTUnwrap(
+            CDNAudioFallbackConfiguration.validatedBaseURL("https://audio.example.com/root")
+        )
+        let asset = makeTestDescriptor(payload: Data("fallback".utf8))
+        let configuration = CDNAudioFallbackConfiguration(
+            baseURL: baseURL,
+            cacheDirectory: URL(fileURLWithPath: "/tmp/audio-fallback-test"),
+            stallTimeout: 15,
+            resourceTimeout: 60
+        )
+        XCTAssertEqual(
+            configuration.remoteURL(for: asset).absoluteString,
+            "https://audio.example.com/root/\(asset.cdnRelativePath)"
+        )
+    }
+
+    func testProductionCDNFallbackIsEnabledAtVerifiedWorkersDevOrigin() throws {
+        let configuration = try XCTUnwrap(CDNAudioFallbackConfiguration.production)
+        XCTAssertEqual(
+            configuration.baseURL.absoluteString,
+            "https://lengyan-audio-fallback.dhyana9.workers.dev"
+        )
+        XCTAssertEqual(configuration.stallTimeout, 15)
+        XCTAssertEqual(configuration.baseURL.scheme, "https")
+    }
+
+    func testPlaybackFailureSwitchesToVerifiedCDNFallback() async throws {
+        let payload = Data("verified fallback audio".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: makeCDNConfiguration(cacheDirectory: cacheDirectory),
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 60
+        )
+
+        let handle = await provider.request(asset, intent: .playback)
+        await waitForRequest(assetID: asset.id, provider: primary)
+        await primary.fail(
+            assetID: asset.id,
+            error: URLError(.cannotConnectToHost)
+        )
+
+        var activatedFallback = false
+        var readyLease: AudioAssetLease?
+        for try await event in handle.events {
+            switch event {
+            case .fallbackActivated:
+                activatedFallback = true
+            case .ready(let lease):
+                readyLease = lease
+            default:
+                break
+            }
+        }
+
+        let lease = try XCTUnwrap(readyLease)
+        XCTAssertTrue(activatedFallback)
+        XCTAssertEqual(try Data(contentsOf: lease.localURL), payload)
+        let downloadCount = await downloader.downloadCount
+        XCTAssertEqual(downloadCount, 1)
+        await provider.release(lease)
+    }
+
+    func testPrefetchFailureDoesNotConsumeCDNFallbackTraffic() async throws {
+        let payload = Data("prefetch must stay on Apple".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: makeCDNConfiguration(cacheDirectory: cacheDirectory),
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 0.05
+        )
+
+        let handle = await provider.request(
+            asset,
+            intent: .prefetch(ownerID: "test-owner")
+        )
+        await waitForRequest(assetID: asset.id, provider: primary)
+        await primary.fail(
+            assetID: asset.id,
+            error: URLError(.cannotConnectToHost)
+        )
+
+        do {
+            for try await _ in handle.events {}
+            XCTFail("A failed prefetch must finish with the primary error")
+        } catch {
+            // Expected: prefetch is intentionally not promoted to CDN traffic.
+        }
+        let downloadCount = await downloader.downloadCount
+        XCTAssertEqual(downloadCount, 0)
+    }
+
+    func testStalledPlaybackCancelsPrimaryBeforeUsingFallback() async throws {
+        let payload = Data("stall watchdog fallback".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: makeCDNConfiguration(cacheDirectory: cacheDirectory),
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 0.05
+        )
+
+        let handle = await provider.request(asset, intent: .playback)
+        var activatedFallback = false
+        var lease: AudioAssetLease?
+        for try await event in handle.events {
+            if case .fallbackActivated = event { activatedFallback = true }
+            if case .ready(let value) = event { lease = value }
+        }
+
+        XCTAssertTrue(activatedFallback)
+        let cancellationCount = await primary.cancellationCount
+        let downloadCount = await downloader.downloadCount
+        XCTAssertEqual(cancellationCount, 1)
+        XCTAssertEqual(downloadCount, 1)
+        if let lease { await provider.release(lease) }
+    }
+
+    func testCancellingPlaybackNeverActivatesFallback() async throws {
+        let payload = Data("cancelled request".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: makeCDNConfiguration(cacheDirectory: cacheDirectory),
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 60
+        )
+
+        let handle = await provider.request(asset, intent: .playback)
+        await waitForRequest(assetID: asset.id, provider: primary)
+        await provider.cancel(requestID: handle.requestID)
+
+        do {
+            for try await _ in handle.events {}
+            XCTFail("A cancelled playback request must throw")
+        } catch {
+            // Expected cancellation; it must not be reinterpreted as failure.
+        }
+        let downloadCount = await downloader.downloadCount
+        let cancellationCount = await primary.cancellationCount
+        XCTAssertEqual(downloadCount, 0)
+        XCTAssertEqual(cancellationCount, 1)
+    }
+
+    func testOutOfSpaceFailureNeverActivatesFallback() async throws {
+        let payload = Data("out of space".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: makeCDNConfiguration(cacheDirectory: cacheDirectory),
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 60
+        )
+
+        let handle = await provider.request(asset, intent: .playback)
+        await waitForRequest(assetID: asset.id, provider: primary)
+        await primary.fail(
+            assetID: asset.id,
+            error: NSError(
+                domain: NSCocoaErrorDomain,
+                code: NSFileWriteOutOfSpaceError
+            )
+        )
+
+        do {
+            for try await _ in handle.events {}
+            XCTFail("Out-of-space must remain a terminal local error")
+        } catch {
+            // Expected: another download cannot fix unavailable local storage.
+        }
+        let downloadCount = await downloader.downloadCount
+        XCTAssertEqual(downloadCount, 0)
+    }
+
+    func testCorruptFallbackIsRejectedAndNeverInstalled() async throws {
+        let expectedPayload = Data("VALID".utf8)
+        let corruptPayload = Data("WRONG".utf8)
+        let asset = makeTestDescriptor(payload: expectedPayload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: corruptPayload)
+        let configuration = makeCDNConfiguration(cacheDirectory: cacheDirectory)
+        let fallback = CDNAudioAssetProvider(
+            configuration: configuration,
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 60
+        )
+
+        let handle = await provider.request(asset, intent: .playback)
+        await waitForRequest(assetID: asset.id, provider: primary)
+        await primary.fail(assetID: asset.id, error: URLError(.cannotFindHost))
+
+        var rejected = false
+        do {
+            for try await _ in handle.events {}
+            XCTFail("Corrupt fallback data must not become playable")
+        } catch AudioAssetError.invalidDownloadedFile(let id) {
+            rejected = id == asset.id
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertTrue(rejected)
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: CDNAudioCache.destinationURL(
+                    for: asset,
+                    configuration: configuration
+                ).path
+            )
+        )
+    }
+
+    func testVerifiedCachedFallbackSkipsAppleAndNetwork() async throws {
+        let payload = Data("cached fallback".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+        let configuration = makeCDNConfiguration(cacheDirectory: cacheDirectory)
+        let destination = CDNAudioCache.destinationURL(
+            for: asset,
+            configuration: configuration
+        )
+        try FileManager.default.createDirectory(
+            at: destination.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try payload.write(to: destination)
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: configuration,
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 0.05
+        )
+
+        let handle = await provider.request(asset, intent: .playback)
+        let lease = try await readyLease(from: handle)
+        XCTAssertEqual(lease.localURL, destination)
+        let primaryRequestCount = await primary.requestCount(for: asset.id)
+        let downloadCount = await downloader.downloadCount
+        XCTAssertEqual(primaryRequestCount, 0)
+        XCTAssertEqual(downloadCount, 0)
+        await provider.release(lease)
+    }
+
+    func testPrimaryProgressKeepsResettingPlaybackWatchdog() async throws {
+        let payload = Data("primary progress".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: makeCDNConfiguration(cacheDirectory: cacheDirectory),
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 0.12
+        )
+
+        let handle = await provider.request(asset, intent: .playback)
+        await waitForRequest(assetID: asset.id, provider: primary)
+        for fraction in [0.1, 0.2, 0.3, 0.4] {
+            try await Task.sleep(nanoseconds: 40_000_000)
+            await primary.publishProgress(assetID: asset.id, fraction: fraction)
+        }
+        let primaryURL = cacheDirectory.appendingPathComponent("primary.m4a")
+        await primary.complete(assetID: asset.id, url: primaryURL)
+        let lease = try await readyLease(from: handle)
+
+        XCTAssertEqual(lease.localURL, primaryURL)
+        let cancellationCount = await primary.cancellationCount
+        let downloadCount = await downloader.downloadCount
+        XCTAssertEqual(cancellationCount, 0)
+        XCTAssertEqual(downloadCount, 0)
+        await provider.release(lease)
+    }
+
+    func testPromotedPrefetchStartsWatchdogAndCanFailOver() async throws {
+        let payload = Data("promoted prefetch".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: makeCDNConfiguration(cacheDirectory: cacheDirectory),
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 0.05
+        )
+
+        let handle = await provider.request(
+            asset,
+            intent: .prefetch(ownerID: "current-volume")
+        )
+        await waitForRequest(assetID: asset.id, provider: primary)
+        try await Task.sleep(nanoseconds: 80_000_000)
+        let prePromotionDownloadCount = await downloader.downloadCount
+        let prePromotionCancellationCount = await primary.cancellationCount
+        XCTAssertEqual(prePromotionDownloadCount, 0)
+        XCTAssertEqual(prePromotionCancellationCount, 0)
+
+        await provider.promote(requestID: handle.requestID)
+        let lease = try await readyLease(from: handle)
+        let promotionCount = await primary.promotionCount
+        let cancellationCount = await primary.cancellationCount
+        let downloadCount = await downloader.downloadCount
+        XCTAssertEqual(promotionCount, 1)
+        XCTAssertEqual(cancellationCount, 1)
+        XCTAssertEqual(downloadCount, 1)
+        await provider.release(lease)
     }
 
     func testPrefetchPromotionReusesOneUnderlyingRequest() async throws {
@@ -195,6 +583,52 @@ final class AudioAssetCoordinatorTests: XCTestCase {
         }
         throw AudioAssetError.cancelled
     }
+
+    private func makeTestDescriptor(payload: Data) -> AudioAssetDescriptor {
+        let hash = SHA256.hash(data: payload).map {
+            String(format: "%02x", $0)
+        }.joined()
+        return AudioAssetDescriptor(
+            id: "test-audio",
+            fileName: "test-audio",
+            fileExtension: "m4a",
+            odrTag: "test-audio",
+            managedPackID: "org.fuxuan.lengyan.audio.test",
+            managedRelativePath: "Audio/test-audio.m4a",
+            cdnRelativePath: "audio/v1/\(hash)/test-audio.m4a",
+            contentSHA256: hash,
+            contentByteCount: Int64(payload.count)
+        )
+    }
+
+    private func temporaryCacheDirectory() -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent(
+            "lengyan-cdn-tests-\(UUID().uuidString)",
+            isDirectory: true
+        )
+    }
+
+    private func makeCDNConfiguration(
+        cacheDirectory: URL
+    ) -> CDNAudioFallbackConfiguration {
+        CDNAudioFallbackConfiguration(
+            baseURL: URL(string: "https://audio.example.com")!,
+            cacheDirectory: cacheDirectory,
+            stallTimeout: 15,
+            resourceTimeout: 60
+        )
+    }
+
+    private func waitForRequest(
+        assetID: String,
+        provider: FakeAudioAssetProvider
+    ) async {
+        for _ in 0..<200 {
+            if await provider.requestCount(for: assetID) > 0 { return }
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+        XCTFail("Timed out waiting for primary audio request")
+    }
 }
 
 private actor FakeAudioAssetProvider: AudioAssetProvider {
@@ -209,6 +643,7 @@ private actor FakeAudioAssetProvider: AudioAssetProvider {
     private var requests: [UUID: Request] = [:]
     private var requestCounts: [String: Int] = [:]
     private(set) var promotionCount = 0
+    private(set) var cancellationCount = 0
     private var releasedLeaseIDs: Set<UUID> = []
     private var promotionCompletion: (assetID: String, url: URL)?
 
@@ -252,6 +687,7 @@ private actor FakeAudioAssetProvider: AudioAssetProvider {
 
     func cancel(requestID: UUID) async {
         guard let request = requests.removeValue(forKey: requestID) else { return }
+        cancellationCount += 1
         request.continuation.finish(throwing: AudioAssetError.cancelled)
     }
 
@@ -286,5 +722,41 @@ private actor FakeAudioAssetProvider: AudioAssetProvider {
             )
             request.continuation.finish()
         }
+    }
+
+    func fail(assetID: String, error: Error) {
+        let matching = requests.filter { $0.value.assetID == assetID }
+        for (requestID, request) in matching {
+            requests.removeValue(forKey: requestID)
+            request.continuation.finish(throwing: error)
+        }
+    }
+
+    func publishProgress(assetID: String, fraction: Double) {
+        let matching = requests.values.filter { $0.assetID == assetID }
+        for request in matching {
+            request.continuation.yield(.progress(fraction))
+        }
+    }
+}
+
+private actor FakeCDNAudioDownloader: CDNAudioDownloading {
+    private let payload: Data
+    private(set) var downloadCount = 0
+
+    init(payload: Data) {
+        self.payload = payload
+    }
+
+    func download(
+        from remoteURL: URL,
+        to stagingURL: URL,
+        expectedByteCount: Int64,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws {
+        downloadCount += 1
+        progress(0.5)
+        try payload.write(to: stagingURL, options: .atomic)
+        progress(1)
     }
 }

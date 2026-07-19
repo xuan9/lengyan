@@ -93,6 +93,7 @@
 
 "downloading_text" = "正在下載...";
 "audio_preparing_track_format" = "正在準備 %@ · %d%%";
+"audio_preparing_fallback_track_format" = "正在使用備用線路準備 %@ · %d%%";
 "audio_preparing_short" = "準備中";
 "welcoming_sutra" = "正在迎請經典…";
 "download_failed" = "下載失敗，请稍後重試";

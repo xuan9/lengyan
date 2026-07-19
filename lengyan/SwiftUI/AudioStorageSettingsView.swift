@@ -17,8 +17,18 @@ private final class AudioStorageSettingsModel: ObservableObject {
         isBusy = true
         Task { [weak self] in
             guard let self else { return }
+            let fallbackSummary = self.fallbackSummary()
             if #available(iOS 26.0, *) {
-                await self.refreshManagedSummary()
+                await self.refreshManagedSummary(fallbackSummary: fallbackSummary)
+            } else if fallbackSummary.fileCount > 0 {
+                self.summary = String(
+                    format: L10n.str("audio_storage_odr_fallback_format"),
+                    fallbackSummary.fileCount,
+                    ByteCountFormatter.string(
+                        fromByteCount: fallbackSummary.byteCount,
+                        countStyle: .file
+                    )
+                )
             } else {
                 self.summary = L10n.str("audio_storage_odr_managed")
             }
@@ -44,7 +54,9 @@ private final class AudioStorageSettingsModel: ObservableObject {
                 )
             }
             if #available(iOS 26.0, *) {
-                await self.refreshManagedSummary()
+                await self.refreshManagedSummary(
+                    fallbackSummary: self.fallbackSummary()
+                )
             } else {
                 self.summary = L10n.str("audio_storage_odr_released")
             }
@@ -53,7 +65,9 @@ private final class AudioStorageSettingsModel: ObservableObject {
     }
 
     @available(iOS 26.0, *)
-    private func refreshManagedSummary() async {
+    private func refreshManagedSummary(
+        fallbackSummary: CDNAudioCacheSummary
+    ) async {
         var downloadedCount = 0
         var totalBytes = 0
         let manager = AssetPackManager.shared
@@ -84,11 +98,31 @@ private final class AudioStorageSettingsModel: ObservableObject {
             fromByteCount: Int64(totalBytes),
             countStyle: .file
         )
-        summary = String(
-            format: L10n.str("audio_storage_managed_format"),
-            downloadedCount,
-            formattedBytes
-        )
+        if fallbackSummary.fileCount > 0 {
+            summary = String(
+                format: L10n.str("audio_storage_combined_format"),
+                downloadedCount,
+                formattedBytes,
+                fallbackSummary.fileCount,
+                ByteCountFormatter.string(
+                    fromByteCount: fallbackSummary.byteCount,
+                    countStyle: .file
+                )
+            )
+        } else {
+            summary = String(
+                format: L10n.str("audio_storage_managed_format"),
+                downloadedCount,
+                formattedBytes
+            )
+        }
+    }
+
+    private func fallbackSummary() -> CDNAudioCacheSummary {
+        guard let configuration = CDNAudioFallbackConfiguration.production else {
+            return CDNAudioCacheSummary(fileCount: 0, byteCount: 0)
+        }
+        return CDNAudioCache.summary(configuration: configuration)
     }
 }
 

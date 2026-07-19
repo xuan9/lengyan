@@ -1,5 +1,13 @@
 # Helper Scripts
 
+## Cloudflare Audio Fallback
+
+`deploy-cloudflare-audio-fallback.sh` verifies and publishes the 11 immutable
+audio files as zero-overage Workers Static Assets. It does not create or use
+R2. `verify-cloudflare-audio-fallback.sh` downloads the public production set
+and verifies every byte count and SHA-256. See
+`BackgroundAssets/CLOUDFLARE_FALLBACK.md` for the production URL and policy.
+
 ## WebDriverAgent Management
 
 These scripts help manage WebDriverAgent for Mobile MCP testing without repeatedly reinstalling.
