@@ -17,6 +17,10 @@ fastlane/README.md
 build/
 .DS_Store
 
+# Managed Background Assets M0 generated upload artifact
+BackgroundAssetsM0/Artifacts/
+BackgroundAssets/Artifacts/
+
 # Swift Package Manager
 .swiftpm/
 .build/

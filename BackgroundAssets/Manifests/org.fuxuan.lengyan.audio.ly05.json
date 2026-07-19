@@ -1,0 +1,6 @@
+{
+  "assetPackID": "org.fuxuan.lengyan.audio.ly05",
+  "downloadPolicy": { "onDemand": {} },
+  "fileSelectors": [{ "file": "Audio/ly05.m4a" }],
+  "platforms": ["iOS"]
+}

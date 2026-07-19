@@ -1,0 +1,17 @@
+{
+  "assetPackID": "org.fuxuan.lengyan.m0.smoke",
+  "downloadPolicy": {
+    "onDemand": {}
+  },
+  "fileSelectors": [
+    {
+      "file": "M0/managed-assets-smoke.txt"
+    },
+    {
+      "file": "M0/managed-assets-smoke.m4a"
+    }
+  ],
+  "platforms": [
+    "iOS"
+  ]
+}

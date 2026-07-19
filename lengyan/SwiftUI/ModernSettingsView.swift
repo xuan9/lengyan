@@ -150,6 +150,26 @@ struct ModernSettingsView: View {
                     themeControl
                 }
 
+                zenSection(L10n.str("settings_section_storage")) {
+                    settingsItem(
+                        L10n.str("settings_audio_storage"),
+                        subtitle: L10n.str("settings_audio_storage_subtitle"),
+                        icon: "externaldrive",
+                        action: openAudioStorage
+                    )
+                }
+
+                if ManagedAssetsM0POCFeature.isEnabled {
+                    zenSection("M0 验证") {
+                        settingsItem(
+                            "Apple 托管资源包",
+                            subtitle: "iOS 26+ 小包下载、取消、验证与删除",
+                            icon: "externaldrive.badge.icloud",
+                            action: openManagedAssetsM0POC
+                        )
+                    }
+                }
+
                 // ── 关于 ──
                 zenSection(L10n.str("settings_section_about")) {
                     aboutItem(L10n.str("settings_feedback"), icon: "envelope", action: openFeedback)
@@ -523,6 +543,21 @@ struct ModernSettingsView: View {
     private func openAppStoreRating() {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
         SKStoreReviewController.requestReview(in: scene)
+    }
+
+    private func openManagedAssetsM0POC() {
+        guard #available(iOS 26.0, *) else { return }
+        NavigationHelper.pushSwiftUIView(
+            ManagedAssetPackM0POCView(),
+            title: "M0 Apple 托管资源包"
+        )
+    }
+
+    private func openAudioStorage() {
+        NavigationHelper.pushSwiftUIView(
+            AudioStorageSettingsView(),
+            title: L10n.str("settings_audio_storage")
+        )
     }
 }
 

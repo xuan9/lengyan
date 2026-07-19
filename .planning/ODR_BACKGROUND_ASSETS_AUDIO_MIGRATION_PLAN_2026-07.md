@@ -1,12 +1,17 @@
 # 楞严经音频：ODR 退场、点播、离线缓存与 CDN 迁移计划
 
+> 2026-07-19 决策更新：当前选择改为“iOS 15–25 继续 ODR，iOS 26+
+> 使用 Apple-hosted Managed Asset Packs”。实施设计见
+> `APPLE_HOSTED_AUDIO_DUAL_STACK_DESIGN_2026-07.md`。本文保留作 R2/HLS、编码与
+> 方案比较研究，其中“R2/HLS 为最终建议”不再是当前实施决定。
+
 研究日期：2026-07-18\
 适用工程：lengyan-app，当前最低系统 iOS 15.0\
 状态：研究完成，等待按里程碑实施
 
 > 2026-07-18 发布复核：本报告发现的 asset-pack 发布阻断项已经先行修复。
 > 当前 Debug 仍设置 `EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES` 以方便本地测试，
-> Release 已改为 `NO`；`ly01` 暂时保留为 initial-install tag。后续 CDN/HLS
+> Release 已改为 `NO`；`ly01` 的 initial-install 属性已移除，但 ODR tag 保留。后续 CDN/HLS
 > 迁移仍未实施，正文中其余“当前”描述均以研究日代码为基线。
 
 ## 0. 最终建议
@@ -49,16 +54,16 @@
 报告初审时 Debug 和 Release 都配置了：
 
 - EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES：project.pbxproj:1051、1080。
-- ly01 是 initial-install tag：project.pbxproj:1059、1088。
+- ly01 保留 ODR tag，但已不再是 initial-install tag。
 
 Apple 的 Build Settings Reference 明确说，Embed Asset Packs 会把所有已构建的 asset packs 放进产品包，只适合无服务器测试，因为它会抵消 ODR 的体积收益。
 
-2026-07-18 已将 Release 改为不嵌入 asset packs，Debug 保持嵌入；`ly01`
-仍作为首卷 initial-install tag。发布 Archive 仍须实际解开 IPA，确认完整音频没有进入
+2026-07-18 已将 Release 改为不嵌入 asset packs，Debug 保持嵌入；后续双栈实施已移除
+`ly01` 的 initial-install 属性。发布 Archive 仍须实际解开 IPA，确认完整音频没有进入
 主 App bundle。后续实施时继续遵循：
 
 - Archive 后实际解开 IPA，证明完整音频没有进入主 App bundle。
-- 去掉 ly01 的 initial-install，除非产品明确要求第一卷随安装占空间。
+- 已去掉 ly01 的 initial-install，避免 iOS 26 同时取得旧 ODR 与 Managed 卷一。
 
 官方依据：[Embed Asset Packs In Product Bundle](https://developer.apple.com/documentation/xcode/build-settings-reference)。
 
@@ -594,7 +599,7 @@ App 内置一份 last-known-good catalog；远端 catalog 失败、格式不支�
 ### 阶段 0：立即止损，1–2 天
 
 - Release 禁止 EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE。
-- 移除 ly01 initial-install。
+- 移除 ly01 initial-install。（已完成）
 - 关闭无提示的下一轨预取，或仅在明确设置 + Wi‑Fi + 空间允许时执行。
 - 切轨/播放结束时正确 endAccessingResources。
 - 加 selection token、取消和真实状态恢复。

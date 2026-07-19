@@ -1,0 +1,6 @@
+{
+  "assetPackID": "org.fuxuan.lengyan.audio.ly10",
+  "downloadPolicy": { "onDemand": {} },
+  "fileSelectors": [{ "file": "Audio/ly10.m4a" }],
+  "platforms": ["iOS"]
+}

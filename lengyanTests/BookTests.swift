@@ -692,37 +692,14 @@ class lengyanTests: XCTestCase {
         observer.cleanup()
     }
     
-    func testAudioManagerTrackSwitching() {
-        let manager = AudioManager.shared
-        let observer = AudioPlayerObserver.shared
-        
-        // Mock media groups and download status
-        let group = MediaGroup(name: "Test Group", files: ["file1", "file2", "file3"], names: ["Track 1", "Track 2", "Track 3"], fileExtension: "mp3")
-        manager.mediaGroups = [group]
-        manager.downloadStatus["file1"] = .downloaded
-        manager.downloadStatus["file2"] = .downloaded
-        manager.downloadStatus["file3"] = .downloaded
-        
-        observer.initializePlayerIfNeeded()
-        observer.currentTrack = "Track 1"
-        observer.lastPlayFile = ("Track 1", "file1", "mp3")
-        
-        // Test playNextTrack
-        manager.playNextTrack()
-        observer.lastPlayFile = ("Track 2", "file2", "mp3")
-        XCTAssertEqual(observer.currentTrack, "Track 2")
-        
-        // Test playPreviousTrack
-        manager.playPreviousTrack()
-        observer.lastPlayFile = ("Track 1", "file1", "mp3")
-        XCTAssertEqual(observer.currentTrack, "Track 1")
-        
-        // Test playPreviousTrack wrap-around
-        manager.playPreviousTrack()
-        observer.lastPlayFile = ("Track 3", "file3", "mp3")
-        XCTAssertEqual(observer.currentTrack, "Track 3")
-        
-        observer.cleanup()
+    func testAudioCatalogTrackOrderAndWraparound() {
+        XCTAssertEqual(
+            AudioAssetCatalog.orderedIDs,
+            ["ly01", "ly02", "ly03", "ly04", "ly05", "ly06", "ly07", "ly08", "ly09", "ly10", "lyz1"]
+        )
+        XCTAssertEqual(AudioAssetCatalog.next(after: "ly01")?.id, "ly02")
+        XCTAssertEqual(AudioAssetCatalog.next(after: "ly10")?.id, "lyz1")
+        XCTAssertEqual(AudioAssetCatalog.next(after: "lyz1")?.id, "ly01")
     }
 
     func testShareLongImagePolicyMatchesCharacterAndHeightLimits() {

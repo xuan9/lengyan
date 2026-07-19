@@ -4,6 +4,18 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>zh_CN</string>
+	<key>BAAppGroupID</key>
+	<string>group.org.fuxuan.books</string>
+	<key>BAHasManagedAssetPacks</key>
+	<true/>
+	<key>BAUsesAppleHosting</key>
+	<true/>
+	<key>LengyanM0ManagedAssetsDiagnosticsEnabled</key>
+	<false/>
+	<key>LengyanManagedAudioCatalogReady</key>
+	<true/>
+	<key>LengyanManagedAudioEnabled</key>
+	<true/>
 	<key>CFBundleDisplayName</key>
 	<string>楞嚴經</string>
 	<key>CFBundleExecutable</key>

@@ -147,10 +147,25 @@
 "play_mode_times_format" = "%@%d次";
 "audio_empty_prompt" = "请轻触卷名听经";
 "audio_immersive_title" = "听\n经";
+"audio_preparing_track_format" = "正在准备 %@ · %d%%";
+"audio_preparing_short" = "准备中";
 "audio_error_out_of_space" = "存储空间不足，无法下载音频";
 "audio_error_too_big" = "音频文件过大";
 "audio_error_invalid" = "音频资源无效";
 "audio_error_download_failed" = "下载失败，请检查网络后重试";
+"settings_section_storage" = "存储";
+"settings_audio_storage" = "音频存储";
+"settings_audio_storage_subtitle" = "查看占用并释放已下载音频";
+"audio_storage_odr_managed" = "旧系统音频由 iOS 按需管理";
+"audio_storage_odr_released" = "已释放 App 的音频访问，实际回收由 iOS 决定";
+"audio_storage_managed_format" = "已下载 %d 卷，共 %@";
+"audio_storage_explanation" = "正在播放的卷不会被删除；下一卷若在准备会先取消。iOS 26+ 可删除 Apple 托管资源包；升级后遗留的旧 ODR 会交还系统择机回收。";
+"audio_storage_refresh" = "刷新";
+"audio_storage_remove_all" = "删除全部";
+"audio_storage_remove_confirm_title" = "删除已下载音频？";
+"audio_storage_remove_confirm_body" = "当前播放的卷会保留，其余音频之后需要重新下载。";
+"audio_storage_remove_success" = "清理请求已完成";
+"audio_storage_remove_partial_format" = "%d 个音频正在使用或暂时无法删除";
 
 "feedback_success_title" = "感谢你的心声";
 "feedback_success_subtitle" = "每一份心声，我们都珍重";

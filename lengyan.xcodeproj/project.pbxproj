@@ -7,6 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BA0000000000000000000002 /* ManagedAssetPackM0POCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000000000000000000001 /* ManagedAssetPackM0POCView.swift */; };
+		BA0000000000000000000007 /* BackgroundDownloadHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000000000000000000004 /* BackgroundDownloadHandler.swift */; };
+		BA000000000000000000000C /* BackgroundAssets.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BA0000000000000000000009 /* BackgroundAssets.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BA000000000000000000000D /* BackgroundAssets.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BA0000000000000000000009 /* BackgroundAssets.framework */; };
+		BA000000000000000000000E /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BA000000000000000000000A /* StoreKit.framework */; };
+		BA000000000000000000000F /* ExtensionFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BA000000000000000000000B /* ExtensionFoundation.framework */; };
+		BA0000000000000000000010 /* LengyanAssetDownloaderExtension.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = BA0000000000000000000008 /* LengyanAssetDownloaderExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BA000000000000000000001D /* LegacyODRM0IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA000000000000000000001C /* LegacyODRM0IntegrationTests.swift */; };
+		BAA100000000000000000101 /* AudioAssetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000001 /* AudioAssetModels.swift */; };
+		BAA100000000000000000102 /* AudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000002 /* AudioAssetProvider.swift */; };
+		BAA100000000000000000103 /* AudioAssetCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000003 /* AudioAssetCatalog.swift */; };
+		BAA100000000000000000104 /* AudioAssetProviderFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000004 /* AudioAssetProviderFactory.swift */; };
+		BAA100000000000000000105 /* AudioAssetCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000005 /* AudioAssetCoordinator.swift */; };
+		BAA100000000000000000106 /* LegacyODRAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000006 /* LegacyODRAudioAssetProvider.swift */; };
+		BAA100000000000000000107 /* ManagedBackgroundAssetsAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000007 /* ManagedBackgroundAssetsAudioAssetProvider.swift */; };
+		BAA100000000000000000108 /* AudioStorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000008 /* AudioStorageSettingsView.swift */; };
+		BAA100000000000000000109 /* AudioAssetCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000009 /* AudioAssetCoordinatorTests.swift */; };
 		0D1E4CD8B4C5D928013BAF33 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D284D40A58BBA43F939040A /* AudioManager.swift */; };
 		0EF37E68574D4E54B045E5F3 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FAE489C5AC4CCBB3066315 /* HapticManager.swift */; };
 		130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130E8CA31D1B360B00D0855A /* SutraIndexViewController.swift */; };
@@ -119,6 +136,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		BA0000000000000000000012 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 139073011D109193003A3333 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA0000000000000000000017;
+			remoteInfo = LengyanAssetDownloaderExtension;
+		};
 		139073201D109194003A3333 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 139073011D109193003A3333 /* Project object */;
@@ -147,9 +171,38 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA000000000000000000001B /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Extensions;
+			dstSubfolderSpec = 1;
+			files = (
+				BA0000000000000000000010 /* LengyanAssetDownloaderExtension.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BA0000000000000000000001 /* ManagedAssetPackM0POCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedAssetPackM0POCView.swift; sourceTree = "<group>"; };
+		BA0000000000000000000004 /* BackgroundDownloadHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundDownloadHandler.swift; sourceTree = "<group>"; };
+		BA0000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BA0000000000000000000006 /* LengyanAssetDownloaderExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LengyanAssetDownloaderExtension.entitlements; sourceTree = "<group>"; };
+		BA0000000000000000000008 /* LengyanAssetDownloaderExtension.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = LengyanAssetDownloaderExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BA0000000000000000000009 /* BackgroundAssets.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BackgroundAssets.framework; path = System/Library/Frameworks/BackgroundAssets.framework; sourceTree = SDKROOT; };
+		BA000000000000000000000A /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		BA000000000000000000000B /* ExtensionFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExtensionFoundation.framework; path = System/Library/Frameworks/ExtensionFoundation.framework; sourceTree = SDKROOT; };
+		BA000000000000000000001C /* LegacyODRM0IntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyODRM0IntegrationTests.swift; sourceTree = "<group>"; };
+		BAA100000000000000000001 /* AudioAssetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetModels.swift; sourceTree = "<group>"; };
+		BAA100000000000000000002 /* AudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetProvider.swift; sourceTree = "<group>"; };
+		BAA100000000000000000003 /* AudioAssetCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetCatalog.swift; sourceTree = "<group>"; };
+		BAA100000000000000000004 /* AudioAssetProviderFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetProviderFactory.swift; sourceTree = "<group>"; };
+		BAA100000000000000000005 /* AudioAssetCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetCoordinator.swift; sourceTree = "<group>"; };
+		BAA100000000000000000006 /* LegacyODRAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyODRAudioAssetProvider.swift; sourceTree = "<group>"; };
+		BAA100000000000000000007 /* ManagedBackgroundAssetsAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedBackgroundAssetsAudioAssetProvider.swift; sourceTree = "<group>"; };
+		BAA100000000000000000008 /* AudioStorageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioStorageSettingsView.swift; sourceTree = "<group>"; };
+		BAA100000000000000000009 /* AudioAssetCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetCoordinatorTests.swift; sourceTree = "<group>"; };
 		062F8B58456A40C09C663C10 /* lengyan/View/Modern/ModernWisdomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lengyan/View/Modern/ModernWisdomView.swift; sourceTree = "<group>"; };
 		0D284D40A58BBA43F939040A /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioManager.swift; path = lengyan/Domain/AudioManager.swift; sourceTree = SOURCE_ROOT; };
 		0D89740455934B739168A0A8 /* ModernSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernSettingsView.swift; sourceTree = "<group>"; };
@@ -278,6 +331,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA000000000000000000000C /* BackgroundAssets.framework in Frameworks */,
 				E8EC0AE8385E41F18E1DB993 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -305,12 +359,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA0000000000000000000015 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA000000000000000000000D /* BackgroundAssets.framework in Frameworks */,
+				BA000000000000000000000F /* ExtensionFoundation.framework in Frameworks */,
+				BA000000000000000000000E /* StoreKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		133CAB732364D10E00B61AC0 /* Domain */ = {
 			isa = PBXGroup;
 			children = (
+				BAA100000000000000000010 /* AudioAssets */,
 				13978CCC1D2028E5005031EE /* Prefers.swift */,
 				135D60621D173B1B00029090 /* Book.swift */,
 				13FE31F423678EFD00F632E9 /* Constants.swift */,
@@ -325,6 +390,20 @@
 				67420AAD4331AD62D8214EFA /* ReadingStayTimer.swift */,
 			);
 			path = Domain;
+			sourceTree = "<group>";
+		};
+		BAA100000000000000000010 /* AudioAssets */ = {
+			isa = PBXGroup;
+			children = (
+				BAA100000000000000000001 /* AudioAssetModels.swift */,
+				BAA100000000000000000002 /* AudioAssetProvider.swift */,
+				BAA100000000000000000003 /* AudioAssetCatalog.swift */,
+				BAA100000000000000000004 /* AudioAssetProviderFactory.swift */,
+				BAA100000000000000000005 /* AudioAssetCoordinator.swift */,
+				BAA100000000000000000006 /* LegacyODRAudioAssetProvider.swift */,
+				BAA100000000000000000007 /* ManagedBackgroundAssetsAudioAssetProvider.swift */,
+			);
+			path = AudioAssets;
 			sourceTree = "<group>";
 		};
 		133CAB772364D1FF00B61AC0 /* View */ = {
@@ -404,6 +483,7 @@
 			isa = PBXGroup;
 			children = (
 				1390730B1D109193003A3333 /* lengyan */,
+				BA0000000000000000000003 /* LengyanAssetDownloaderExtension */,
 				139073221D109194003A3333 /* lengyanTests */,
 				1390732D1D109194003A3333 /* lengyanUITests */,
 				1390730A1D109193003A3333 /* Products */,
@@ -423,6 +503,7 @@
 			isa = PBXGroup;
 			children = (
 				139073091D109193003A3333 /* lengyan.app */,
+				BA0000000000000000000008 /* LengyanAssetDownloaderExtension.appex */,
 				1390731F1D109194003A3333 /* lengyanTests.xctest */,
 				1390732A1D109194003A3333 /* lengyanUITests.xctest */,
 			);
@@ -458,6 +539,8 @@
 			isa = PBXGroup;
 			children = (
 				139073231D109194003A3333 /* BookTests.swift */,
+				BAA100000000000000000009 /* AudioAssetCoordinatorTests.swift */,
+				BA000000000000000000001C /* LegacyODRM0IntegrationTests.swift */,
 				A7C2E4F10000000000000001 /* ReadingResumeStateTests.swift */,
 				CB1B21E12EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift */,
 				139073251D109194003A3333 /* Info.plist */,
@@ -534,6 +617,9 @@
 			isa = PBXGroup;
 			children = (
 				ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */,
+				BA0000000000000000000009 /* BackgroundAssets.framework */,
+				BA000000000000000000000B /* ExtensionFoundation.framework */,
+				BA000000000000000000000A /* StoreKit.framework */,
 				0FC6B7D88C924C55AF90EB80 /* WidgetKit.framework */,
 				3D0653490A0146489495DE29 /* SwiftUI.framework */,
 			);
@@ -543,6 +629,8 @@
 		CB8A4D60265EE95000D1E7B9 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				BA0000000000000000000001 /* ManagedAssetPackM0POCView.swift */,
+				BAA100000000000000000008 /* AudioStorageSettingsView.swift */,
 				CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */,
 				CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */,
 				0D89740455934B739168A0A8 /* ModernSettingsView.swift */,
@@ -552,6 +640,16 @@
 				E254A899CA7928BE9C44A242 /* SutraAcknowledgmentsView.swift */,
 			);
 			path = SwiftUI;
+			sourceTree = "<group>";
+		};
+		BA0000000000000000000003 /* LengyanAssetDownloaderExtension */ = {
+			isa = PBXGroup;
+			children = (
+				BA0000000000000000000004 /* BackgroundDownloadHandler.swift */,
+				BA0000000000000000000005 /* Info.plist */,
+				BA0000000000000000000006 /* LengyanAssetDownloaderExtension.entitlements */,
+			);
+			path = LengyanAssetDownloaderExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -565,10 +663,12 @@
 				139073061D109193003A3333 /* Frameworks */,
 				139073071D109193003A3333 /* Resources */,
 				A895C447F80A481EB73932C7 /* Embed Foundation Extensions */,
+				BA000000000000000000001B /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				BA0000000000000000000013 /* PBXTargetDependency */,
 			);
 			name = lengyan;
 			productName = lengyan;
@@ -628,6 +728,23 @@
 			productReference = ACFC6DC7BE8D4A8A8AC23926 /* LengyanWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		BA0000000000000000000017 /* LengyanAssetDownloaderExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BA000000000000000000001A /* Build configuration list for PBXNativeTarget "LengyanAssetDownloaderExtension" */;
+			buildPhases = (
+				BA0000000000000000000014 /* Sources */,
+				BA0000000000000000000015 /* Frameworks */,
+				BA0000000000000000000016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LengyanAssetDownloaderExtension;
+			productName = LengyanAssetDownloaderExtension;
+			productReference = BA0000000000000000000008 /* LengyanAssetDownloaderExtension.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -647,7 +764,6 @@
 					ly09,
 					ly10,
 					lyz1,
-					lyzpg1,
 				);
 				LastSwiftUpdateCheck = 0730;
 				LastUpgradeCheck = 1640;
@@ -678,6 +794,11 @@
 						ProvisioningStyle = Automatic;
 						TestTargetID = 139073081D109193003A3333;
 					};
+					BA0000000000000000000017 = {
+						CreatedOnToolsVersion = 26.6;
+						DevelopmentTeam = A37UYHPM4V;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 139073041D109193003A3333 /* Build configuration list for PBXProject "lengyan" */;
@@ -696,6 +817,7 @@
 			projectRoot = "";
 			targets = (
 				139073081D109193003A3333 /* lengyan */,
+				BA0000000000000000000017 /* LengyanAssetDownloaderExtension */,
 				1390731E1D109194003A3333 /* lengyanTests */,
 				139073291D109194003A3333 /* lengyanUITests */,
 				3DD228B411D644A7BDFB77B4 /* LengyanWidgetExtension */,
@@ -751,6 +873,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA0000000000000000000016 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -758,6 +887,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BAA100000000000000000101 /* AudioAssetModels.swift in Sources */,
+				BAA100000000000000000102 /* AudioAssetProvider.swift in Sources */,
+				BAA100000000000000000103 /* AudioAssetCatalog.swift in Sources */,
+				BAA100000000000000000104 /* AudioAssetProviderFactory.swift in Sources */,
+				BAA100000000000000000105 /* AudioAssetCoordinator.swift in Sources */,
+				BAA100000000000000000106 /* LegacyODRAudioAssetProvider.swift in Sources */,
+				BAA100000000000000000107 /* ManagedBackgroundAssetsAudioAssetProvider.swift in Sources */,
+				BAA100000000000000000108 /* AudioStorageSettingsView.swift in Sources */,
+				BA0000000000000000000002 /* ManagedAssetPackM0POCView.swift in Sources */,
 				2D1FA1B8FB3A4F9FA9BB2367 /* lengyan/View/Modern/ModernWisdomView.swift in Sources */,
 				133CAB9D2364DDB700B61AC0 /* RABatchChangeEntity.h in Sources */,
 				133CAB9E2364DDB700B61AC0 /* RABatchChangeEntity.m in Sources */,
@@ -842,6 +980,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				139073241D109194003A3333 /* BookTests.swift in Sources */,
+				BAA100000000000000000109 /* AudioAssetCoordinatorTests.swift in Sources */,
+				BA000000000000000000001D /* LegacyODRM0IntegrationTests.swift in Sources */,
 				A7C2E4F10000000000000002 /* ReadingResumeStateTests.swift in Sources */,
 				CB1B21E22EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift in Sources */,
 			);
@@ -868,9 +1008,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA0000000000000000000014 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA0000000000000000000007 /* BackgroundDownloadHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		BA0000000000000000000013 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BA0000000000000000000017 /* LengyanAssetDownloaderExtension */;
+			targetProxy = BA0000000000000000000012 /* PBXContainerItemProxy */;
+		};
 		139073211D109194003A3333 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 139073081D109193003A3333 /* lengyan */;
@@ -1056,7 +1209,6 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.3;
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1085,7 +1237,6 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.3;
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = ly01;
 				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1238,6 +1389,58 @@
 			};
 			name = Release;
 		};
+		BA0000000000000000000018 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = LengyanAssetDownloaderExtension/LengyanAssetDownloaderExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 19;
+				DEVELOPMENT_TEAM = A37UYHPM4V;
+				INFOPLIST_FILE = LengyanAssetDownloaderExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan.asset-downloader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BA0000000000000000000019 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = LengyanAssetDownloaderExtension/LengyanAssetDownloaderExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 19;
+				DEVELOPMENT_TEAM = A37UYHPM4V;
+				INFOPLIST_FILE = LengyanAssetDownloaderExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = org.fuxuan.lengyan.asset-downloader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1282,6 +1485,15 @@
 			buildConfigurations = (
 				6BAF1A356A4B47FC96D45A58 /* Debug */,
 				DA03CBD0F8534812815DF4D3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BA000000000000000000001A /* Build configuration list for PBXNativeTarget "LengyanAssetDownloaderExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA0000000000000000000018 /* Debug */,
+				BA0000000000000000000019 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

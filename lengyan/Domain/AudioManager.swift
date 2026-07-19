@@ -2,586 +2,660 @@
 //  AudioManager.swift
 //  lengyan
 //
-//  音频下载与播放管理
+//  UI/playback orchestration for the dual delivery stack. OS and backend
+//  decisions live in AudioAssetProviderFactory; this type only handles user
+//  selection, AVPlayer state, and the current -> next policy.
 //
 
 import AVFoundation
+import UIKit
 
-class AudioManager: ObservableObject {
+final class AudioManager: ObservableObject {
     static let shared = AudioManager()
 
     let audioObserver = AudioPlayerObserver.shared
 
-    // MARK: - Published State
-
     @Published var mediaGroups: [MediaGroup] = []
     @Published var isLoading = true
     @Published var selectedPlayMode: PlayMode = .repeatAll
-
-    // PlayMode计数器
-    private var playCount = 0
-
-    // Download state
     @Published var downloadProgress: [String: Double] = [:]
     @Published var downloadStatus: [String: MediaItem.MediaStatus] = [:]
     @Published var downloadErrorMessage: String?
-    var resourceRequests: [String: NSBundleResourceRequest] = [:]
+    @Published private(set) var pendingTrackName: String?
+
+    private let assetCoordinator: AudioAssetCoordinator
+    private var playCount = 0
+    private var selectionGeneration = UUID()
+    private var playbackGeneration: UUID?
+    private var prefetchTriggeredGeneration: UUID?
+    private var requestedAssetID: String?
+    private var pendingAssetID: String?
+    private var playingAssetID: String?
+    private var resumableAssetID: String?
+    private var lifecycleObservers: [NSObjectProtocol] = []
+
+    var pendingTrackProgress: Double {
+        guard let pendingAssetID else { return 0 }
+        return min(max(downloadProgress[pendingAssetID] ?? 0, 0), 1)
+    }
+
+    var isPreparingRequestedTrack: Bool {
+        pendingTrackName != nil && pendingAssetID != nil
+    }
 
     private init() {
+        let provider = AudioAssetProviderFactory.makeProvider()
+        assetCoordinator = AudioAssetCoordinator(provider: provider)
+
         if let raw = Prefers.shared.lastPlayMode,
            let mode = PlayMode(rawValue: raw) {
             selectedPlayMode = mode
         }
-        // 主动加载：避免 TabBar 非首屏 tab 的 onAppear 不触发导致列表为空
+
+        audioObserver.onFirstPlaybackStarted = { [weak self] in
+            self?.startNextPrefetchIfNeeded()
+        }
+        audioObserver.onPlayerItemRemoved = { [weak self] in
+            self?.playerItemWasRemoved()
+        }
+        installLifecycleObservers()
+
+        if let catalogError = AudioAssetCatalog.validationError {
+            assertionFailure(catalogError)
+        }
         if Book.shared.loaded {
             loadMediaData()
+        }
+    }
+
+    deinit {
+        for observer in lifecycleObservers {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 
     // MARK: - Data Loading
 
     func loadMediaData() {
-        // 已加载过则跳过
         guard mediaGroups.isEmpty else { return }
         guard let mediaData = Book.shared.media else {
             isLoading = false
             return
         }
 
-        var groups: [MediaGroup] = []
-        for mediaDict in mediaData {
-            if let name = mediaDict["name"] as? String,
-               let files = mediaDict["files"] as? [String],
-               let names = mediaDict["names"] as? [String],
-               let ext = mediaDict["extension"] as? String {
-                groups.append(MediaGroup(name: name, files: files, names: names, fileExtension: ext))
+        mediaGroups = mediaData.compactMap { mediaDict in
+            guard let name = mediaDict["name"] as? String,
+                  let files = mediaDict["files"] as? [String],
+                  let names = mediaDict["names"] as? [String],
+                  let ext = mediaDict["extension"] as? String else {
+                return nil
             }
+            return MediaGroup(
+                name: name,
+                files: files,
+                names: names,
+                fileExtension: ext
+            )
         }
 
-        mediaGroups = groups
-        // 我们不再启动时检查所有文件状态 (checkMediaStatus)。
-        // ODR (按需资源) 的最佳实践是「按需检查」。
-        // 当用户点击播放某个曲目时，系统会瞬间判断资源是否存在。
         isLoading = false
         resumeLastPlayback()
     }
 
-    // MARK: - Resume
-
     func resumeLastPlayback() {
-        guard let lastFileName = Prefers.shared.lastPlayFile?.first,
-              !lastFileName.isEmpty else {
+        guard let file = Prefers.shared.lastPlayFile?.first,
+              AudioAssetCatalog.descriptor(for: file) != nil,
+              mediaGroups.contains(where: { $0.files.contains(file) }) else {
+            resumableAssetID = nil
+            return
+        }
+        // Keep the resume candidate separate from playing state. Merely opening
+        // the player must not update Now Playing or start a next-pack prefetch.
+        resumableAssetID = file
+    }
+
+    // MARK: - Selection and Delivery
+
+    func handleMediaItemTap(name: String, file: String, fileExtension: String) {
+        if pendingAssetID == file,
+           downloadStatus[file] == .downloading {
+            return
+        }
+        if playingAssetID == file,
+           audioObserver.queuePlayer?.currentItem != nil {
+            let supersededPendingID = pendingAssetID
+            if let playbackGeneration {
+                selectionGeneration = playbackGeneration
+            }
+            requestedAssetID = file
+            pendingAssetID = nil
+            pendingTrackName = nil
+            prefetchTriggeredGeneration = nil
+            let cancelledPendingSelection = supersededPendingID != nil
+                && supersededPendingID != file
+            if let supersededPendingID, cancelledPendingSelection {
+                downloadStatus[supersededPendingID] = .notDownloaded
+                downloadProgress.removeValue(forKey: supersededPendingID)
+                cancelPendingSelectionAndResumePrefetchIfNeeded()
+            }
+            audioObserver.seek(to: 0)
+            if !audioObserver.isPlaying {
+                audioObserver.queuePlayer?.play()
+            }
+            if !cancelledPendingSelection {
+                startNextPrefetchIfNeeded()
+            }
+            return
+        }
+        requestPlayback(
+            name: name,
+            file: file,
+            fileExtension: fileExtension,
+            autoplay: true
+        )
+    }
+
+    func downloadMedia(name: String, file: String, fileExtension: String) {
+        requestPlayback(
+            name: name,
+            file: file,
+            fileExtension: fileExtension,
+            autoplay: true
+        )
+    }
+
+    func playMedia(
+        name: String,
+        file: String,
+        fileExtension: String,
+        autoplay: Bool = true
+    ) {
+        requestPlayback(
+            name: name,
+            file: file,
+            fileExtension: fileExtension,
+            autoplay: autoplay
+        )
+    }
+
+    private func requestPlayback(
+        name: String,
+        file: String,
+        fileExtension: String,
+        autoplay: Bool
+    ) {
+        guard let descriptor = AudioAssetCatalog.descriptor(for: file),
+              descriptor.fileExtension == fileExtension else {
+            downloadStatus[file] = .error
+            downloadErrorMessage = L10n.str("audio_error_invalid")
             return
         }
 
-        for group in mediaGroups {
-            if let index = group.files.firstIndex(of: lastFileName) {
-                guard index < group.names.count && index < group.files.count else { continue }
-                let name = group.names[index]
-                audioObserver.currentTrack = name
-                // 不覆盖 downloadStatus — 让 checkMediaStatus 的异步回调决定真实状态
-                // 如果文件未下载，用户点击时会自动走下载流程
-                print("📝 Resumed playback UI: \(name)")
-                break
-            }
+        let previousPending = pendingAssetID
+        let generation = UUID()
+        selectionGeneration = generation
+        requestedAssetID = file
+        pendingAssetID = file
+        pendingTrackName = name
+        resumableAssetID = file
+        downloadErrorMessage = nil
+
+        if let previousPending,
+           previousPending != file,
+           previousPending != playingAssetID {
+            downloadStatus[previousPending] = .notDownloaded
+            downloadProgress.removeValue(forKey: previousPending)
         }
-    }
 
-    // MARK: - Tap Handling
+        downloadStatus[file] = .downloading
+        downloadProgress[file] = 0
+        // Explicit user intent always receives immediate acknowledgement. The
+        // current title remains unchanged while another volume is prepared.
+        audioObserver.showPlayerBar = true
 
-    func handleMediaItemTap(name: String, file: String, fileExtension: String) {
-        let status = downloadStatus[file] ?? .notDownloaded
-        switch status {
-        case .downloaded:
-            // 播放器已加载该曲目
-            if audioObserver.currentTrack == name && audioObserver.queuePlayer?.currentItem != nil {
-                // 如果再次点击正在播放的项目，则从头重新播放
-                audioObserver.seek(to: 0)
-                if !audioObserver.isPlaying {
-                    audioObserver.queuePlayer?.play()
+        let shouldContinuePlaying = audioObserver.isPlaying
+        Task { [weak self] in
+            guard let self else { return }
+            let handle = await self.assetCoordinator.requestPlayback(
+                descriptor,
+                generation: generation
+            )
+            do {
+                for try await event in handle.events {
+                    await MainActor.run {
+                        self.receive(
+                            event,
+                            generation: generation,
+                            name: name,
+                            descriptor: descriptor,
+                            autoplay: autoplay || shouldContinuePlaying
+                        )
+                    }
                 }
-            } else {
-                playMedia(name: name, file: file, fileExtension: fileExtension)
+            } catch {
+                await MainActor.run {
+                    self.receiveDeliveryFailure(
+                        error,
+                        generation: generation,
+                        assetID: file
+                    )
+                }
             }
-        case .notDownloaded, .error:
-            downloadMedia(name: name, file: file, fileExtension: fileExtension)
-        case .downloading:
-            break
         }
     }
 
-    /// 统一的下载状态查询：按曲目名查「是否在下载 + 进度」。
-    /// 卷阅读页播放按钮与听经小播放器共用此入口 —— 单一数据源、一处计算、两处呈现一致。
-    func downloadState(forTrackName name: String?) -> (isDownloading: Bool, progress: Double) {
-        guard let name = name, !name.isEmpty else { return (false, 0) }
+    private func receive(
+        _ event: AudioAssetEvent,
+        generation: UUID,
+        name: String,
+        descriptor: AudioAssetDescriptor,
+        autoplay: Bool
+    ) {
+        switch event {
+        case .queued:
+            guard selectionGeneration == generation else { return }
+            downloadStatus[descriptor.id] = .downloading
+        case .progress(let fraction):
+            guard selectionGeneration == generation else { return }
+            downloadProgress[descriptor.id] = min(max(fraction, 0), 1)
+        case .ready(let lease):
+            guard selectionGeneration == generation,
+                  requestedAssetID == descriptor.id else {
+                Task { await assetCoordinator.discard(lease) }
+                return
+            }
+            installPlayback(
+                lease: lease,
+                generation: generation,
+                name: name,
+                descriptor: descriptor,
+                autoplay: autoplay
+            )
+        }
+    }
+
+    private func installPlayback(
+        lease: AudioAssetLease,
+        generation: UUID,
+        name: String,
+        descriptor: AudioAssetDescriptor,
+        autoplay: Bool
+    ) {
+        guard FileManager.default.isReadableFile(atPath: lease.localURL.path) else {
+            Task { await assetCoordinator.discard(lease) }
+            receiveDeliveryFailure(
+                AudioAssetError.missingLocalFile(lease.localURL.path),
+                generation: generation,
+                assetID: descriptor.id
+            )
+            return
+        }
+
+        let priorSavedFile = Prefers.shared.lastPlayFile?.first
+        if priorSavedFile != descriptor.id {
+            playCount = 0
+            Prefers.shared.lastPlayTime = 0
+        }
+
+        do {
+            try audioObserver.replaceItem(with: lease.localURL)
+        } catch {
+            Task { await assetCoordinator.discard(lease) }
+            receiveDeliveryFailure(error, generation: generation, assetID: descriptor.id)
+            return
+        }
+
+        // AVPlayer now owns the new URL. Only at this point may the coordinator
+        // release the previous current lease.
+        Task { await assetCoordinator.commitPlayback(lease) }
+
+        playingAssetID = descriptor.id
+        pendingAssetID = nil
+        pendingTrackName = nil
+        playbackGeneration = generation
+        prefetchTriggeredGeneration = nil
+        audioObserver.currentTrack = name
+        audioObserver.showPlayerBar = true
+        audioObserver.lastPlayFile = (name, descriptor.id, descriptor.fileExtension)
+        Prefers.shared.lastPlayFile = [descriptor.id]
+        downloadStatus[descriptor.id] = .downloaded
+        downloadProgress.removeValue(forKey: descriptor.id)
+
+        if priorSavedFile == descriptor.id, Prefers.shared.lastPlayTime > 0 {
+            audioObserver.seek(to: Prefers.shared.lastPlayTime)
+        }
+
+        if autoplay {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                guard let self,
+                      self.selectionGeneration == generation,
+                      self.playingAssetID == descriptor.id else { return }
+                self.audioObserver.queuePlayer?.play()
+            }
+        }
+    }
+
+    private func receiveDeliveryFailure(
+        _ error: Error,
+        generation: UUID,
+        assetID: String
+    ) {
+        guard selectionGeneration == generation else { return }
+        pendingAssetID = nil
+        pendingTrackName = nil
+        downloadStatus[assetID] = .error
+        downloadProgress.removeValue(forKey: assetID)
+        if !isCancellation(error) {
+            downloadErrorMessage = deliveryErrorMessage(error)
+        }
+    }
+
+    func downloadState(forTrackName name: String?) -> (
+        isDownloading: Bool,
+        progress: Double
+    ) {
+        guard let name, !name.isEmpty else { return (false, 0) }
         for group in mediaGroups {
-            if let index = group.names.firstIndex(of: name) {
+            if let index = group.names.firstIndex(of: name), index < group.files.count {
                 let file = group.files[index]
-                return (downloadStatus[file] == .downloading, downloadProgress[file] ?? 0)
+                return (
+                    downloadStatus[file] == .downloading,
+                    downloadProgress[file] ?? 0
+                )
             }
         }
         return (false, 0)
     }
 
-    // MARK: - Download
-
-    func downloadMedia(name: String, file: String, fileExtension: String) {
-        debugLog("DL downloadMedia file=\(file) prefetchReqExists=\(resourceRequests[file] != nil)")
-        // 停止当前播放，防止出现一边播放旧音频一边下载新音频的混乱体验
-        audioObserver.queuePlayer?.pause()
-        audioObserver.isPlaying = false
-
-        downloadStatus[file] = .downloading
-        downloadProgress[file] = 0
-
-        // 立即展示小播放器栏并同步曲目名，进入下载状态
-        audioObserver.currentTrack = name
-        audioObserver.showPlayerBar = true
-
-        // 复用已有的 prefetch 请求，避免重复下载
-        if let existing = resourceRequests[file] {
-            // prefetch 已调用 beginAccessingResources，不能重复调用
-            // 挂上进度 UI，等 prefetch 完成后自动播放
-            setupDownloadTimerAndFetch(resourceRequest: existing, file: file, isPrefetchInProgress: true, name: name, fileExtension: fileExtension)
-        } else {
-            DispatchQueue.global(qos: .userInitiated).async {
-                let req = NSBundleResourceRequest(tags: [file])
-                req.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
-                
-                DispatchQueue.main.async {
-                    self.resourceRequests[file] = req
-                    self.setupDownloadTimerAndFetch(resourceRequest: req, file: file, isPrefetchInProgress: false, name: name, fileExtension: fileExtension)
-                }
-            }
-        }
-    }
-    
-    private func setupDownloadTimerAndFetch(resourceRequest: NSBundleResourceRequest, file: String, isPrefetchInProgress: Bool, name: String, fileExtension: String) {
-
-        let progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-            if self.downloadStatus[file] == .downloaded || self.downloadStatus[file] == .error {
-                timer.invalidate()
-            } else {
-                let realProgress = resourceRequest.progress.fractionCompleted
-                self.downloadProgress[file] = realProgress > 0 ? realProgress : 0.01
-            }
-        }
-
-        // prefetch 已在下载中，只需挂上完成回调，不能重复调用 beginAccessingResources
-        if isPrefetchInProgress {
-            // 轮询等待 prefetch 完成，然后自动播放
-            let _ = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { timer in
-                if self.downloadStatus[file] == .downloaded || self.downloadStatus[file] == .error {
-                    timer.invalidate()
-                    progressTimer.invalidate()
-                    if self.downloadStatus[file] == .downloaded {
-                        self.downloadProgress[file] = 1.0
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            self.downloadProgress.removeValue(forKey: file)
-                            self.playMedia(name: name, file: file, fileExtension: fileExtension)
-                        }
-                    }
-                }
-            }
-            return
-        }
-
-        resourceRequest.beginAccessingResources { (error: Error?) in
-            DispatchQueue.main.async {
-                progressTimer.invalidate()
-
-                if let error = error {
-                    print("❌ Error downloading ODR: \(error)")
-                    self.downloadStatus[file] = .error
-                    self.resourceRequests[file]?.endAccessingResources()
-                    self.resourceRequests[file] = nil
-                    self.downloadProgress.removeValue(forKey: file)
-                    let msg = self.getODRErrorMessage(error as NSError)
-                    print("❌ ODR Error details: \(msg)")
-                    self.downloadErrorMessage = msg
-                } else {
-                    print("✅ Successfully downloaded ODR: \(file)")
-                    debugLog("DL beginAccess OK file=\(file) -> status=downloaded")
-                    self.downloadStatus[file] = .downloaded
-                    self.downloadProgress[file] = 1.0
-
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        self.downloadProgress.removeValue(forKey: file)
-                        self.playMedia(name: name, file: file, fileExtension: fileExtension)
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - Playback
-
-    func playMedia(name: String, file: String, fileExtension: String, autoplay: Bool = true) {
-        guard !name.isEmpty && !file.isEmpty && !fileExtension.isEmpty else {
-            print("❌ Invalid parameters for playMedia")
-            return
-        }
-
-        // 新曲目，重置播放计数与播放位置（若非上次保存的曲目，则清空播放位置）
-        if Prefers.shared.lastPlayFile?.first != file {
-            playCount = 0
-            Prefers.shared.lastPlayTime = 0
-        }
-
-        audioObserver.currentTrack = name
-        audioObserver.showPlayerBar = true
-        audioObserver.initializePlayerIfNeeded()
-
-        guard let resourceRequest = resourceRequests[file] else {
-            DispatchQueue.global(qos: .userInitiated).async {
-                let newRequest = NSBundleResourceRequest(tags: [file])
-                newRequest.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
-                DispatchQueue.main.async {
-                    self.resourceRequests[file] = newRequest
-                    self.playMediaUsingRequest(request: newRequest, name: name, file: file, fileExtension: fileExtension, autoplay: autoplay)
-                }
-            }
-            return
-        }
-
-        playMediaUsingRequest(request: resourceRequest, name: name, file: file, fileExtension: fileExtension, autoplay: autoplay)
-    }
-
-    private func playMediaUsingRequest(request: NSBundleResourceRequest, name: String, file: String, fileExtension: String, autoplay: Bool = true) {
-        if let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
-            debugLog("play URL OK file=\(file) -> playAudio")
-            playAudio(url: url, name: name, autoplay: autoplay)
-        } else {
-            debugLog("play URL nil file=\(file) -> conditionallyBegin")
-            // 获取不到 URL 说明尚未持有访问权限，需正式申请资源访问
-            request.conditionallyBeginAccessingResources { available in
-                DispatchQueue.main.async {
-                    if available, let url = request.bundle.url(forResource: file, withExtension: fileExtension) {
-                        debugLog("play cond OK file=\(file) -> playAudio")
-                        self.playAudio(url: url, name: name, autoplay: autoplay)
-                    } else {
-                        debugLog("play cond FAIL file=\(file) -> clear request & fallback downloadMedia")
-                        
-                        // ⚠️ 关键修复：清除失效的旧请求，释放访问引用，以便重新触发全新下载
-                        request.endAccessingResources()
-                        if self.resourceRequests[file] === request {
-                            self.resourceRequests[file] = nil
-                        }
-                        self.downloadStatus[file] = .notDownloaded
-                        
-                        // 如果状态有误，回退到标准下载流程
-                        self.downloadMedia(name: name, file: file, fileExtension: fileExtension)
-                    }
-                }
-            }
-        }
-    }
-
-    private func playAudio(url: URL, name: String, autoplay: Bool = true) {
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            print("❌ Audio file does not exist at path: \(url.path)")
-            return
-        }
-
-        if let currentItem = audioObserver.queuePlayer?.currentItem,
-           let currentURL = (currentItem.asset as? AVURLAsset)?.url,
-           currentURL == url {
-            audioObserver.currentTrack = name
-            audioObserver.showPlayerBar = true
-
-            if autoplay && !audioObserver.isPlaying {
-                audioObserver.queuePlayer?.play()
-                audioObserver.isPlaying = true
-            } else if !autoplay && audioObserver.isPlaying {
-                audioObserver.queuePlayer?.pause()
-                audioObserver.isPlaying = false
-            }
-            return
-        }
-
-        let playerItem = AVPlayerItem(url: url)
-        guard playerItem.asset.isReadable else {
-            print("❌ Audio asset is not readable: \(url)")
-            return
-        }
-
-        let wasPlaying = audioObserver.isPlaying
-
-        audioObserver.currentTrack = name
-        audioObserver.showPlayerBar = true
-
-        audioObserver.queuePlayer?.removeAllItems()
-        audioObserver.queuePlayer?.insert(playerItem, after: nil)
-
-        let fileName = url.lastPathComponent.split(separator: ".").first?.description ?? ""
-        audioObserver.lastPlayFile = (name, fileName, url.pathExtension)
-
-        if let file = audioObserver.lastPlayFile?.1 {
-            Prefers.shared.lastPlayFile = [file]
-        }
-
-        // 🌾 恢复上次播放时间点
-        let savedTime = Prefers.shared.lastPlayTime
-        if savedTime > 0 && Prefers.shared.lastPlayFile?.first == fileName {
-            audioObserver.seek(to: savedTime)
-        }
-
-        if autoplay || wasPlaying {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.audioObserver.queuePlayer?.play()
-                self.audioObserver.isPlaying = true
-            }
-        } else {
-            audioObserver.isPlaying = false
-        }
-
-        // 循环模式：静默预下载下一首，确保无缝衔接
-        if selectedPlayMode == .repeatAll {
-            prefetchNextTrack()
-        }
-    }
-
     // MARK: - Playback Controls
 
     func togglePlayPause() {
-        // 播放器未初始化（如恢复上次曲目后首次点击）→ 找到当前曲目并播放
-        guard let player = audioObserver.queuePlayer else {
+        guard let player = audioObserver.queuePlayer,
+              player.currentItem != nil else {
             startCurrentTrack()
             return
         }
-
         if audioObserver.isPlaying {
             player.pause()
-            audioObserver.isPlaying = false
         } else {
-            if player.currentItem != nil {
-                player.play()
-                audioObserver.isPlaying = true
-            } else {
-                startCurrentTrack()
-            }
+            player.play()
         }
     }
 
     func startPlayback() {
-        if audioObserver.isPlaying {
-            return
-        }
         if let player = audioObserver.queuePlayer, player.currentItem != nil {
-            player.play()
-            audioObserver.isPlaying = true
+            if !audioObserver.isPlaying { player.play() }
         } else {
-            if audioObserver.currentTrack == nil {
-                resumeLastPlayback()
-            }
             startCurrentTrack()
         }
     }
 
     func playChapter(chapter: Int) {
-        if mediaGroups.isEmpty {
-            loadMediaData()
-        }
-        guard chapter >= 0 && chapter < 10 else { return }
-        guard let group = mediaGroups.first else { return }
-        guard chapter < group.files.count && chapter < group.names.count else { return }
-        
-        let name = group.names[chapter]
-        let file = group.files[chapter]
-        let ext = group.fileExtension
-        
-        handleMediaItemTap(name: name, file: file, fileExtension: ext)
+        if mediaGroups.isEmpty { loadMediaData() }
+        guard chapter >= 0 && chapter < 10,
+              let group = mediaGroups.first,
+              chapter < group.files.count,
+              chapter < group.names.count else { return }
+        handleMediaItemTap(
+            name: group.names[chapter],
+            file: group.files[chapter],
+            fileExtension: group.fileExtension
+        )
     }
 
-
-    /// 根据 currentTrack 名称找到对应文件，走完整的点击流程（自动处理下载）
     private func startCurrentTrack() {
-        guard let trackName = audioObserver.currentTrack else { return }
-        for group in mediaGroups {
-            if let index = group.names.firstIndex(of: trackName) {
-                let file = group.files[index]
-                handleMediaItemTap(name: trackName, file: file, fileExtension: group.fileExtension)
-                return
-            }
-        }
+        let candidate = playingAssetID
+            ?? resumableAssetID
+            ?? audioObserver.lastPlayFile?.1
+            ?? mediaGroups.first?.files.first
+        guard let candidate,
+              let track = track(for: candidate) else { return }
+        handleMediaItemTap(
+            name: track.name,
+            file: candidate,
+            fileExtension: track.fileExtension
+        )
     }
 
-    // MARK: - Play Mode
+    // MARK: - Play Mode and Completion
 
     func selectMode(_ mode: PlayMode) {
         selectedPlayMode = mode
         playCount = 0
         Prefers.shared.lastPlayMode = mode.rawValue
+        if mode == .repeatAll {
+            if audioObserver.isPlaying { startNextPrefetchIfNeeded() }
+        } else {
+            prefetchTriggeredGeneration = nil
+            Task { await assetCoordinator.cancelPrefetch() }
+        }
     }
-
-    // MARK: - Playback Completion
 
     func handlePlaybackCompletion() {
         playCount += 1
-        Prefers.shared.lastPlayTime = 0 // 重置为 0，因为播放完成了
-        let mode = selectedPlayMode
-
-        switch mode {
+        Prefers.shared.lastPlayTime = 0
+        switch selectedPlayMode {
         case .repeatAll:
             playNextTrack()
         case .repeatOne:
             replayCurrentTrack()
         default:
-            // playOnce / playNTimes
-            let targetCount = mode.rawValue
-            if playCount < targetCount {
+            if playCount < selectedPlayMode.rawValue {
                 replayCurrentTrack()
+            } else {
+                finishPlaybackWithoutNextTrack()
             }
-            // 达到次数则停止，不做任何操作
+        }
+    }
+
+    private func finishPlaybackWithoutNextTrack() {
+        let hadPlayerItem = audioObserver.queuePlayer?.currentItem != nil
+        audioObserver.stopAndRemoveItem()
+        // AVQueuePlayer normally removed the completed item before the
+        // notification arrives, so stopAndRemoveItem may have nothing left to
+        // report. Explicitly release in that case.
+        if !hadPlayerItem {
+            playerItemWasRemoved()
         }
     }
 
     private func replayCurrentTrack() {
-        guard let last = audioObserver.lastPlayFile else { return }
-        playMedia(name: last.0, file: last.1, fileExtension: last.2)
+        guard let file = playingAssetID ?? audioObserver.lastPlayFile?.1,
+              let track = track(for: file) else { return }
+        playMedia(
+            name: track.name,
+            file: file,
+            fileExtension: track.fileExtension
+        )
     }
 
     func playNextTrack() {
-        let currentFile: String
-        if let last = audioObserver.lastPlayFile {
-            currentFile = last.1
-        } else if let currentTrackName = audioObserver.currentTrack {
-            var foundFile: String?
-            for group in mediaGroups {
-                if let index = group.names.firstIndex(of: currentTrackName) {
-                    foundFile = group.files[index]
-                    break
-                }
-            }
-            guard let file = foundFile else { return }
-            currentFile = file
-        } else {
-            // Play first item of first group
-            guard let group = mediaGroups.first, !group.files.isEmpty else { return }
-            handleMediaItemTap(name: group.names[0], file: group.files[0], fileExtension: group.fileExtension)
+        let current = playingAssetID
+            ?? audioObserver.lastPlayFile?.1
+            ?? resumableAssetID
+        guard let current,
+              let next = AudioAssetCatalog.next(after: current),
+              let track = track(for: next.id) else {
+            playFirstTrackIfAvailable()
             return
         }
-
-        // 在当前组中查找下一首，未下载的自动下载播放
-        for group in mediaGroups {
-            if let index = group.files.firstIndex(of: currentFile) {
-                let nextIndex = (index + 1) % group.files.count
-                let nextFile = group.files[nextIndex]
-                let nextName = group.names[nextIndex]
-                handleMediaItemTap(name: nextName, file: nextFile, fileExtension: group.fileExtension)
-                return
-            }
-        }
+        handleMediaItemTap(
+            name: track.name,
+            file: next.id,
+            fileExtension: track.fileExtension
+        )
     }
 
     func playPreviousTrack() {
-        let currentFile: String
-        if let last = audioObserver.lastPlayFile {
-            currentFile = last.1
-        } else if let currentTrackName = audioObserver.currentTrack {
-            var foundFile: String?
-            for group in mediaGroups {
-                if let index = group.names.firstIndex(of: currentTrackName) {
-                    foundFile = group.files[index]
-                    break
-                }
-            }
-            guard let file = foundFile else { return }
-            currentFile = file
-        } else {
-            // Play first item of first group
-            guard let group = mediaGroups.first, !group.files.isEmpty else { return }
-            handleMediaItemTap(name: group.names[0], file: group.files[0], fileExtension: group.fileExtension)
+        let current = playingAssetID
+            ?? audioObserver.lastPlayFile?.1
+            ?? resumableAssetID
+        guard let current,
+              let index = AudioAssetCatalog.orderedIDs.firstIndex(of: current) else {
+            playFirstTrackIfAvailable()
             return
         }
+        let previousID = AudioAssetCatalog.orderedIDs[
+            (index - 1 + AudioAssetCatalog.orderedIDs.count)
+                % AudioAssetCatalog.orderedIDs.count
+        ]
+        guard let track = track(for: previousID) else { return }
+        handleMediaItemTap(
+            name: track.name,
+            file: previousID,
+            fileExtension: track.fileExtension
+        )
+    }
 
-        for group in mediaGroups {
-            if let index = group.files.firstIndex(of: currentFile) {
-                let prevIndex = (index - 1 + group.files.count) % group.files.count
-                let prevFile = group.files[prevIndex]
-                let prevName = group.names[prevIndex]
-                handleMediaItemTap(name: prevName, file: prevFile, fileExtension: group.fileExtension)
-                return
+    private func playFirstTrackIfAvailable() {
+        guard let first = AudioAssetCatalog.orderedIDs.first,
+              let track = track(for: first) else { return }
+        handleMediaItemTap(
+            name: track.name,
+            file: first,
+            fileExtension: track.fileExtension
+        )
+    }
+
+    // MARK: - Current -> Next Prefetch
+
+    private func startNextPrefetchIfNeeded() {
+        guard selectedPlayMode == .repeatAll,
+              let generation = playbackGeneration,
+              generation == selectionGeneration,
+              prefetchTriggeredGeneration != generation,
+              let current = playingAssetID,
+              let next = AudioAssetCatalog.next(after: current),
+              next.id != current else { return }
+
+        prefetchTriggeredGeneration = generation
+        Task { [weak self] in
+            guard let self else { return }
+            await self.assetCoordinator.startPrefetch(
+                next,
+                ownerID: generation.uuidString
+            )
+        }
+    }
+
+    private func playerItemWasRemoved() {
+        selectionGeneration = UUID()
+        playbackGeneration = nil
+        prefetchTriggeredGeneration = nil
+        requestedAssetID = nil
+        pendingAssetID = nil
+        pendingTrackName = nil
+        playingAssetID = nil
+        audioObserver.currentTrack = nil
+        audioObserver.showPlayerBar = false
+        Task { await assetCoordinator.stopAndReleaseAll() }
+    }
+
+    private func cancelPendingSelectionAndResumePrefetchIfNeeded() {
+        let generation = playbackGeneration
+        Task { [weak self] in
+            guard let self else { return }
+            await self.assetCoordinator.cancelPending()
+            await MainActor.run {
+                guard let generation,
+                      self.playbackGeneration == generation,
+                      self.selectionGeneration == generation,
+                      self.audioObserver.queuePlayer?.currentItem != nil else { return }
+                self.prefetchTriggeredGeneration = nil
+                self.startNextPrefetchIfNeeded()
             }
         }
     }
 
-    /// 静默预下载下一首曲目，确保循环播放无缝衔接
-    private func prefetchNextTrack() {
-        guard let last = audioObserver.lastPlayFile else { return }
-        let currentFile = last.1
-
-        for group in mediaGroups {
-            if let index = group.files.firstIndex(of: currentFile) {
-                let nextIndex = (index + 1) % group.files.count
-                let nextFile = group.files[nextIndex]
-
-                // 已下载、正在下载、或已有请求（用户手动触发），无需预取
-                guard downloadStatus[nextFile] != .downloaded
-                      && downloadStatus[nextFile] != .downloading
-                      && resourceRequests[nextFile] == nil else { return }
-
-                DispatchQueue.global(qos: .utility).async {
-                    let request = NSBundleResourceRequest(tags: [nextFile])
-                    DispatchQueue.main.async {
-                        self.resourceRequests[nextFile] = request
-
-                        request.beginAccessingResources { error in
-                            DispatchQueue.main.async {
-                                if let error = error {
-                                    print("❌ Prefetch error for \(nextFile): \(error)")
-                                    self.resourceRequests[nextFile]?.endAccessingResources()
-                                    self.resourceRequests[nextFile] = nil
-                                    
-                                    // 如果用户在预取中途点击了播放（变成了下载状态），标记为错误以驱动 UI
-                                    if self.downloadStatus[nextFile] == .downloading {
-                                        self.downloadStatus[nextFile] = .error
-                                        let msg = self.getODRErrorMessage(error as NSError)
-                                        self.downloadErrorMessage = msg
-                                    } else {
-                                        self.downloadStatus[nextFile] = .notDownloaded
-                                    }
-                                } else {
-                                    self.downloadStatus[nextFile] = .downloaded
-                                }
-                                // 预取完成，释放或同步状态
-                            }
-                        }
-                    }
-                }
-                return
-            }
+    func stopAndReleaseAudio() {
+        let hadPlayerItem = audioObserver.queuePlayer?.currentItem != nil
+        audioObserver.stopAndRemoveItem()
+        if !hadPlayerItem {
+            playerItemWasRemoved()
         }
     }
 
-    // MARK: - Audio Session
+    func removeAllDownloadedAudio() async -> [String: Result<AudioAssetEvictionResult, Error>] {
+        var results: [String: Result<AudioAssetEvictionResult, Error>] = [:]
+        for id in AudioAssetCatalog.orderedIDs {
+            do {
+                results[id] = .success(try await assetCoordinator.evict(assetID: id))
+            } catch {
+                results[id] = .failure(error)
+            }
+        }
+        return results
+    }
+
+    func audioAssetSnapshot() async -> AudioAssetCoordinatorSnapshot {
+        await assetCoordinator.snapshot()
+    }
+
+    // MARK: - Lifecycle
+
+    private func installLifecycleObservers() {
+        let memory = NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.prefetchTriggeredGeneration = nil
+            Task { await self?.assetCoordinator.cancelPrefetch() }
+        }
+        let terminate = NotificationCenter.default.addObserver(
+            forName: UIApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { await self?.assetCoordinator.shutdown() }
+        }
+        let lowDisk = NotificationCenter.default.addObserver(
+            forName: NSNotification.Name.NSBundleResourceRequestLowDiskSpace,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.prefetchTriggeredGeneration = nil
+            Task { await self?.assetCoordinator.cancelPrefetch() }
+        }
+        lifecycleObservers = [memory, terminate, lowDisk]
+    }
+
+    // MARK: - Helpers
+
+    private func track(for file: String) -> (name: String, fileExtension: String)? {
+        for group in mediaGroups {
+            if let index = group.files.firstIndex(of: file), index < group.names.count {
+                return (group.names[index], group.fileExtension)
+            }
+        }
+        return nil
+    }
 
     func setupAudioSession() {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let session = AVAudioSession.sharedInstance()
-                try session.setCategory(AVAudioSession.Category.playback, mode: AVAudioSession.Mode.default)
+                try session.setCategory(.playback, mode: .default)
                 try session.setActive(true, options: .notifyOthersOnDeactivation)
             } catch {
-                print("❌ Failed to setup audio session: \(error)")
+                print("Audio session setup failed: \(error)")
             }
         }
     }
 
-    // MARK: - Formatting
-
     static func formatTime(_ seconds: Double) -> String {
         guard seconds.isFinite && seconds >= 0 else { return "00:00" }
         let clampedSeconds = min(seconds, 99 * 60 + 59)
-        let minutes = Int(clampedSeconds) / 60
-        let seconds = Int(clampedSeconds) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+        return String(
+            format: "%02d:%02d",
+            Int(clampedSeconds) / 60,
+            Int(clampedSeconds) % 60
+        )
     }
 
-    // MARK: - ODR Error Handling
-
-    private func getODRErrorMessage(_ error: NSError) -> String {
-        switch error.code {
+    private func deliveryErrorMessage(_ error: Error) -> String {
+        let nsError = error as NSError
+        switch nsError.code {
         case NSBundleOnDemandResourceOutOfSpaceError:
             return L10n.str("audio_error_out_of_space")
         case NSBundleOnDemandResourceExceededMaximumSizeError:
@@ -591,5 +665,14 @@ class AudioManager: ObservableObject {
         default:
             return L10n.str("audio_error_download_failed")
         }
+    }
+
+    private func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError { return true }
+        if let assetError = error as? AudioAssetError,
+           case .cancelled = assetError {
+            return true
+        }
+        return false
     }
 }

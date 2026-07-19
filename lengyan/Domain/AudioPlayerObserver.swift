@@ -21,11 +21,14 @@ class AudioPlayerObserver: NSObject, ObservableObject {
     var queuePlayer: AVQueuePlayer?
     var playerTimer: Timer?
     var lastPlayFile: (String, String, String)?
+    var onFirstPlaybackStarted: (() -> Void)?
+    var onPlayerItemRemoved: (() -> Void)?
     private var playerCancellables = Set<AnyCancellable>()
     private var timeObserver: Any?
     private var isObservationSetup = false
     private var lastNowPlayingUpdateTime: Double = 0
     private var trackSubscription: AnyCancellable?
+    private var hasReportedPlaybackStartForCurrentItem = false
 
     private override init() {
         super.init()
@@ -39,6 +42,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
     }
 
     func cleanup() {
+        let hadPlayerItem = queuePlayer?.currentItem != nil
         if let observer = timeObserver, let player = queuePlayer {
             player.removeTimeObserver(observer)
             timeObserver = nil
@@ -50,6 +54,11 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         playerTimer = nil
 
         queuePlayer = nil
+        hasReportedPlaybackStartForCurrentItem = false
+
+        if hadPlayerItem {
+            onPlayerItemRemoved?()
+        }
 
         isObservationSetup = false
 
@@ -84,6 +93,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         queuePlayer?.publisher(for: \.currentItem)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newItem in
+                self?.hasReportedPlaybackStartForCurrentItem = false
                 if let item = newItem {
                     self?.showPlayerBar = true
                     self?.totalTime = CMTimeGetSeconds(item.duration)
@@ -94,8 +104,15 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         queuePlayer?.publisher(for: \.rate)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newRate in
-                self?.isPlaying = newRate > 0
-                self?.updateNowPlayingInfo()
+                guard let self else { return }
+                self.isPlaying = newRate > 0
+                if newRate > 0,
+                   self.queuePlayer?.currentItem != nil,
+                   !self.hasReportedPlaybackStartForCurrentItem {
+                    self.hasReportedPlaybackStartForCurrentItem = true
+                    self.onFirstPlaybackStarted?()
+                }
+                self.updateNowPlayingInfo()
             }
             .store(in: &playerCancellables)
 
@@ -239,6 +256,30 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         self.lastNowPlayingUpdateTime = seconds
         self.updateNowPlayingInfo()
         Prefers.shared.lastPlayTime = seconds
+    }
+
+    func replaceItem(with url: URL) throws {
+        initializePlayerIfNeeded()
+        let item = AVPlayerItem(url: url)
+        guard item.asset.isReadable else {
+            throw AudioAssetError.missingLocalFile(url.path)
+        }
+        queuePlayer?.removeAllItems()
+        queuePlayer?.insert(item, after: nil)
+        hasReportedPlaybackStartForCurrentItem = false
+    }
+
+    func stopAndRemoveItem() {
+        let hadPlayerItem = queuePlayer?.currentItem != nil
+        queuePlayer?.pause()
+        queuePlayer?.removeAllItems()
+        isPlaying = false
+        currentTime = 0
+        totalTime = 0
+        hasReportedPlaybackStartForCurrentItem = false
+        if hadPlayerItem {
+            onPlayerItemRemoved?()
+        }
     }
 
     @objc private func handlePlay() -> MPRemoteCommandHandlerStatus {
