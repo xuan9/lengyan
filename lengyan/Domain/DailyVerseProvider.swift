@@ -45,17 +45,28 @@ final class DailyVerseProvider {
     /// Keep the Lock Screen useful even when the reader does not open the App
     /// for a while. This matches the 60-day reminder horizon.
     static let widgetScheduleDays = SharedVerseData.scheduleDays
-    private let scheduleLock = NSLock()
-    private init() {}
+    private static let widgetKind = "DailyVerseWidget"
+    private static let scheduleLock = NSLock()
+    private let widgetTimelineReloader: () -> Void
+
+    private init() {
+        widgetTimelineReloader = {
+            if #available(iOS 14.0, *) {
+                WidgetCenter.shared.reloadTimelines(ofKind: DailyVerseProvider.widgetKind)
+            }
+        }
+    }
+
+    /// Internal initializer for testing the Widget reload side effect.
+    init(widgetTimelineReloader: @escaping () -> Void) {
+        self.widgetTimelineReloader = widgetTimelineReloader
+    }
 
     // MARK: - Public API
 
     /// 今日经文
     func todayVerse() -> DailyVerse? {
-        let v = verse(for: Date())
-        // 同步到 Widget App Group
-        if let v = v { syncToWidget(v) }
-        return v
+        verse(for: Date())
     }
 
     /// 近期经文（今日 + 过去7天 = 最多8张）
@@ -72,10 +83,12 @@ final class DailyVerseProvider {
         return verses
     }
 
-    /// 主动同步到 Widget（AppDelegate 启动时调用）
-    func syncWidgetData() {
+    /// 主动同步到 Widget（AppDelegate 启动时调用）。
+    /// - Returns: 共享数据有变化并已请求 Widget 刷新时为 `true`。
+    @discardableResult
+    func syncWidgetData() -> Bool {
         let snapshot = captureWidgetSyncSnapshot()
-        Self.widgetSyncQueue.sync {
+        return Self.widgetSyncQueue.sync {
             performWidgetDataSync(snapshot: snapshot)
         }
     }
@@ -84,11 +97,11 @@ final class DailyVerseProvider {
     func syncWidgetDataAsync() {
         let snapshot = captureWidgetSyncSnapshot()
         Self.widgetSyncQueue.async { [self] in
-            performWidgetDataSync(snapshot: snapshot)
+            _ = performWidgetDataSync(snapshot: snapshot)
         }
     }
 
-    private func performWidgetDataSync(snapshot: WidgetSyncSnapshot) {
+    private func performWidgetDataSync(snapshot: WidgetSyncSnapshot) -> Bool {
         var verses: [SharedVerseData] = []
         let calendar = Calendar.current
         let today = Date()
@@ -109,20 +122,17 @@ final class DailyVerseProvider {
             )
             verses.append(shared)
         }
-        
-        SharedVerseData.save(verses: verses)
-        
-        // 通知 WidgetKit 刷新时间线
-        if #available(iOS 14.0, *) {
-            WidgetCenter.shared.reloadAllTimelines()
+
+        // Never replace a valid offline schedule with partial data. The serial
+        // queue makes comparison, write, and reload one atomic sync operation.
+        guard verses.count == Self.widgetScheduleDays,
+              SharedVerseData.saveIfChanged(verses: verses) else {
+            return false
         }
-    }
 
-    // MARK: - Widget Sync
-
-    /// (弃用)
-    private func syncToWidget(_ verse: DailyVerse) {
-        // No-op
+        // Refresh only this Widget kind, and only after its payload changed.
+        widgetTimelineReloader()
+        return true
     }
 
     // MARK: - Persistent Schedule
@@ -138,8 +148,8 @@ final class DailyVerseProvider {
     }
 
     private func getPath(for date: Date, selection: VerseSelectionSnapshot) -> String {
-        scheduleLock.lock()
-        defer { scheduleLock.unlock() }
+        Self.scheduleLock.lock()
+        defer { Self.scheduleLock.unlock() }
 
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"

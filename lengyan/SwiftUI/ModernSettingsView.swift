@@ -16,16 +16,19 @@ enum WidgetGuidePlacement: Equatable {
 }
 
 struct WidgetInstallationState: Equatable {
-    let hasStandardSize: Bool
+    /// WidgetKit exposes a family, not where that widget is placed. A standard
+    /// family can live on the Home Screen, Today View, StandBy, or (on iPad)
+    /// the Lock Screen, so callers must not present this as a location signal.
+    let hasStandardFamily: Bool
     let hasLockScreenAccessory: Bool
 
     static let empty = WidgetInstallationState(
-        hasStandardSize: false,
+        hasStandardFamily: false,
         hasLockScreenAccessory: false
     )
 
     var isInstalled: Bool {
-        hasStandardSize || hasLockScreenAccessory
+        hasStandardFamily || hasLockScreenAccessory
     }
 }
 
@@ -50,7 +53,7 @@ enum WidgetGuidePlatform {
     ) -> WidgetGuidePlacement {
         guard supportsLockScreen else { return .homeScreen }
         if installation?.hasLockScreenAccessory == true,
-           installation?.hasStandardSize == false {
+           installation?.hasStandardFamily == false {
             return .homeScreen
         }
         return .lockScreen
@@ -61,14 +64,16 @@ private enum WidgetInstallationReader {
     static let widgetKind = "DailyVerseWidget"
 
     static func refresh(completion: @escaping (WidgetInstallationState) -> Void) {
-        #if DEBUG
-        if CommandLine.arguments.contains("--widget-guide-empty-state") {
+        // This target does not define a Swift `DEBUG` compilation condition.
+        // Both private arguments are required, so normal App launches cannot
+        // enter the UI-test-only empty state in any build configuration.
+        if CommandLine.arguments.contains("--uitesting"),
+           CommandLine.arguments.contains("--widget-guide-empty-state") {
             DispatchQueue.main.async {
                 completion(.empty)
             }
             return
         }
-        #endif
 
         let supportsLockScreen = WidgetGuidePlatform.supportsLockScreenWidget
         WidgetCenter.shared.getCurrentConfigurations { result in
@@ -79,7 +84,7 @@ private enum WidgetInstallationReader {
             }
 
             let matchingWidgets = configurations.filter { $0.kind == widgetKind }
-            let hasStandardSize = matchingWidgets.contains { info in
+            let hasStandardFamily = matchingWidgets.contains { info in
                 switch info.family {
                 case .systemSmall, .systemMedium, .systemLarge:
                     return true
@@ -97,7 +102,7 @@ private enum WidgetInstallationReader {
             }
 
             let state = WidgetInstallationState(
-                hasStandardSize: hasStandardSize,
+                hasStandardFamily: hasStandardFamily,
                 hasLockScreenAccessory: hasLockScreenAccessory
             )
             DispatchQueue.main.async {
@@ -108,6 +113,7 @@ private enum WidgetInstallationReader {
 }
 
 struct ModernSettingsView: View {
+    @Environment(\.sizeCategory) private var sizeCategory
     @State private var fontSizeLevel: Int = Prefers.shared.fontSizeLevel
     @State private var selectedTheme: SutraTheme = SutraDesignTokens.shared.currentTheme
     @State private var isReminderOn: Bool = Prefers.shared.isDailyReminderOn
@@ -337,18 +343,40 @@ struct ModernSettingsView: View {
 
     private var widgetGuideRow: some View {
         Button(action: openWidgetGuide) {
-            HStack(spacing: 0) {
-                Text(L10n.str("settings_widget_today_verse"))
-                    .font(SutraTypographyBridge.uiBody(weight: .regular))
-                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                Spacer()
-                Text(widgetGuideActionText)
-                    .font(.system(size: 12, weight: .light))
-                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                    .padding(.leading, 10)
+            Group {
+                if sizeCategory.isAccessibilityCategory {
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text(L10n.str("settings_widget_today_verse"))
+                            .font(SutraTypographyBridge.uiBody(weight: .regular))
+                            .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                        HStack(spacing: 8) {
+                            Text(widgetGuideActionText)
+                                .font(.footnote)
+                                .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    HStack(spacing: 12) {
+                        Text(L10n.str("settings_widget_today_verse"))
+                            .font(SutraTypographyBridge.uiBody(weight: .regular))
+                            .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                        Spacer(minLength: 16)
+                        Text(widgetGuideActionText)
+                            .font(.footnote)
+                            .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.trailing)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                            .accessibilityHidden(true)
+                    }
+                }
             }
             .padding(.vertical, 16)
             .contentShape(Rectangle())
@@ -625,13 +653,25 @@ struct PrivacyPolicyView: View {
     }
 }
 
+private struct WidgetGuideStepContent {
+    let title: String
+    let body: String
+}
+
 struct WidgetGuideView: View {
     @Environment(\.sizeCategory) private var sizeCategory
+    @ScaledMetric(relativeTo: .body) private var stepNumberDiameter: CGFloat = 28
     @State private var installation: WidgetInstallationState?
     @State private var selectedPlacement: WidgetGuidePlacement
     @State private var hasChosenPlacement = false
 
     private let supportsLockScreen: Bool
+
+    private enum SelectedInstallationStatus: Equatable {
+        case confirmed
+        case standardFamilyDetected
+        case missing
+    }
 
     init(initialInstallation: WidgetInstallationState?) {
         let supportsLockScreen = WidgetGuidePlatform.supportsLockScreenWidget
@@ -647,27 +687,15 @@ struct WidgetGuideView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 headerCard
-                    .padding(.top, 24)
+                    .padding(.top, 22)
 
-                if supportsLockScreen {
-                    placementPicker
-                        .padding(.top, 22)
-                }
+                instructionSectionHeader
+                    .padding(.top, 32)
 
-                guideSectionTitle(sectionTitle)
-                    .padding(.top, 26)
-
-                guideIllustration
-                    .padding(.bottom, 26)
-
-                VStack(alignment: .leading, spacing: 20) {
-                    ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                        WidgetGuideStepRow(number: index + 1, text: step)
-                    }
-                }
+                stepsCard
 
                 usageNote
-                    .padding(.top, 30)
+                    .padding(.top, 28)
                     .padding(.bottom, 80)
             }
             .padding(.horizontal, 28)
@@ -680,100 +708,152 @@ struct WidgetGuideView: View {
         }
     }
 
-    private var selectedPlacementIsInstalled: Bool {
+    private var selectedInstallationStatus: SelectedInstallationStatus {
         switch selectedPlacement {
         case .lockScreen:
-            return installation?.hasLockScreenAccessory == true
+            return installation?.hasLockScreenAccessory == true ? .confirmed : .missing
         case .homeScreen:
-            return installation?.hasStandardSize == true
+            return installation?.hasStandardFamily == true ? .standardFamilyDetected : .missing
         }
     }
 
     private var headerBadgeKey: String {
-        if selectedPlacementIsInstalled {
+        switch selectedInstallationStatus {
+        case .confirmed:
             return "widget_guide_badge_added"
+        case .standardFamilyDetected:
+            return "widget_guide_badge_standard_detected"
+        case .missing:
+            return selectedPlacement == .lockScreen
+                ? "widget_guide_badge_lock_recommended"
+                : "widget_guide_badge_home"
         }
-        return selectedPlacement == .lockScreen
-            ? "widget_guide_badge_lock_recommended"
-            : "widget_guide_badge_home"
     }
 
     private var headerSymbol: String {
-        if selectedPlacementIsInstalled {
+        switch selectedInstallationStatus {
+        case .confirmed:
             return "checkmark.circle.fill"
+        case .standardFamilyDetected:
+            return "checkmark.circle"
+        case .missing:
+            return selectedPlacement == .lockScreen ? "lock" : "rectangle.grid.2x2"
         }
-        return selectedPlacement == .lockScreen ? "lock" : "rectangle.grid.2x2"
     }
 
     private var headerCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 7) {
-                Image(systemName: headerSymbol)
-                    .foregroundColor(SutraDesignSystem.color(.primary))
-                    .accessibilityHidden(true)
-                Text(L10n.str(headerBadgeKey))
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 7) {
+                    Image(systemName: headerSymbol)
+                        .foregroundColor(SutraDesignSystem.color(.primary))
+                        .accessibilityHidden(true)
+                    Text(L10n.str(headerBadgeKey))
+                        .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                }
+                .font(.subheadline.weight(.semibold))
+
+                Text(headerTitle)
+                    .font(.title2.weight(.semibold))
                     .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(headerBody)
+                    .font(.body)
+                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                    .lineSpacing(5)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .font(.subheadline.weight(.semibold))
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("widget_guide_header")
 
-            Text(headerTitle)
-                .font(.title2.weight(.semibold))
-                .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                .fixedSize(horizontal: false, vertical: true)
+            if supportsLockScreen {
+                placementPicker
+                    .padding(.top, 20)
+            }
 
-            Text(headerBody)
-                .font(.body)
-                .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                .lineSpacing(5)
-                .fixedSize(horizontal: false, vertical: true)
+            if !sizeCategory.isAccessibilityCategory {
+                guideIllustration
+                    .padding(.top, 22)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
+        .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(SutraDesignSystem.color(.card).opacity(0.62))
+            ZStack {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(SutraDesignSystem.color(.card).opacity(0.62))
+                LinearGradient(
+                    colors: [
+                        SutraDesignSystem.color(.primary).opacity(0.065),
+                        Color.clear,
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+            }
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(SutraDesignSystem.color(.primary).opacity(0.12), lineWidth: 0.75)
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(SutraDesignSystem.color(.primary).opacity(0.14), lineWidth: 0.75)
         )
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("widget_guide_header")
     }
 
     private var headerTitle: String {
-        if selectedPlacementIsInstalled {
+        switch selectedInstallationStatus {
+        case .confirmed:
             return L10n.str("widget_guide_header_added_title")
+        case .standardFamilyDetected:
+            return L10n.str("widget_guide_header_standard_title")
+        case .missing:
+            return L10n.str(selectedPlacement == .lockScreen
+                ? "widget_guide_header_lock_title"
+                : "widget_guide_header_home_title")
         }
-        return L10n.str(selectedPlacement == .lockScreen
-            ? "widget_guide_header_lock_title"
-            : "widget_guide_header_home_title")
     }
 
     private var headerBody: String {
-        if selectedPlacementIsInstalled {
+        switch selectedInstallationStatus {
+        case .confirmed:
             return L10n.str("widget_guide_header_added_body")
+        case .standardFamilyDetected:
+            return L10n.str("widget_guide_header_standard_body")
+        case .missing:
+            return L10n.str(selectedPlacement == .lockScreen
+                ? "widget_guide_header_lock_body"
+                : "widget_guide_header_home_body")
         }
-        return L10n.str(selectedPlacement == .lockScreen
-            ? "widget_guide_header_lock_body"
-            : "widget_guide_header_home_body")
     }
 
     @ViewBuilder
     private var placementPicker: some View {
         if sizeCategory.isAccessibilityCategory {
-            VStack(spacing: 10) {
+            VStack(spacing: 4) {
                 lockScreenPlacementButton
                 homeScreenPlacementButton
             }
+            .padding(4)
+            .background(placementPickerBackground)
             .accessibilityElement(children: .contain)
         } else {
-            HStack(spacing: 10) {
+            HStack(spacing: 4) {
                 lockScreenPlacementButton
                 homeScreenPlacementButton
             }
+            .padding(4)
+            .background(placementPickerBackground)
             .accessibilityElement(children: .contain)
         }
+    }
+
+    private var placementPickerBackground: some View {
+        RoundedRectangle(cornerRadius: 14)
+            .fill(SutraDesignSystem.color(.primary).opacity(0.055))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(SutraDesignSystem.color(.primary).opacity(0.1), lineWidth: 0.5)
+            )
     }
 
     private var lockScreenPlacementButton: some View {
@@ -800,7 +880,9 @@ struct WidgetGuideView: View {
         let isSelected = selectedPlacement == placement
         return Button {
             hasChosenPlacement = true
-            selectedPlacement = placement
+            withAnimation(.easeInOut(duration: 0.22)) {
+                selectedPlacement = placement
+            }
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: symbol)
@@ -816,17 +898,26 @@ struct WidgetGuideView: View {
                         : SutraDesignSystem.color(.textSecondary))
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, minHeight: 48)
+            .padding(.horizontal, 10)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(SutraDesignSystem.color(.card).opacity(isSelected ? 0.8 : 0.35))
+                RoundedRectangle(cornerRadius: 11)
+                    .fill(isSelected
+                        ? SutraDesignSystem.color(.card).opacity(0.94)
+                        : Color.clear)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(
-                        SutraDesignSystem.color(.primary).opacity(isSelected ? 0.42 : 0.1),
-                        lineWidth: isSelected ? 1 : 0.5
+                        SutraDesignSystem.color(.primary).opacity(isSelected ? 0.26 : 0),
+                        lineWidth: 0.75
                     )
+            )
+            .shadow(
+                color: SutraDesignSystem.color(.shadow).opacity(isSelected ? 0.08 : 0),
+                radius: 5,
+                x: 0,
+                y: 2
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -836,7 +927,7 @@ struct WidgetGuideView: View {
             : "widget_guide_home_tab")
     }
 
-    private var sectionTitle: String {
+    private var placementName: String {
         L10n.str(selectedPlacement == .lockScreen
             ? "widget_guide_lock_section_title"
             : "widget_guide_home_section_title")
@@ -851,25 +942,71 @@ struct WidgetGuideView: View {
         }
     }
 
-    private var steps: [String] {
-        let prefix = selectedPlacement == .lockScreen
+    private var steps: [WidgetGuideStepContent] {
+        let bodyPrefix = selectedPlacement == .lockScreen
             ? "widget_guide_lock_step_"
             : "widget_guide_home_step_"
-        return (1...4).map { L10n.str("\(prefix)\($0)") }
+        let titlePrefix = selectedPlacement == .lockScreen
+            ? "widget_guide_lock_step_title_"
+            : "widget_guide_home_step_title_"
+        return (1...4).map { number in
+            WidgetGuideStepContent(
+                title: L10n.str("\(titlePrefix)\(number)"),
+                body: L10n.str("\(bodyPrefix)\(number)")
+            )
+        }
     }
 
-    private func guideSectionTitle(_ text: String) -> some View {
-        Text(text)
-            .font(.caption.weight(.semibold))
-            .tracking(2)
-            .foregroundColor(SutraDesignSystem.color(.textPrimary))
-            .padding(.bottom, 14)
-            .accessibilityAddTraits(.isHeader)
+    private var instructionSectionHeader: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(L10n.str(selectedInstallationStatus == .confirmed
+                ? "widget_guide_reinstall_title"
+                : "widget_guide_steps_title"))
+                .font(.title3.weight(.semibold))
+                .foregroundColor(SutraDesignSystem.color(.textPrimary))
+            Text(L10n.str(selectedInstallationStatus == .confirmed
+                ? "widget_guide_reinstall_subtitle"
+                : "widget_guide_steps_subtitle"))
+                .font(.footnote)
+                .foregroundColor(SutraDesignSystem.color(.textSecondary))
+        }
+        .padding(.bottom, 14)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "\(L10n.str(selectedInstallationStatus == .confirmed ? "widget_guide_reinstall_title" : "widget_guide_steps_title")), \(placementName)"
+        )
+        .accessibilityAddTraits(.isHeader)
+    }
+
+    private var stepsCard: some View {
+        VStack(spacing: 0) {
+            ForEach(steps.indices, id: \.self) { index in
+                WidgetGuideStepRow(
+                    number: index + 1,
+                    step: steps[index],
+                    numberDiameter: stepNumberDiameter
+                )
+                if index < steps.count - 1 {
+                    Rectangle()
+                        .fill(SutraDesignSystem.color(.primary).opacity(0.1))
+                        .frame(height: 0.5)
+                        .padding(.leading, 16 + stepNumberDiameter + 14)
+                }
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(SutraDesignSystem.color(.card).opacity(0.54))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(SutraDesignSystem.color(.primary).opacity(0.11), lineWidth: 0.75)
+        )
     }
 
     private var usageNote: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "book.closed")
+            Image(systemName: "bell.slash")
                 .font(.system(size: 15, weight: .regular))
                 .foregroundColor(SutraDesignSystem.color(.primary))
                 .frame(width: 22)
@@ -880,12 +1017,14 @@ struct WidgetGuideView: View {
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16)
+        .padding(.horizontal, 4)
+        .padding(.top, 18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(SutraDesignSystem.color(.card).opacity(0.4))
-        )
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(SutraDesignSystem.color(.primary).opacity(0.11))
+                .frame(height: 0.5)
+        }
     }
 
     private func refreshInstallation() {
@@ -902,10 +1041,9 @@ struct WidgetGuideView: View {
 }
 
 private struct WidgetGuideStepRow: View {
-    @ScaledMetric(relativeTo: .body) private var numberDiameter: CGFloat = 27
-
     let number: Int
-    let text: String
+    let step: WidgetGuideStepContent
+    let numberDiameter: CGFloat
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -922,52 +1060,124 @@ private struct WidgetGuideStepRow: View {
                         .stroke(SutraDesignSystem.color(.primary).opacity(0.28), lineWidth: 0.75)
                 )
 
-            Text(text)
-                .font(.body)
-                .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                .lineSpacing(5)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(step.title)
+                    .font(.body.weight(.semibold))
+                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                Text(step.body)
+                    .font(.subheadline)
+                    .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                    .lineSpacing(4)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 17)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(number). \(text)")
+        .accessibilityLabel("\(number). \(step.title). \(step.body)")
+    }
+}
+
+private struct WidgetGuideDeviceFrame<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .frame(width: 196, height: 252)
+            .background(
+                LinearGradient(
+                    colors: [
+                        SutraDesignSystem.color(.background),
+                        SutraDesignSystem.color(.primary).opacity(0.07),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 30))
+            .overlay(
+                RoundedRectangle(cornerRadius: 30)
+                    .stroke(SutraDesignSystem.color(.textPrimary).opacity(0.2), lineWidth: 1.25)
+            )
+            .shadow(
+                color: SutraDesignSystem.color(.shadow).opacity(0.12),
+                radius: 16,
+                x: 0,
+                y: 9
+            )
+    }
+}
+
+private struct WidgetGuideAppIcon: View {
+    let symbol: String
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(SutraDesignSystem.color(.card).opacity(0.72))
+            .frame(width: 31, height: 31)
+            .overlay(
+                Image(systemName: symbol)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(SutraDesignSystem.color(.primary).opacity(0.72))
+            )
     }
 }
 
 private struct WidgetGuideLockScreenIllustration: View {
     var body: some View {
-        VStack(spacing: 14) {
-            Text("09:18")
-                .font(.system(size: 42, weight: .thin, design: .rounded))
-                .foregroundColor(SutraDesignSystem.color(.textPrimary).opacity(0.82))
+        VStack(spacing: 13) {
+            WidgetGuideDeviceFrame {
+                VStack(spacing: 0) {
+                    HStack(spacing: 4) {
+                        Spacer()
+                        Image(systemName: "wifi")
+                        Image(systemName: "battery.100")
+                    }
+                    .font(.system(size: 7, weight: .semibold))
+                    .foregroundColor(SutraDesignSystem.color(.textPrimary).opacity(0.72))
 
-            VStack(alignment: .leading, spacing: 7) {
-                HStack(spacing: 7) {
-                    Image(systemName: "book.closed")
-                        .font(.system(size: 11, weight: .semibold))
-                    Text(L10n.str("widget_guide_preview_title"))
-                        .font(.system(size: 11, weight: .semibold))
+                    Text(L10n.str("widget_guide_preview_date"))
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(SutraDesignSystem.color(.textSecondary))
+                        .padding(.top, 15)
+
+                    Text("08:00")
+                        .font(.system(size: 38, weight: .thin, design: .rounded))
+                        .foregroundColor(SutraDesignSystem.color(.textPrimary).opacity(0.82))
+                        .padding(.top, 1)
+
+                    Spacer(minLength: 10)
+                    lockScreenWidget
+                    Spacer(minLength: 12)
+
+                    HStack {
+                        Circle()
+                            .fill(SutraDesignSystem.color(.card).opacity(0.72))
+                            .frame(width: 26, height: 26)
+                            .overlay(Image(systemName: "flashlight.off.fill").font(.system(size: 8)))
+                        Spacer()
+                        Circle()
+                            .fill(SutraDesignSystem.color(.card).opacity(0.72))
+                            .frame(width: 26, height: 26)
+                            .overlay(Image(systemName: "camera.fill").font(.system(size: 8)))
+                    }
+                    .foregroundColor(SutraDesignSystem.color(.textPrimary).opacity(0.62))
                 }
-                Text(L10n.str("widget_guide_preview_verse"))
-                    .font(SutraTypographyBridge.sutraCaption(weight: .regular))
-                    .lineSpacing(2)
-                    .lineLimit(3)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
             }
-            .foregroundColor(SutraDesignSystem.color(.textPrimary))
-            .frame(maxWidth: 230, alignment: .leading)
-            .padding(.horizontal, 13)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(SutraDesignSystem.color(.card).opacity(0.65))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(SutraDesignSystem.color(.primary).opacity(0.55), lineWidth: 1.5)
-            )
 
-            Text(L10n.str("widget_guide_lock_callout"))
-                .font(.system(size: 12, weight: .semibold))
+            HStack(spacing: 7) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 10, weight: .semibold))
+                Text(L10n.str("widget_guide_lock_callout"))
+                    .font(.system(size: 12, weight: .semibold))
+            }
                 .foregroundColor(SutraDesignSystem.color(.textPrimary))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
@@ -976,102 +1186,123 @@ private struct WidgetGuideLockScreenIllustration: View {
                         .stroke(SutraDesignSystem.color(.primary).opacity(0.45), lineWidth: 1)
                 )
         }
-        .frame(maxWidth: .infinity, minHeight: 190)
-        .padding(.vertical, 14)
-        .background(illustrationBackground)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 4)
         .accessibilityHidden(true)
     }
 
-    private var illustrationBackground: some View {
-        RoundedRectangle(cornerRadius: 20)
-            .fill(SutraDesignSystem.color(.card).opacity(0.42))
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(SutraDesignSystem.color(.primary).opacity(0.1), lineWidth: 0.75)
-            )
+    private var lockScreenWidget: some View {
+        Text(L10n.str("widget_guide_preview_verse"))
+            .font(.system(size: 10.5, weight: .regular, design: .serif))
+            .lineSpacing(2)
+            .lineLimit(3)
+        .foregroundColor(SutraDesignSystem.color(.textPrimary))
+        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(SutraDesignSystem.color(.card).opacity(0.76))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(SutraDesignSystem.color(.primary).opacity(0.56), lineWidth: 1.35)
+        )
     }
 }
 
 private struct WidgetGuideHomeScreenIllustration: View {
-    private let appSymbols = ["text.book.closed", "headphones", "star", "gearshape"]
-    private let appColumns = Array(
-        repeating: GridItem(.flexible(minimum: 36, maximum: 52), spacing: 10),
-        count: 4
-    )
-
     var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 8) {
-                Text(L10n.str("widget_guide_home_edit"))
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .overlay(
-                        Capsule()
-                            .stroke(SutraDesignSystem.color(.primary).opacity(0.5), lineWidth: 1.25)
-                    )
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(SutraDesignSystem.color(.textTertiary))
-                Label(L10n.str("widget_guide_home_add"), systemImage: "plus")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                Spacer()
-            }
+        VStack(spacing: 13) {
+            WidgetGuideDeviceFrame {
+                VStack(spacing: 0) {
+                    HStack(spacing: 4) {
+                        Text("8:00")
+                            .font(.system(size: 9, weight: .semibold, design: .rounded))
+                        Spacer()
+                        Image(systemName: "wifi")
+                        Image(systemName: "battery.100")
+                    }
+                    .font(.system(size: 7, weight: .semibold))
+                    .foregroundColor(SutraDesignSystem.color(.textPrimary).opacity(0.72))
 
-            LazyVGrid(columns: appColumns, spacing: 10) {
-                ForEach(appSymbols, id: \.self) { symbol in
-                    RoundedRectangle(cornerRadius: 11)
-                        .fill(SutraDesignSystem.color(.primary).opacity(0.08))
-                        .aspectRatio(1, contentMode: .fit)
-                        .overlay(
-                            Image(systemName: symbol)
-                                .font(.system(size: 17, weight: .light))
-                                .foregroundColor(SutraDesignSystem.color(.primary).opacity(0.7))
-                        )
-                }
-            }
-            .frame(maxWidth: 238)
+                    HStack {
+                        Text(L10n.str("widget_guide_home_edit"))
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(SutraDesignSystem.color(.card).opacity(0.82)))
+                            .overlay(
+                                Capsule()
+                                    .stroke(SutraDesignSystem.color(.primary).opacity(0.48), lineWidth: 1)
+                            )
+                        Spacer()
+                        Image(systemName: "plus")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(SutraDesignSystem.color(.textPrimary))
+                            .frame(width: 24, height: 24)
+                            .background(Circle().fill(SutraDesignSystem.color(.card).opacity(0.82)))
+                    }
+                    .padding(.top, 12)
 
-            HStack(alignment: .center, spacing: 14) {
-                Text(L10n.str("widget_guide_preview_verse"))
-                    .font(SutraTypographyBridge.sutraCaption(weight: .regular))
-                    .foregroundColor(SutraDesignSystem.color(.textPrimary))
-                    .lineSpacing(3)
-                    .lineLimit(3)
-                    .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
-                    .padding(.horizontal, 14)
+                    homeScreenWidget
+                        .padding(.top, 24)
+
+                    Spacer(minLength: 9)
+
+                    HStack(spacing: 9) {
+                        ForEach(["phone.fill", "message.fill", "safari", "music.note"], id: \.self) { symbol in
+                            WidgetGuideAppIcon(symbol: symbol)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 7)
                     .background(
                         RoundedRectangle(cornerRadius: 13)
-                            .fill(SutraDesignSystem.color(.card).opacity(0.72))
+                            .fill(SutraDesignSystem.color(.card).opacity(0.55))
                     )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 13)
-                            .stroke(SutraDesignSystem.color(.primary).opacity(0.32), lineWidth: 1)
-                    )
-
-                VStack(spacing: 10) {
-                    ForEach(0..<2, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: 9)
-                            .fill(SutraDesignSystem.color(.primary).opacity(0.07))
-                            .frame(width: 44, height: 44)
-                    }
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
             }
-            .frame(maxWidth: 420)
+
+            HStack(spacing: 7) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 10, weight: .semibold))
+                Text(L10n.str("widget_guide_home_callout"))
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundColor(SutraDesignSystem.color(.textPrimary))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .overlay(
+                Capsule()
+                    .stroke(SutraDesignSystem.color(.primary).opacity(0.45), lineWidth: 1)
+            )
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 190)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 4)
+        .accessibilityHidden(true)
+    }
+
+    private var homeScreenWidget: some View {
+        Text(L10n.str("widget_guide_preview_verse"))
+            .font(.system(size: 10.5, weight: .regular, design: .serif))
+            .lineSpacing(2)
+            .lineLimit(3)
+        .foregroundColor(SutraDesignSystem.color(.textPrimary))
+        .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 7)
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(SutraDesignSystem.color(.card).opacity(0.42))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(SutraDesignSystem.color(.card).opacity(0.76))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(SutraDesignSystem.color(.primary).opacity(0.1), lineWidth: 0.75)
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(SutraDesignSystem.color(.primary).opacity(0.32), lineWidth: 0.9)
         )
-        .accessibilityHidden(true)
     }
 }
 

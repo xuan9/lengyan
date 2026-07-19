@@ -11,7 +11,7 @@ import Foundation
 
 /// Widget 与 App 共享的经文数据
 /// 编码为 JSON 存入 App Group UserDefaults
-struct SharedVerseData: Codable {
+struct SharedVerseData: Codable, Equatable {
     static let scheduleDays = 60
 
     let text: String         // 短文本 ~40字（小/中 Widget）
@@ -52,11 +52,21 @@ struct SharedVerseData: Codable {
         loadAll().isEmpty
     }
 
-    /// 批量写入未来多天的经文到 App Group
-    static func save(verses: [SharedVerseData]) {
+    /// 仅在内容变化时写入未来多天的经文。
+    /// - Returns: 数据已成功更新时为 `true`；内容相同或写入失败时为 `false`。
+    @discardableResult
+    static func saveIfChanged(verses: [SharedVerseData]) -> Bool {
         guard let defaults = UserDefaults(suiteName: appGroupID),
-              let data = try? JSONEncoder().encode(verses) else { return }
+              let data = try? JSONEncoder().encode(verses) else { return false }
+
+        if let storedData = defaults.data(forKey: defaultsKey),
+           let storedVerses = try? JSONDecoder().decode([SharedVerseData].self, from: storedData),
+           storedVerses == verses {
+            return false
+        }
+
         defaults.set(data, forKey: defaultsKey)
+        return true
     }
 
     /// 判断是否今日数据

@@ -43,18 +43,26 @@ private enum WidgetL10n {
     }
 
     static var widgetDisplayName: String { text("今日读经", "今日讀經") }
-    static var widgetDescription: String { text("每天一段楞严经文，抬眼可见，点按深读。", "每天一段楞嚴經文，抬眼可見，點按深讀。") }
+    static var widgetDescription: String { text("每天一段楞严经文，抬眼可见，轻点继续阅读。", "每天一段楞嚴經文，抬眼可見，點一下繼續閱讀。") }
     static var sutraHeader: String { text("大佛顶首楞严经", "大佛頂首楞嚴經") }
-    static var inlineOnboarding: String { text("楞严 · 待启卷", "楞嚴 · 待啟卷") }
-    static var lockTitle: String { text("楞严经", "楞嚴經") }
-    static var lockSubtitle: String { text("请先打开主 App 启卷", "請先打開主 App 啟卷") }
-    static var emptyTitle: String { "楞" }
-    static var emptySubtitle: String { text("请先打开楞严一次", "請先打開楞嚴一次") }
+    static var previewVerse: String {
+        text(
+            "若能转物，则同如来。身心圆明，不动道场，于一毛端，遍能含受十方国土。",
+            "若能轉物，則同如來。身心圓明，不動道場，於一毛端，遍能含受十方國土。"
+        )
+    }
+    static var fallbackTitle: String { text("常住真心 · 性净明体", "常住真心 · 性淨明體") }
+    static var fallbackVerse: String {
+        text(
+            "一切众生从无始来，生死相续，皆由不知常住真心性净明体，用诸妄想，此想不真，故有轮转。",
+            "一切眾生從無始來，生死相續，皆由不知常住真心性淨明體，用諸妄想，此想不真，故有輪轉。"
+        )
+    }
+    static var fallbackSource: String { text("卷一 · 七处征心", "卷一 · 七處徵心") }
     static var smallPreviewName: String { text("小尺寸", "小尺寸") }
     static var mediumPreviewName: String { text("中尺寸", "中尺寸") }
     static var largePreviewName: String { text("大尺寸", "大尺寸") }
     static var lockPreviewName: String { text("锁屏·卡片", "鎖屏·卡片") }
-    static var emptyMediumPreviewName: String { text("空态·中", "空態·中") }
 }
 
 // MARK: - 动态字号计算
@@ -110,44 +118,25 @@ struct DailyVerseEntry: TimelineEntry {
     let source: String
     let path: String
     let theme: String
-    let isPlaceholder: Bool
-    /// 主App尚未授记过今日经文 — 显示优雅空态而非伪数据
-    let needsOnboarding: Bool
 
-    /// 首次占位：极简留白金句（首次添加 Widget 第一印象）
+    /// 系统图库与占位渲染使用的内置经文。
     static let placeholder = DailyVerseEntry(
         date: Date(),
-        text: "常住真心 · 性净明体",
-        fullText: "一切众生从无始来，生死相续，皆由不知常住真心性净明体。",
-        source: "卷一 · 七处征心",
+        text: WidgetL10n.previewVerse,
+        fullText: WidgetL10n.previewVerse,
+        source: "卷二",
         path: "",
-        theme: "sepia",
-        isPlaceholder: true,
-        needsOnboarding: false
+        theme: "sepia"
     )
 
-    /// 内置兜底：主App 已运行过但当日数据缺失时使用
+    /// 共享数据暂未就绪时仍先呈现经文，不把初始化工作交给用户。
     static let fallback = DailyVerseEntry(
         date: Date(),
-        text: "常住真心 · 性净明体",
-        fullText: "一切众生从无始来，生死相续，皆由不知常住真心性净明体，用诸妄想，此想不真，故有轮转。",
-        source: "卷一 · 七处征心",
+        text: WidgetL10n.fallbackTitle,
+        fullText: WidgetL10n.fallbackVerse,
+        source: WidgetL10n.fallbackSource,
         path: "/A2/B1/C2/D1/E2/F1/G1/H1/I1/J2",
-        theme: "sepia",
-        isPlaceholder: false,
-        needsOnboarding: false
-    )
-
-    /// 优雅空态：用户尚未打开主App授记
-    static let onboarding = DailyVerseEntry(
-        date: Date(),
-        text: "",
-        fullText: "",
-        source: "",
-        path: "",
-        theme: "sepia",
-        isPlaceholder: false,
-        needsOnboarding: true
+        theme: "sepia"
     )
 }
 
@@ -159,7 +148,13 @@ struct DailyVerseTimelineProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (DailyVerseEntry) -> Void) {
-        let entry = loadEntry(for: Date()) ?? .onboarding
+        // Widget Gallery should show the finished experience, independent of
+        // App Group initialization or the user's current reading data.
+        if context.isPreview {
+            completion(.placeholder)
+            return
+        }
+        let entry = loadEntry(for: Date()) ?? .fallback
         completion(entry)
     }
 
@@ -183,15 +178,7 @@ struct DailyVerseTimelineProvider: TimelineProvider {
             ) {
                 entries.append(entry)
             } else if offset == 0 {
-                // 今日数据缺失：若 App Group 完全为空，显示空态引导；
-                // 否则用 fallback 经文保持 Widget 气质
-                let entry: DailyVerseEntry
-                if scheduleByDate.isEmpty {
-                    entry = DailyVerseEntry.onboarding.copyWith(date: entryDate)
-                } else {
-                    entry = DailyVerseEntry.fallback.copyWith(date: entryDate)
-                }
-                entries.append(entry)
+                entries.append(DailyVerseEntry.fallback.copyWith(date: entryDate))
             }
         }
 
@@ -229,9 +216,7 @@ struct DailyVerseTimelineProvider: TimelineProvider {
             fullText: data.effectiveFullText,
             source: data.source,
             path: data.path,
-            theme: data.effectiveTheme,
-            isPlaceholder: false,
-            needsOnboarding: false
+            theme: data.effectiveTheme
         )
     }
 }
@@ -244,9 +229,7 @@ private extension DailyVerseEntry {
             fullText: fullText,
             source: source,
             path: path,
-            theme: theme,
-            isPlaceholder: isPlaceholder,
-            needsOnboarding: needsOnboarding
+            theme: theme
         )
     }
 }
@@ -260,32 +243,28 @@ struct SmallVerseView: View {
         ZStack {
             LegacyWidgetBackground()
 
-            if entry.needsOnboarding {
-                EmptyStateView(compact: true)
-            } else {
-                // 小尺寸也按经文段落排版：左对齐、紧凑留白。
-                GeometryReader { proxy in
-                    let horizontalPadding: CGFloat = 10
-                    let verticalPadding: CGFloat = 9
-                    let sutra = entry.compactText
-                    let size = dynamicFontSize(
-                        charCount: sutra.count,
-                        availableWidth: max(CGFloat(80), proxy.size.width - horizontalPadding * 2),
-                        availableHeight: max(CGFloat(80), proxy.size.height - verticalPadding * 2),
-                        lineSpacing: 3.5,
-                        minSize: 12.5,
-                        maxSize: 13.5
-                    )
-                    Text(sutra)
-                        .font(WidgetTokens.sutraFont(size: size))
-                        .foregroundColor(WidgetTokens.sutraText)
-                        .lineSpacing(3.5)
-                        .multilineTextAlignment(.leading)
-                        .minimumScaleFactor(0.9)
-                        .padding(.horizontal, horizontalPadding)
-                        .padding(.vertical, verticalPadding)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                }
+            // 小尺寸也按经文段落排版：左对齐、紧凑留白。
+            GeometryReader { proxy in
+                let horizontalPadding: CGFloat = 14
+                let verticalPadding: CGFloat = 12
+                let sutra = entry.compactText
+                let size = dynamicFontSize(
+                    charCount: sutra.count,
+                    availableWidth: max(CGFloat(80), proxy.size.width - horizontalPadding * 2),
+                    availableHeight: max(CGFloat(80), proxy.size.height - verticalPadding * 2),
+                    lineSpacing: 3.5,
+                    minSize: 13.5,
+                    maxSize: 16
+                )
+                Text(sutra)
+                    .font(WidgetTokens.sutraFont(size: size))
+                    .foregroundColor(WidgetTokens.sutraText)
+                    .lineSpacing(3.5)
+                    .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(0.9)
+                    .padding(.horizontal, horizontalPadding)
+                    .padding(.vertical, verticalPadding)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             }
         }
     }
@@ -300,31 +279,27 @@ struct MediumVerseView: View {
         ZStack {
             LegacyWidgetBackground()
 
-            if entry.needsOnboarding {
-                EmptyStateView(compact: false)
-            } else {
-                GeometryReader { proxy in
-                    let horizontalPadding: CGFloat = 18
-                    let verticalPadding: CGFloat = 14
-                    let sutra = entry.mediumText
-                    let size = dynamicFontSize(
-                        charCount: sutra.count,
-                        availableWidth: max(CGFloat(240), proxy.size.width - horizontalPadding * 2),
-                        availableHeight: max(CGFloat(110), proxy.size.height - verticalPadding * 2),
-                        lineSpacing: 5,
-                        minSize: 13.5,
-                        maxSize: 14.5
-                    )
-                    Text(sutra)
-                        .font(WidgetTokens.sutraFont(size: size))
-                        .foregroundColor(WidgetTokens.sutraText)
-                        .lineSpacing(5)
-                        .multilineTextAlignment(.leading)
-                        .minimumScaleFactor(0.9)
-                        .padding(.horizontal, horizontalPadding)
-                        .padding(.vertical, verticalPadding)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                }
+            GeometryReader { proxy in
+                let horizontalPadding: CGFloat = 18
+                let verticalPadding: CGFloat = 14
+                let sutra = entry.mediumText
+                let size = dynamicFontSize(
+                    charCount: sutra.count,
+                    availableWidth: max(CGFloat(240), proxy.size.width - horizontalPadding * 2),
+                    availableHeight: max(CGFloat(110), proxy.size.height - verticalPadding * 2),
+                    lineSpacing: 5,
+                    minSize: 13.5,
+                    maxSize: 14.5
+                )
+                Text(sutra)
+                    .font(WidgetTokens.sutraFont(size: size))
+                    .foregroundColor(WidgetTokens.sutraText)
+                    .lineSpacing(5)
+                    .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(0.9)
+                    .padding(.horizontal, horizontalPadding)
+                    .padding(.vertical, verticalPadding)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             }
         }
     }
@@ -339,40 +314,36 @@ struct LargeVerseView: View {
         ZStack(alignment: .leading) {
             LegacyWidgetBackground()
 
-            if entry.needsOnboarding {
-                EmptyStateView(compact: false)
-            } else {
-                // 主内容 — 顶部题眉 + 正文 + 底部卷名页脚（细发丝线分隔）
-                VStack(alignment: .center, spacing: 0) {
-                    // 经卷题眉 — 全名「大佛顶首楞严经」，庄重不单薄
-                    Text(WidgetL10n.sutraHeader)
-                        .font(WidgetTokens.sutraFont(size: 13))
-                        .foregroundColor(WidgetTokens.textTertiary)
-                        .tracking(3)
-                        .padding(.top, 18)
-                        .padding(.bottom, 18)
+            // 主内容 — 顶部题眉 + 正文 + 底部卷名页脚（细发丝线分隔）
+            VStack(alignment: .center, spacing: 0) {
+                // 经卷题眉 — 全名「大佛顶首楞严经」，庄重不单薄
+                Text(WidgetL10n.sutraHeader)
+                    .font(WidgetTokens.sutraFont(size: 13))
+                    .foregroundColor(WidgetTokens.textTertiary)
+                    .tracking(3)
+                    .padding(.top, 18)
+                    .padding(.bottom, 18)
 
-                    // 经文正文 — 左对齐，紧随题眉
-                    sutraBody
-                        .padding(.horizontal, 4)
+                // 经文正文 — 左对齐，紧随题眉
+                sutraBody
+                    .padding(.horizontal, 4)
 
-                    Spacer(minLength: 12)
+                Spacer(minLength: 12)
 
-                    // 卷名页脚 — 细发丝线 + 极淡小字，提供每日定位感
-                    if !entry.source.isEmpty {
-                        VStack(spacing: 8) {
-                            hairlineDivider
-                            Text(entry.source)
-                                .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
-                                .foregroundColor(WidgetTokens.textTertiary)
-                                .tracking(1)
-                        }
-                        .padding(.bottom, 16)
+                // 卷名页脚 — 细发丝线 + 极淡小字，提供每日定位感
+                if !entry.source.isEmpty {
+                    VStack(spacing: 8) {
+                        hairlineDivider
+                        Text(entry.source)
+                            .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
+                            .foregroundColor(WidgetTokens.textTertiary)
+                            .tracking(1)
                     }
+                    .padding(.bottom, 16)
                 }
-                .padding(.leading, 18)
-                .padding(.trailing, 18)
             }
+            .padding(.leading, 18)
+            .padding(.trailing, 18)
         }
     }
 
@@ -414,11 +385,7 @@ struct InlineVerseView: View {
     let entry: DailyVerseEntry
 
     var body: some View {
-        if entry.needsOnboarding {
-            Text(WidgetL10n.inlineOnboarding)
-        } else {
-            Text(entry.inlineText)
-        }
+        Text(entry.inlineText)
     }
 }
 
@@ -427,55 +394,24 @@ struct RectangularVerseView: View {
     let entry: DailyVerseEntry
 
     var body: some View {
-        if entry.needsOnboarding {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(WidgetL10n.lockTitle)
-                    .font(.system(size: 13, weight: .semibold))
-                Text(WidgetL10n.lockSubtitle)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        } else {
-            GeometryReader { proxy in
-                let text = entry.lockScreenText
-                let size = dynamicFontSize(
-                    charCount: text.count,
-                    availableWidth: max(CGFloat(120), proxy.size.width),
-                    availableHeight: max(CGFloat(48), proxy.size.height),
-                    lineSpacing: 1.5,
-                    minSize: 10.5,
-                    maxSize: 12.5
-                )
-                Text(text)
-                    .font(WidgetTokens.sutraFont(size: size))
-                    .foregroundColor(.primary)
-                    .lineSpacing(1.5)
-                    .lineLimit(4)
-                    .minimumScaleFactor(0.9)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-            }
-        }
-    }
-}
-
-// MARK: - Empty State (优雅空态)
-
-private struct EmptyStateView: View {
-    let compact: Bool
-
-    var body: some View {
-        VStack(spacing: compact ? 6 : 10) {
-            Spacer()
-            Text(WidgetL10n.emptyTitle)
-                .font(WidgetTokens.sutraFont(size: compact ? 28 : 36))
-                .foregroundColor(WidgetTokens.decorativeGold.opacity(0.6))
-            Text(WidgetL10n.emptySubtitle)
-                .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
-                .foregroundColor(WidgetTokens.textTertiary)
-                .tracking(1)
-            Spacer()
+        GeometryReader { proxy in
+            let text = entry.lockScreenText
+            let size = dynamicFontSize(
+                charCount: text.count,
+                availableWidth: max(CGFloat(120), proxy.size.width),
+                availableHeight: max(CGFloat(48), proxy.size.height),
+                lineSpacing: 1.5,
+                minSize: 10.5,
+                maxSize: 12.5
+            )
+            Text(text)
+                .font(WidgetTokens.sutraFont(size: size))
+                .foregroundColor(.primary)
+                .lineSpacing(1.5)
+                .lineLimit(4)
+                .minimumScaleFactor(0.9)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
     }
 }
@@ -692,12 +628,6 @@ struct DailyVerseWidget_Previews: PreviewProvider {
                 .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
                 .previewDisplayName(WidgetL10n.lockPreviewName)
 
-            // 空态预览
-            WidgetPreviewContainer {
-                MediumVerseView(entry: .onboarding)
-            }
-                .previewContext(WidgetPreviewContext(family: .systemMedium))
-                .previewDisplayName(WidgetL10n.emptyMediumPreviewName)
         }
     }
 }

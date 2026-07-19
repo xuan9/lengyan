@@ -76,15 +76,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         UNUserNotificationCenter.current().delegate = self
         registerNotificationCategory()
 
-        // 将所有可能涉及 IO 或底层 IPC 通信的非 UI 任务放到后台，坚决不阻塞启动
-        DispatchQueue.global(qos: .utility).async {
-            // 启动时调度每日提醒（60天，绝对防重复）
+        // 在用户可交互前从主线程捕获一次稳定快照，再由串行后台队列准备
+        // 未来 60 天的小组件数据。内容没有变化时不会重复写入或刷新。
+        DailyVerseProvider.shared.syncWidgetDataAsync()
+
+        DispatchQueue.global(qos: .background).async {
             if Prefers.shared.isDailyReminderOn {
+                // 启动时调度每日提醒（60天，绝对防重复）
                 ReminderManager.shared.scheduleDaily()
             }
-
-            // 同步每日经文到 Widget 小组件
-            DailyVerseProvider.shared.syncWidgetData()
         }
 
         return true

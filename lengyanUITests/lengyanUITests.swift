@@ -756,13 +756,13 @@ class lengyanUITests: XCTestCase {
 
         let header = app.descendants(matching: .any)["widget_guide_header"]
         XCTAssertTrue(header.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["添加到锁定屏幕"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["每次亮屏，先读一段经文"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["四步完成"].waitForExistence(timeout: 3))
         takeAndAttachScreenshot(name: "WidgetGuide_LockScreen")
 
         let homeTab = app.buttons["widget_guide_home_tab"]
         XCTAssertTrue(homeTab.waitForExistence(timeout: 3))
         homeTab.tap()
-        XCTAssertTrue(app.staticTexts["添加到主屏幕"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["让今日经文常驻主屏幕"].waitForExistence(timeout: 3))
     }
 

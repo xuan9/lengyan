@@ -129,6 +129,43 @@ class WidgetDataSyncTests: XCTestCase {
             XCTAssertEqual(calendar.dateComponents([.day], from: current, to: next).day, 1)
         }
     }
+
+    func testRepeatedWidgetDataSyncSkipsUnchangedWriteAndRefresh() {
+        guard let defaults = UserDefaults(suiteName: SharedVerseData.appGroupID) else {
+            XCTFail("Expected Widget App Group defaults to be available")
+            return
+        }
+
+        let sharedProvider = DailyVerseProvider.shared
+        // The test host also performs its normal asynchronous launch sync.
+        // Drain that serial queue before creating a controlled empty state.
+        _ = sharedProvider.syncWidgetData()
+
+        var reloadCount = 0
+        let provider = DailyVerseProvider {
+            reloadCount += 1
+        }
+
+        let originalData = defaults.data(forKey: SharedVerseData.defaultsKey)
+        defer {
+            if let originalData {
+                defaults.set(originalData, forKey: SharedVerseData.defaultsKey)
+            } else {
+                defaults.removeObject(forKey: SharedVerseData.defaultsKey)
+            }
+        }
+
+        defaults.removeObject(forKey: SharedVerseData.defaultsKey)
+
+        XCTAssertTrue(provider.syncWidgetData(), "The first sync should write and request one refresh")
+        XCTAssertEqual(reloadCount, 1)
+        let firstPayload = defaults.data(forKey: SharedVerseData.defaultsKey)
+        XCTAssertNotNil(firstPayload)
+
+        XCTAssertFalse(provider.syncWidgetData(), "An identical sync must not request another refresh")
+        XCTAssertEqual(reloadCount, 1)
+        XCTAssertEqual(defaults.data(forKey: SharedVerseData.defaultsKey), firstPayload)
+    }
 }
 
 final class WidgetGuidePlatformTests: XCTestCase {
@@ -162,7 +199,7 @@ final class WidgetGuidePlatformTests: XCTestCase {
         XCTAssertEqual(
             WidgetGuidePlatform.preferredPlacement(
                 installation: WidgetInstallationState(
-                    hasStandardSize: false,
+                    hasStandardFamily: false,
                     hasLockScreenAccessory: true
                 ),
                 supportsLockScreen: true
@@ -175,6 +212,34 @@ final class WidgetGuidePlatformTests: XCTestCase {
                 supportsLockScreen: false
             ),
             .homeScreen
+        )
+    }
+
+    func testStandardFamilyDetectionStillRecommendsTheRectangularAccessory() {
+        let standardFamilyOnly = WidgetInstallationState(
+            hasStandardFamily: true,
+            hasLockScreenAccessory: false
+        )
+        XCTAssertTrue(standardFamilyOnly.isInstalled)
+        XCTAssertEqual(
+            WidgetGuidePlatform.preferredPlacement(
+                installation: standardFamilyOnly,
+                supportsLockScreen: true
+            ),
+            .lockScreen
+        )
+
+        let bothFamilies = WidgetInstallationState(
+            hasStandardFamily: true,
+            hasLockScreenAccessory: true
+        )
+        XCTAssertTrue(bothFamilies.isInstalled)
+        XCTAssertEqual(
+            WidgetGuidePlatform.preferredPlacement(
+                installation: bothFamilies,
+                supportsLockScreen: true
+            ),
+            .lockScreen
         )
     }
 }
