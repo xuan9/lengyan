@@ -142,6 +142,37 @@ final class AudioAssetCoordinatorTests: XCTestCase {
         )
     }
 
+    func testCDNDownloadPolicyStopsResponsesLargerThanCatalog() {
+        XCTAssertFalse(
+            CDNAudioDownloadPolicy.exceedsExpectedSize(
+                totalBytesWritten: 512,
+                totalBytesExpectedToWrite: NSURLSessionTransferSizeUnknown,
+                catalogByteCount: 1_024
+            )
+        )
+        XCTAssertFalse(
+            CDNAudioDownloadPolicy.exceedsExpectedSize(
+                totalBytesWritten: 1_024,
+                totalBytesExpectedToWrite: 1_024,
+                catalogByteCount: 1_024
+            )
+        )
+        XCTAssertTrue(
+            CDNAudioDownloadPolicy.exceedsExpectedSize(
+                totalBytesWritten: 1_025,
+                totalBytesExpectedToWrite: NSURLSessionTransferSizeUnknown,
+                catalogByteCount: 1_024
+            )
+        )
+        XCTAssertTrue(
+            CDNAudioDownloadPolicy.exceedsExpectedSize(
+                totalBytesWritten: 1,
+                totalBytesExpectedToWrite: 1_025,
+                catalogByteCount: 1_024
+            )
+        )
+    }
+
     func testProductionCDNFallbackIsEnabledAtVerifiedWorkersDevOrigin() throws {
         let configuration = try XCTUnwrap(CDNAudioFallbackConfiguration.production)
         XCTAssertEqual(
@@ -337,6 +368,44 @@ final class AudioAssetCoordinatorTests: XCTestCase {
             XCTFail("Out-of-space must remain a terminal local error")
         } catch {
             // Expected: another download cannot fix unavailable local storage.
+        }
+        let downloadCount = await downloader.downloadCount
+        XCTAssertEqual(downloadCount, 0)
+    }
+
+    func testODROutOfSpaceFailureNeverActivatesFallback() async throws {
+        let payload = Data("ODR out of space".utf8)
+        let asset = makeTestDescriptor(payload: payload)
+        let cacheDirectory = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: cacheDirectory) }
+
+        let downloader = FakeCDNAudioDownloader(payload: payload)
+        let fallback = CDNAudioAssetProvider(
+            configuration: makeCDNConfiguration(cacheDirectory: cacheDirectory),
+            downloader: downloader
+        )
+        let primary = FakeAudioAssetProvider()
+        let provider = FailoverAudioAssetProvider(
+            primary: primary,
+            fallback: fallback,
+            stallTimeout: 60
+        )
+
+        let handle = await provider.request(asset, intent: .playback)
+        await waitForRequest(assetID: asset.id, provider: primary)
+        await primary.fail(
+            assetID: asset.id,
+            error: NSError(
+                domain: NSCocoaErrorDomain,
+                code: NSBundleOnDemandResourceOutOfSpaceError
+            )
+        )
+
+        do {
+            for try await _ in handle.events {}
+            XCTFail("ODR out-of-space must remain a terminal local error")
+        } catch {
+            // Expected: Cloudflare cannot solve unavailable local storage.
         }
         let downloadCount = await downloader.downloadCount
         XCTAssertEqual(downloadCount, 0)

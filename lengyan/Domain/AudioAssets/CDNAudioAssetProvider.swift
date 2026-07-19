@@ -162,6 +162,18 @@ protocol CDNAudioDownloading: Sendable {
     ) async throws
 }
 
+enum CDNAudioDownloadPolicy {
+    static func exceedsExpectedSize(
+        totalBytesWritten: Int64,
+        totalBytesExpectedToWrite: Int64,
+        catalogByteCount: Int64
+    ) -> Bool {
+        guard catalogByteCount > 0 else { return true }
+        if totalBytesWritten > catalogByteCount { return true }
+        return totalBytesExpectedToWrite > catalogByteCount
+    }
+}
+
 struct URLSessionCDNAudioDownloader: CDNAudioDownloading {
     let resourceTimeout: TimeInterval
 
@@ -227,6 +239,17 @@ private final class URLSessionCDNAudioDownloadOperation: NSObject,
         totalBytesWritten: Int64,
         totalBytesExpectedToWrite: Int64
     ) {
+        if CDNAudioDownloadPolicy.exceedsExpectedSize(
+            totalBytesWritten: totalBytesWritten,
+            totalBytesExpectedToWrite: totalBytesExpectedToWrite,
+            catalogByteCount: expectedByteCount
+        ) {
+            downloadTask.cancel()
+            finish(.failure(AudioAssetError.invalidDownloadedFile(
+                remoteURL.lastPathComponent
+            )))
+            return
+        }
         let expected = totalBytesExpectedToWrite > 0
             ? totalBytesExpectedToWrite
             : expectedByteCount

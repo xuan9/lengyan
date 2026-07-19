@@ -8,12 +8,15 @@ second default source, and silent prefetch never activates it.
 
 - A valid fallback file already cached by the app is used immediately.
 - An explicit playback request starts with Apple.
-- A definitive Apple error switches to Cloudflare immediately.
+- A definitive Apple delivery error switches to Cloudflare immediately. User
+  cancellation and local-storage exhaustion remain terminal because another
+  network source cannot resolve either condition.
 - If Apple makes no forward progress for 15 seconds, the app cancels that
   request before switching.
 - Background next-volume prefetch does not switch to Cloudflare on failure.
-- Every downloaded file must match the exact byte count and SHA-256 compiled
-  into the app before it is installed.
+- A response is cancelled as soon as its advertised or received size exceeds
+  the catalog. Every completed file must then match the exact byte count and
+  SHA-256 compiled into the app before it is installed.
 - Downloads live below Application Support, are excluded from backup, and are
   removed by the existing audio-storage cleanup action.
 
