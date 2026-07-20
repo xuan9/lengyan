@@ -212,12 +212,13 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             action: #selector(close)
         )
         backBtn.tintColor = secondaryColor
+        backBtn.accessibilityIdentifier = "reader.backButton"
         if #available(iOS 26.0, *) {
             backBtn.hidesSharedBackground = true
         }
         self.backButton = backBtn
 
-        // 2. 目录按钮 (只要 isShowIndexButton 为 true 便始终显示，允许从叶子节点直接跳转)
+        // 2. 目录按钮（是否显示由当前节点是否还有子科判动态决定）
         if self.isShowIndexButton {
             let indexBtn = UIBarButtonItem(
                 image: UIImage(systemName: "list.bullet"),
@@ -311,9 +312,10 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let item = Book.shared.itemOfPath(path)
         self.navigationItem.titleView = Book.shared.getTitleView(item)
 
-        // 科判是正文的上下文导航；无论当前节点是否为叶子都保持可用。
+        // 叶子正文已是科判尽头，只保留返回，避免出现无意义的重复入口。
+        let isLeaf = item["children"] == nil
         var leftButtons = (isEmbedded ? [] : [backButton]).compactMap { $0 }
-        if self.isShowIndexButton {
+        if self.isShowIndexButton && !isLeaf {
             if let indexBtn = self.indexButton {
                 leftButtons.append(indexBtn)
             }
@@ -371,7 +373,10 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     @objc func openIndex(){
         if let viewControllers = self.navigationController?.viewControllers {
             if let existingIndexVC = viewControllers.last(where: { $0 is SutraIndexViewController }) as? SutraIndexViewController {
-                existingIndexVC.prepareToRevealPath(self.path ?? "")
+                existingIndexVC.prepareToRevealPath(
+                    self.path ?? "",
+                    expandingOneAdditionalLevel: true
+                )
                 self.navigationController?.popToViewController(existingIndexVC, animated: true)
                 return
             }
@@ -381,6 +386,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         indexVC.tree = Book.shared.itemOfPath(path!);
         indexVC.path = self.path
         indexVC.defaultExpandLevel = 2;
+        indexVC.expandsOneAdditionalLevelOnLoad = true
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     

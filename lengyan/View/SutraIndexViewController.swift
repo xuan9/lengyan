@@ -17,6 +17,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     internal var tree:[String:Any]?, path:String?
     
     var defaultExpandLevel:Int = 2
+    var expandsOneAdditionalLevelOnLoad = false
     var isRootIndex = false;
     
     override func viewDidLoad() {
@@ -64,7 +65,11 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.tree = resolvedTree
             self.treeView.reloadData()
             if let currentPath = self.path, !currentPath.isEmpty, currentPath != "/" {
-                self.openPath(currentPath, shouldCenter: true)
+                self.openPath(
+                    currentPath,
+                    shouldCenter: true,
+                    expandingOneAdditionalLevel: expandsOneAdditionalLevelOnLoad
+                )
             }
         }
         self.updateHeader()
@@ -189,6 +194,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             target: self,
             action: #selector(close)
         )
+        self.navigationItem.leftBarButtonItem?.accessibilityIdentifier = "outline.backButton"
         self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .textSecondary)
         self.navigationItem.rightBarButtonItems = nil
     }
@@ -311,7 +317,16 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                     pageVC.page = foundIndex
                     
                     var newStack = viewControllers
-                    newStack.removeAll(where: { $0 is SutraPageViewController })
+                    // The iPad favorites detail reader is the root of its own
+                    // navigation controller. Keep that embedded root below the
+                    // outline so a reader -> outline -> reader round-trip can
+                    // still return to the original detail page.
+                    newStack.removeAll(where: { viewController in
+                        guard let reader = viewController as? SutraPageViewController else {
+                            return false
+                        }
+                        return !reader.isEmbedded
+                    })
                     if let selfIndex = newStack.firstIndex(of: self) {
                         newStack.insert(pageVC, at: selfIndex + 1)
                         newStack = Array(newStack.prefix(through: selfIndex + 1))
@@ -335,7 +350,12 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 purePageVC.path = path
                 
                 var newStack = viewControllers
-                newStack.removeAll(where: { $0 is SutraPurePageViewController })
+                newStack.removeAll(where: { viewController in
+                    guard let reader = viewController as? SutraPurePageViewController else {
+                        return false
+                    }
+                    return !reader.isEmbedded
+                })
                 if let selfIndex = newStack.firstIndex(of: self) {
                     newStack.insert(purePageVC, at: selfIndex + 1)
                     newStack = Array(newStack.prefix(through: selfIndex + 1))
@@ -438,21 +458,30 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     /// Keeps the hidden outline synchronized with the visible reader. Updating
     /// immediately (without animation) means an edge-pop reveals the correct
     /// destination throughout the transition instead of jumping afterwards.
-    func prepareToRevealPath(_ path: String) {
+    func prepareToRevealPath(
+        _ path: String,
+        expandingOneAdditionalLevel: Bool = false
+    ) {
         guard !path.isEmpty, path != "/" else { return }
         guard isViewLoaded, treeView != nil else {
             // A newly pushed outline will perform the actual reveal from
             // viewDidLoad once its legacy tree view exists.
             self.path = path
+            expandsOneAdditionalLevelOnLoad = expandingOneAdditionalLevel
             return
         }
-        openPath(path, animated: false)
+        openPath(
+            path,
+            animated: false,
+            expandingOneAdditionalLevel: expandingOneAdditionalLevel
+        )
     }
 
     func openPath(
         _ path:String,
         shouldCenter: Bool? = nil,
-        animated: Bool? = nil
+        animated: Bool? = nil,
+        expandingOneAdditionalLevel: Bool = false
     ) {
         // SAFE: Check if path is valid
         guard !path.isEmpty && path != "/" else {
@@ -506,6 +535,10 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // A failed lookup must never clear the old active-row highlight.
         self.path = path
 
+        if expandingOneAdditionalLevel {
+            expandChildrenOneLevel(of: currentNode)
+        }
+
         // New reading locations are centered. Re-selecting the same path keeps
         // the user's exact scroll position (reader round-trip / tab switch).
         let centersCurrentPath = shouldCenter ?? (previousPath != path)
@@ -524,6 +557,24 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                let item = treeView.item(for: cell) as? NSDictionary {
                 self.updateCellText(cell, for: item)
             }
+        }
+    }
+
+    /// A contextual outline already shows the revealed node's direct children.
+    /// Expanding only child groups adds useful context without turning the page
+    /// into the full, deeply expanded outline.
+    private func expandChildrenOneLevel(of node: NSDictionary) {
+        guard let children = node["children"] as? NSArray else { return }
+
+        children.forEach { child in
+            guard let childNode = child as? NSDictionary,
+                  childNode["children"] != nil,
+                  !treeView.isCell(forItemExpanded: childNode) else { return }
+            treeView.expandRow(
+                forItem: childNode,
+                expandChildren: false,
+                with: RATreeViewRowAnimationNone
+            )
         }
     }
 

@@ -297,15 +297,6 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let shareIcon = UIImage(systemName: "square.and.arrow.up")
         let shareButton = UIBarButtonItem(image: shareIcon, style: .plain, target: self, action: #selector(share))
 
-        let indexButton = UIBarButtonItem(
-            image: UIImage(systemName: "list.bullet"),
-            style: .plain,
-            target: self,
-            action: #selector(openIndex)
-        )
-        indexButton.accessibilityIdentifier = "reader.outlineButton"
-        indexButton.accessibilityLabel = L10n.str("home_outline_button")
-
         let isLiked = Prefers.shared.isLike(path!)
         let bookmarkIcon = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
         let bookmarkButton = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: isLiked ? #selector(unlike) : #selector(like))
@@ -315,24 +306,23 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
         if isEmbedded {
-            self.navigationItem.leftBarButtonItems = [indexButton]
+            self.navigationItem.leftBarButtonItems = nil
         } else {
             let backIcon = UIImage(systemName: "chevron.left")
             let backBarButton = UIBarButtonItem(image: backIcon, style: .plain, target: self, action: #selector(close))
-            self.navigationItem.leftBarButtonItems = [backBarButton, indexButton]
+            backBarButton.accessibilityIdentifier = "reader.backButton"
+            self.navigationItem.leftBarButtonItems = [backBarButton]
             backBarButton.tintColor = secondaryTextColor
             if #available(iOS 26.0, *) {
                 backBarButton.hidesSharedBackground = true
             }
         }
 
-        indexButton.tintColor = secondaryTextColor
         shareButton.tintColor = secondaryTextColor
         bookmarkButton.tintColor = isLiked ? bookmarkColor : secondaryTextColor
 
         // 移除 iOS 26 Liquid Glass 按钮背景，与导航栏完全融合
         if #available(iOS 26.0, *) {
-            indexButton.hidesSharedBackground = true
             shareButton.hidesSharedBackground = true
             bookmarkButton.hidesSharedBackground = true
         }
