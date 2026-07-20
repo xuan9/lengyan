@@ -98,7 +98,6 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         
         // Save progress
         recordCurrentReading()
-        synchronizeExistingOutline()
     }
 
     override var prefersStatusBarHidden: Bool {
@@ -137,6 +136,9 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        // Prepare the destination only when navigation is actually starting,
+        // keeping ordinary page turns as light as before.
+        synchronizeExistingOutline()
         if !isEmbedded {
             self.tabBarController?.tabBar.isHidden = false
             if #available(iOS 18.0, *) {
@@ -220,10 +222,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
     private func synchronizeExistingOutline() {
         guard let path,
-              let index = navigationController?.viewControllers.first(where: {
+              let index = navigationController?.viewControllers.last(where: {
                   $0 is SutraIndexViewController
               }) as? SutraIndexViewController else { return }
-        index.revealPathWhenVisible(path)
+        index.prepareToRevealPath(path)
     }
 
     deinit {
@@ -258,8 +260,8 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         guard let path else { return }
 
         if let viewControllers = navigationController?.viewControllers,
-           let existingIndex = viewControllers.first(where: { $0 is SutraIndexViewController }) as? SutraIndexViewController {
-            existingIndex.revealPathWhenVisible(path)
+           let existingIndex = viewControllers.last(where: { $0 is SutraIndexViewController }) as? SutraIndexViewController {
+            existingIndex.prepareToRevealPath(path)
             navigationController?.popToViewController(existingIndex, animated: true)
             return
         }
@@ -447,7 +449,6 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
             // 每次翻页完成即保存进度
             recordCurrentReading()
-            synchronizeExistingOutline()
         }
     }
     

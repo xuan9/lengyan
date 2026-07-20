@@ -14,6 +14,7 @@ class lengyanUITests: XCTestCase {
     private enum HomeReadingState {
         case start
         case outlineResume
+        case pagedResume(path: String, pageIndex: Int)
     }
         
     override func setUp() {
@@ -46,7 +47,6 @@ class lengyanUITests: XCTestCase {
             "-chapterResumeSnapshotV2", "invalid",
             "-pagedResumeSnapshotV2", "invalid",
             "-treeResumeSnapshotV2", "invalid",
-            "-lastReadPage", "0",
             "-lastReadChapter", "0",
             "-lastReadChapterOffset", "0",
             "-playFile", "invalid",
@@ -54,11 +54,22 @@ class lengyanUITests: XCTestCase {
         ]
         switch readingState {
         case .start:
-            arguments += ["-lastReadPath", "", "-lastReadMode", ""]
+            arguments += [
+                "-lastReadPath", "",
+                "-lastReadMode", "",
+                "-lastReadPage", "0",
+            ]
         case .outlineResume:
             arguments += [
                 "-lastReadPath", "/A1/B1/C1",
                 "-lastReadMode", "tree",
+                "-lastReadPage", "0",
+            ]
+        case let .pagedResume(path, pageIndex):
+            arguments += [
+                "-lastReadPath", path,
+                "-lastReadMode", "paged",
+                "-lastReadPage", String(pageIndex),
             ]
         }
         app.launchArguments = arguments
@@ -823,6 +834,54 @@ class lengyanUITests: XCTestCase {
         XCTAssertTrue(
             app.cells["outline.row./A1/B1/C2/D1/E1"].waitForExistence(timeout: 3),
             "A completed interactive pop should reveal the page reached inside the reader"
+        )
+    }
+
+    func testScopedReaderEdgePopPromotesOutlineAcrossBranches() {
+        let app = launchHomeApp(
+            readingState: .pagedResume(
+                path: "/A1/B1/C2/D3/E2",
+                pageIndex: 12
+            )
+        )
+        let resumeButton = app.buttons["home.outlineResumeButton"]
+        XCTAssertTrue(resumeButton.waitForExistence(timeout: 3))
+        resumeButton.tap()
+
+        let reader = app.otherElements["reader.paged"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 3))
+        let outlineButton = app.buttons["reader.outlineButton"]
+        XCTAssertTrue(outlineButton.waitForExistence(timeout: 3))
+        outlineButton.tap()
+
+        let currentLeaf = app.cells["outline.row./A1/B1/C2/D3/E2"]
+        XCTAssertTrue(currentLeaf.waitForExistence(timeout: 3))
+        currentLeaf.tap()
+        XCTAssertTrue(reader.waitForExistence(timeout: 3))
+
+        reader.swipeLeft()
+        XCTAssertTrue(waitForCondition(timeout: 3) {
+            app.staticTexts["王臣设供"].exists
+        })
+        Thread.sleep(forTimeInterval: 0.6)
+
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.45))
+        let finish = app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.45))
+        start.press(forDuration: 0.05, thenDragTo: finish)
+
+        XCTAssertTrue(app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3))
+        XCTAssertTrue(
+            app.cells["outline.row./A1/B2/C1"].waitForExistence(timeout: 3),
+            "Crossing a scoped branch should promote the outline and reveal the exact current node"
+        )
+        XCTAssertTrue(app.cells["outline.row./A1/B1"].exists)
+        XCTAssertFalse(
+            app.cells["outline.row./A2"].exists,
+            "The outline should stop at the smallest common ancestor instead of resetting to the full tree"
+        )
+        XCTAssertFalse(
+            app.cells["outline.row./A1/B1/C1"].exists,
+            "Promoting the scope must not expand an unrelated previous branch"
         )
     }
 

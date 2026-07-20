@@ -18,7 +18,6 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     var defaultExpandLevel:Int = 2
     var isRootIndex = false;
-    private var pendingRevealPath: String?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -83,18 +82,6 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.setNavigationBarHidden(false, animated: true)
         self.navigationController?.hidesBarsOnSwipe = false;
         self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .sutraText)
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        guard let pendingRevealPath else { return }
-        self.pendingRevealPath = nil
-        openPath(pendingRevealPath)
-    }
-
-    func revealPathWhenVisible(_ path: String) {
-        guard !path.isEmpty, path != "/" else { return }
-        pendingRevealPath = path
     }
 
     override func viewDidLayoutSubviews() {
@@ -448,37 +435,48 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
-    func openPath(_ path:String, shouldCenter: Bool? = nil) {
+    /// Keeps the hidden outline synchronized with the visible reader. Updating
+    /// immediately (without animation) means an edge-pop reveals the correct
+    /// destination throughout the transition instead of jumping afterwards.
+    func prepareToRevealPath(_ path: String) {
+        guard !path.isEmpty, path != "/" else { return }
+        guard isViewLoaded, treeView != nil else {
+            // A newly pushed outline will perform the actual reveal from
+            // viewDidLoad once its legacy tree view exists.
+            self.path = path
+            return
+        }
+        openPath(path, animated: false)
+    }
+
+    func openPath(
+        _ path:String,
+        shouldCenter: Bool? = nil,
+        animated: Bool? = nil
+    ) {
         // SAFE: Check if path is valid
         guard !path.isEmpty && path != "/" else {
             return
         }
 
         let previousPath = self.path
-        self.path = path
 
-        // SAFE: Check if tree exists and has path
-        guard let tree = self.tree else {
-            print("⚠️ ERROR: Failed to get root path from tree in openPath")
-            return
-        }
-        let rootNode = tree as NSDictionary
+        // A contextual outline normally starts at the current node's parent.
+        // If paging crosses that boundary, promote only to the smallest common
+        // ancestor. This preserves the compact context without ever resolving
+        // a same-named suffix inside the wrong branch.
+        guard let rootNode = rootNode(containing: path) else { return }
         guard let rootPath = rootNode["path"] as? String else {
             print("⚠️ ERROR: Failed to get root path from tree in openPath")
             return
         }
+        let rootComponents = pathComponents(rootPath)
+        let targetComponents = pathComponents(path)
+        guard targetComponents.starts(with: rootComponents) else { return }
 
-        // SAFE: Check if rootPath is valid
-        guard rootPath.count <= path.count else {
-            return
-        }
-
-        let subPath = path[rootPath.endIndex...]
         var currentNode = rootNode
 
-        for id in subPath.components(separatedBy: "/") {
-            guard !id.isEmpty else { continue }
-
+        for id in targetComponents.dropFirst(rootComponents.count) {
             // SAFE: Check if current node has children
             guard let children = currentNode["children"] as? NSArray else {
                 return
@@ -504,12 +502,17 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
 
+        // Commit the reading path only after the exact node has been resolved.
+        // A failed lookup must never clear the old active-row highlight.
+        self.path = path
+
         // New reading locations are centered. Re-selecting the same path keeps
         // the user's exact scroll position (reader round-trip / tab switch).
         let centersCurrentPath = shouldCenter ?? (previousPath != path)
+        let animatesSelection = animated ?? centersCurrentPath
         treeView.selectRow(
             forItem: currentNode,
-            animated: centersCurrentPath,
+            animated: centersCurrentPath && animatesSelection,
             scrollPosition: centersCurrentPath
                 ? RATreeViewScrollPositionMiddle
                 : RATreeViewScrollPositionNone
@@ -522,6 +525,50 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 self.updateCellText(cell, for: item)
             }
         }
+    }
+
+    private func rootNode(containing targetPath: String) -> NSDictionary? {
+        guard let currentTree = tree,
+              let currentRootPath = currentTree["path"] as? String else {
+            print("⚠️ ERROR: Failed to get root path from tree in openPath")
+            return nil
+        }
+
+        let currentRootComponents = pathComponents(currentRootPath)
+        let targetComponents = pathComponents(targetPath)
+        if targetComponents.starts(with: currentRootComponents) {
+            return currentTree as NSDictionary
+        }
+
+        let targetNode = Book.shared.itemOfPath(targetPath)
+        guard let resolvedTargetPath = targetNode["path"] as? String,
+              pathComponents(resolvedTargetPath) == targetComponents else {
+            print("⚠️ ERROR: Failed to resolve outline path: \(targetPath)")
+            return nil
+        }
+
+        let sharedComponents = zip(currentRootComponents, targetComponents)
+            .prefix(while: { pair in pair.0 == pair.1 })
+            .map { $0.0 }
+        let sharedPath = sharedComponents.isEmpty
+            ? ""
+            : "/" + sharedComponents.joined(separator: "/")
+        let promotedTree = Book.shared.itemOfPath(sharedPath)
+        guard let promotedPath = promotedTree["path"] as? String,
+              pathComponents(promotedPath) == sharedComponents else {
+            print("⚠️ ERROR: Failed to promote outline for path: \(targetPath)")
+            return nil
+        }
+
+        tree = promotedTree
+        isRootIndex = sharedComponents.isEmpty
+        treeView.reloadData()
+        updateHeader()
+        return promotedTree as NSDictionary
+    }
+
+    private func pathComponents(_ path: String) -> [String] {
+        path.split(separator: "/").map(String.init)
     }
     
     // MARK - RATreeView

@@ -53,7 +53,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         
         // Programmatic target changes are explicit navigation requests.
         recordCurrentReading()
-        synchronizeExistingOutline()
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -96,6 +95,9 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        // Prepare the destination only when navigation is actually starting,
+        // keeping ordinary page turns as light as before.
+        synchronizeExistingOutline()
         if !isEmbedded {
             self.tabBarController?.tabBar.isHidden = false
             if #available(iOS 18.0, *) {
@@ -179,10 +181,10 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
     private func synchronizeExistingOutline() {
         guard let path,
-              let index = navigationController?.viewControllers.first(where: {
+              let index = navigationController?.viewControllers.last(where: {
                   $0 is SutraIndexViewController
               }) as? SutraIndexViewController else { return }
-        index.revealPathWhenVisible(path)
+        index.prepareToRevealPath(path)
     }
 
     deinit {
@@ -368,8 +370,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
     @objc func openIndex(){
         if let viewControllers = self.navigationController?.viewControllers {
-            if let existingIndexVC = viewControllers.first(where: { $0 is SutraIndexViewController }) as? SutraIndexViewController {
-                existingIndexVC.revealPathWhenVisible(self.path ?? "")
+            if let existingIndexVC = viewControllers.last(where: { $0 is SutraIndexViewController }) as? SutraIndexViewController {
+                existingIndexVC.prepareToRevealPath(self.path ?? "")
                 self.navigationController?.popToViewController(existingIndexVC, animated: true)
                 return
             }
@@ -477,7 +479,6 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
             // 每次翻页完成即保存进度
             recordCurrentReading()
-            synchronizeExistingOutline()
         }
     }
 }
