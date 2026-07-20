@@ -17,8 +17,23 @@ struct CDNAudioFallbackConfiguration: Sendable {
 
     let baseURL: URL
     let cacheDirectory: URL
+    let legacyCacheDirectory: URL?
     let stallTimeout: TimeInterval
     let resourceTimeout: TimeInterval
+
+    init(
+        baseURL: URL,
+        cacheDirectory: URL,
+        legacyCacheDirectory: URL? = nil,
+        stallTimeout: TimeInterval,
+        resourceTimeout: TimeInterval
+    ) {
+        self.baseURL = baseURL
+        self.cacheDirectory = cacheDirectory
+        self.legacyCacheDirectory = legacyCacheDirectory
+        self.stallTimeout = stallTimeout
+        self.resourceTimeout = resourceTimeout
+    }
 
     static var production: CDNAudioFallbackConfiguration? {
         from(bundle: .main)
@@ -31,6 +46,10 @@ struct CDNAudioFallbackConfiguration: Sendable {
         guard bundle.object(forInfoDictionaryKey: enabledInfoKey) as? Bool == true,
               let rawURL = bundle.object(forInfoDictionaryKey: baseURLInfoKey) as? String,
               let baseURL = validatedBaseURL(rawURL),
+              let cachesDirectory = fileManager.urls(
+                for: .cachesDirectory,
+                in: .userDomainMask
+              ).first,
               let applicationSupport = fileManager.urls(
                 for: .applicationSupportDirectory,
                 in: .userDomainMask
@@ -42,7 +61,11 @@ struct CDNAudioFallbackConfiguration: Sendable {
 
         return CDNAudioFallbackConfiguration(
             baseURL: baseURL,
-            cacheDirectory: applicationSupport.appendingPathComponent(
+            cacheDirectory: cachesDirectory.appendingPathComponent(
+                "AudioFallback",
+                isDirectory: true
+            ),
+            legacyCacheDirectory: applicationSupport.appendingPathComponent(
                 "AudioFallback",
                 isDirectory: true
             ),
@@ -71,12 +94,17 @@ struct CDNAudioFallbackConfiguration: Sendable {
     }
 }
 
-struct CDNAudioCacheSummary: Sendable {
-    let fileCount: Int
-    let byteCount: Int64
-}
-
 enum CDNAudioCache {
+    static let maximumFileCount = 2
+    static let maximumByteCount: Int64 = 48 * 1_024 * 1_024
+
+    private struct CachedFile {
+        let assetID: String
+        let url: URL
+        let byteCount: Int64
+        let lastAccessDate: Date
+    }
+
     static func destinationURL(
         for asset: AudioAssetDescriptor,
         configuration: CDNAudioFallbackConfiguration
@@ -88,21 +116,99 @@ enum CDNAudioCache {
         }
     }
 
-    static func summary(
+    static func prepareStorage(
         configuration: CDNAudioFallbackConfiguration,
         fileManager: FileManager = .default
-    ) -> CDNAudioCacheSummary {
-        var fileCount = 0
-        var byteCount: Int64 = 0
+    ) {
+        let destination = configuration.cacheDirectory
+        let parent = destination.deletingLastPathComponent()
+        try? fileManager.createDirectory(
+            at: parent,
+            withIntermediateDirectories: true
+        )
+
+        if let legacy = configuration.legacyCacheDirectory,
+           legacy.standardizedFileURL != destination.standardizedFileURL,
+           fileManager.fileExists(atPath: legacy.path) {
+            do {
+                if fileManager.fileExists(atPath: destination.path) {
+                    try fileManager.removeItem(at: legacy)
+                } else {
+                    try fileManager.moveItem(at: legacy, to: destination)
+                }
+            } catch {
+                // A migration failure leaves the old cache untouched. It can
+                // be retried safely the next time the provider is created.
+            }
+        }
+
+        let stagingDirectory = destination.appendingPathComponent(
+            ".staging",
+            isDirectory: true
+        )
+        try? fileManager.removeItem(at: stagingDirectory)
+        trim(configuration: configuration, protecting: [], fileManager: fileManager)
+    }
+
+    static func touch(
+        _ url: URL,
+        fileManager: FileManager = .default,
+        date: Date = Date()
+    ) {
+        try? fileManager.setAttributes(
+            [.modificationDate: date],
+            ofItemAtPath: url.path
+        )
+    }
+
+    static func trim(
+        configuration: CDNAudioFallbackConfiguration,
+        protecting protectedAssetIDs: Set<String>,
+        fileManager: FileManager = .default,
+        maximumFileCount: Int = CDNAudioCache.maximumFileCount,
+        maximumByteCount: Int64 = CDNAudioCache.maximumByteCount
+    ) {
+        var files: [CachedFile] = []
         for asset in AudioAssetCatalog.descriptors {
             let url = destinationURL(for: asset, configuration: configuration)
             guard let attributes = try? fileManager.attributesOfItem(atPath: url.path),
-                  let size = attributes[.size] as? NSNumber,
-                  size.int64Value == asset.contentByteCount else { continue }
-            fileCount += 1
-            byteCount += size.int64Value
+                  let size = attributes[.size] as? NSNumber else { continue }
+            files.append(
+                CachedFile(
+                    assetID: asset.id,
+                    url: url,
+                    byteCount: size.int64Value,
+                    lastAccessDate: attributes[.modificationDate] as? Date
+                        ?? .distantPast
+                )
+            )
         }
-        return CDNAudioCacheSummary(fileCount: fileCount, byteCount: byteCount)
+
+        var fileCount = files.count
+        var byteCount = files.reduce(Int64(0)) { $0 + $1.byteCount }
+        let candidates = files
+            .filter { !protectedAssetIDs.contains($0.assetID) }
+            .sorted { lhs, rhs in
+                if lhs.lastAccessDate != rhs.lastAccessDate {
+                    return lhs.lastAccessDate < rhs.lastAccessDate
+                }
+                return lhs.assetID < rhs.assetID
+            }
+
+        for candidate in candidates {
+            guard fileCount > maximumFileCount || byteCount > maximumByteCount else {
+                break
+            }
+            do {
+                try fileManager.removeItem(
+                    at: candidate.url.deletingLastPathComponent()
+                )
+                fileCount -= 1
+                byteCount -= candidate.byteCount
+            } catch {
+                // Best-effort cache maintenance; a later pass retries it.
+            }
+        }
     }
 
     static func validate(
@@ -149,6 +255,7 @@ enum CDNAudioCache {
         values.isExcludedFromBackup = true
         var mutableDestination = destination
         try mutableDestination.setResourceValues(values)
+        touch(mutableDestination, fileManager: fileManager)
         return destination
     }
 }
@@ -401,6 +508,10 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
             resourceTimeout: configuration.resourceTimeout
         )
         self.fileManager = fileManager
+        CDNAudioCache.prepareStorage(
+            configuration: configuration,
+            fileManager: fileManager
+        )
     }
 
     func request(
@@ -459,6 +570,8 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
             entry.leaseIDs.insert(lease.id)
             entries[asset.id] = entry
             leaseToAsset[lease.id] = asset.id
+            CDNAudioCache.touch(url, fileManager: fileManager)
+            trimCacheIfNeeded()
             return lease
         }
         guard entries[asset.id] == nil else { return nil }
@@ -479,6 +592,8 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
                 task: nil
             )
             leaseToAsset[lease.id] = asset.id
+            CDNAudioCache.touch(destination, fileManager: fileManager)
+            trimCacheIfNeeded()
             return lease
         } catch {
             try? fileManager.removeItem(at: destination)
@@ -510,6 +625,7 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
         entry.leaseIDs.remove(lease.id)
         entries[assetID] = entry
         cleanupIfUnused(assetID: assetID, generation: entry.generation, cancelTask: false)
+        trimCacheIfNeeded()
     }
 
     func evict(assetID: String) async throws -> AudioAssetEvictionResult {
@@ -637,6 +753,7 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
         }
         entries[assetID] = entry
         cleanupIfUnused(assetID: assetID, generation: generation, cancelTask: false)
+        trimCacheIfNeeded()
     }
 
     private func finishFailure(assetID: String, generation: UUID, error: Error) {
@@ -661,5 +778,21 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
             entry.task?.cancel()
         }
         entries.removeValue(forKey: assetID)
+    }
+
+    private func trimCacheIfNeeded() {
+        let protectedAssetIDs = Set<String>(
+            entries.values.compactMap { entry -> String? in
+                guard !entry.consumers.isEmpty
+                        || !entry.leaseIDs.isEmpty
+                        || entry.task != nil else { return nil }
+                return entry.asset.id
+            }
+        )
+        CDNAudioCache.trim(
+            configuration: configuration,
+            protecting: protectedAssetIDs,
+            fileManager: fileManager
+        )
     }
 }

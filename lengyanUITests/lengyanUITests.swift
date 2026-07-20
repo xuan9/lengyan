@@ -78,6 +78,122 @@ class lengyanUITests: XCTestCase {
         } while Date() < deadline
         return condition()
     }
+
+    private func launchAudioFallbackApp(faultMode: String) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.terminate()
+        app.launchArguments = [
+            "--uitesting",
+            "--audio-primary-fault", faultMode,
+            "--audio-fallback-stall-timeout", "2",
+            "--audio-fallback-presentation-delay", "1.5",
+            "--reset-audio-fallback-cache",
+            "-AppleLanguages", "(zh-Hans)",
+            "-AppleLocale", "zh_Hans_CN",
+            "-hasSeenDailyReminderPrompt", "YES",
+            "-playFile", "invalid",
+            "-lastPlayTime", "0",
+            "-playMode", "999",
+        ]
+        app.launch()
+        return app
+    }
+
+    private func wait(
+        for element: XCUIElement,
+        labelContaining text: String,
+        timeout: TimeInterval
+    ) -> Bool {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND label CONTAINS %@", text),
+            object: element
+        )
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func wait(
+        for element: XCUIElement,
+        labelEqualTo text: String,
+        timeout: TimeInterval
+    ) -> Bool {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND label == %@", text),
+            object: element
+        )
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func exerciseAudioFallbackE2E(faultMode: String) throws {
+        let app = launchAudioFallbackApp(faultMode: faultMode)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8))
+        tabBar.buttons.element(boundBy: 1).tap()
+
+        let volumeOne = app.staticTexts["audio_track_ly01"]
+        let volumeTwo = app.staticTexts["audio_track_ly02"]
+        let pendingStatus = app.staticTexts["audio_player_pending_status"]
+        let currentTrack = app.staticTexts["audio_player_current_track"]
+        XCTAssertTrue(volumeOne.waitForExistence(timeout: 8))
+        XCTAssertTrue(volumeTwo.waitForExistence(timeout: 8))
+
+        volumeOne.tap()
+        if faultMode == "stall" {
+            XCTAssertTrue(
+                wait(for: pendingStatus, labelContaining: "正在准备", timeout: 4),
+                "The UI must acknowledge the Apple request before the watchdog fires"
+            )
+        }
+        XCTAssertTrue(
+            wait(for: pendingStatus, labelContaining: "备用线路", timeout: 15),
+            "The UI must reveal that Cloudflare fallback was activated"
+        )
+        XCTAssertTrue(
+            wait(for: currentTrack, labelEqualTo: "楞严经 卷一", timeout: 120),
+            "Volume one should play after the verified fallback download"
+        )
+
+        volumeTwo.tap()
+        XCTAssertEqual(
+            currentTrack.label,
+            "楞严经 卷一",
+            "Selecting volume two must not replace the currently playable volume one"
+        )
+        XCTAssertTrue(
+            wait(for: pendingStatus, labelContaining: "备用线路", timeout: 15),
+            "Volume two should activate the visible fallback state"
+        )
+        XCTAssertEqual(
+            currentTrack.label,
+            "楞严经 卷一",
+            "Volume one must remain current while volume two downloads"
+        )
+        XCTAssertTrue(
+            wait(for: currentTrack, labelEqualTo: "楞严经 卷二", timeout: 120),
+            "The player should switch only after volume two is fully downloaded and verified"
+        )
+    }
+
+    func testAudioFallbackImmediateFailureE2E() throws {
+        try exerciseAudioFallbackE2E(faultMode: "immediate")
+    }
+
+    func testAudioFallbackStallWatchdogE2E() throws {
+        try exerciseAudioFallbackE2E(faultMode: "stall")
+    }
+
+    func testSettingsDoesNotExposeTechnicalAudioStorageControls() {
+        let app = launchHomeApp(readingState: .start)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8))
+        tabBar.buttons.element(boundBy: 3).tap()
+
+        XCTAssertTrue(
+            app.buttons["settings_widget_guide_row"].waitForExistence(timeout: 5)
+        )
+        XCTAssertFalse(app.staticTexts["音频存储"].exists)
+        XCTAssertFalse(app.staticTexts["删除全部"].exists)
+        XCTAssertFalse(app.staticTexts["可释放"].exists)
+    }
     
     func testComprehensiveAllNavigationPaths() {
         let app = XCUIApplication()

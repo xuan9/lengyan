@@ -118,7 +118,27 @@ actor ManagedBackgroundAssetsAudioAssetProvider: AudioAssetProvider {
         guard let descriptor = AudioAssetCatalog.descriptor(for: assetID) else {
             throw AudioAssetError.unknownAsset(assetID)
         }
-        try await AssetPackManager.shared.remove(assetPackWithID: descriptor.managedPackID)
+        let manager = AssetPackManager.shared
+        let status: AssetPack.Status
+        if #available(iOS 26.4, *) {
+            status = await manager.localStatus(
+                ofAssetPackWithID: descriptor.managedPackID
+            )
+        } else {
+            status = try await manager.status(
+                ofAssetPackWithID: descriptor.managedPackID
+            )
+        }
+        guard status.contains(.downloaded) || status.contains(.downloading) else {
+            return .removed
+        }
+        // status(...) suspends this actor. A playback request may have arrived
+        // in the meantime, so repeat the in-use check before removal.
+        if let entry = entries[assetID],
+           !entry.leaseIDs.isEmpty || !entry.consumers.isEmpty {
+            throw AudioAssetError.packIsInUse(assetID)
+        }
+        try await manager.remove(assetPackWithID: descriptor.managedPackID)
         return .removed
     }
 

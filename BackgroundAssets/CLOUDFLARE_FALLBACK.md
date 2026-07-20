@@ -17,8 +17,9 @@ second default source, and silent prefetch never activates it.
 - A response is cancelled as soon as its advertised or received size exceeds
   the catalog. Every completed file must then match the exact byte count and
   SHA-256 compiled into the app before it is installed.
-- Downloads live below Application Support, are excluded from backup, and are
-  removed by the existing audio-storage cleanup action.
+- Downloads live below `Library/Caches`, are excluded from backup, and are
+  automatically limited to the two most recently used files or 48 MiB. An
+  existing Application Support cache is moved on first launch.
 
 ## Deployed topology
 

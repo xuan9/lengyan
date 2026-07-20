@@ -11,8 +11,8 @@
 - iOS 26 首次启用 Managed 时将旧 ODR tags 的保留优先级降为零；`ly01` 仍保留兼容 tag，但不再是 initial-install。
 - Cloudflare 备用线路只用于明确播放请求；后台预取失败不会触发公网下载。
 - Apple 的可回退交付错误会立即切换；用户取消和本机空间不足不会切换。无进展 15 秒会先取消 Apple 请求，再切换 Cloudflare，并立即显示“正在使用备用线路准备…”。
-- CDN 使用内容寻址路径 `audio/v1/<sha256>/<id>.m4a`；响应声明或实际接收字节超过目录值时立即取消，下载完成后必须同时通过精确字节数和 SHA-256 才进入 Application Support 缓存，且排除 iCloud 备份。
-- 设置页分别显示 Apple/ODR 与备用缓存占用；删除音频会清理两侧缓存，正在播放的 lease 受保护。
+- CDN 使用内容寻址路径 `audio/v1/<sha256>/<id>.m4a`；响应声明或实际接收字节超过目录值时立即取消，下载完成后必须同时通过精确字节数和 SHA-256 才进入系统 Caches。备用音频按最近使用自动保留最多 2 卷/48 MiB，并迁移旧 Application Support 缓存。
+- 不向用户暴露技术性的音频存储页。iOS 26+ 在低空间时自动取消预取并清理未使用资源包，保护正在播放、用户正在等待及最近播放的卷；iOS 15–25 继续由 ODR 管理。
 - Cloudflare 使用纯 Workers Static Assets：没有 Worker 脚本、R2 bucket/binding 或 `run_worker_first`。这是为了满足“不接受任何可能的超额费用”；配置测试会阻止这些计费路径被误加回来。
 - 生产地址：`https://lengyan-audio-fallback.dhyana9.workers.dev`；部署版本：`efde653d-4a39-439b-8a96-2979d4e4b480`。
 
@@ -23,15 +23,29 @@
 | Cloudflare 部署 | 12 个资源成功发布：11 个 M4A + 1 个健康契约；无 bindings |
 | 公网全量回读 | 11/11 通过 HTTPS、精确大小、SHA-256、`afinfo`、MIME、immutable cache、ETag、HEAD 与 Range 安全行为 |
 | Cloudflare 本地测试 | 3/3 通过；含 25 MiB 上限、11 条内容寻址清单、assets-only/no-R2 配置断言 |
-| iOS 18.6 完整单元测试 | 86 passed / 0 failed / 0 skipped |
-| iOS 26.5 完整单元测试 | 85 passed / 0 failed / 1 条预期的旧 ODR 条件跳过 |
+| iOS 18.6 完整单元测试 | 89 passed / 0 failed / 0 skipped |
+| iOS 26.5 完整单元测试 | 88 passed / 0 failed / 1 条预期的旧 ODR 条件跳过 |
+| iOS 18.6 备用线路 UI E2E | 2/2 通过：Apple 立即报错、Apple 无进展 watchdog；每项均实测卷一/卷二 Cloudflare 下载、校验、A→B 无缝切换 |
+| iOS 26.5 备用线路 UI E2E | 2/2 通过：与 iOS 18.6 相同的两条端到端路径 |
 | 故障转移场景 | 明确失败、15 秒 watchdog、进度重置、预取提升、取消不切 CDN、普通/ODR 专用空间不足不切 CDN、超大响应中止、坏文件拒绝、缓存命中与选择竞态均覆盖 |
-| Thread Sanitizer | 故障转移聚焦测试 20/20 通过，未报告数据竞争 |
+| Thread Sanitizer | 音频资源与故障转移聚焦测试 23/23 通过，未报告数据竞争 |
 | Static Analyze | 通过；仅有项目既有、与音频备用线路无关的 warning |
 | Unsigned Release Archive | `/tmp/lengyan-reviewed-release-20260719-2318.xcarchive` 成功 |
 | Archive 双栈校验 | minOS、弱链接、11 个 ODR tags、无 initial-install/prefetch tags、App 内 0 个 M4A、11 个源 hash、生产 Cloudflare=true 全部通过 |
 
 Static Assets 实测会忽略 `Range` 并返回完整文件 200，因此备用下载被中断时会重下当前卷；最大一卷约 20.1 MiB，不影响完整性校验或播放切换语义。
+
+## 模拟器故障注入
+
+Debug App target 使用专用编译条件 `AUDIO_FALLBACK_UI_TESTS`。只有同时带 `--uitesting` 时，才接受以下启动参数：
+
+- `--audio-primary-fault immediate`：Apple primary 立即返回不可连接错误。
+- `--audio-primary-fault stall`：Apple primary 保持无进展，由 watchdog 触发备用线路。
+- `--audio-primary-fault out-of-space`：模拟本机空间不足；按生产策略不得切 Cloudflare。
+- `--audio-fallback-stall-timeout 2`：仅测试时将 watchdog 缩短到 2 秒。
+- `--reset-audio-fallback-cache`：启动时仅清理 Caches 下的 `AudioFallback` 测试缓存。
+
+UI 测试为稳定观察瞬时提示另设 1.5 秒 presentation delay；真实 Cloudflare 请求、完整 M4A 下载、大小/SHA-256 校验和播放器切换没有替换为 mock。Release 构建成功，且产物扫描确认不包含上述故障参数、测试 provider 或缓存重置入口。
 
 ## 仍需真实发行环境验证
 

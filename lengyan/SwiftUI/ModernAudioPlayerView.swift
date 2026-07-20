@@ -323,11 +323,13 @@ struct ModernAudioPlayerView: View {
                                 .font(SutraTypographyBridge.uiBody(weight: .medium))
                                 .foregroundColor(.primary)
                                 .lineLimit(1)
+                                .accessibilityIdentifier("audio_player_current_track")
                         } else if let pendingTrackName = manager.pendingTrackName {
                             Text(pendingTrackName)
                                 .font(SutraTypographyBridge.uiBody(weight: .medium))
                                 .foregroundColor(.primary)
                                 .lineLimit(1)
+                                .accessibilityIdentifier("audio_player_pending_track")
                         } else {
                             Text(L10n.str("audio_empty_prompt"))
                                 .font(SutraTypographyBridge.uiCaption(weight: .light))
@@ -341,6 +343,7 @@ struct ModernAudioPlayerView: View {
                                 .font(SutraTypographyBridge.uiCaption(weight: .regular))
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
+                                .accessibilityIdentifier("audio_player_pending_status")
                         } else if isCurrentTrackDownloading {
                             ZenBreathingText(text: L10n.str("downloading_text"))
                         } else {
@@ -448,6 +451,7 @@ struct ModernAudioPlayerView: View {
                     .frame(maxWidth: 120)
                     .padding(.top, 10)
                     .offset(x: -14)
+                    .accessibilityIdentifier("audio_player_pending_status")
             }
 
             // 时间圈：静态细线圈，仅显示时间，进度由卧香表达
@@ -679,6 +683,7 @@ struct ModernAudioPlayerView: View {
                         ? primary
                         : Color(SutraDesignTokens.shared.color(for: .textPrimary)))
                     .padding(.leading, isCurrent ? 14 : 17)
+                    .accessibilityIdentifier("audio_track_\(file)")
 
                 Spacer()
 

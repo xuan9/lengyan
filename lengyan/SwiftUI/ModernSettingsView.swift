@@ -156,15 +156,6 @@ struct ModernSettingsView: View {
                     themeControl
                 }
 
-                zenSection(L10n.str("settings_section_storage")) {
-                    settingsItem(
-                        L10n.str("settings_audio_storage"),
-                        subtitle: L10n.str("settings_audio_storage_subtitle"),
-                        icon: "externaldrive",
-                        action: openAudioStorage
-                    )
-                }
-
                 if ManagedAssetsM0POCFeature.isEnabled {
                     zenSection("M0 验证") {
                         settingsItem(
@@ -333,7 +324,7 @@ struct ModernSettingsView: View {
         }
         if WidgetGuidePlatform.supportsLockScreenWidget,
            !widgetInstallation.hasLockScreenAccessory {
-            return L10n.str("settings_widget_action_recommended_lock_screen")
+            return L10n.str("settings_widget_action_add_lock_screen")
         }
         if widgetInstallation.isInstalled {
             return L10n.str("settings_widget_action_added")
@@ -581,12 +572,6 @@ struct ModernSettingsView: View {
         )
     }
 
-    private func openAudioStorage() {
-        NavigationHelper.pushSwiftUIView(
-            AudioStorageSettingsView(),
-            title: L10n.str("settings_audio_storage")
-        )
-    }
 }
 
 struct PrivacyPolicyView: View {

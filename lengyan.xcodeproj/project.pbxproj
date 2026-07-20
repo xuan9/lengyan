@@ -22,7 +22,6 @@
 		BAA100000000000000000105 /* AudioAssetCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000005 /* AudioAssetCoordinator.swift */; };
 		BAA100000000000000000106 /* LegacyODRAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000006 /* LegacyODRAudioAssetProvider.swift */; };
 		BAA100000000000000000107 /* ManagedBackgroundAssetsAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000007 /* ManagedBackgroundAssetsAudioAssetProvider.swift */; };
-		BAA100000000000000000108 /* AudioStorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000008 /* AudioStorageSettingsView.swift */; };
 		BAA100000000000000000109 /* AudioAssetCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA100000000000000000009 /* AudioAssetCoordinatorTests.swift */; };
 		BAA10000000000000000010A /* CDNAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA10000000000000000000A /* CDNAudioAssetProvider.swift */; };
 		BAA10000000000000000010B /* FailoverAudioAssetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA10000000000000000000B /* FailoverAudioAssetProvider.swift */; };
@@ -203,7 +202,6 @@
 		BAA100000000000000000005 /* AudioAssetCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetCoordinator.swift; sourceTree = "<group>"; };
 		BAA100000000000000000006 /* LegacyODRAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyODRAudioAssetProvider.swift; sourceTree = "<group>"; };
 		BAA100000000000000000007 /* ManagedBackgroundAssetsAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedBackgroundAssetsAudioAssetProvider.swift; sourceTree = "<group>"; };
-		BAA100000000000000000008 /* AudioStorageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioStorageSettingsView.swift; sourceTree = "<group>"; };
 		BAA100000000000000000009 /* AudioAssetCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetCoordinatorTests.swift; sourceTree = "<group>"; };
 		BAA10000000000000000000A /* CDNAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CDNAudioAssetProvider.swift; sourceTree = "<group>"; };
 		BAA10000000000000000000B /* FailoverAudioAssetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailoverAudioAssetProvider.swift; sourceTree = "<group>"; };
@@ -636,7 +634,6 @@
 			isa = PBXGroup;
 			children = (
 				BA0000000000000000000001 /* ManagedAssetPackM0POCView.swift */,
-				BAA100000000000000000008 /* AudioStorageSettingsView.swift */,
 				CB8A4D53265EE92000D1E7B9 /* ModernAudioPlayerView.swift */,
 				CB8A4D59265EE96000D1E7B9 /* ModernFavoritesView.swift */,
 				0D89740455934B739168A0A8 /* ModernSettingsView.swift */,
@@ -902,7 +899,6 @@
 				BAA100000000000000000107 /* ManagedBackgroundAssetsAudioAssetProvider.swift in Sources */,
 				BAA10000000000000000010A /* CDNAudioAssetProvider.swift in Sources */,
 				BAA10000000000000000010B /* FailoverAudioAssetProvider.swift in Sources */,
-				BAA100000000000000000108 /* AudioStorageSettingsView.swift in Sources */,
 				BA0000000000000000000002 /* ManagedAssetPackM0POCView.swift in Sources */,
 				2D1FA1B8FB3A4F9FA9BB2367 /* lengyan/View/Modern/ModernWisdomView.swift in Sources */,
 				133CAB9D2364DDB700B61AC0 /* RABatchChangeEntity.h in Sources */,
@@ -1222,6 +1218,7 @@
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "lengyan/lengyan-Bridging-Header.h";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) AUDIO_FALLBACK_UI_TESTS";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;

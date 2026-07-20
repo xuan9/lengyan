@@ -8,7 +8,60 @@
 //
 
 import AVFoundation
+import Network
 import UIKit
+
+private final class AudioAutomaticDownloadNetworkMonitor: @unchecked Sendable {
+    static let shared = AudioAutomaticDownloadNetworkMonitor()
+
+    private let monitor = NWPathMonitor()
+    private let queue = DispatchQueue(
+        label: "org.fuxuan.lengyan.audio-prefetch-network"
+    )
+    private let lock = NSLock()
+    private var latestPath: NWPath?
+    private var suitablePathHandler: (@Sendable () -> Void)?
+
+    private init() {
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard let self else { return }
+            self.lock.lock()
+            self.latestPath = path
+            let handler = path.status == .satisfied
+                && !path.isExpensive
+                && !path.isConstrained
+                ? self.suitablePathHandler
+                : nil
+            self.lock.unlock()
+            if let handler {
+                DispatchQueue.main.async(execute: handler)
+            }
+        }
+        monitor.start(queue: queue)
+    }
+
+    func setSuitablePathHandler(_ handler: @escaping @Sendable () -> Void) {
+        lock.lock()
+        suitablePathHandler = handler
+        let shouldNotify = latestPath.map {
+            $0.status == .satisfied && !$0.isExpensive && !$0.isConstrained
+        } ?? false
+        lock.unlock()
+        if shouldNotify {
+            DispatchQueue.main.async(execute: handler)
+        }
+    }
+
+    var allowsPrefetch: Bool {
+        lock.lock()
+        let path = latestPath
+        lock.unlock()
+        guard let path else { return false }
+        return path.status == .satisfied
+            && !path.isExpensive
+            && !path.isConstrained
+    }
+}
 
 final class AudioManager: ObservableObject {
     static let shared = AudioManager()
@@ -59,6 +112,10 @@ final class AudioManager: ObservableObject {
         audioObserver.onPlayerItemRemoved = { [weak self] in
             self?.playerItemWasRemoved()
         }
+        AudioAutomaticDownloadNetworkMonitor.shared.setSuitablePathHandler {
+            [weak self] in
+            self?.startNextPrefetchIfNeeded()
+        }
         installLifecycleObservers()
 
         if let catalogError = AudioAssetCatalog.validationError {
@@ -66,6 +123,10 @@ final class AudioManager: ObservableObject {
         }
         if Book.shared.loaded {
             loadMediaData()
+        }
+
+        Task { [assetCoordinator] in
+            await assetCoordinator.performAutomaticStorageMaintenance()
         }
     }
 
@@ -529,6 +590,8 @@ final class AudioManager: ObservableObject {
 
     private func startNextPrefetchIfNeeded() {
         guard selectedPlayMode == .repeatAll,
+              !ProcessInfo.processInfo.isLowPowerModeEnabled,
+              AudioAutomaticDownloadNetworkMonitor.shared.allowsPrefetch,
               let generation = playbackGeneration,
               generation == selectionGeneration,
               prefetchTriggeredGeneration != generation,
@@ -584,18 +647,6 @@ final class AudioManager: ObservableObject {
         }
     }
 
-    func removeAllDownloadedAudio() async -> [String: Result<AudioAssetEvictionResult, Error>] {
-        var results: [String: Result<AudioAssetEvictionResult, Error>] = [:]
-        for id in AudioAssetCatalog.orderedIDs {
-            do {
-                results[id] = .success(try await assetCoordinator.evict(assetID: id))
-            } catch {
-                results[id] = .failure(error)
-            }
-        }
-        return results
-    }
-
     func audioAssetSnapshot() async -> AudioAssetCoordinatorSnapshot {
         await assetCoordinator.snapshot()
     }
@@ -624,9 +675,30 @@ final class AudioManager: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             self?.prefetchTriggeredGeneration = nil
-            Task { await self?.assetCoordinator.cancelPrefetch() }
+            Task {
+                await self?.assetCoordinator.performAutomaticStorageMaintenance(
+                    force: true
+                )
+            }
         }
-        lifecycleObservers = [memory, terminate, lowDisk]
+        let foreground = NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task {
+                await self?.assetCoordinator.performAutomaticStorageMaintenance()
+            }
+        }
+        let power = NotificationCenter.default.addObserver(
+            forName: Notification.Name.NSProcessInfoPowerStateDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
+            self?.startNextPrefetchIfNeeded()
+        }
+        lifecycleObservers = [memory, terminate, lowDisk, foreground, power]
     }
 
     // MARK: - Helpers

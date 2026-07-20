@@ -33,6 +33,7 @@ actor FailoverAudioAssetProvider: AudioAssetProvider {
     private let primary: any AudioAssetProvider
     private let fallback: CDNAudioAssetProvider
     private let stallTimeout: TimeInterval
+    private let fallbackPresentationDelay: TimeInterval
     private var entries: [UUID: Entry] = [:]
     private var leaseOwners: [UUID: Source] = [:]
     private var isShutdown = false
@@ -40,11 +41,15 @@ actor FailoverAudioAssetProvider: AudioAssetProvider {
     init(
         primary: any AudioAssetProvider,
         fallback: CDNAudioAssetProvider,
-        stallTimeout: TimeInterval
+        stallTimeout: TimeInterval,
+        fallbackPresentationDelay: TimeInterval = 0
     ) {
         self.primary = primary
         self.fallback = fallback
         self.stallTimeout = stallTimeout
+        self.fallbackPresentationDelay = fallbackPresentationDelay.isFinite
+            ? min(max(fallbackPresentationDelay, 0), 5)
+            : 0
         backendKind = primary.backendKind
     }
 
@@ -187,6 +192,16 @@ actor FailoverAudioAssetProvider: AudioAssetProvider {
         }
 
         guard activateFallback(requestID: requestID) else { return }
+        if fallbackPresentationDelay > 0 {
+            do {
+                try await Task.sleep(
+                    nanoseconds: UInt64(fallbackPresentationDelay * 1_000_000_000)
+                )
+            } catch {
+                return
+            }
+            guard entries[requestID]?.source == .fallback else { return }
+        }
         do {
             try await consume(requestID: requestID, source: .fallback)
         } catch {
