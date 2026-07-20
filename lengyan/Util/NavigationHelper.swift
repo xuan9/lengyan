@@ -8,6 +8,53 @@
 import UIKit
 import SwiftUI
 
+protocol NavigationPopAware: AnyObject {
+    func navigationControllerDidPop()
+}
+
+/// Keeps the system edge-swipe pop gesture available even when a screen uses
+/// custom navigation items. Several reader screens intentionally use an
+/// icon-only back button, which otherwise leaves the gesture disabled and lets
+/// the underlying page/tree gesture handle the swipe instead.
+final class SutraNavigationController: UINavigationController, UIGestureRecognizerDelegate, UINavigationControllerDelegate {
+    private var lastShownStack: [UIViewController] = []
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        lastShownStack = viewControllers
+        delegate = self
+        interactivePopGestureRecognizer?.delegate = self
+        interactivePopGestureRecognizer?.isEnabled = true
+    }
+
+    func navigationController(
+        _ navigationController: UINavigationController,
+        didShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        interactivePopGestureRecognizer?.delegate = self
+        interactivePopGestureRecognizer?.isEnabled = viewControllers.count > 1
+
+        let previousStack = lastShownStack
+        let currentStack = viewControllers
+        let returnedToExistingController = previousStack.contains(where: { $0 === viewController })
+        let poppedControllers = previousStack.filter { previous in
+            !currentStack.contains(where: { $0 === previous })
+        }
+        lastShownStack = currentStack
+        if returnedToExistingController {
+            poppedControllers.forEach {
+                ($0 as? NavigationPopAware)?.navigationControllerDidPop()
+            }
+        }
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer === interactivePopGestureRecognizer else { return true }
+        return viewControllers.count > 1 && transitionCoordinator == nil
+    }
+}
+
 // MARK: - 自动管理导航栏显隐的 HostingController
 
 class NavBarHostingController<T: View>: UIHostingController<T> {

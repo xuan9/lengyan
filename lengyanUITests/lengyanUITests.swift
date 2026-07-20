@@ -79,6 +79,24 @@ class lengyanUITests: XCTestCase {
         return condition()
     }
 
+    private func openFirstLeafFromFullOutline(in app: XCUIApplication) {
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        XCTAssertTrue(fullOutlineButton.waitForExistence(timeout: 3))
+        fullOutlineButton.tap()
+
+        let firstSection = app.cells["outline.row./A1"]
+        let firstSubsection = app.cells["outline.row./A1/B1"]
+        let firstLeaf = app.cells["outline.row./A1/B1/C1"]
+        XCTAssertTrue(firstSection.waitForExistence(timeout: 3))
+        XCTAssertFalse(firstSubsection.exists, "The complete outline should start as a compact overview")
+
+        firstSection.tap()
+        XCTAssertTrue(firstSubsection.waitForExistence(timeout: 3))
+        firstSubsection.tap()
+        XCTAssertTrue(firstLeaf.waitForExistence(timeout: 3))
+        firstLeaf.tap()
+    }
+
     private func launchAudioFallbackApp(faultMode: String) -> XCUIApplication {
         let app = XCUIApplication()
         app.terminate()
@@ -722,6 +740,125 @@ class lengyanUITests: XCTestCase {
         fullOutlineButton.tap()
 
         XCTAssertTrue(app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3))
+    }
+
+    func testFullOutlinePreservesDisclosureStateAcrossTabSwitches() {
+        let app = launchHomeApp(readingState: .start)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        XCTAssertTrue(fullOutlineButton.waitForExistence(timeout: 3))
+        fullOutlineButton.tap()
+
+        let firstSection = app.cells["outline.row./A1"]
+        let firstChild = app.cells["outline.row./A1/B1"]
+        XCTAssertTrue(firstSection.waitForExistence(timeout: 3))
+        XCTAssertFalse(firstChild.exists)
+
+        firstSection.tap()
+        XCTAssertTrue(firstChild.waitForExistence(timeout: 3))
+
+        tabBar.buttons.element(boundBy: 1).tap()
+        tabBar.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(firstChild.waitForExistence(timeout: 3), "Expanded rows should survive a tab round-trip")
+
+        firstSection.tap()
+        XCTAssertTrue(waitForCondition(timeout: 3) { !firstChild.exists })
+
+        tabBar.buttons.element(boundBy: 1).tap()
+        tabBar.buttons.element(boundBy: 0).tap()
+        XCTAssertFalse(firstChild.exists, "Collapsed rows must not be reopened when the outline reappears")
+    }
+
+    func testFullOutlineSupportsInteractiveEdgePop() {
+        let app = launchHomeApp(readingState: .start)
+        let fullOutlineButton = app.buttons["home.fullOutlineButton"]
+        XCTAssertTrue(fullOutlineButton.waitForExistence(timeout: 3))
+        fullOutlineButton.tap()
+        XCTAssertTrue(app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3))
+
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.45))
+        let finish = app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.45))
+        start.press(forDuration: 0.05, thenDragTo: finish)
+
+        XCTAssertTrue(
+            fullOutlineButton.waitForExistence(timeout: 3),
+            "A left-edge swipe should return to the home screen"
+        )
+        XCTAssertFalse(app.otherElements["reader.outlineIndex"].exists)
+    }
+
+    func testPagedLeafReaderCanReturnToItsCurrentOutline() {
+        let app = launchHomeApp(readingState: .start)
+        openFirstLeafFromFullOutline(in: app)
+
+        XCTAssertTrue(app.otherElements["reader.paged"].waitForExistence(timeout: 3))
+        let outlineButton = app.buttons["reader.outlineButton"]
+        XCTAssertTrue(outlineButton.waitForExistence(timeout: 3))
+        outlineButton.tap()
+
+        XCTAssertTrue(app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.cells["outline.row./A1/B1/C1"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.cells["outline.row./A2/B1"].exists, "Returning to the current leaf must not expand unrelated sections")
+    }
+
+    func testReaderEdgePopRevealsAChangedReadingPath() {
+        let app = launchHomeApp(readingState: .start)
+        openFirstLeafFromFullOutline(in: app)
+
+        let reader = app.otherElements["reader.paged"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 3))
+        reader.swipeLeft()
+        XCTAssertTrue(waitForCondition(timeout: 3) {
+            app.staticTexts["据迹标数"].exists
+        })
+        Thread.sleep(forTimeInterval: 0.6)
+
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.45))
+        let finish = app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.45))
+        start.press(forDuration: 0.05, thenDragTo: finish)
+
+        XCTAssertTrue(app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3))
+        XCTAssertTrue(
+            app.cells["outline.row./A1/B1/C2/D1/E1"].waitForExistence(timeout: 3),
+            "A completed interactive pop should reveal the page reached inside the reader"
+        )
+    }
+
+    func testPagedReaderOutlineButtonRevealsAChangedReadingPath() {
+        let app = launchHomeApp(readingState: .start)
+        openFirstLeafFromFullOutline(in: app)
+
+        let reader = app.otherElements["reader.paged"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 3))
+        reader.swipeLeft()
+        XCTAssertTrue(waitForCondition(timeout: 3) {
+            app.staticTexts["据迹标数"].exists
+        })
+        Thread.sleep(forTimeInterval: 0.6)
+
+        let outlineButton = app.buttons["reader.outlineButton"]
+        XCTAssertTrue(outlineButton.waitForExistence(timeout: 3))
+        outlineButton.tap()
+
+        XCTAssertTrue(app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.cells["outline.row./A1/B1/C2/D1/E1"].waitForExistence(timeout: 3))
+    }
+
+    func testTreeLeafReaderCanOpenItsCurrentOutline() {
+        let app = launchHomeApp(readingState: .outlineResume)
+        let resumeButton = app.buttons["home.outlineResumeButton"]
+        XCTAssertTrue(resumeButton.waitForExistence(timeout: 3))
+        resumeButton.tap()
+
+        XCTAssertTrue(app.otherElements["reader.tree"].waitForExistence(timeout: 3))
+        let outlineButton = app.buttons["reader.outlineButton"]
+        XCTAssertTrue(outlineButton.waitForExistence(timeout: 3))
+        outlineButton.tap()
+
+        XCTAssertTrue(app.otherElements["reader.outlineIndex"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.cells["outline.row./A1/B1/C1"].waitForExistence(timeout: 3))
     }
 
     func testNightReadingThemeIsNotExposed() {

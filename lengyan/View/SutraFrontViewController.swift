@@ -1093,7 +1093,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
 
     @objc func openSearch() {
-        let nav = UINavigationController()
+        let nav = SutraNavigationController()
         nav.setNavigationBarHidden(true, animated: false)
         nav.modalPresentationStyle = SutraAdaptiveLayout.shouldUseSheetModal(for: traitCollection)
             ? .pageSheet : .fullScreen

@@ -9,7 +9,7 @@
 import UIKit
 import Combine
 
-class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate{
+class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate, NavigationPopAware{
     // STORYBOARD REMOVED: Using programmatic UI now
     var onDismiss: (() -> Void)?
     var path:String?
@@ -53,6 +53,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         
         // Programmatic target changes are explicit navigation requests.
         recordCurrentReading()
+        synchronizeExistingOutline()
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -81,8 +82,16 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        prioritizeInteractivePopGesture()
         isReaderVisible = true
         resumeReadingCheckpointIfNeeded()
+    }
+
+    private func prioritizeInteractivePopGesture() {
+        guard let popGesture = navigationController?.interactivePopGestureRecognizer else { return }
+        view.subviews
+            .compactMap { $0 as? UIScrollView }
+            .forEach { $0.panGestureRecognizer.require(toFail: popGesture) }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -168,15 +177,26 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         Prefers.shared.recordTreeReading(path: path)
     }
 
+    private func synchronizeExistingOutline() {
+        guard let path,
+              let index = navigationController?.viewControllers.first(where: {
+                  $0 is SutraIndexViewController
+              }) as? SutraIndexViewController else { return }
+        index.revealPathWhenVisible(path)
+    }
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
 
     @objc func close() {
         print("DEBUG: SutraPurePageViewController close() - Stack before pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
-        onDismiss?();
         let popped = self.navigationController?.popViewController(animated: true);
         print("DEBUG: SutraPurePageViewController close() - Popped VC: \(String(describing: popped)), Stack after pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
+    }
+
+    func navigationControllerDidPop() {
+        onDismiss?()
     }
 
     private func setupNavigationItems() {
@@ -204,6 +224,8 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
                 action: #selector(openIndex)
             )
             indexBtn.tintColor = secondaryColor
+            indexBtn.accessibilityIdentifier = "reader.outlineButton"
+            indexBtn.accessibilityLabel = L10n.str("home_outline_button")
             if #available(iOS 26.0, *) {
                 indexBtn.hidesSharedBackground = true
             }
@@ -287,10 +309,9 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         let item = Book.shared.itemOfPath(path)
         self.navigationItem.titleView = Book.shared.getTitleView(item)
 
-        // 🌿 动态更新左侧返回/目录项 (叶子正文页自动隐藏目录项，保证纯净阅读环境)
-        let isLeaf = item["children"] == nil
+        // 科判是正文的上下文导航；无论当前节点是否为叶子都保持可用。
         var leftButtons = (isEmbedded ? [] : [backButton]).compactMap { $0 }
-        if self.isShowIndexButton && !isLeaf {
+        if self.isShowIndexButton {
             if let indexBtn = self.indexButton {
                 leftButtons.append(indexBtn)
             }
@@ -348,7 +369,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
     @objc func openIndex(){
         if let viewControllers = self.navigationController?.viewControllers {
             if let existingIndexVC = viewControllers.first(where: { $0 is SutraIndexViewController }) as? SutraIndexViewController {
-                existingIndexVC.openPath(self.path ?? "")
+                existingIndexVC.revealPathWhenVisible(self.path ?? "")
                 self.navigationController?.popToViewController(existingIndexVC, animated: true)
                 return
             }
@@ -456,6 +477,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
             // 每次翻页完成即保存进度
             recordCurrentReading()
+            synchronizeExistingOutline()
         }
     }
 }

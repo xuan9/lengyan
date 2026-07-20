@@ -702,7 +702,7 @@ struct SwiftUISutraReader: UIViewControllerRepresentable {
             childVC = pageVC
         }
         
-        let navController = UINavigationController(rootViewController: childVC)
+        let navController = SutraNavigationController(rootViewController: childVC)
         navController.navigationBar.isHidden = false
         return navController
     }

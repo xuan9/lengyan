@@ -8,7 +8,7 @@
 
 import UIKit
 
-class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate{
+class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate, NavigationPopAware{
     // STORYBOARD REMOVED: Using programmatic UI now
     var onDismiss: (() -> Void)?
     private let readingCheckpoint = ReadingCheckpointGate()
@@ -98,6 +98,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         
         // Save progress
         recordCurrentReading()
+        synchronizeExistingOutline()
     }
 
     override var prefersStatusBarHidden: Bool {
@@ -122,8 +123,16 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        prioritizeInteractivePopGesture()
         isReaderVisible = true
         resumeReadingCheckpointIfNeeded()
+    }
+
+    private func prioritizeInteractivePopGesture() {
+        guard let popGesture = navigationController?.interactivePopGestureRecognizer else { return }
+        view.subviews
+            .compactMap { $0 as? UIScrollView }
+            .forEach { $0.panGestureRecognizer.require(toFail: popGesture) }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -209,6 +218,14 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         Prefers.shared.recordPagedReading(path: path, pageIndex: page)
     }
 
+    private func synchronizeExistingOutline() {
+        guard let path,
+              let index = navigationController?.viewControllers.first(where: {
+                  $0 is SutraIndexViewController
+              }) as? SutraIndexViewController else { return }
+        index.revealPathWhenVisible(path)
+    }
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -229,9 +246,29 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
     
     @objc func close() {
         print("DEBUG: SutraPageViewController close() - Stack before pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
-        self.onDismiss?()
         let popped = self.navigationController?.popViewController(animated: true)
         print("DEBUG: SutraPageViewController close() - Popped VC: \(String(describing: popped)), Stack after pop: \(self.navigationController?.viewControllers.map { type(of: $0) } ?? [])")
+    }
+
+    func navigationControllerDidPop() {
+        onDismiss?()
+    }
+
+    @objc func openIndex() {
+        guard let path else { return }
+
+        if let viewControllers = navigationController?.viewControllers,
+           let existingIndex = viewControllers.first(where: { $0 is SutraIndexViewController }) as? SutraIndexViewController {
+            existingIndex.revealPathWhenVisible(path)
+            navigationController?.popToViewController(existingIndex, animated: true)
+            return
+        }
+
+        let indexVC = SutraIndexViewController()
+        indexVC.tree = Book.shared.itemOfPath(path)
+        indexVC.path = path
+        indexVC.defaultExpandLevel = 2
+        navigationController?.pushViewController(indexVC, animated: true)
     }
     
     @objc func share() {
@@ -258,6 +295,15 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let shareIcon = UIImage(systemName: "square.and.arrow.up")
         let shareButton = UIBarButtonItem(image: shareIcon, style: .plain, target: self, action: #selector(share))
 
+        let indexButton = UIBarButtonItem(
+            image: UIImage(systemName: "list.bullet"),
+            style: .plain,
+            target: self,
+            action: #selector(openIndex)
+        )
+        indexButton.accessibilityIdentifier = "reader.outlineButton"
+        indexButton.accessibilityLabel = L10n.str("home_outline_button")
+
         let isLiked = Prefers.shared.isLike(path!)
         let bookmarkIcon = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
         let bookmarkButton = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: isLiked ? #selector(unlike) : #selector(like))
@@ -267,22 +313,24 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let bookmarkColor = SutraDesignTokens.shared.color(for: .bookmark)
 
         if isEmbedded {
-            self.navigationItem.leftBarButtonItem = nil
+            self.navigationItem.leftBarButtonItems = [indexButton]
         } else {
             let backIcon = UIImage(systemName: "chevron.left")
             let backBarButton = UIBarButtonItem(image: backIcon, style: .plain, target: self, action: #selector(close))
-            self.navigationItem.leftBarButtonItem = backBarButton
-            self.navigationItem.leftBarButtonItem?.tintColor = secondaryTextColor
+            self.navigationItem.leftBarButtonItems = [backBarButton, indexButton]
+            backBarButton.tintColor = secondaryTextColor
             if #available(iOS 26.0, *) {
                 backBarButton.hidesSharedBackground = true
             }
         }
 
+        indexButton.tintColor = secondaryTextColor
         shareButton.tintColor = secondaryTextColor
         bookmarkButton.tintColor = isLiked ? bookmarkColor : secondaryTextColor
 
         // 移除 iOS 26 Liquid Glass 按钮背景，与导航栏完全融合
         if #available(iOS 26.0, *) {
+            indexButton.hidesSharedBackground = true
             shareButton.hidesSharedBackground = true
             bookmarkButton.hidesSharedBackground = true
         }
@@ -399,6 +447,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
             // 每次翻页完成即保存进度
             recordCurrentReading()
+            synchronizeExistingOutline()
         }
     }
     

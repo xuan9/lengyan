@@ -8,7 +8,7 @@
 
 import UIKit
 
-class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
+class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate, NavigationPopAware{
     
     var onDismiss: (() -> Void)?
 
@@ -18,6 +18,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     var defaultExpandLevel:Int = 2
     var isRootIndex = false;
+    private var pendingRevealPath: String?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -63,6 +64,9 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
             self.tree = resolvedTree
             self.treeView.reloadData()
+            if let currentPath = self.path, !currentPath.isEmpty, currentPath != "/" {
+                self.openPath(currentPath, shouldCenter: true)
+            }
         }
         self.updateHeader()
 
@@ -79,17 +83,18 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.setNavigationBarHidden(false, animated: true)
         self.navigationController?.hidesBarsOnSwipe = false;
         self.navigationItem.leftBarButtonItem?.tintColor = SutraDesignTokens.shared.color(for: .sutraText)
-        treeView.visibleCells()?.forEach({ (cell) in
-            let item = treeView.item(for: cell as! UITableViewCell)
-            treeView.expandRow(forItem: item, expandChildren: false, with: RATreeViewRowAnimationNone)
-        })
     }
-    
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if let currentPath = self.path {
-            self.openPath(currentPath)
-        }
+        guard let pendingRevealPath else { return }
+        self.pendingRevealPath = nil
+        openPath(pendingRevealPath)
+    }
+
+    func revealPathWhenVisible(_ path: String) {
+        guard !path.isEmpty, path != "/" else { return }
+        pendingRevealPath = path
     }
 
     override func viewDidLayoutSubviews() {
@@ -151,7 +156,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.treeView.reloadData()
             self.updateHeader()
             if let currentPath = self.path {
-                self.openPath(currentPath)
+                self.openPath(currentPath, shouldCenter: true)
             }
         }
     }
@@ -203,9 +208,12 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     
     
     @objc func close(){
-        onDismiss?();
         self.navigationController?.isNavigationBarHidden = false
         self.navigationController?.popViewController(animated: true)
+    }
+
+    func navigationControllerDidPop() {
+        onDismiss?()
     }
 
     // MARK: - 主题变化即时刷新
@@ -214,8 +222,14 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             self.treeView.backgroundColor = SutraDesignTokens.shared.color(for: .background)
             self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
             self.updateHeader()
-            // 强制所有 cell 重新渲染以应用新颜色
-            self.treeView.reloadData()
+            // RATreeView.reloadData() 会清空展开结构。只重绘可见行即可；
+            // 离屏行在复用时会自然使用最新主题。
+            self.treeView.visibleCells()?.forEach { cell in
+                guard let cell = cell as? UITableViewCell,
+                      let item = self.treeView.item(for: cell) as? NSDictionary else { return }
+                cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+                self.updateCellText(cell, for: item)
+            }
         }, completion: nil)
     }
     
@@ -295,6 +309,10 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             print("⚠️ ERROR: Book.shared.index is nil in openItem")
             return
         }
+
+        // The tapped leaf is already visible. Mark it current without moving
+        // the list so returning from the reader restores the exact viewport.
+        self.openPath(path, shouldCenter: false)
 
         // SAFE: Check if there's an existing reader on the navigation stack.
         // If so, we instantiate a new clean copy of that reader type, set the stack to place it on top of self (IndexVC),
@@ -430,17 +448,22 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         self.navigationController?.pushViewController(indexVC, animated: true)
     }
     
-    func openPath(_ path:String) {
+    func openPath(_ path:String, shouldCenter: Bool? = nil) {
         // SAFE: Check if path is valid
         guard !path.isEmpty && path != "/" else {
             return
         }
 
+        let previousPath = self.path
         self.path = path
 
         // SAFE: Check if tree exists and has path
-        guard let tree = self.tree,
-              let rootPath = tree["path"] as? String else {
+        guard let tree = self.tree else {
+            print("⚠️ ERROR: Failed to get root path from tree in openPath")
+            return
+        }
+        let rootNode = tree as NSDictionary
+        guard let rootPath = rootNode["path"] as? String else {
             print("⚠️ ERROR: Failed to get root path from tree in openPath")
             return
         }
@@ -451,7 +474,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         }
 
         let subPath = path[rootPath.endIndex...]
-        var currentNode = tree
+        var currentNode = rootNode
 
         for id in subPath.components(separatedBy: "/") {
             guard !id.isEmpty else { continue }
@@ -461,14 +484,14 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 return
             }
 
-            // SAFE: Filter children safely
-            if let foundNode = children.filter({ child in
-                if let childDict = child as? [String:Any],
-                   let childId = childDict["id"] as? String {
-                    return childId == id
-                }
-                return false
-            }).first as? [String:Any] {
+            // Keep the original Foundation object owned by RATreeView. Casting
+            // every child to a Swift Dictionary creates a bridged copy that the
+            // legacy tree control cannot resolve back to its internal node.
+            if let foundNode = children.first(where: { child in
+                guard let childDict = child as? NSDictionary,
+                      let childId = childDict["id"] as? String else { return false }
+                return childId == id
+            }) as? NSDictionary {
                 currentNode = foundNode
             } else {
                 print("⚠️ WARNING: Failed to find child with id: \(id)")
@@ -481,8 +504,16 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
         }
 
-        // Always highlight and center the current reading path in the viewport
-        treeView.selectRow(forItem: currentNode, animated: true, scrollPosition: RATreeViewScrollPositionMiddle)
+        // New reading locations are centered. Re-selecting the same path keeps
+        // the user's exact scroll position (reader round-trip / tab switch).
+        let centersCurrentPath = shouldCenter ?? (previousPath != path)
+        treeView.selectRow(
+            forItem: currentNode,
+            animated: centersCurrentPath,
+            scrollPosition: centersCurrentPath
+                ? RATreeViewScrollPositionMiddle
+                : RATreeViewScrollPositionNone
+        )
         
         // Refresh visible cells to update text colors immediately
         treeView.visibleCells()?.forEach { cell in
@@ -497,10 +528,10 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     func treeView(_ treeView: RATreeView, numberOfChildrenOfItem item: Any?) -> Int {
         if item == nil {
             return (self.tree?["children"] as? NSArray)?.count ?? 0
-        } else if let itemDict = item as? [String:Any] {
+        } else if let itemDict = item as? NSDictionary {
             return (itemDict["children"] as? NSArray)?.count ?? 0
         } else {
-            print("⚠️ ERROR: Failed to cast item to [String:Any] in numberOfChildrenOfItem")
+            print("⚠️ ERROR: Failed to cast outline item in numberOfChildrenOfItem")
             return 0
         }
     }
@@ -582,6 +613,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
         // 每次渲染都刷新颜色和附件样式（新建 + 复用），确保主题切换即时生效
         let cell = newCell!;
+        cell.accessibilityIdentifier = "outline.row.\(item["path"] as? String ?? "")"
         // 🌿 回归全屏背景色平整统一，符合纯净留白风格，避免花哨的条叠感
         cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         cell.selectionStyle = .none
@@ -602,11 +634,11 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(_ treeView: RATreeView, child index: Int, ofItem item: Any?) -> Any {
-        if(item != nil){
-            return (((item as! [String:Any])["children"] as! NSArray)[index]) as! [String:Any]
-        }else{
-            return ((self.tree?["children"] as! NSArray)[index])  as! [String:Any]
+        if let item = item as? NSDictionary,
+           let children = item["children"] as? NSArray {
+            return children[index]
         }
+        return (self.tree?["children"] as! NSArray)[index]
     }
     
     

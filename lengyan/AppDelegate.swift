@@ -138,7 +138,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         // Setup Reading Tab
         let sutraFrontVC = SutraFrontViewController()
-        let readingNavController = UINavigationController(rootViewController: sutraFrontVC)
+        let readingNavController = SutraNavigationController(rootViewController: sutraFrontVC)
         readingNavController.view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 消除 push 转场白色闪现
         readingNavController.tabBarItem = UITabBarItem(
             title: L10n.str("reading_tab_title"),
@@ -149,7 +149,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Setup Listening Tab — 听经是最高优先级的学习方式
         let modernAudioPlayer = ModernAudioPlayerView()
         let audioHostingController = UIHostingController(rootView: modernAudioPlayer)
-        let listeningNavController = UINavigationController(rootViewController: audioHostingController)
+        let listeningNavController = SutraNavigationController(rootViewController: audioHostingController)
         listeningNavController.tabBarItem = UITabBarItem(
             title: L10n.str("media_tab_title"),
             image: UIImage(systemName: "headphones")?.withConfiguration(iconConfiguration),
@@ -160,7 +160,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Setup Favorites Tab
         let modernFavorites = ModernFavoritesView()
         let favoritesHostingController = FavoritesHostingController(rootView: modernFavorites)
-        let favoritesNavController = UINavigationController(rootViewController: favoritesHostingController)
+        let favoritesNavController = SutraNavigationController(rootViewController: favoritesHostingController)
         favoritesNavController.tabBarItem = UITabBarItem(
             title: L10n.str("star_tab_title"),
             image: UIImage(systemName: "heart")?.withConfiguration(iconConfiguration),
@@ -171,7 +171,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Setup Settings Tab
         let settingsView = ModernSettingsView()
         let settingsHostingController = NavBarHostingController(rootView: settingsView, showsNavBar: false)
-        let settingsNavController = UINavigationController(rootViewController: settingsHostingController)
+        let settingsNavController = SutraNavigationController(rootViewController: settingsHostingController)
         settingsNavController.tabBarItem = UITabBarItem(
             title: L10n.str("settings_tab_title"),
             image: UIImage(systemName: "gearshape")?.withConfiguration(iconConfiguration),
