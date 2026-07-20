@@ -964,6 +964,49 @@ class lengyanUITests: XCTestCase {
         XCTAssertFalse(app.otherElements["reader.outlineIndex"].exists)
     }
 
+    func testIPadFavoritesLongLeafBodyReflowsWithoutClipping() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("Favorites split-detail layout is iPad-only")
+        }
+
+        let longLeafPath = "/A2/B1/C2/D1/E3/F2/G2/H2/I2/J1/K3/L1"
+        let app = launchHomeApp(
+            readingState: .start,
+            userLikes: [longLeafPath]
+        )
+        defer { XCUIDevice.shared.orientation = .portrait }
+
+        let favoritesTab = app.tabBars.firstMatch.buttons.element(boundBy: 2)
+        XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3))
+        favoritesTab.tap()
+
+        let reader = app.otherElements["reader.paged"]
+        let body = app.textViews["reader.paged.body.0"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 5))
+        XCTAssertTrue(body.waitForExistence(timeout: 5))
+        let portraitHeight = body.frame.height
+        XCTAssertGreaterThan(
+            portraitHeight,
+            app.frame.height + 100,
+            "The long favorite body should extend beyond one screen and remain vertically scrollable"
+        )
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        guard waitForCondition(timeout: 5, {
+            app.frame.width > app.frame.height
+        }) else {
+            throw XCTSkip("The simulator did not acknowledge landscape orientation")
+        }
+        XCTAssertTrue(body.waitForExistence(timeout: 3))
+        let landscapeHeight = body.frame.height
+        XCTAssertGreaterThan(landscapeHeight, app.frame.height + 100)
+        XCTAssertLessThan(
+            landscapeHeight,
+            portraitHeight,
+            "A wider iPad reading column should reflow the complete body into fewer lines"
+        )
+    }
+
     func testNightReadingThemeIsNotExposed() {
         let app = launchHomeApp(readingState: .start)
         let tabBar = app.tabBars.firstMatch

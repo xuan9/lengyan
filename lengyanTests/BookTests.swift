@@ -196,6 +196,31 @@ class lengyanTests: XCTestCase {
         XCTAssertFalse(Book.shared.isValidResumePath("/missing/path"))
     }
 
+    func testPagedReaderIndexIncludesEveryCorpusContentPath() throws {
+        guard case .success = Book.shared.loadDataSyncWithCompletionHandler({ _ in }) else {
+            XCTFail("Expected bundled corpus to load")
+            return
+        }
+        let index = try XCTUnwrap(Book.shared.index)
+        let contents = try XCTUnwrap(Book.shared.contents)
+        let pagedPaths = index.indices.compactMap { indexPosition -> String? in
+            guard Book.shared.isItemLeaf(indexPosition) == true else { return nil }
+            return index[indexPosition]["path"]
+        }
+
+        XCTAssertEqual(pagedPaths.count, Set(pagedPaths).count)
+        XCTAssertEqual(
+            Set(pagedPaths),
+            Set(contents.keys),
+            "Horizontal page traversal must not skip any stored scripture section"
+        )
+        XCTAssertTrue(
+            contents.values.flatMap { $0 }.allSatisfy {
+                !($0["content"] ?? "").isEmpty
+            }
+        )
+    }
+
     func testReadingStayTimerAccumulatesOnlyForegroundIntervals() {
         let baseline = Date(timeIntervalSince1970: 1_000)
         var timer = ReadingStayTimer(threshold: 10)
@@ -1001,6 +1026,172 @@ class lengyanTests: XCTestCase {
     }
 
     @MainActor
+    func testPagedReaderCellHeightContainsEntireParagraph() throws {
+        guard case .success = Book.shared.loadDataSyncWithCompletionHandler({ _ in }) else {
+            XCTFail("Expected bundled corpus to load")
+            return
+        }
+        let path = "/A2/B1/C2/D1/E3/F2/G2/H2/I2/J1/K3/L1"
+        let pageIndex = try XCTUnwrap(
+            Book.shared.index?.firstIndex(where: { $0["path"] == path })
+        )
+
+        let reader = SutraPageContentViewController()
+        reader.pageIndex = pageIndex
+        reader.loadViewIfNeeded()
+        let window = host(reader, size: CGSize(width: 1_024, height: 1_366))
+        defer { window.isHidden = true }
+
+        let indexPath = IndexPath(row: 0, section: 0)
+        reader.tableView.scrollToRow(at: indexPath, at: .top, animated: false)
+        reader.tableView.layoutIfNeeded()
+        let cell = try XCTUnwrap(
+            reader.tableView.cellForRow(at: indexPath) as? SutraTableViewCell
+        )
+        cell.layoutIfNeeded()
+
+        let textView = try XCTUnwrap(cell.textView)
+        textView.layoutManager.ensureLayout(for: textView.textContainer)
+        let requiredTextHeight = ceil(
+            textView.layoutManager.usedRect(for: textView.textContainer).height
+                + textView.textContainerInset.top
+                + textView.textContainerInset.bottom
+        )
+        XCTAssertGreaterThan(requiredTextHeight, 500)
+        XCTAssertGreaterThanOrEqual(
+            textView.bounds.height + 1,
+            requiredTextHeight,
+            "A self-sizing page row must not clip the final wrapped lines"
+        )
+
+        layout(reader, in: window, size: CGSize(width: 540, height: 1_024))
+        reader.tableView.scrollToRow(at: indexPath, at: .top, animated: false)
+        reader.tableView.layoutIfNeeded()
+        let narrowedCell = try XCTUnwrap(
+            reader.tableView.cellForRow(at: indexPath) as? SutraTableViewCell
+        )
+        narrowedCell.layoutIfNeeded()
+        let narrowedTextView = try XCTUnwrap(narrowedCell.textView)
+        narrowedTextView.layoutManager.ensureLayout(for: narrowedTextView.textContainer)
+        let narrowedRequiredHeight = ceil(
+            narrowedTextView.layoutManager.usedRect(for: narrowedTextView.textContainer).height
+                + narrowedTextView.textContainerInset.top
+                + narrowedTextView.textContainerInset.bottom
+        )
+        XCTAssertGreaterThan(
+            narrowedRequiredHeight,
+            requiredTextHeight,
+            "Narrowing the reading column should increase the wrapped text height"
+        )
+        XCTAssertGreaterThanOrEqual(
+            narrowedTextView.bounds.height + 1,
+            narrowedRequiredHeight,
+            "A page narrowed by iPad multitasking must grow instead of clipping its final lines"
+        )
+    }
+
+    @MainActor
+    func testPagedReaderCellMeasuresUsingFinalReadingWidth() throws {
+        guard case .success = Book.shared.loadDataSyncWithCompletionHandler({ _ in }) else {
+            XCTFail("Expected bundled corpus to load")
+            return
+        }
+        let path = "/A2/B1/C2/D1/E3/F2/G2/H2/I2/J1/K3/L1"
+        let content = try XCTUnwrap(Book.shared.contents?[path]?.first?["content"])
+        XCTAssertGreaterThan(content.count, 1_000)
+
+        let cell = SutraTableViewCell(style: .default, reuseIdentifier: nil)
+        cell.configureWithZenStyle(content: content, type: "sutra")
+
+        let targetWidth: CGFloat = 1_024
+        let measuredSize = cell.systemLayoutSizeFitting(
+            CGSize(width: targetWidth, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        cell.frame = CGRect(x: 0, y: 0, width: targetWidth, height: measuredSize.height)
+        cell.setNeedsLayout()
+        cell.layoutIfNeeded()
+
+        let textView = try XCTUnwrap(cell.textView)
+        textView.layoutManager.ensureLayout(for: textView.textContainer)
+        let requiredTextHeight = ceil(
+            textView.layoutManager.usedRect(for: textView.textContainer).height
+                + textView.textContainerInset.top
+                + textView.textContainerInset.bottom
+        )
+        XCTAssertGreaterThan(requiredTextHeight, 500)
+        XCTAssertGreaterThanOrEqual(
+            measuredSize.height + 1,
+            requiredTextHeight,
+            "Initial self-sizing must use the final centered reading-column width"
+        )
+    }
+
+    @MainActor
+    func testChapterReaderPagesCoverEveryCharacterWithoutClipping() throws {
+        let rawText = String(
+            repeating: "如是我聞，一時佛在舍衛國祇樹給孤獨園。",
+            count: 600
+        )
+        let attributedText = Book.shared.getSutraAttributeString(text: rawText)
+        let reader = ReaderViewController(
+            title: "卷一",
+            content: attributedText,
+            chapter: 0
+        )
+        let window = host(reader, size: CGSize(width: 390, height: 844))
+        defer { window.isHidden = true }
+
+        let pages = descendantTextViews(in: reader.view).sorted {
+            $0.frame.minX < $1.frame.minX
+        }
+        XCTAssertGreaterThan(pages.count, 2)
+
+        var nextCharacterLocation = 0
+        for textView in pages {
+            let layoutManager = textView.layoutManager
+            let textContainer = textView.textContainer
+            layoutManager.ensureLayout(for: textContainer)
+            let glyphRange = layoutManager.glyphRange(for: textContainer)
+            let characterRange = layoutManager.characterRange(
+                forGlyphRange: glyphRange,
+                actualGlyphRange: nil
+            )
+            XCTAssertEqual(
+                characterRange.location,
+                nextCharacterLocation,
+                "Adjacent volume pages must not omit scripture characters"
+            )
+            nextCharacterLocation = NSMaxRange(characterRange)
+
+            let usedRect = layoutManager.usedRect(for: textContainer)
+            let availableWidth = textView.bounds.width
+                - textView.textContainerInset.left
+                - textView.textContainerInset.right
+            let availableHeight = textView.bounds.height
+                - textView.textContainerInset.top
+                - textView.textContainerInset.bottom
+            XCTAssertLessThanOrEqual(
+                usedRect.maxX,
+                availableWidth + 1,
+                "A volume page must not draw its final columns outside the visible text area"
+            )
+            XCTAssertLessThanOrEqual(
+                usedRect.maxY,
+                availableHeight + 1,
+                "A volume page must not draw its final line outside the visible text area"
+            )
+        }
+
+        XCTAssertEqual(
+            nextCharacterLocation,
+            attributedText.length,
+            "The final volume page must include the final scripture character"
+        )
+    }
+
+    @MainActor
     private func host(_ controller: UIViewController, size: CGSize) -> UIWindow {
         let window = UIWindow(frame: CGRect(origin: .zero, size: size))
         window.rootViewController = controller
@@ -1090,6 +1281,15 @@ class lengyanTests: XCTestCase {
             indexPath.row,
             min(max((visibleY - rowRect.minY) / rowRect.height, 0), 1)
         )
+    }
+
+    @MainActor
+    private func descendantTextViews(in view: UIView) -> [UITextView] {
+        var result = view.subviews.compactMap { $0 as? UITextView }
+        for subview in view.subviews {
+            result.append(contentsOf: descendantTextViews(in: subview))
+        }
+        return result
     }
 
     private func sutraText(characterCount: Int) -> String {

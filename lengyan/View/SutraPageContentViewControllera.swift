@@ -150,32 +150,58 @@ class SutraTableViewCell: UITableViewCell {
         ]
 
         textView.attributedText = NSAttributedString(string: content, attributes: attributes)
+        textView.invalidateIntrinsicContentSize()
+        setNeedsLayout()
         
         // 更新左侧锚定线的显示状态（仅在经文正文时显示）
         if let borderLayer = containerView.layer.sublayers?.first(where: { $0.name == "zenAnchorLine" }) {
             borderLayer.isHidden = (type != "sutra")
         }
     }
+
+    override func systemLayoutSizeFitting(
+        _ targetSize: CGSize,
+        withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
+        verticalFittingPriority: UILayoutPriority
+    ) -> CGSize {
+        updateReadingColumn(for: targetSize.width)
+        return super.systemLayoutSizeFitting(
+            targetSize,
+            withHorizontalFittingPriority: horizontalFittingPriority,
+            verticalFittingPriority: verticalFittingPriority
+        )
+    }
     
     override func layoutSubviews() {
+        // Apply the final reading width before UIKit lays out the text view.
+        // Updating these constraints after `super` can leave a self-sized row
+        // one layout pass behind and visually cut off its final wrapped lines.
+        updateReadingColumn(for: contentView.bounds.width)
         super.layoutSubviews()
-        
+
+        // 动态调整金线的高度与位置
+        if let borderLayer = containerView.layer.sublayers?.first(where: { $0.name == "zenAnchorLine" }) {
+            borderLayer.frame = CGRect(x: 4, y: 16, width: 1, height: max(0, containerView.bounds.height - 32))
+        }
+    }
+
+    private func updateReadingColumn(for width: CGFloat) {
+        guard width > 0 else { return }
+
         // A cell's own height is only the current paragraph height and cannot
         // identify the reading window's orientation. Prefer the scene window;
         // before attachment, use a square fallback so a tall iPad is never
         // mistaken for landscape during self-sizing.
         let readingContainerHeight = window?.bounds.height
-            ?? max(contentView.bounds.width, contentView.bounds.height)
+            ?? max(width, contentView.bounds.height)
         let horizontalInset = SutraAdaptiveLayout.readingHorizontalInsets(
-            containerWidth: contentView.bounds.width,
+            containerWidth: width,
             containerHeight: readingContainerHeight
         )
-        containerLeadingConstraint.constant = horizontalInset
-        containerTrailingConstraint.constant = -horizontalInset
-        
-        // 动态调整金线的高度与位置
-        if let borderLayer = containerView.layer.sublayers?.first(where: { $0.name == "zenAnchorLine" }) {
-            borderLayer.frame = CGRect(x: 4, y: 16, width: 1, height: containerView.bounds.height - 32)
+        if abs(containerLeadingConstraint.constant - horizontalInset) > 0.5 {
+            containerLeadingConstraint.constant = horizontalInset
+            containerTrailingConstraint.constant = -horizontalInset
+            textView.invalidateIntrinsicContentSize()
         }
     }
 
@@ -719,6 +745,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
         // Apply comprehensive zen styling
         cell.configureWithZenStyle(content: textContent, type: contentType)
+        cell.textView.accessibilityIdentifier = "reader.paged.body.\(row)"
 
         // 含蓄的禅意入场动画
         cell.alpha = 0
