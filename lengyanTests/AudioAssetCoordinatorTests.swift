@@ -173,40 +173,13 @@ final class AudioAssetCoordinatorTests: XCTestCase {
         )
     }
 
-    func testAutomaticStoragePolicyUsesASeparatePrefetchHeadroom() {
-        let threshold = AudioAssetAutomaticStoragePolicy.minimumHeadroomBytes
-        XCTAssertFalse(
-            AudioAssetAutomaticStoragePolicy.shouldReclaim(
-                availableCapacity: nil
-            )
-        )
-        XCTAssertTrue(
-            AudioAssetAutomaticStoragePolicy.shouldReclaim(
-                availableCapacity: threshold - 1
-            )
-        )
-        XCTAssertFalse(
-            AudioAssetAutomaticStoragePolicy.shouldReclaim(
-                availableCapacity: threshold
-            )
-        )
-        XCTAssertFalse(
-            AudioAssetAutomaticStoragePolicy.allowsPrefetch(
-                assetByteCount: 10,
-                availableCapacity: threshold + 9
-            )
-        )
-        XCTAssertTrue(
-            AudioAssetAutomaticStoragePolicy.allowsPrefetch(
-                assetByteCount: 10,
-                availableCapacity: threshold + 10
-            )
-        )
-    }
-
     func testFallbackCacheMigratesToCachesAndKeepsTwoMostRecentFiles() throws {
         let root = temporaryCacheDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
+        let defaultsSuite = "lengyan-cdn-cache-tests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: defaultsSuite))
+        defaults.removePersistentDomain(forName: defaultsSuite)
+        defer { defaults.removePersistentDomain(forName: defaultsSuite) }
         let cacheDirectory = root.appendingPathComponent("Caches/AudioFallback")
         let legacyDirectory = root.appendingPathComponent(
             "ApplicationSupport/AudioFallback"
@@ -225,7 +198,10 @@ final class AudioAssetCoordinatorTests: XCTestCase {
             resourceTimeout: 60
         )
 
-        CDNAudioCache.prepareStorage(configuration: configuration)
+        CDNAudioCache.prepareStorage(
+            configuration: configuration,
+            defaults: defaults
+        )
         XCTAssertFalse(FileManager.default.fileExists(atPath: legacyDirectory.path))
         XCTAssertTrue(
             FileManager.default.fileExists(
@@ -246,15 +222,13 @@ final class AudioAssetCoordinatorTests: XCTestCase {
                 withIntermediateDirectories: true
             )
             try Data(repeating: UInt8(index), count: 16).write(to: url)
-            CDNAudioCache.touch(
-                url,
-                date: Date(timeIntervalSince1970: TimeInterval(index + 1))
-            )
+            CDNAudioCache.touch(assetID: asset.id, defaults: defaults)
         }
 
         CDNAudioCache.trim(
             configuration: configuration,
             protecting: [],
+            defaults: defaults,
             maximumFileCount: 2,
             maximumByteCount: .max
         )
@@ -760,10 +734,7 @@ final class AudioAssetCoordinatorTests: XCTestCase {
         let provider = FakeAudioAssetProvider(
             backendKind: .managedBackgroundAssets
         )
-        let coordinator = AudioAssetCoordinator(
-            provider: provider,
-            availableCapacityProvider: { Int64.max }
-        )
+        let coordinator = AudioAssetCoordinator(provider: provider)
         let current = try XCTUnwrap(AudioAssetCatalog.descriptor(for: "ly01"))
         let selected = try XCTUnwrap(AudioAssetCatalog.descriptor(for: "ly02"))
 
@@ -782,7 +753,7 @@ final class AudioAssetCoordinatorTests: XCTestCase {
             selected,
             generation: UUID()
         )
-        await coordinator.performAutomaticStorageMaintenance(force: true)
+        await coordinator.reclaimUnusedManagedPacks()
 
         let evicted = await provider.evictedAssetIDs
         XCTAssertFalse(evicted.contains(current.id))
@@ -800,6 +771,50 @@ final class AudioAssetCoordinatorTests: XCTestCase {
         } catch {
             // Expected.
         }
+    }
+
+    func testManagedOutOfSpaceFailureReclaimsUnusedVolumes() async throws {
+        let provider = FakeAudioAssetProvider(
+            backendKind: .managedBackgroundAssets
+        )
+        let coordinator = AudioAssetCoordinator(provider: provider)
+        let current = try XCTUnwrap(AudioAssetCatalog.descriptor(for: "ly01"))
+        let next = try XCTUnwrap(AudioAssetCatalog.descriptor(for: "ly02"))
+
+        let currentHandle = await coordinator.requestPlayback(
+            current,
+            generation: UUID()
+        )
+        await provider.complete(
+            assetID: current.id,
+            url: URL(fileURLWithPath: "/tmp/managed-current-ly01.m4a")
+        )
+        let currentLease = try await readyLease(from: currentHandle)
+        await coordinator.commitPlayback(currentLease)
+
+        await coordinator.startPrefetch(next, ownerID: UUID().uuidString)
+        await waitForRequest(assetID: next.id, provider: provider)
+        await provider.fail(
+            assetID: next.id,
+            error: NSError(
+                domain: NSCocoaErrorDomain,
+                code: NSFileWriteOutOfSpaceError
+            )
+        )
+
+        for _ in 0..<200 {
+            if await provider.evictedAssetIDs.count
+                == AudioAssetCatalog.orderedIDs.count - 1 {
+                break
+            }
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+        let evicted = await provider.evictedAssetIDs
+        XCTAssertFalse(evicted.contains(current.id))
+        XCTAssertEqual(
+            Set(evicted),
+            Set(AudioAssetCatalog.orderedIDs).subtracting([current.id])
+        )
     }
 
     private func readyLease(

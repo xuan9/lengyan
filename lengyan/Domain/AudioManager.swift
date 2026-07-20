@@ -125,9 +125,6 @@ final class AudioManager: ObservableObject {
             loadMediaData()
         }
 
-        Task { [assetCoordinator] in
-            await assetCoordinator.performAutomaticStorageMaintenance()
-        }
     }
 
     deinit {
@@ -676,18 +673,7 @@ final class AudioManager: ObservableObject {
         ) { [weak self] _ in
             self?.prefetchTriggeredGeneration = nil
             Task {
-                await self?.assetCoordinator.performAutomaticStorageMaintenance(
-                    force: true
-                )
-            }
-        }
-        let foreground = NotificationCenter.default.addObserver(
-            forName: UIApplication.willEnterForegroundNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task {
-                await self?.assetCoordinator.performAutomaticStorageMaintenance()
+                await self?.assetCoordinator.reclaimUnusedManagedPacks()
             }
         }
         let power = NotificationCenter.default.addObserver(
@@ -698,7 +684,7 @@ final class AudioManager: ObservableObject {
             guard !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
             self?.startNextPrefetchIfNeeded()
         }
-        lifecycleObservers = [memory, terminate, lowDisk, foreground, power]
+        lifecycleObservers = [memory, terminate, lowDisk, power]
     }
 
     // MARK: - Helpers

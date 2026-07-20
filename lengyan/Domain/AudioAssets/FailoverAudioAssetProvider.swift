@@ -328,26 +328,8 @@ actor FailoverAudioAssetProvider: AudioAssetProvider {
            nsError.code == NSURLErrorCancelled {
             return false
         }
-        if isLocalOutOfSpace(error) { return false }
+        if AudioAssetFailurePolicy.isLocalOutOfSpace(error) { return false }
         return true
-    }
-
-    private func isLocalOutOfSpace(_ error: Error, depth: Int = 0) -> Bool {
-        guard depth < 4 else { return false }
-        let nsError = error as NSError
-        if nsError.domain == NSCocoaErrorDomain,
-           (nsError.code == NSFileWriteOutOfSpaceError
-            || nsError.code == NSBundleOnDemandResourceOutOfSpaceError) {
-            return true
-        }
-        if nsError.domain == NSPOSIXErrorDomain,
-           nsError.code == Int(POSIXErrorCode.ENOSPC.rawValue) {
-            return true
-        }
-        guard let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? Error else {
-            return false
-        }
-        return isLocalOutOfSpace(underlying, depth: depth + 1)
     }
 
     private func scheduleWatchdog(requestID: UUID) {

@@ -97,12 +97,13 @@ struct CDNAudioFallbackConfiguration: Sendable {
 enum CDNAudioCache {
     static let maximumFileCount = 2
     static let maximumByteCount: Int64 = 48 * 1_024 * 1_024
+    private static let accessOrderDefaultsKey =
+        "audioAssets.cdnCacheAccessOrderV1"
 
     private struct CachedFile {
         let assetID: String
         let url: URL
         let byteCount: Int64
-        let lastAccessDate: Date
     }
 
     static func destinationURL(
@@ -118,7 +119,8 @@ enum CDNAudioCache {
 
     static func prepareStorage(
         configuration: CDNAudioFallbackConfiguration,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        defaults: UserDefaults = .standard
     ) {
         let destination = configuration.cacheDirectory
         let parent = destination.deletingLastPathComponent()
@@ -147,54 +149,74 @@ enum CDNAudioCache {
             isDirectory: true
         )
         try? fileManager.removeItem(at: stagingDirectory)
-        trim(configuration: configuration, protecting: [], fileManager: fileManager)
+        trim(
+            configuration: configuration,
+            protecting: [],
+            fileManager: fileManager,
+            defaults: defaults
+        )
     }
 
     static func touch(
-        _ url: URL,
-        fileManager: FileManager = .default,
-        date: Date = Date()
+        assetID: String,
+        defaults: UserDefaults = .standard
     ) {
-        try? fileManager.setAttributes(
-            [.modificationDate: date],
-            ofItemAtPath: url.path
-        )
+        var accessOrder = defaults.stringArray(
+            forKey: accessOrderDefaultsKey
+        ) ?? []
+        accessOrder.removeAll { $0 == assetID }
+        accessOrder.append(assetID)
+        defaults.set(accessOrder, forKey: accessOrderDefaultsKey)
     }
 
     static func trim(
         configuration: CDNAudioFallbackConfiguration,
         protecting protectedAssetIDs: Set<String>,
         fileManager: FileManager = .default,
+        defaults: UserDefaults = .standard,
         maximumFileCount: Int = CDNAudioCache.maximumFileCount,
         maximumByteCount: Int64 = CDNAudioCache.maximumByteCount
     ) {
         var files: [CachedFile] = []
         for asset in AudioAssetCatalog.descriptors {
             let url = destinationURL(for: asset, configuration: configuration)
-            guard let attributes = try? fileManager.attributesOfItem(atPath: url.path),
-                  let size = attributes[.size] as? NSNumber else { continue }
+            guard fileManager.fileExists(atPath: url.path) else { continue }
             files.append(
                 CachedFile(
                     assetID: asset.id,
                     url: url,
-                    byteCount: size.int64Value,
-                    lastAccessDate: attributes[.modificationDate] as? Date
-                        ?? .distantPast
+                    byteCount: asset.contentByteCount
                 )
             )
         }
+
+        let existingIDs = Set(files.map(\.assetID))
+        var seenIDs = Set<String>()
+        var accessOrder = defaults.stringArray(
+            forKey: accessOrderDefaultsKey
+        )?.filter {
+            existingIDs.contains($0) && seenIDs.insert($0).inserted
+        } ?? []
+        let orderedIDs = Set(accessOrder)
+        accessOrder.append(contentsOf: AudioAssetCatalog.orderedIDs.filter {
+            existingIDs.contains($0) && !orderedIDs.contains($0)
+        })
+        let accessRanks = Dictionary(
+            uniqueKeysWithValues: accessOrder.enumerated().map {
+                ($0.element, $0.offset)
+            }
+        )
 
         var fileCount = files.count
         var byteCount = files.reduce(Int64(0)) { $0 + $1.byteCount }
         let candidates = files
             .filter { !protectedAssetIDs.contains($0.assetID) }
             .sorted { lhs, rhs in
-                if lhs.lastAccessDate != rhs.lastAccessDate {
-                    return lhs.lastAccessDate < rhs.lastAccessDate
-                }
-                return lhs.assetID < rhs.assetID
+                accessRanks[lhs.assetID, default: 0]
+                    < accessRanks[rhs.assetID, default: 0]
             }
 
+        var removedIDs = Set<String>()
         for candidate in candidates {
             guard fileCount > maximumFileCount || byteCount > maximumByteCount else {
                 break
@@ -205,28 +227,34 @@ enum CDNAudioCache {
                 )
                 fileCount -= 1
                 byteCount -= candidate.byteCount
+                removedIDs.insert(candidate.assetID)
             } catch {
                 // Best-effort cache maintenance; a later pass retries it.
             }
         }
+        defaults.set(
+            accessOrder.filter { !removedIDs.contains($0) },
+            forKey: accessOrderDefaultsKey
+        )
     }
 
     static func validate(
         _ url: URL,
-        for asset: AudioAssetDescriptor,
-        fileManager: FileManager = .default
+        for asset: AudioAssetDescriptor
     ) throws {
-        let attributes = try fileManager.attributesOfItem(atPath: url.path)
-        guard let size = attributes[.size] as? NSNumber,
-              size.int64Value == asset.contentByteCount else {
-            throw AudioAssetError.invalidDownloadedFile(asset.id)
-        }
-
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         var hasher = SHA256()
+        var byteCount: Int64 = 0
         while let data = try handle.read(upToCount: 1_048_576), !data.isEmpty {
+            byteCount += Int64(data.count)
+            guard byteCount <= asset.contentByteCount else {
+                throw AudioAssetError.invalidDownloadedFile(asset.id)
+            }
             hasher.update(data: data)
+        }
+        guard byteCount == asset.contentByteCount else {
+            throw AudioAssetError.invalidDownloadedFile(asset.id)
         }
         let digest = hasher.finalize().map { String(format: "%02x", $0) }.joined()
         guard digest == asset.contentSHA256 else {
@@ -240,7 +268,7 @@ enum CDNAudioCache {
         configuration: CDNAudioFallbackConfiguration,
         fileManager: FileManager = .default
     ) throws -> URL {
-        try validate(stagingURL, for: asset, fileManager: fileManager)
+        try validate(stagingURL, for: asset)
         let destination = destinationURL(for: asset, configuration: configuration)
         let parent = destination.deletingLastPathComponent()
         try fileManager.createDirectory(
@@ -255,7 +283,7 @@ enum CDNAudioCache {
         values.isExcludedFromBackup = true
         var mutableDestination = destination
         try mutableDestination.setResourceValues(values)
-        touch(mutableDestination, fileManager: fileManager)
+        touch(assetID: asset.id)
         return destination
     }
 }
@@ -570,7 +598,7 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
             entry.leaseIDs.insert(lease.id)
             entries[asset.id] = entry
             leaseToAsset[lease.id] = asset.id
-            CDNAudioCache.touch(url, fileManager: fileManager)
+            CDNAudioCache.touch(assetID: asset.id)
             trimCacheIfNeeded()
             return lease
         }
@@ -581,7 +609,7 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
             configuration: configuration
         )
         do {
-            try CDNAudioCache.validate(destination, for: asset, fileManager: fileManager)
+            try CDNAudioCache.validate(destination, for: asset)
             let lease = AudioAssetLease(assetID: asset.id, localURL: destination)
             entries[asset.id] = Entry(
                 asset: asset,
@@ -592,7 +620,7 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
                 task: nil
             )
             leaseToAsset[lease.id] = asset.id
-            CDNAudioCache.touch(destination, fileManager: fileManager)
+            CDNAudioCache.touch(assetID: asset.id)
             trimCacheIfNeeded()
             return lease
         } catch {
@@ -681,7 +709,7 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
         do {
             if fileManager.fileExists(atPath: destination.path) {
                 do {
-                    try CDNAudioCache.validate(destination, for: asset, fileManager: fileManager)
+                    try CDNAudioCache.validate(destination, for: asset)
                     deliverReady(assetID: asset.id, generation: generation, url: destination)
                     return
                 } catch {

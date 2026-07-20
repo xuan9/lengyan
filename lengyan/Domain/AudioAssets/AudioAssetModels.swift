@@ -90,6 +90,26 @@ enum AudioAssetError: LocalizedError, Sendable {
     }
 }
 
+enum AudioAssetFailurePolicy {
+    static func isLocalOutOfSpace(_ error: Error, depth: Int = 0) -> Bool {
+        guard depth < 4 else { return false }
+        let nsError = error as NSError
+        if nsError.domain == NSCocoaErrorDomain,
+           (nsError.code == NSFileWriteOutOfSpaceError
+            || nsError.code == NSBundleOnDemandResourceOutOfSpaceError) {
+            return true
+        }
+        if nsError.domain == NSPOSIXErrorDomain,
+           nsError.code == Int(POSIXErrorCode.ENOSPC.rawValue) {
+            return true
+        }
+        guard let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? Error else {
+            return false
+        }
+        return isLocalOutOfSpace(underlying, depth: depth + 1)
+    }
+}
+
 struct AudioAssetCoordinatorSnapshot: Sendable {
     let backend: AudioAssetBackendKind
     let requestedAssetID: String?

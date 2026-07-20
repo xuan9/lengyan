@@ -9,39 +9,6 @@
 
 import Foundation
 
-enum AudioAssetAutomaticStoragePolicy {
-    // Audio prefetch is opportunistic. Keep enough room for normal device
-    // operation in addition to the next (at most 21 MiB) audio pack.
-    static let minimumHeadroomBytes: Int64 = 512 * 1_024 * 1_024
-
-    static func shouldReclaim(availableCapacity: Int64?) -> Bool {
-        guard let availableCapacity else { return false }
-        return availableCapacity < minimumHeadroomBytes
-    }
-
-    static func allowsPrefetch(
-        assetByteCount: Int64,
-        availableCapacity: Int64?
-    ) -> Bool {
-        guard assetByteCount > 0 else { return false }
-        guard let availableCapacity else { return true }
-        return availableCapacity >= minimumHeadroomBytes + assetByteCount
-    }
-
-    static func currentOpportunisticCapacity(
-        fileManager: FileManager = .default
-    ) -> Int64? {
-        guard let cachesURL = fileManager.urls(
-            for: .cachesDirectory,
-            in: .userDomainMask
-        ).first,
-        let values = try? cachesURL.resourceValues(
-            forKeys: [.volumeAvailableCapacityForOpportunisticUsageKey]
-        ) else { return nil }
-        return values.volumeAvailableCapacityForOpportunisticUsage
-    }
-}
-
 actor AudioAssetCoordinator {
     private static let accessTimesDefaultsKey =
         "audioAssets.managedPackLastAccessTimesV1"
@@ -62,21 +29,14 @@ actor AudioAssetCoordinator {
     }
 
     private let provider: any AudioAssetProvider
-    private let availableCapacityProvider: @Sendable () -> Int64?
     private var pending: PendingRequest?
     private var prefetch: PrefetchRequest?
     private var currentLease: AudioAssetLease?
     private var requestedAssetID: String?
     private var lastAccessTimes: [String: TimeInterval]
 
-    init(
-        provider: any AudioAssetProvider,
-        availableCapacityProvider: @escaping @Sendable () -> Int64? = {
-            AudioAssetAutomaticStoragePolicy.currentOpportunisticCapacity()
-        }
-    ) {
+    init(provider: any AudioAssetProvider) {
         self.provider = provider
-        self.availableCapacityProvider = availableCapacityProvider
         let stored = UserDefaults.standard.dictionary(
             forKey: Self.accessTimesDefaultsKey
         ) ?? [:]
@@ -93,9 +53,6 @@ actor AudioAssetCoordinator {
     ) async -> AudioAssetRequestHandle {
         await cancelPending()
         requestedAssetID = asset.id
-        await performAutomaticStorageMaintenance(
-            additionallyProtecting: [asset.id]
-        )
 
         let output = AsyncThrowingStream<AudioAssetEvent, Error>.audioAssetStream()
 
@@ -168,18 +125,6 @@ actor AudioAssetCoordinator {
         _ asset: AudioAssetDescriptor,
         ownerID: String
     ) async {
-        let capacity = availableCapacityProvider()
-        guard AudioAssetAutomaticStoragePolicy.allowsPrefetch(
-            assetByteCount: asset.contentByteCount,
-            availableCapacity: capacity
-        ) else {
-            await performAutomaticStorageMaintenance(
-                force: AudioAssetAutomaticStoragePolicy.shouldReclaim(
-                    availableCapacity: capacity
-                )
-            )
-            return
-        }
         guard currentLease?.assetID != asset.id else { return }
         if prefetch?.asset.id == asset.id { return }
 
@@ -207,7 +152,6 @@ actor AudioAssetCoordinator {
         if let oldLease {
             await provider.release(oldLease)
         }
-        await performAutomaticStorageMaintenance()
     }
 
     func discard(_ lease: AudioAssetLease) async {
@@ -245,16 +189,10 @@ actor AudioAssetCoordinator {
         requestedAssetID = nil
     }
 
-    func performAutomaticStorageMaintenance(
-        force: Bool = false,
+    func reclaimUnusedManagedPacks(
         additionallyProtecting additionalIDs: Set<String> = []
     ) async {
         guard provider.backendKind == .managedBackgroundAssets else { return }
-
-        let capacity = availableCapacityProvider()
-        guard force || AudioAssetAutomaticStoragePolicy.shouldReclaim(
-            availableCapacity: capacity
-        ) else { return }
 
         var protectedIDs = additionalIDs
         if let currentLease { protectedIDs.insert(currentLease.assetID) }
@@ -291,15 +229,8 @@ actor AudioAssetCoordinator {
                 lastAccessTimes.removeValue(forKey: assetID)
             } catch {
                 // A newly-started request can race maintenance while an await
-                // is suspended. In-use and transient removal failures are safe
-                // to retry during the next maintenance pass.
-            }
-
-            if !force,
-               !AudioAssetAutomaticStoragePolicy.shouldReclaim(
-                   availableCapacity: availableCapacityProvider()
-               ) {
-                break
+                // is suspended. In-use and transient removal failures remain
+                // safe for the system or a later low-space event to handle.
             }
         }
         persistAccessTimes()
@@ -377,14 +308,21 @@ actor AudioAssetCoordinator {
     }
 
     private func fail(_ error: Error, requestID: UUID) async {
+        let shouldReclaim = AudioAssetFailurePolicy.isLocalOutOfSpace(error)
         if let pending, pending.requestID == requestID {
             self.pending = nil
             requestedAssetID = currentLease?.assetID
             pending.continuation.finish(throwing: error)
+            if shouldReclaim {
+                await reclaimUnusedManagedPacks()
+            }
             return
         }
         if let prefetch, prefetch.requestID == requestID {
             self.prefetch = nil
+            if shouldReclaim {
+                await reclaimUnusedManagedPacks()
+            }
         }
     }
 }
