@@ -349,17 +349,29 @@ public final class SutraDesignTokens {
     }
 
     private func applyTheme(_ theme: SutraTheme) {
-        DispatchQueue.main.async {
+        let updateVisibleInterface = {
             // Update global UIKit appearance proxies (borrowed from SutraDesignSystem)
             self.applyThemeToApp()
 
-            // Also update interface style for views that don't use appearance proxies
+            // UIAppearance only guarantees styling when a view enters the
+            // appearance hierarchy. Refresh the existing root tab bar as well
+            // so a theme selected from Settings is visible without changing tabs.
             self.applicationWindows().forEach { window in
                 let backgroundColor = self.color(for: .background)
                 window.backgroundColor = backgroundColor
                 window.rootViewController?.view.backgroundColor = backgroundColor
                 window.overrideUserInterfaceStyle = self.interfaceStyle(for: theme)
+
+                if let tabBarController = window.rootViewController as? UITabBarController {
+                    self.applyCurrentTheme(to: tabBarController.tabBar)
+                }
             }
+        }
+
+        if Thread.isMainThread {
+            updateVisibleInterface()
+        } else {
+            DispatchQueue.main.async(execute: updateVisibleInterface)
         }
     }
 
@@ -493,6 +505,25 @@ public final class SutraDesignTokens {
         }
 
         return appearance
+    }
+
+    /// Applies the theme to an already-created tab bar. Appearance proxies do
+    /// not reliably restyle visible instances until their next appearance pass.
+    func applyCurrentTheme(to tabBar: UITabBar) {
+        let appearance = makeTabBarAppearance()
+        let tabBarColor = color(for: .tabBar)
+
+        tabBar.standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            tabBar.scrollEdgeAppearance = appearance
+        }
+        tabBar.tintColor = color(for: .primary)
+        tabBar.unselectedItemTintColor = color(for: .textSecondary)
+        tabBar.barTintColor = tabBarColor
+        tabBar.backgroundColor = tabBarColor
+        tabBar.isTranslucent = false
+        tabBar.setNeedsLayout()
+        tabBar.setNeedsDisplay()
     }
 
     private func configureTabBarItemAppearance(

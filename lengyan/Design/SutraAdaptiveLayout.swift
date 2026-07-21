@@ -14,6 +14,22 @@ enum SutraAdaptiveLayout {
     /// 横屏阅读上限：iPad 横屏时放宽经文宽度，减少两侧留白空洞感
     static let landscapeReadingWidth: CGFloat = 960
 
+    /// 听经目录在横屏和普通窗口中保持原有的紧凑节奏；只有 iPad 的高屏窗口
+    /// 才逐步增加行高，利用竖向空间而不放大已经足够清晰的 20pt 列表文字。
+    /// 这里使用宽高差连续插值，不按 orientation 硬切，旋转和分屏缩放时不会跳版。
+    static func audioTrackRowHeight(
+        containerSize: CGSize,
+        deviceIdiom: UIUserInterfaceIdiom = UIDevice.current.userInterfaceIdiom
+    ) -> CGFloat {
+        let compactHeight: CGFloat = 52
+        guard deviceIdiom == .pad else { return compactHeight }
+
+        let tallWindowDifference = max(containerSize.height - containerSize.width, 0)
+        let tallWindowProgress = min(tallWindowDifference / 280, 1)
+        let largeIPadProgress = min(max(containerSize.height - 1_120, 0) / 100, 1)
+        return compactHeight + 10 * tallWindowProgress + 6 * largeIPadProgress
+    }
+
     /// 根据容器尺寸判断是否横屏宽屏（宽度大于高度，且足够宽）
     static func isWideLandscape(containerWidth: CGFloat, containerHeight: CGFloat) -> Bool {
         return containerWidth > containerHeight && containerWidth >= 1024

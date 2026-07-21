@@ -13,6 +13,9 @@ struct ModernAudioPlayerView: View {
     var body: some View {
         GeometryReader { rootGeo in
             let tabBarOverlapHeight = tabBarOverlapHeight(in: rootGeo.frame(in: .global))
+            let trackRowHeight = SutraAdaptiveLayout.audioTrackRowHeight(
+                containerSize: rootGeo.size
+            )
 
             ZStack(alignment: .bottom) {
                 // 1. 全景沉浸式动态古画背景 + 启动画面风格的竖向书法标题
@@ -57,7 +60,7 @@ struct ModernAudioPlayerView: View {
                                     .progressViewStyle(CircularProgressViewStyle())
                                     .padding(.top, SutraDesignTokens.shared.spacing(for: SutraDesignTokens.SpacingTokens.spacingComponentXXL))
                             } else {
-                                flatTrackList
+                                flatTrackList(rowHeight: trackRowHeight)
                             }
 
                             // 归属署名 — 安静低调
@@ -624,7 +627,7 @@ struct ModernAudioPlayerView: View {
     }
 
     // MARK: - Flat Track List (经卷目录)
-    private var flatTrackList: some View {
+    private func flatTrackList(rowHeight: CGFloat) -> some View {
         VStack(spacing: 0) {
             ForEach(manager.mediaGroups) { group in
                 ForEach(group.files.indices, id: \.self) { index in
@@ -643,7 +646,8 @@ struct ModernAudioPlayerView: View {
                     trackRow(
                         name: group.names[index],
                         file: group.files[index],
-                        fileExtension: group.fileExtension
+                        fileExtension: group.fileExtension,
+                        rowHeight: rowHeight
                     )
 
                     // 曲目间极细线
@@ -660,7 +664,12 @@ struct ModernAudioPlayerView: View {
     }
 
     // MARK: - Track Row
-    private func trackRow(name: String, file: String, fileExtension ext: String) -> some View {
+    private func trackRow(
+        name: String,
+        file: String,
+        fileExtension ext: String,
+        rowHeight: CGFloat
+    ) -> some View {
         let status = manager.downloadStatus[file] ?? .notDownloaded
         let progress = manager.downloadProgress[file] ?? 0
         let isCurrent = audioObserver.currentTrack == name
@@ -710,7 +719,7 @@ struct ModernAudioPlayerView: View {
                     Circle().fill(primary.opacity(0.4)).frame(width: 6, height: 6)
                 }
             }
-            .frame(minHeight: 52)
+            .frame(minHeight: rowHeight)
 
             // 下载进度条（静默，无文字）
             if status == .downloading {

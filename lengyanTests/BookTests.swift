@@ -491,6 +491,85 @@ class lengyanTests: XCTestCase {
         XCTAssertEqual(SutraDesignTokens.shared.currentTheme.rawValue, SutraTheme.sepia.rawValue)
     }
 
+    func testThemeChangeImmediatelyRestylesExistingRootTabBar() {
+        let completed = expectation(description: "Visible tab bar adopts the selected theme")
+
+        DispatchQueue.main.async {
+            guard
+                let appDelegate = UIApplication.shared.delegate as? AppDelegate,
+                let tabBarController = appDelegate.window?.rootViewController as? UITabBarController
+            else {
+                XCTFail("Expected the app's root tab bar controller")
+                completed.fulfill()
+                return
+            }
+
+            let tokens = SutraDesignTokens.shared
+            let previousTheme = tokens.currentTheme
+            let targetTheme: SutraTheme = previousTheme == .light ? .sepia : .light
+            defer {
+                tokens.setTheme(previousTheme)
+                completed.fulfill()
+            }
+
+            tokens.setTheme(targetTheme)
+
+            let tabBar = tabBarController.tabBar
+            let expectedBackground = tokens.color(for: .tabBar)
+            XCTAssertTrue(
+                tabBar.standardAppearance.backgroundColor?.isEqual(expectedBackground) == true
+            )
+            XCTAssertTrue(
+                tabBar.scrollEdgeAppearance?.backgroundColor?.isEqual(expectedBackground) == true
+            )
+            XCTAssertTrue(tabBar.backgroundColor?.isEqual(expectedBackground) == true)
+            XCTAssertTrue(tabBar.tintColor?.isEqual(tokens.color(for: .primary)) == true)
+            XCTAssertTrue(
+                tabBar.unselectedItemTintColor?.isEqual(tokens.color(for: .textSecondary)) == true
+            )
+        }
+
+        wait(for: [completed], timeout: 3)
+    }
+
+    func testAudioTrackRowsAdaptContinuouslyWithoutChangingPhoneOrLandscape() {
+        XCTAssertEqual(
+            SutraAdaptiveLayout.audioTrackRowHeight(
+                containerSize: CGSize(width: 834, height: 1_119),
+                deviceIdiom: .pad
+            ),
+            62
+        )
+        XCTAssertEqual(
+            SutraAdaptiveLayout.audioTrackRowHeight(
+                containerSize: CGSize(width: 1_194, height: 759),
+                deviceIdiom: .pad
+            ),
+            52
+        )
+        XCTAssertEqual(
+            SutraAdaptiveLayout.audioTrackRowHeight(
+                containerSize: CGSize(width: 900, height: 1_040),
+                deviceIdiom: .pad
+            ),
+            57
+        )
+        XCTAssertEqual(
+            SutraAdaptiveLayout.audioTrackRowHeight(
+                containerSize: CGSize(width: 1_024, height: 1_316),
+                deviceIdiom: .pad
+            ),
+            68
+        )
+        XCTAssertEqual(
+            SutraAdaptiveLayout.audioTrackRowHeight(
+                containerSize: CGSize(width: 390, height: 763),
+                deviceIdiom: .phone
+            ),
+            52
+        )
+    }
+
     func testAdaptiveReadingWidthsDistinguishLargeIPadPortraitAndLandscape() {
         XCTAssertEqual(
             SutraAdaptiveLayout.homeHorizontalInsets(

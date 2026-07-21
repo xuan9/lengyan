@@ -175,10 +175,10 @@ struct ModernSettingsView: View {
                     zenDivider
                     aboutItem(L10n.str("settings_acknowledgments"), icon: "heart.text.square", action: openAcknowledgments)
                     zenDivider
+                    aboutItem(L10n.str("settings_privacy_policy"), icon: "hand.raised", action: openPrivacyPolicy)
+                    zenDivider
                     versionRow
                 }
-
-                privacyPolicyFooter
 
                 Text("✧ ❀ ✧")
                     .font(.system(size: 11))
@@ -527,19 +527,6 @@ struct ModernSettingsView: View {
                 .foregroundColor(SutraDesignSystem.color(.textSecondary))
         }
         .padding(.vertical, 16)
-    }
-
-    private var privacyPolicyFooter: some View {
-        Button(action: openPrivacyPolicy) {
-            Text(L10n.str("settings_privacy_policy"))
-                .font(SutraTypographyBridge.uiSmall(weight: .regular))
-                .foregroundColor(SutraDesignSystem.color(.textSecondary))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .frame(minHeight: 44)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .padding(.top, 20)
     }
 
     // MARK: - Navigation (delegates to NavigationHelper)

@@ -664,20 +664,27 @@ class lengyanUITests: XCTestCase {
             }
 
             assertSingleRowAlignment()
+            let startedInPortraitScene = app.frame.height > app.frame.width
             defer { XCUIDevice.shared.orientation = .portrait }
             XCUIDevice.shared.orientation = .landscapeLeft
-            XCTAssertTrue(waitForCondition(timeout: 5) {
+            let sceneEnteredLandscape = startedInPortraitScene && waitForCondition(timeout: 5) {
                 app.frame.width > app.frame.height
-            })
-            XCTAssertTrue(outlineResumeButton.waitForExistence(timeout: 3))
-            assertSingleRowAlignment()
+            }
+            // iPadOS 26 Windowed Apps may retain the scene's window size when
+            // XCTest changes only the physical device orientation. If UIKit
+            // does resize this scene, verify both transitions; otherwise the
+            // layout remains covered at its current, user-controlled size.
+            if sceneEnteredLandscape {
+                XCTAssertTrue(outlineResumeButton.waitForExistence(timeout: 3))
+                assertSingleRowAlignment()
 
-            XCUIDevice.shared.orientation = .portrait
-            XCTAssertTrue(waitForCondition(timeout: 5) {
-                app.frame.height > app.frame.width
-            })
-            XCTAssertTrue(outlineResumeButton.waitForExistence(timeout: 3))
-            assertSingleRowAlignment()
+                XCUIDevice.shared.orientation = .portrait
+                XCTAssertTrue(waitForCondition(timeout: 5) {
+                    app.frame.height > app.frame.width
+                })
+                XCTAssertTrue(outlineResumeButton.waitForExistence(timeout: 3))
+                assertSingleRowAlignment()
+            }
         } else {
             XCTAssertEqual(outlineResumeButton.frame.minX, chapterOneButton.frame.minX, accuracy: 1)
             XCTAssertEqual(listeningButton.frame.minX, chapterOneButton.frame.minX, accuracy: 1)
@@ -709,6 +716,71 @@ class lengyanUITests: XCTestCase {
             "The seeded tree-reading history should resume its exact reader mode"
         )
         XCTAssertFalse(chapterReader.exists)
+    }
+
+    func testIPadListeningListAdaptsAcrossRotation() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("Listening rotation coverage is iPad-only")
+        }
+
+        XCUIDevice.shared.orientation = .portrait
+        let app = launchHomeApp(readingState: .start)
+        defer { XCUIDevice.shared.orientation = .portrait }
+
+        guard waitForCondition(timeout: 3, {
+            app.frame.height > app.frame.width
+        }) else {
+            throw XCTSkip(
+                "The iPadOS scene retained its user-controlled landscape geometry"
+            )
+        }
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+        tabBar.buttons.element(boundBy: 1).tap()
+
+        let firstTrack = app.staticTexts["audio_track_ly01"]
+        let secondTrack = app.staticTexts["audio_track_ly02"]
+        XCTAssertTrue(firstTrack.waitForExistence(timeout: 5))
+        XCTAssertTrue(secondTrack.waitForExistence(timeout: 5))
+
+        let portraitPitch = secondTrack.frame.midY - firstTrack.frame.midY
+        XCTAssertGreaterThanOrEqual(portraitPitch, 61)
+
+        let portraitAttachment = XCTAttachment(screenshot: app.screenshot())
+        portraitAttachment.name = "Listening-iPad-Portrait"
+        portraitAttachment.lifetime = .keepAlways
+        add(portraitAttachment)
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        guard waitForCondition(timeout: 5, {
+            app.frame.width > app.frame.height
+        }) else {
+            throw XCTSkip(
+                "The iPadOS Windowed Apps scene retained its user-controlled window size"
+            )
+        }
+        XCTAssertTrue(waitForCondition(timeout: 5) {
+            let pitch = secondTrack.frame.midY - firstTrack.frame.midY
+            return abs(pitch - 52.5) <= 1
+        })
+
+        let landscapePitch = secondTrack.frame.midY - firstTrack.frame.midY
+        XCTAssertEqual(landscapePitch, 52.5, accuracy: 1)
+        XCTAssertGreaterThan(portraitPitch, landscapePitch + 5)
+
+        let landscapeAttachment = XCTAttachment(screenshot: app.screenshot())
+        landscapeAttachment.name = "Listening-iPad-Landscape"
+        landscapeAttachment.lifetime = .keepAlways
+        add(landscapeAttachment)
+
+        XCUIDevice.shared.orientation = .portrait
+        XCTAssertTrue(waitForCondition(timeout: 5) {
+            app.frame.height > app.frame.width
+        })
+        XCTAssertTrue(waitForCondition(timeout: 5) {
+            abs((secondTrack.frame.midY - firstTrack.frame.midY) - portraitPitch) <= 1
+        })
     }
 
     func testHomeSingleRowDistributesShortResumeSpaceAcrossEqualGaps() throws {
