@@ -1,8 +1,9 @@
 # Lengyan Audio Fallback Static Assets
 
-This assets-only Workers project exposes exactly the 11 immutable audio files
-listed in `src/catalog.mjs`. It deliberately has no Worker script, R2 bucket,
-binding, or `run_worker_first` route. Production uses the free
+This assets-only Workers project exposes the immutable audio files declared in
+`../AudioAssets/audio-manifest.json`. `src/catalog.mjs` and the static health
+contract are generated from that canonical manifest. The project deliberately
+has no Worker script, R2 bucket, binding, or `run_worker_first` route. Production uses the free
 `lengyan-audio-fallback.dhyana9.workers.dev` HTTPS route until a custom domain
 is available.
 
@@ -20,6 +21,7 @@ used because its free tier can incur usage charges when exceeded.
 ## Local verification
 
 ```sh
+node scripts/generate-audio-manifest.mjs --check
 node scripts/verify-audio-fallback-catalogs.mjs
 node --test CloudflareAudioFallback/tests/*.test.mjs
 asset_dir="$(mktemp -d /tmp/lengyan-assets.XXXXXX)"
@@ -38,7 +40,7 @@ Authenticate Wrangler once, then run:
 scripts/deploy-cloudflare-audio-fallback.sh
 ```
 
-This verifies and stages all 11 source files, reruns catalog/config tests, then
+This verifies and stages every canonical source file, reruns catalog/config tests, then
 deploys them as pure Static Assets with preview URLs disabled. It never creates
 or accesses R2. Verify the public result with:
 

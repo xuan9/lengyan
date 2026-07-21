@@ -2,6 +2,13 @@
 
 set -euo pipefail
 
+script_dir="${0:A:h}"
+repo_root="${script_dir:h}"
+catalog_file="${repo_root}/AudioAssets/audio-manifest.json"
+expected_tags="$(jq -r '[.tracks[].id] | sort | join(",")' "${catalog_file}")"
+expected_count="$(jq -r '.tracks | length' "${catalog_file}")"
+file_extension="$(jq -r '.fileExtension' "${catalog_file}")"
+
 require_signed=false
 if [[ "${1:-}" == "--require-signed" ]]; then
   require_signed=true
@@ -22,7 +29,6 @@ odr_root="${archive_path}/Products/OnDemandResources"
 odr_manifest="${app_path}/OnDemandResources.plist"
 host_executable="${app_path}/$(plutil -extract CFBundleExecutable raw "${main_info}")"
 extension_executable="${extension_path}/$(plutil -extract CFBundleExecutable raw "${extension_info}")"
-expected_tags="ly01,ly02,ly03,ly04,ly05,ly06,ly07,ly08,ly09,ly10,lyz1"
 
 test -d "${archive_path}"
 test -d "${app_path}"
@@ -31,6 +37,7 @@ test -d "${extension_path}"
 test -f "${extension_info}"
 test -f "${host_executable}"
 test -f "${extension_executable}"
+node "${script_dir}/generate-audio-manifest.mjs" --check
 
 [[ "$(plutil -extract MinimumOSVersion raw "${main_info}")" == "15.0" ]]
 [[ "$(plutil -extract BAAppGroupID raw "${main_info}")" == "group.org.fuxuan.books" ]]
@@ -41,9 +48,9 @@ test -f "${extension_executable}"
 
 test -f "${odr_manifest}"
 test -d "${odr_root}"
-[[ "$(find "${odr_root}" -maxdepth 1 -type d -name '*.assetpack' | wc -l | tr -d ' ')" == "11" ]]
-[[ "$(find "${odr_root}" -type f -name '*.m4a' | wc -l | tr -d ' ')" == "11" ]]
-[[ "$(find "${app_path}" -type f -name '*.m4a' | wc -l | tr -d ' ')" == "0" ]]
+[[ "$(find "${odr_root}" -maxdepth 1 -type d -name '*.assetpack' | wc -l | tr -d ' ')" == "${expected_count}" ]]
+[[ "$(find "${odr_root}" -type f -name "*.${file_extension}" | wc -l | tr -d ' ')" == "${expected_count}" ]]
+[[ "$(find "${app_path}" -type f -name "*.${file_extension}" | wc -l | tr -d ' ')" == "0" ]]
 
 actual_tags="$(
   plutil -convert json -o - "${odr_manifest}" |
@@ -52,7 +59,7 @@ actual_tags="$(
 [[ "${actual_tags}" == "${expected_tags}" ]]
 
 for asset_pack in "${odr_root}"/*.assetpack; do
-  [[ "$(find "${asset_pack}" -type f -name '*.m4a' | wc -l | tr -d ' ')" == "1" ]]
+  [[ "$(find "${asset_pack}" -type f -name "*.${file_extension}" | wc -l | tr -d ' ')" == "1" ]]
 done
 
 xcrun vtool -show-build "${host_executable}" | grep -Eq 'minos[[:space:]]+15\.0'
@@ -80,7 +87,7 @@ echo "  host minimum OS: 15.0"
 echo "  downloader minimum OS: 26.0"
 echo "  BackgroundAssets host linkage: weak"
 echo "  managed Background Assets keys: present"
-echo "  legacy ODR asset packs/tags: 11 exact matches"
+echo "  legacy ODR asset packs/tags: ${expected_count} exact matches"
 echo "  M4A files embedded in app: 0"
 if [[ "${require_signed}" == "true" ]]; then
   echo "  code signatures: verified"

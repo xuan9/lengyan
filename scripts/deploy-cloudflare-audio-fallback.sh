@@ -6,6 +6,7 @@ script_dir="${0:A:h}"
 repo_root="${script_dir:h}"
 worker_config="${repo_root}/CloudflareAudioFallback/wrangler.jsonc"
 repo_wrangler="${repo_root}/server/node_modules/.bin/wrangler"
+catalog_version="$(jq -r '.catalogVersion' "${repo_root}/AudioAssets/audio-manifest.json")"
 
 if [[ -n "${WRANGLER_BIN:-}" ]]; then
   wrangler_bin="${WRANGLER_BIN}"
@@ -30,4 +31,4 @@ node --test "${repo_root}"/CloudflareAudioFallback/tests/*.test.mjs
   --config "${worker_config}" \
   --assets "${asset_dir}" \
   --strict \
-  --message "Release zero-overage immutable audio fallback v1"
+  --message "Release zero-overage immutable audio fallback ${catalog_version}"

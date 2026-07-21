@@ -206,7 +206,7 @@ class AudioPlayerObserver: NSObject, ObservableObject {
     func updateNowPlayingInfo() {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: currentTrack ?? "楞嚴經",
-            MPMediaItemPropertyArtist: "屏東能淨協會讀誦",
+            MPMediaItemPropertyArtist: GeneratedAudioManifest.nowPlayingArtist,
             MPMediaItemPropertyPlaybackDuration: totalTime,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0

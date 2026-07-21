@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "v1",
+  "sourceDirectory": "lengyan/屏東能淨協會讀誦",
+  "fileExtension": "m4a",
+  "cdnPathPrefix": "audio",
+  "apple": {
+    "assetPackIDPrefix": "org.fuxuan.lengyan.audio.",
+    "relativeDirectory": "Audio",
+    "downloadPolicy": "onDemand",
+    "platforms": [
+      "iOS"
+    ]
+  },
+  "localizations": {
+    "zh-Hant": {
+      "artist": "屏東能淨協會讀誦"
+    },
+    "zh-Hans": {
+      "artist": "屏东能净协会读诵"
+    }
+  },
+  "tracks": [
+    {
+      "id": "ly01",
+      "sha256": "981ed4e96be6bf23694d3ad4dda4958fc987295fa895d229df1138f87674ae5a",
+      "bytes": 11408933,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷一",
+        "zh-Hans": "楞严经 卷一"
+      }
+    },
+    {
+      "id": "ly02",
+      "sha256": "86e26f96f26f51c7d94bb9763ae8da5cdc2d7c29f4e3f963ffbc19629725f472",
+      "bytes": 14772155,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷二",
+        "zh-Hans": "楞严经 卷二"
+      }
+    },
+    {
+      "id": "ly03",
+      "sha256": "b2170f364da0d44dd7b1242c73b784eb0f8243e19946591cbdeee90a7b670d55",
+      "bytes": 15582450,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷三",
+        "zh-Hans": "楞严经 卷三"
+      }
+    },
+    {
+      "id": "ly04",
+      "sha256": "34dbd536f603b32ac4fc0316201cd65fe8fbbee504196470fce2b4ac4fa7c840",
+      "bytes": 16602673,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷四",
+        "zh-Hans": "楞严经 卷四"
+      }
+    },
+    {
+      "id": "ly05",
+      "sha256": "f8669fe34c8bd95093679c7d25e16dfdb72cc8d15601987dbaf49bb3dde6151c",
+      "bytes": 13012100,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷五",
+        "zh-Hans": "楞严经 卷五"
+      }
+    },
+    {
+      "id": "ly06",
+      "sha256": "53ce455f3a20cc09e49f05ae2632fafd8c1c686529d5bf9ecdd32f3465a39828",
+      "bytes": 14330690,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷六",
+        "zh-Hans": "楞严经 卷六"
+      }
+    },
+    {
+      "id": "ly07",
+      "sha256": "c4b879afc23d06fbcf4af2ed81d5b9680797fa0860a0f9804531da95668813a7",
+      "bytes": 16483037,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷七",
+        "zh-Hans": "楞严经 卷七"
+      }
+    },
+    {
+      "id": "ly08",
+      "sha256": "7a31de382ed9bfc523ec4a49792055249d378a32c8d5cde8b8b3bea928b01e96",
+      "bytes": 15602303,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷八",
+        "zh-Hans": "楞严经 卷八"
+      }
+    },
+    {
+      "id": "ly09",
+      "sha256": "a0f8ad5c1cdde15243d150e510368f43d327fe42f5ef1e362e704971cedde801",
+      "bytes": 21116150,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷九",
+        "zh-Hans": "楞严经 卷九"
+      }
+    },
+    {
+      "id": "ly10",
+      "sha256": "e531560f540e74fd3088201de8e164007dfb71434ec55f43d751c92b11feff2c",
+      "bytes": 16590672,
+      "titles": {
+        "zh-Hant": "楞嚴經 卷十",
+        "zh-Hans": "楞严经 卷十"
+      }
+    },
+    {
+      "id": "lyz1",
+      "sha256": "33734314186b1229a08b85169c6b481ed9401cf94ae636f4b36340f11d1db2e0",
+      "bytes": 5919555,
+      "titles": {
+        "zh-Hant": "楞嚴咒",
+        "zh-Hans": "楞严咒"
+      }
+    }
+  ]
+}

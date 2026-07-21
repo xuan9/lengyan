@@ -5,17 +5,20 @@ import test from "node:test";
 import { AUDIO_ASSETS, CATALOG_VERSION } from "../src/catalog.mjs";
 
 const MAXIMUM_STATIC_ASSET_BYTES = 25 * 1024 * 1024;
+const manifest = JSON.parse(
+  await readFile(new URL("../../AudioAssets/audio-manifest.json", import.meta.url), "utf8"),
+);
 
-test("catalog exposes exactly 11 immutable content-addressed assets", () => {
-  assert.equal(CATALOG_VERSION, "v1");
-  assert.equal(Object.keys(AUDIO_ASSETS).length, 11);
+test("catalog exposes every canonical immutable content-addressed asset", () => {
+  assert.equal(CATALOG_VERSION, manifest.catalogVersion);
+  assert.equal(Object.keys(AUDIO_ASSETS).length, manifest.tracks.length);
 
   const identifiers = new Set();
   const hashes = new Set();
   for (const [assetPath, asset] of Object.entries(AUDIO_ASSETS)) {
-    assert.match(
+    assert.equal(
       assetPath,
-      new RegExp(`^/audio/v1/${asset.sha256}/${asset.id}\\.m4a$`),
+      `/${manifest.cdnPathPrefix}/${manifest.catalogVersion}/${asset.sha256}/${asset.id}.${manifest.fileExtension}`,
     );
     assert.equal(asset.key, assetPath.slice(1));
     assert.ok(asset.bytes > 0);
@@ -24,8 +27,8 @@ test("catalog exposes exactly 11 immutable content-addressed assets", () => {
     hashes.add(asset.sha256);
   }
 
-  assert.equal(identifiers.size, 11);
-  assert.equal(hashes.size, 11);
+  assert.equal(identifiers.size, manifest.tracks.length);
+  assert.equal(hashes.size, manifest.tracks.length);
 });
 
 test("deployment is assets-only with no executable Worker or R2 binding", async () => {
@@ -49,8 +52,8 @@ test("static health contract declares the asset backend", async () => {
   assert.deepEqual(health, {
     service: "lengyan-audio-fallback",
     status: "ok",
-    catalogVersion: "v1",
-    assetCount: 11,
+    catalogVersion: manifest.catalogVersion,
+    assetCount: manifest.tracks.length,
     storage: "workers-static-assets",
   });
 });

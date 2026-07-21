@@ -1,6 +1,14 @@
 {
   "assetPackID": "org.fuxuan.lengyan.audio.ly04",
-  "downloadPolicy": { "onDemand": {} },
-  "fileSelectors": [{ "file": "Audio/ly04.m4a" }],
-  "platforms": ["iOS"]
+  "downloadPolicy": {
+    "onDemand": {}
+  },
+  "fileSelectors": [
+    {
+      "file": "Audio/ly04.m4a"
+    }
+  ],
+  "platforms": [
+    "iOS"
+  ]
 }

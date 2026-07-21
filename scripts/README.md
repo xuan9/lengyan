@@ -2,10 +2,15 @@
 
 ## Cloudflare Audio Fallback
 
-`deploy-cloudflare-audio-fallback.sh` verifies and publishes the 11 immutable
-audio files as zero-overage Workers Static Assets. It does not create or use
-R2. `verify-cloudflare-audio-fallback.sh` downloads the public production set
-and verifies every byte count and SHA-256. See
+`AudioAssets/audio-manifest.json` is the only hand-edited audio catalog.
+`generate-audio-manifest.mjs` validates the source M4A files and generates the
+Swift, Apple, Cloudflare, checksum and localized media catalogs. Its `--check`
+mode fails if a generated file drifts from the canonical manifest.
+
+`deploy-cloudflare-audio-fallback.sh` verifies and publishes the canonical
+immutable audio files as zero-overage Workers Static Assets. It does not create
+or use R2. `verify-cloudflare-audio-fallback.sh` downloads the public production
+set and verifies every byte count and SHA-256. See
 `BackgroundAssets/CLOUDFLARE_FALLBACK.md` for the production URL and policy.
 
 ## WebDriverAgent Management

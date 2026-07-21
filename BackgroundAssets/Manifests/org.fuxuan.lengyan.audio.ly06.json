@@ -1,6 +1,14 @@
 {
   "assetPackID": "org.fuxuan.lengyan.audio.ly06",
-  "downloadPolicy": { "onDemand": {} },
-  "fileSelectors": [{ "file": "Audio/ly06.m4a" }],
-  "platforms": ["iOS"]
+  "downloadPolicy": {
+    "onDemand": {}
+  },
+  "fileSelectors": [
+    {
+      "file": "Audio/ly06.m4a"
+    }
+  ],
+  "platforms": [
+    "iOS"
+  ]
 }

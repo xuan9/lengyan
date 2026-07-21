@@ -7,6 +7,24 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  audio-catalog:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Verify canonical audio manifest
+      run: |
+        node scripts/generate-audio-manifest.mjs --check
+        node scripts/verify-audio-fallback-catalogs.mjs
+        node --test CloudflareAudioFallback/tests/*.test.mjs
+
   test:
     runs-on: macos-latest
 

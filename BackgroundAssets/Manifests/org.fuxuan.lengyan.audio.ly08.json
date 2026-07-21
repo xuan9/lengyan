@@ -1,6 +1,14 @@
 {
   "assetPackID": "org.fuxuan.lengyan.audio.ly08",
-  "downloadPolicy": { "onDemand": {} },
-  "fileSelectors": [{ "file": "Audio/ly08.m4a" }],
-  "platforms": ["iOS"]
+  "downloadPolicy": {
+    "onDemand": {}
+  },
+  "fileSelectors": [
+    {
+      "file": "Audio/ly08.m4a"
+    }
+  ],
+  "platforms": [
+    "iOS"
+  ]
 }
