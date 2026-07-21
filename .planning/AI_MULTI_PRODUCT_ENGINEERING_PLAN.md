@@ -1,7 +1,7 @@
 # AI 驱动的多经典产品工程与维护计划
 
-**日期：** 2026-07-17\
-**版本：** v2（跨平台一致性复核后）\
+**日期：** 2026-07-20\
+**版本：** v3（结合 7 月 19–20 日提交复核后）\
 **状态：** 实施前主决策稿\
 **适用产品：** 《楞严经》《金刚经》《圆觉经》《六祖坛经》及后续单经产品
 
@@ -27,7 +27,7 @@
 3. **平台内共享代码，平台间共享契约。** iOS 使用本地 `ClassicKit` Swift Package；Android 使用原生 Kotlin/Compose 库模块。两个平台共用内容源、schema、稳定 ID、音频 artifact 清单、深链和行为 fixtures，不强行共享 UI/runtime 代码。
 4. **稳定差异配置化，独特体验留在薄壳。** 经名、章卷结构、精选池、来源、资源和稳定功能开关进入 `ProductManifest`；真正独有的导读、人物或问答体验保留为产品代码，不制造万能 manifest。
 5. **文字与权利信息进入 Git，大音频离开主 Git。** 音频 artifact 由带 SHA-256 的清单描述，平台/渠道交付配置与内容清单分离。
-6. **新音频默认自托管交付。** 共用 CDN/object storage 可同时服务 iOS、Google Play 和非 Play 渠道；现有 iOS ODR 仅作为迁移期 provider，Apple-Hosted Background Assets 是验证收益后的可选优化，不是跨平台基础。
+6. **音频 artifact 共享，交付策略按平台分层。** 当前楞严已实现 iOS 15–25 Legacy ODR、iOS 26+ Managed Background Assets 和 Cloudflare 应急回退；新产品与 Android 仍以可替换的 CDN/object storage 为跨平台基线。现有 `workers.dev` 回退源不是 Android 主源，也不是新产品默认基础设施。
 7. **AI 用机器检查约束。** 每个改动必须通过真实构建、测试、内容校验和必要的截图/真机证据；禁止用只输出“成功”的占位 CI。
 8. **人保留不可委托的最终责任。** 经文与教义编辑、版权/授权、产品身份和签名密钥、隐私/地区合规、各平台正式发布批准。
 
@@ -71,14 +71,15 @@ iOS 与 Android 最困难的部分分别依赖 AVFoundation/WidgetKit/UIKit/Swif
 
 ## 3. 当前仓库审计结论
 
-### 3.1 已有基础足够复用（2026-07-17 实测）
+### 3.1 已有基础足够复用（2026-07-20 实测）
 
 - UIKit 阅读流已经承载约 8 万字符内容的《楞严经》数据。
 - SwiftUI 已用于听经、收藏、搜索、设置和分享。
 - `Book.shared` 已有资源加载和基本结构校验。
-- `AudioManager.shared` 已处理 ODR、后台播放、续播与锁屏控制。
-- Widget、简繁体、提醒、分享长图和文字导出已有实现。
-- 当前 Xcode 工程包含 App、Unit Tests、UI Tests 和 Widget 四个 Target。
+- `AudioManager.shared` 已通过 `AudioAssetProvider` / `AudioAssetCoordinator` 处理资源 lease、后台播放、续播、下一卷预取与锁屏控制；系统和 CDN 分支不再散落在播放器中。
+- Widget 已支持小/中/大与锁屏尺寸、首次添加引导和刷新恢复；简繁体、提醒、分享长图和文字导出已有实现。
+- 当前 Xcode 工程包含 App、Asset Downloader Extension、Unit Tests、UI Tests 和 Widget 五个 Target；App Scheme 已提交为 shared scheme。
+- 7 月 20 日的候选基线提交 `8172e47` 工作区干净，已包含阅读目录状态、iPad 导航和长段分页裁切修复。
 
 因此需要的是**产品化抽象和质量基础设施**，不是重新开发阅读器。
 
@@ -88,18 +89,31 @@ iOS 与 Android 最困难的部分分别依赖 AVFoundation/WidgetKit/UIKit/Swif
 2. `Constants.swift` 写死大量楞严路径、精选路径和十卷假设。
 3. `ReadingResumeResolver`、首页、分享文件名、Widget、URL Scheme、Bundle ID、ODR Tag 和发布脚本仍含产品硬编码。
 4. `Book.shared`、`AudioManager.shared`、`Prefers.shared` 让视图直接依赖全局单例，测试和多产品注入困难。
-5. 唯一 App Scheme 位于 `xcuserdata`；`.gitignore` 又排除了该目录，干净克隆不能可靠获得共享 Scheme。
+5. App Scheme 已从 `xcuserdata` 移到 `xcshareddata`；但新 Asset Downloader Extension 的 Archive、pack 校验和目标级 scheme 仍未收敛到统一 `verify.sh`。
 6. CI 在没有 `Package.swift` 的情况下执行 `swift package resolve` 和 `generate-xcodeproj`，流程本身不可成立。
 7. CI 的无障碍、性能和覆盖率门槛目前只是输出成功文字，没有执行真实检查。
 8. 根目录 `CLAUDE.md`、`REQUIREMENTS.md` 和部分架构报告已与现状不一致，会误导后续 AI。
-9. 仓库约 1.1GB，`.git` 约 690MB、Git pack 约 673MB；当前有 21 个 MP3/M4A 音频二进制直接进入 Git，按当前方式增加三款音频会持续恶化克隆和 CI。
-10. Apple 已从 iOS 27 起弃用 ODR，并建议迁移到 Background Assets；当前音频管理器直接依赖 ODR，不能作为新产品的永久资源接口。
-11. 当前工作区有大量尚未整理的改动，不能把架构迁移混入这些功能修改。
-12. 仓库已经包含用户主动反馈的 App 客户端和 Cloudflare Worker/D1 服务；“完全本地”已不再是完整数据流描述，后续多产品还需显式携带非识别性的 `productID` 才能正确分流反馈。
-13. CI 固定 Xcode 15/iOS 17，并依赖本机 `xcuserdata` Scheme；即使部分命令在当前机器可发现 Scheme，也不能证明干净克隆和当前工具链可复现。
-14. 当前仓库没有 Android/Gradle/Kotlin 工程；Android 是从零建立原生实现并按行为移植，不存在可继续扩建的旧 Android 代码基线。
+9. `.git` 约 693MB、Git pack 约 673MB；索引仍有 21 个大型 MP3/M4A 母源/发布文件和 1 个约 7KB 的 M0 smoke 音频。新产品继续这样存放会恶化克隆和 CI。
+10. iOS provider 边界已经建立，但 `AudioAssetCatalog.swift` 仍写死 11 个楞严 ID、ODR tag、Managed pack ID、CDN path、bytes 和 SHA-256，并把 artifact 与 iOS delivery 字段放在同一模型，不能直接作为多产品清单。
+11. 同一批音频元数据目前重复存在于 Swift catalog、Node static-assets catalog、checksum 文本和 Apple manifests；校验脚本通过正则解析 Swift 源码。它能防止当前 11 条漂移，但不能成为新增产品的生成方式。
+12. 当前工作区已整理并提交，可作为 F0 候选；但尚无带真实命令结果、关键截图、已知问题和发行约束的正式 reference baseline，因此 Gate F0 不能只凭“工作区干净”宣布通过。
+13. 仓库包含反馈 Worker/D1，以及 Apple/Cloudflare 音频网络交付；“完全本地”已不再是完整数据流描述。当前 `PRIVACY.md` 尚未说明外部音频托管链路，后续需同时描述必要的网络请求、服务方、用途和保留边界。
+14. CI 仍固定 Xcode 15/iOS 17，已经无法可信编译 iOS 26 Background Assets API 和 deployment target 26 的 Asset Downloader Extension；同时还执行不存在的 Swift Package 命令，并保留假无障碍、假性能和假覆盖率 job。shared scheme 的提交只解决其中一个问题。
+15. Apple 双栈生产代码、11 个 pack 和 Cloudflare 全量回读已验证，但 App Store Connect 上传/关联、签名 Validate、TestFlight、Apple-hosted 真下载以及目标地区真机网络仍未验证；这部分是外部发行 Gate，不能由模拟器测试替代。
+16. 当前仓库没有 Android/Gradle/Kotlin 工程；Android 是从零建立原生实现并按行为移植，不存在可继续扩建的旧 Android 代码基线。
 
 这些问题不表示不可实施，而是定义了实施顺序：**先建立可信基线，再抽象，再接第二款产品。**
+
+### 3.3 7 月 19–20 日提交对计划的影响
+
+| 提交主题 | 对计划的判断 | 后续动作 |
+|---|---|---|
+| shared scheme、反馈/隐私发布准备 | F0/F1 部分前移，但 CI 仍不可信 | 保留成果，接入统一命令和真实 CI |
+| Apple-hosted + ODR + Cloudflare 音频双栈 | `AudioAssetProvider` 原型阶段已完成，方向正确 | 不重写状态机；把硬编码 catalog 迁入 canonical manifest，并补真实发行验证 |
+| 自动音频存储与 Required Reason API 清理 | 用户体验改为“播放时自动准备、低空间自动处理”，不再展示技术存储页 | Android Phase 0 明确同一产品语义；平台内部缓存实现可不同 |
+| Widget 引导与预览可靠性 | Widget onboarding 已成为现有产品行为 | 加入产品配置、简繁和跨平台验收基线 |
+| 目录状态、返回路径、iPad split-detail | 导航状态是产品行为，不是 UIKit 偶然实现 | 形成 route/outline fixtures；Android 使用原生返回但保持结果一致 |
+| 长段分页裁切修复 | “每个字符可达、宽度变化不裁字”已有测试证据 | 保留为 iOS 回归并加入 Android 长文门槛 |
 
 ## 4. 目标仓库结构
 
@@ -164,7 +178,10 @@ lengyan-app/
 │   │   │   └── android/
 │   │   └── Platform/
 │   │       ├── ios/
+│   │       │   ├── audio-delivery.json
+│   │       │   └── ManagedAssetManifests/   # 生成源；.aar 只进 artifacts
 │   │       └── android/
+│   │           └── audio-delivery.json
 │   ├── jingang/
 │   ├── yuanjue/
 │   └── tanjing/
@@ -187,7 +204,8 @@ lengyan-app/
 │   ├── product/
 │   ├── quality/
 │   └── release/
-├── server/                            # 共享反馈服务及其迁移/隐私测试
+├── server/                            # 现有共享反馈服务及其迁移/隐私测试
+├── CloudflareAudioFallback/           # 现有楞严应急源；catalog 由 manifest 生成
 └── fastlane/
     └── products/                      # 由 Products/StoreMetadata 驱动
 ```
@@ -215,8 +233,10 @@ lengyan-app/
 - 播放队列、续播、下载状态、睡眠定时和远程控制。
 - 只通过协议读取产品音频清单，不访问 `Book.shared`。
 - 播放与资源交付分离：`AudioAssetProvider` 负责确保文件可用，播放器只接收本地 URL。
-- 现有楞严过渡期提供 `LegacyODRAssetProvider`；iOS 15+ 的长期基线采用 CDN + background `URLSession` provider。
-- `ManagedBackgroundAssetsProvider` 只在 iOS 26+ 原型证明可靠性和运营收益后增加，不要求旧系统走同一实现。
+- 现有 App 内的 `AudioAssetProvider`、lease、单任务提升、selection generation、当前/下一卷和 failover 状态机作为迁移输入，先原样锁定测试，再移入模块；不为“重新抽象”重写已经验证的并发逻辑。
+- 现有楞严保留 `LegacyODRAudioAssetProvider`（iOS 15–25）与 `ManagedBackgroundAssetsAudioAssetProvider`（iOS 26+）；后者已完成代码和 Archive 验证，但仍以真实发行环境验证为上线条件。
+- 当前 `CDNAudioAssetProvider` 是用户主动播放时的应急整文件回退，使用前台 `URLSessionDownloadTask` 和最多 2 卷/48MiB cache；它不等同于新产品所需的可恢复后台 CDN provider。
+- 新产品默认采用可替换 CDN + background `URLSession`；Managed Background Assets 只有在楞严真实发行链路和运营收益得到验证后才按产品增加，不要求旧系统走同一实现。
 - AVFoundation、ODR、URLSession 和 Background Assets 的实现细节留在模块内部，业务页面不直接调用这些 API。
 
 **`ClassicUI`（逐步抽取，不先重写）**
@@ -303,6 +323,8 @@ Bundle ID、application ID、签名 Team、App Group、渠道 host 等构建/交
 4. `scripts/bootstrap.sh --product jingang --audio` 只下载该产品所需资源并校验哈希。
 5. 普通代码 CI 不下载全部音频；音频集成和 Release CI 才获取完整资源。
 
+现有楞严迁移时，以 `AudioAssetCatalog.swift`、`BackgroundAssets/audio-source-sha256.txt`、11 个 Apple manifest 和 `CloudflareAudioFallback/src/catalog.mjs` 为一次性输入，生成并人工核对首版 `audio-manifest.json`。迁移完成后这些平台文件必须由同一个结构化 manifest 生成或校验，禁止继续用正则解析 Swift 源码同步重复常量。
+
 不建议立即改写已有 673MB Git 历史。先停止继续增长；历史清理应作为独立、可回滚的仓库迁移项目处理。
 
 ### 6.3 内容清单与交付配置分层
@@ -314,15 +336,16 @@ Products/<id>/Platform/ios/audio-delivery.json
 Products/<id>/Platform/android/audio-delivery.json
 ```
 
-内容清单回答“这是什么文件、对应哪一卷、是否正确”；平台配置回答“这个渠道到哪里取得它”。同一 track 可以有 AAC/M4A 与 Opus 等多个 rendition，平台通过受测策略选择，两个平台仍以 audio ID 和正文映射保持一致。生产 host 可由受控环境配置注入，但 artifact key 和 checksum 必须可审阅。
+内容清单回答“这是什么文件、对应哪一卷、是否正确”；平台配置回答“这个渠道到哪里取得它、何时回退、缓存策略是什么”。同一 track 可以有 AAC/M4A 与 Opus 等多个 rendition，平台通过受测策略选择，两个平台仍以 audio ID 和正文映射保持一致。生产 host 可由受控环境配置注入，但 artifact key 和 checksum 必须可审阅。
 
 ### 6.4 ODR 迁移与长期交付
 
-ODR 已进入弃用周期，因此共享接口不能再暴露 `NSBundleResourceRequest`。实施时应先写 `AudioAssetProvider` 协议，并按系统与产品策略选择实现：
+ODR 已进入弃用周期，因此共享接口不能暴露 `NSBundleResourceRequest`。当前楞严已经建立 backend-neutral `AudioAssetProvider` 与 lease 契约，后续工作是产品化和生成配置，不是重新设计接口：
 
-- **现有楞严：** 在不破坏当前最低系统和已发布资源的前提下保留 ODR 兼容实现。
+- **现有楞严：** iOS 15–25 使用 Legacy ODR；iOS 26+ 使用 Apple-hosted Managed packs；用户主动播放时 Apple 明确失败或连续无进展才使用 Cloudflare 应急回退。后台下一卷预取不得触发公共回退流量。
 - **新产品和 Android：** 默认使用同一受控 CDN/object storage；iOS 15+ 通过 background `URLSession`，Android 通过 Media3 下载。
-- **iOS 26+ 可选优化：** 评估 Apple-Hosted Managed Background Assets；只有它在可靠性、成本或首启体验上显著优于共用 CDN 时才增加 provider。
+- **当前 Cloudflare 限制：** Static Assets 实测忽略 Range 并返回完整文件，且 `workers.dev` 没有中国大陆 SLA；它只保留为楞严应急源，Android 与新产品必须另选支持 Range、恢复、容量与地区要求的主 host。
+- **iOS 26+ 可选优化：** 新产品是否采用 Apple-Hosted Managed Background Assets，必须等楞严完成 App Store Connect pack 关联、TestFlight/生产真机和目标网络验证后再决定。
 - **未来移除：** 当支持系统范围允许时删除 ODR Provider，而不改播放器、页面或产品内容模型。
 
 Apple 已确认 ODR 从 iOS/iPadOS 27 起弃用并建议迁移；Managed Background Assets 可用于目标 iOS 26+ 的 App。弃用不等于当前版本立即失效，因此现有楞严迁移应行为保持、可回滚；但新产品不再建立新的 ODR 依赖。
@@ -334,6 +357,7 @@ Apple 已确认 ODR 从 iOS/iPadOS 27 起弃用并建议迁移；Managed Backgro
 - `server/` 是正式部署单元，必须有锁定工具链、单元/迁移/隐私测试和独立发布 runbook。
 - 多产品请求只增加必要的 `productID` 与公开 App 版本，不附带设备标识、型号、系统版本或用户阅读数据。
 - 每款 App 的隐私说明、Apple Privacy Manifest 和 Google Play Data safety 必须与 Worker/D1 的真实字段、保留和删除流程一致。
+- 隐私数据流还必须列出 Apple/Google/第三方音频 host 的请求目的、可能处理的网络元数据、缓存位置和地区路由；“正文与进度本地保存”不能被表述为“App 完全不联网”。
 - 客户端失败不能阻塞离线阅读；服务端 schema 变更先做向后兼容阶段，再删除旧字段。
 - AI 可以执行迁移检查和生成数据流 diff，但生产数据库、Cloudflare 权限和隐私声明仍需人工批准。
 
@@ -341,19 +365,20 @@ Apple 已确认 ODR 从 iOS/iPadOS 27 起弃用并建议迁移；Managed Backgro
 
 ### 7.1 短期
 
-- 先把现有 Scheme 移到 `xcshareddata/xcschemes` 并提交。
+- 保留已经提交的 shared App Scheme，并把 Widget/Asset Downloader Extension 的可复现 build/archive 校验接入公共脚本；只在独立调用确有需要时再提交目标级 shared scheme。
 - 修正 CI，使干净克隆只用仓库真实存在的命令即可构建。
+- CI Xcode image 必须支持 iOS 26 SDK 和 Asset Downloader Extension；工具链不满足时明确失败，不能通过弱化/跳过 extension 得到绿色。
 - 用 `.xcconfig` 收敛最低系统、版本、签名以外的共享 Build Settings。
 
 ### 7.2 增加第二款 Target 前
 
 建议采用 XcodeGen，把 Target、Scheme、资源、测试和配置写成可审阅的 `project.yml`。`project.pbxproj` 可以提交，但视为生成物，不再手工编辑。这样 Codex 修改的是稳定的 YAML，而不是大量随机 UUID。
 
-由于当前工程包含 ODR Tag、Widget、Objective-C Bridging Header 和旧资源组，迁移必须先做等价性试验：
+由于当前工程包含 ODR Tag、Widget、Asset Downloader Extension、Managed Background Assets、Objective-C Bridging Header 和旧资源组，迁移必须先做等价性试验：
 
 - Debug/Release Build Settings 对比。
-- 主 App 与 Widget 均可构建和启动。
-- 迁移过渡期的 ODR Tag、初始安装资源和音频下载行为不变。
+- 主 App、Widget 与 Asset Downloader Extension 均可构建，主 App/Widget 可启动。
+- 11 个 ODR Tag、Managed manifests、App Group、弱链接、App 内不嵌完整 M4A 和 Apple/CDN 音频状态语义不变。
 - Bundle ID、Entitlements、URL Scheme 和本地化不变。
 - Unit/UI Test Target 仍正确关联。
 
@@ -472,6 +497,7 @@ Apple 已确认 ODR 从 iOS/iPadOS 27 起弃用并建议迁移；Managed Backgro
 ### 10.2 CI 矩阵
 
 - 每个 PR：Manifest/内容 schema、服务端 lint/tests、受影响平台单测和 App 构建。
+- 修改音频 catalog、provider、pack 或 fallback：运行 Swift 音频 tests、Node catalog/static-assets tests、shell/package checks 和无内嵌 M4A 的 Archive 校验；真实 Apple-hosted 下载仍由发行 Gate 负责。
 - 修改 `Contracts`、schema 或生成器：验证所有现有产品的 iOS/Android contract tests；新产品未建立前不制造空通过矩阵。
 - 修改 `ClassicCore`：构建全部现有 iOS App + Widget；修改 Android shared library：构建全部现有 Android App modules。
 - 修改单款内容/资产：验证该产品两个平台和共享内容校验。
@@ -487,9 +513,12 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 产品化重构前先为楞严建立以下基线：
 
 - 首次启动、继续阅读、目录跳转、搜索与收藏。
+- 全目录 disclosure state 跨 tab 保持；跨分支返回到正确层级；iPad 收藏 split-detail 能回到根阅读流。
+- 每个 canonical leaf 恰好可达一次；长段在 iPhone/iPad、旋转和窄窗口下不漏字符、不裁最后一行。
 - 当前卷暂停后恢复；其他卷从头播放。
-- Legacy ODR 下载、后台播放、锁屏控制和无网络错误；迁移 provider 后同一行为继续成立。
-- Widget 刷新与深链。
+- 当前播放 A 时请求 B 不提前中断 A；下一卷预取可提升复用；迟到选择不能抢占；用户取消/空间不足不误触 CDN；下载文件须通过 bytes + SHA-256 后才播放。
+- iOS 15–25 Legacy ODR、iOS 26+ Managed packs、Cloudflare 明确失败/无进展回退、后台播放、锁屏控制和无网络错误；抽取模块后同一状态语义继续成立。
+- Widget 小/中/大与锁屏尺寸、首次添加引导、刷新恢复和深链。
 - 简繁切换、大字体、VoiceOver 关键标签。
 - 短文本、9,000 字、20,000 字分享预览和导出。
 - 现有收藏与阅读/播放进度迁移。
@@ -553,25 +582,26 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 
 ### Foundation 0：整理当前基线（3-5 个工作日）
 
-- Review、拆分并提交或明确搁置当前大量工作区改动。
-- 固定一个可安装的楞严 reference commit、版本、关键截图和已知问题。
-- 禁止把当前分享、导航、隐私或服务端修改混入架构迁移提交。
+- 以 `8172e47` 为候选，记录当前 13 个近期提交的行为变化、版本、关键截图、真实测试结果、未运行项和已知问题。
+- 将 Apple-hosted 未验证项、Cloudflare 地区限制和隐私文案缺口列为明确 release blockers/accepted risks，不用单元测试结果掩盖。
+- 固定最终可安装 reference commit；后续分享、导航、Widget、音频或服务端修复不得与架构迁移混成一个提交。
 
 **Gate F0：** reference commit、迁移输入和行为基线可定位；没有依赖未提交用户文件才能恢复的关键状态。
 
 ### Foundation 1：可信仓库（1-2 周）
 
-- 新增根 `AGENTS.md`、共享 Scheme、工具链检查和统一 `verify.sh`。
-- 修正 CI 中不存在的 Swift Package 命令、过期工具链和假通过 quality jobs。
+- 保留已提交的 shared App Scheme；新增根 `AGENTS.md`、工具链检查和统一 `verify.sh`，并覆盖 App、Widget、Asset Downloader Extension 与音频 Archive 校验。
+- 修正 CI 中不存在的 Swift Package 命令、无法编译 iOS 26 extension 的 Xcode 15 工具链和假通过 quality jobs。
 - 建立 `.github/CODEOWNERS`、required checks 和最小权限 workflow；第三方 Action 固定到 commit SHA。
 - 更新或归档冲突的 `CLAUDE.md`、`REQUIREMENTS.md`。
-- 给反馈 Worker 建立锁定依赖、真实 tests 和迁移/隐私检查。
+- 把已经存在的反馈 Worker lockfile/tests 接入 CI，并补迁移、部署和 privacy data-flow 检查。
 
 **Gate F1：** 干净克隆可用一条公共命令构建/测试当前 iOS App；CI 每个绿色 job 都有真实执行证据。
 
 ### Foundation 2：共享内容契约（2-4 周）
 
 - 建立 `ProductManifest`、`BookManifest`、audio artifact manifest、source manifest schema 和稳定 ID 规则。
+- 从现有 Swift/Node/checksum/Apple manifests 导入首版楞严音频清单；由结构化生成器输出平台 catalog，删除正则解析 Swift 源码的权威地位。
 - 冻结 canonical UTF-8/NFC、空白/换行、确定性序列化和内容 hash 规则。
 - 把现有楞严数据导入 canonical source，保留 `/A1/B1/...` legacy mapping。
 - 建立搜索、每日经句、续读、分享文件名、深链和音频按钮的跨平台 fixtures。
@@ -581,12 +611,20 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 
 ### Track I：iOS 产品化
 
+**I0：现有音频发行闭环（可与 Foundation 1–2 并行）**
+
+- 按当前单次 submission 的 pack 限制完成 11 个 pack 的 10+1 审核/上传、处理、build 关联和签名 Validate；限制变化时以当期 App Store Connect 为准。
+- 在 iOS 15 与 iOS 26 真机验证 ODR/Managed 下载、取消、恢复、版本更新、低空间和 Cloudflare 回退；目标地区网络单独记录。
+- 更新隐私政策与数据流，使 Apple/Cloudflare 音频请求和反馈服务描述与生产一致。
+
+**Gate I0：** `BackgroundAssets/IMPLEMENTATION_STATUS_2026-07-19.md` 的“仍需真实发行环境验证”已关闭或逐项由人工接受风险；未通过时不把 Managed packs 复制到新产品。
+
 **I1：`ClassicCore` 与 provider 边界（3-6 周）**
 
 - 引入本地 Swift Package 和强类型内容模型。
 - 新代码通过注入访问 repository；`Book.shared`/`Prefers.shared` 保留为迁移 facade，不一次性重写 UI。
 - 楞严从 Manifest 启动，旧收藏、进度、Widget 和播放行为保持。
-- 建立 `AudioAssetProvider`；先包装 Legacy ODR，再用一卷完成 CDN/background URLSession prototype。
+- 把已验证的 provider/lease/coordinator 及测试迁入 `ClassicAudio`，通过生成的产品 catalog 注入；新增适合新产品的 background URLSession provider，不改变当前楞严双栈行为。
 
 **Gate I1：** 楞严回归矩阵通过；provider 切换不改变 UI 或播放状态语义。
 
@@ -633,10 +671,12 @@ AI 会缩短编码、差异检查和文档时间，但不能压缩授权、录�
 | 决策 | 推荐默认 | 冻结时点 |
 |---|---|---|
 | iOS 新产品最低版本 | 先保持 iOS 15，依据设备数据再提高 | Asset delivery ADR |
+| 新产品是否采用 Managed packs | 楞严 Gate I0 通过后再按产品评估，不因代码已存在而默认复制 | 新产品 audio delivery ADR |
 | Android `minSdk` | 暂定 26，按目标用户/渠道设备数据验证 | Android 工程创建前 |
 | iOS/Android 永久应用身份 | 沿用明确 publisher namespace，每款独立 | 创建商店记录前 |
 | 签名密钥 | 每款独立；人工离线备份，CI 仅用受控凭据 | 首个 release candidate 前 |
-| CDN/对象存储 | 同一 artifact、可替换地区 host | audio delivery prototype 前 |
+| CDN/对象存储 | 另选支持 Range/恢复/目标地区的主 host；现有 `workers.dev` 仅是楞严应急源 | Android/新产品 audio prototype 前 |
+| Android 音频存储体验 | 推荐当前卷按需准备、下一卷受控预取、自动缓存；不默认复制已删除的技术存储页 | Android Phase 0 |
 | XcodeGen | 等价性试验通过才采用 | 第二 iOS Target 前 |
 | Android 自动备份 | 默认关闭以符合当前“本地保存”承诺；若开启需先更新隐私 | Android release 前 |
 | 首批 Android 渠道 | Google Play international；大陆作为独立 Gate | 包名/签名冻结前 |
@@ -673,13 +713,14 @@ AI 不得通过创建占位商店 App、生成生产 key、提高最低系统、
 - 干净克隆可运行文档中的公共命令，且缺工具会明确失败。
 - 当前楞严 iOS 的 Scheme、build、unit/UI smoke、内容和反馈 tests 真实执行。
 - schema v1、stable ID、legacy map、behavior fixtures 和 audio artifact manifest 已提交并双人/双上下文 review。
+- 现有 11 条音频的 Swift/Node/checksum/Apple manifests 已由同一 canonical manifest 生成或结构化校验，不再靠正则解析源码维持一致。
 - CI 不再包含假无障碍、假性能或不存在的 Package 命令。
 - `CLAUDE.md`、`REQUIREMENTS.md`、`AGENTS.md` 和实际命令不存在互相冲突的活跃指令。
 - 没有新增大型音频、生产 secrets 或未经批准的应用身份。
 
 ## 17. 最终建议
 
-**可以实施，但两平台不能各自形成一套产品框架。先完成可信基线和跨平台 contracts，再让 iOS 产品化与 Android 楞严基准并行。共享的是经文、身份、音频 artifact 和行为证据；UI、播放、Widget、存储与发布保持平台原生。Codex 负责绝大多数工程执行，机器门槛负责防漂移，人负责内容、权利、密钥、隐私和生产发布。第一项工程任务仍不是创建新 App，而是整理当前基线并建立真实 `verify.sh` 与 schema v1。**
+**可以实施，近期提交还验证了 provider 边界和高风险 UI 回归可以由 Codex + 测试完成，但两平台不能各自形成一套产品框架。下一项工作不是再写一套音频下载器或创建新 App，而是把 `8172e47` 固化为有证据的 reference、修复真实 CI，并将现有 11 条硬编码音频 catalog 收敛为 schema v1。之后再让 iOS 模块化与 Android 楞严并行；共享经文、身份、音频 artifact 和行为证据，UI、播放、Widget、存储与发布保持平台原生。**
 
 ## 参考
 

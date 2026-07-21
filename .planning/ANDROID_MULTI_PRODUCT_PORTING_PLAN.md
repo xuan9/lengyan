@@ -1,7 +1,7 @@
 # Android 多经典产品移植与长期开发计划
 
-**日期：** 2026-07-17\
-**版本：** v2（与跨平台主计划一致性复核后）\
+**日期：** 2026-07-20\
+**版本：** v3（结合现有 iOS 双栈音频与阅读基线复核后）\
 **状态：** Android 实施前决策稿\
 **适用产品：** 《楞严经》《金刚经》《圆觉经》《六祖坛经》及后续单经产品\
 **开发模式：** Codex 主导代码、测试、文档和自动化；人工负责经文、权利、密钥与正式发布批准
@@ -21,7 +21,7 @@ Android 版本可以实施，也应从第一天按多经典产品建设。推荐
 3. **Android 使用原生 Kotlin + Jetpack Compose。** 不把 Swift UI 逐像素翻译，也不在第一阶段采用 Flutter、React Native、Compose Multiplatform 或 Kotlin Multiplatform。
 4. **Android 产品共用一组库模块。** 内容、数据、阅读、音频、分享、设计系统和组件能力只实现一次；稳定差异来自产品配置，真正独特页面保留在薄 App 模块。
 5. **跨平台共享数据和行为契约，不强行共享 UI/runtime 代码。** iOS 与 Android 共用 `ProductManifest`、经文源数据、稳定 ID、来源清单、音频清单、深链格式和 golden test fixtures。
-6. **正文始终随 App 离线可用；完整音频通过 HTTPS 交付配置下载。** Android 使用 Media3 后台播放和离线下载，不把 Google Play Asset Delivery 作为主方案，以保留非 Play 商店和中国大陆分发能力。
+6. **正文始终随 App 离线可用；完整音频通过 HTTPS 交付配置按需准备。** Android 使用 Media3 后台下载/播放，复现“当前卷优先、下一卷受控预取、失败可恢复”的产品语义；不把 Google Play Asset Delivery 或现有楞严 `workers.dev` 应急源作为主方案。
 7. **先完成《楞严经》Android 作为金标准，再接《金刚经》。** 第二款真实产品用于验证共享架构；不要同时复制四个半成品工程。
 8. **AI 开发必须由机器可验证的合同约束。** 干净克隆构建、单元测试、内容校验、UI 测试、截图、真机音频测试和发布检查必须真实执行，禁止占位成功。
 
@@ -57,6 +57,17 @@ Android 版本可以实施，也应从第一天按多经典产品建设。推荐
 - 不把大型音频二进制继续提交进 Git。
 - 不允许 AI 自行改写经文、判断授权、创建或接触生产签名密钥、直接发布正式版本。
 - 不把 iOS 已有布局问题和偶然实现细节当作需要移植的需求。
+
+### 2.3 2026-07-20 iOS 新基线对 Android 的影响
+
+7 月 19–20 日提交不改变原生 Android、多 App module 和共享 contract 的总方向，但提供了更强的行为 oracle：
+
+- iOS 已有 backend-neutral `AudioAssetProvider`、lease 和 coordinator；Android 不复制 Swift/ODR/Background Assets 代码，但应复用同一 audio ID、状态语义和故障 fixtures。
+- 当前可观察语义是：A 播放期间请求 B 不提前中断 A；当前卷完整可用后原子切换；下一卷只维持一个预取；用户点中预取卷时提升同一任务；迟到结果不能抢占新选择。
+- Apple primary 明确失败或 15 秒无进展时，只有用户主动播放才进入 Cloudflare fallback；取消、本机空间不足和静默预取失败不得触发公网回退。
+- 当前 Cloudflare Static Assets 会忽略 Range 并返回完整文件，且没有中国大陆 SLA。其 content-addressed key 与 bytes/SHA-256 校验可以复用，host 和下载实现不能作为 Android 主链路。
+- iOS 已取消技术性的音频存储设置页，改为按需准备和自动缓存/清理。Android Phase 0 必须把“是否也采用自动模式、是否提供 Wi-Fi-only 或手动 pin”作为产品决定，不能默认为了框架完整而增加复杂下载管理页。
+- 目录 disclosure state、跨分支返回、iPad split-detail、Widget 添加引导和长段不裁字已有回归测试；Android parity matrix 应描述用户结果，不逐像素复制 UIKit/WidgetKit。
 
 ## 3. 为什么是一个仓库、多个 App 模块
 
@@ -161,7 +172,7 @@ Android 建设不先移动现有 iOS 文件。Gate F2 后只增加 `android/` �
 
 ## 5. Android 技术基线
 
-### 5.1 截至 2026-07-17 的约束
+### 5.1 截至 2026-07-20 的约束
 
 - Google Play 从 **2026-08-31** 起要求手机和平板的新 App 与更新以 Android 16 / API 36 或更高为 target，因此项目从建立时就使用 `targetSdk = 36`，不先建立一个即将过期的 API 35 基线。[Google Play target API 要求](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en-be)
 - `compileSdk` 同样使用 36；以后由一处版本目录集中升级。
@@ -302,9 +313,10 @@ Products/<product>/Content + product/audio/source manifests
 - 搜索规范化、简繁匹配、结果定位和片段截取。
 - 每日经句在日期、时区和内容版本下的稳定选择。
 - 收藏、续读和 legacy path 到 stable ID 的迁移。
+- 目录节点展开/收起、跨分支返回和全部 leaf path 恰好可达一次；平台导航控件可以不同，目标 path 与状态恢复结果必须一致。
 - 分享标题与文件名；禁止默认名 `text`，禁止自动加入日期时间。
 - 深链编码、解码和非法输入处理。
-- 音频按钮语义。
+- 音频按钮、selection generation、当前卷/下一卷、预取提升、迟到结果、取消、空间不足、校验失败和可回退错误语义。
 - 主题、字号和产品默认值。
 
 iOS XCTest 与 Android JVM tests 读取同一 fixtures。平台 UI 可以不同，用户行为结果必须一致。
@@ -345,12 +357,12 @@ iOS XCTest 与 Android JVM tests 读取同一 fixtures。平台 UI 可以不同�
 | 续读 | DataStore + resolver | 回到同段落，内容版本迁移可靠 |
 | 搜索 | 预生成索引 + repository | 简繁、定位、空态、长查询和性能 |
 | 收藏 | Room | 排序、删除、深链、升级迁移；首版不顺带新增笔记 |
-| 设置 | Compose controls | 主题、字号、简繁、阅读模式、提醒、音频下载策略 |
+| 设置 | Compose controls | 主题、字号、简繁、阅读模式、提醒；不默认增加技术性音频存储页 |
 | 听经 | Media3 | 后台、锁屏、耳机、蓝牙、倍速、睡眠、断点 |
-| 离线音频 | DownloadService | 校验、暂停/恢复、删除、磁盘不足、Wi-Fi only |
+| 按需/离线音频 | Media3 DownloadService/Manager | 当前卷优先、下一卷受控预取、bytes/SHA-256、暂停恢复、低空间/Data Saver；缓存策略由 Phase 0 冻结 |
 | Mini-player | 导航壳 bottom region | 始终紧贴 bottom navigation，上下 inset 只计算一次 |
 | 分享 | Android Sharesheet + FileProvider | 文字、`.txt`、单/多图片、语义文件名、无打开卡顿 |
-| Widget | Glance | 小/中/大尺寸、深链、简繁、每日更新 |
+| Widget | Glance | 小/中/大尺寸、深链、简繁、每日更新、添加/固定引导和 launcher 差异 |
 | 每日提醒 | 通知 + 非精确调度 | 用户开启后才请求权限，重启后恢复 |
 | 来源/隐私/反馈 | 产品配置 + 系统 Intent | 来源可追踪，反馈内容由用户确认 |
 
@@ -360,6 +372,7 @@ iOS XCTest 与 Android JVM tests 读取同一 fixtures。平台 UI 可以不同�
 - Android App Links（有稳定 HTTPS 域名后）。
 - 多设备云同步。
 - 更复杂的平板双栏目录/正文布局。
+- 手动 pin 多卷、下载全部、逐卷存储管理等高级离线控制；只有用户研究证明自动模式不足时进入 P0。
 - Android Auto 或 Wear OS 控制入口。
 - 远程内容增量更新。
 
@@ -371,10 +384,10 @@ iOS XCTest 与 Android JVM tests 读取同一 fixtures。平台 UI 可以不同�
 |---|---|---|
 | `Book.shared` | `BookRepository` | 去全局单例，产品和测试可注入 |
 | `Prefers.shared` | DataStore repositories | 强类型、异步、可迁移 |
-| `AudioManager.shared` | Media3 service + repository | 服务拥有播放，UI 观察状态 |
+| `AudioManager.shared` + `AudioAssetCoordinator` | Media3 service + repository | 服务拥有播放，UI 观察状态；移植状态语义而非 Swift actor 实现 |
 | UIKit/SwiftUI 阅读页面 | Compose ReaderScreen | 复刻行为，不复制布局 bug |
 | WidgetKit | Glance App Widget | 单独 composables 和尺寸策略 |
-| ODR/Background Assets | audio artifact + Android delivery config + Media3 download | 平台交付不同，audio ID/正文映射/checksum 共用 |
+| ODR/Managed BA/Cloudflare fallback | audio artifact + Android delivery config + Media3 download | 平台交付与 host 不同，audio ID/正文映射/checksum/故障语义共用 |
 | `UIActivityViewController` | Android Sharesheet/FileProvider | 语义文件名和延迟生成一致 |
 | UserNotifications | Notification + inexact AlarmManager | 遵循 Android 权限和省电规则；WorkManager 只做维护任务 |
 | URL Scheme | typed route + deep-link Intent | route fixture 跨平台共用 |
@@ -387,6 +400,7 @@ iOS XCTest 与 Android JVM tests 读取同一 fixtures。平台 UI 可以不同�
 - 保留段落 stable ID，恢复位置使用 `LazyListState` 与精确 anchor 信息。
 - 注释、科判或章标题是明确 item type，不通过字符串特征猜测样式。
 - 选择、复制、分享和 TalkBack 语义必须在真实长文上测试。
+- canonical contents 的每个 leaf path 必须恰好可达；宽度、窗口和 font scale 改变后，最后一行仍完整显示且字符覆盖与源文本一致。
 
 ### 10.2 分页模式
 
@@ -395,6 +409,7 @@ iOS XCTest 与 Android JVM tests 读取同一 fixtures。平台 UI 可以不同�
 - 只同步计算当前页附近所需内容，其余分页可在后台预计算并缓存。
 - 缓存 key 包含窗口尺寸、系统 font scale、App 字号、字体、语言、内容版本和 inset。
 - 旋转、分屏、折叠状态或字号改变时使旧缓存失效，并通过段落 anchor 保持语义位置。
+- 分页测试不只比较页数，还要拼接每页字符 range，证明从第一个到最后一个字符连续、无重复、无遗漏、无越界裁切。
 - 以 2 万字单页源内容、API 26 低内存模拟器和大字号组合做压力测试，禁止主线程长时间停顿。
 
 ### 10.3 自适应和无障碍
@@ -461,11 +476,15 @@ AudioAssetProvider
 首选 CDN/object storage + immutable versioned URLs：
 
 - 跨平台 `audio-manifest.json` 提供 audio/track ID、卷 ID、renditions、codec、duration、bytes、SHA-256、artifact key 和权利引用，不放渠道 host。
+- 首版楞严 manifest 从现有 `AudioAssetCatalog.swift`、checksum、Apple manifests 和 Node catalog 结构化导入；这些文件随后由 manifest 生成/校验，Android 不读取或正则解析 Swift 源码。
 - `Products/<id>/Platform/android/audio-delivery.json` 选择 rendition 并把 artifact key 解析到当前渠道的 HTTPS host；生产 token/secret 不进入文件。
 - Media3 `DownloadService` / `DownloadManager` 处理后台离线下载和恢复。[Media3 downloading media](https://developer.android.com/media/media3/exoplayer/downloading-media)
 - 下载完成后校验长度和 SHA-256；损坏文件不可进入可播放状态。
-- 用户可选择仅 Wi-Fi、逐卷下载、删除单卷/全部、查看占用空间。
+- 默认产品语义建议与 iOS 对齐：用户点选的当前卷优先完整准备，播放开始后只预取下一卷；同一 asset 只有一个底层任务，预取可提升，旧 selection 的迟到结果不能抢占。
+- Phase 0 通过用户需求和 Android Data Saver/计费网络约束冻结 cache budget、预取网络条件和清理入口。首版不默认增加逐卷/下载全部/占用详情等技术页；若增加手动 pin，必须与自动清理语义明确区分。
 - URL/host 可由渠道 adapter 替换，但同一 audio ID、正文映射和 artifact checksum 保持不变。
+
+现有 `https://lengyan-audio-fallback.dhyana9.workers.dev` 只作为 iOS 楞严的应急实现证据：它实测对 Range 返回完整 200，网络中断会重下整卷，也没有大陆 SLA。Android prototype 必须使用支持 Range/恢复、容量、成本告警和目标地区可达性的独立主 host；不能因为路径和 checksum 已验证就沿用该 endpoint。
 
 Play Asset Delivery 主要面向由 Google Play 托管的 app/game asset packs，会把资源交付绑定到 Play；本项目需要非 Play 和大陆渠道，因此不作为基础设施。[Play Asset Delivery](https://developer.android.com/guide/playcore/asset-delivery)
 
@@ -527,6 +546,8 @@ Play Asset Delivery 主要面向由 Google Play 托管的 app/game asset packs�
 
 Widget 必须验证不同 launcher、系统字号、简繁和深色背景。Widget 数据使用独立、版本化 snapshot；App 内容、语言、收藏或日期变化时触发更新，失败时保留上一份有效数据。
 
+设置页提供一个 Widget 入口，而不是“组件样式”三选项：小/中/大是 launcher 尺寸，不是三种产品样式。支持 `requestPinAppWidget` 的 launcher 优先调用系统固定流程；不支持时才显示经目标 launcher 校验的简短步骤。引导只展示当前 App 实际注册的 Widget、尺寸和预览，不能复制 iOS 锁屏步骤或宣传不存在的第三种“经文卡片”样式。
+
 ### 13.2 每日提醒
 
 - 用户主动开启提醒时再请求 Android 13+ `POST_NOTIFICATIONS`，不在首次启动弹出。[Notification runtime permission](https://developer.android.com/develop/ui/compose/notifications/notification-permission)
@@ -554,6 +575,7 @@ Widget 必须验证不同 launcher、系统字号、简繁和深色背景。Widg
 
 - 无账户、广告、第三方分析和跨 App 跟踪。
 - 只访问 HTTPS，使用 network security config 禁止 cleartext。
+- 隐私政策与 Data safety 明确区分本地经文/进度、用户主动反馈和音频下载；音频 host 可能处理请求 IP 等网络元数据，不能把“无账户、无分析”表述为“完全不联网”。
 - 不申请联系人、位置、相册全库、精确闹钟等非必要权限。
 - 分享文件仅放在受控 cache/FileProvider 路径，定期清理，不公开整个内部目录。
 - 日志不包含完整经文选择、笔记内容、文件路径、签名信息或用户反馈正文。
@@ -593,17 +615,18 @@ Codex 可以发现缺字段、生成差异和许可证清单，但不能替代�
 **Android JVM 单元测试**
 
 - parser、repository mapping、搜索、每日经句、续读、分享文件名。
-- 音频状态机和“同卷 resume、异卷从头”语义。
+- 音频状态机和“同卷 resume、异卷从头”、A→B 原子切换、单预取提升、selection 竞态、取消/空间不足不误回退、bytes/SHA-256 拒绝坏文件语义；fixture 由现有 iOS tests 提炼，不直接移植 Swift test double。
 - DataStore/Room migration、下载状态、错误恢复。
 - route/deep-link round trip 和恶意输入。
 
 **Compose UI / instrumentation tests**
 
-- 首次启动、主 tab、目录到阅读、搜索到定位、收藏、设置。
+- 首次启动、主 tab、目录到阅读、搜索到定位、收藏、设置；目录状态跨 tab/进程恢复，跨分支返回到正确层级。
+- canonical leaf 全覆盖、长段最后一行和分页字符 range 连续；tablet 收藏 detail 可回到根阅读流。
 - Mini-player 跨 tab 始终贴近 bottom navigation。
 - 分享页即时可见，长文后台生成可取消。
 - 语言、主题、字号、旋转和进程重建。
-- 通知 deep link、Widget deep link 和播放 notification。
+- 通知 deep link、Widget deep link/固定引导和播放 notification。
 
 **截图和无障碍测试**
 
@@ -617,6 +640,7 @@ Codex 可以发现缺字段、生成差异和许可证清单，但不能替代�
 
 - 后台播放、锁屏、耳机、蓝牙、来电/audio focus。
 - 下载中杀进程、重启、断网、切换 Wi-Fi/蜂窝、磁盘不足。
+- 主音频 host 的 HEAD/Range/中断恢复、错误 Content-Length、hash 损坏与渠道 host 切换；不得拿现有无 Range 的应急源冒充通过。
 - Widget 在 Pixel Launcher、Samsung 和至少一个目标大陆 OEM launcher 上表现。
 - 通知省电限制、后台限制和系统升级。
 
@@ -767,11 +791,13 @@ Android developer verification 已进入分阶段实施，2026-09-30 起先在�
 
 - 确认 publisher namespace、建议 `minSdk`、首发地区和测试设备。
 - 审核共享楞严 behavior baseline，明确 Android 必须等价和允许原生差异的项目。
+- 冻结音频产品策略：推荐当前卷按需准备、下一卷受控预取、自动缓存；明确计费网络/Wi-Fi、cache budget、清理入口与是否支持手动 pin。
+- 选择支持 Range/恢复和目标地区的 Android 主音频 host；明确现有 Cloudflare fallback 只用于对照失败场景。
 - 确认 API 36、JDK/Gradle/AGP/Kotlin/Compose/Media3 精确版本及升级策略。
 - 验证根 `verify.sh` 能路由 Android scope，缺少 Android 工程时明确报告未实现而非假成功。
 - 创建 Android ADR 清单，不写产品 UI。
 
-Gate A：F2 输入可由 Android 构建读取；包名/minSdk/渠道/设备等待人工决定项有 owner 和期限。
+Gate A：F2 输入可由 Android 构建读取；包名/minSdk/渠道/设备/音频 UX/主 host 等人工决定项有 owner 和期限。
 
 ### Phase 1：Android 工程骨架（1-2 周）
 
@@ -790,11 +816,11 @@ Gate B：干净克隆一条命令构建、测试并安装楞严空壳；没有�
 交付：
 
 - Android generated-assets task 和 schema validation adapter。
-- manifest/content parser、BookRepository、稳定 ID 和搜索索引。
+- product/book/audio manifest parser、BookRepository、稳定 ID 和搜索索引；不得读取现有 Swift catalog。
 - DataStore/Room 初始 schema 与 migration tests。
 - Android JVM tests 执行既有跨平台 behavior fixtures，不复制 fixture 内容。
 
-Gate C：Android 与 iOS 对相同 fixtures 产生相同目录、搜索、每日经句和续读结果。
+Gate C：Android 与 iOS 对相同 fixtures 产生相同目录、全部 leaf path、搜索、每日经句、续读和 audio ID/checksum 结果。
 
 ### Phase 3：楞严文本产品闭环（3-5 周）
 
@@ -803,6 +829,7 @@ Gate C：Android 与 iOS 对相同 fixtures 产生相同目录、搜索、每日
 - 首页、目录、卷阅读、滚动/分页、搜索、收藏和设置。
 - 简繁、主题、当前字号、大字体、TalkBack 和自适应布局。
 - deep links、旋转/进程恢复和设备分页 anchor 恢复。
+- 目录 disclosure/跨分支返回、全部 leaf 可达，以及分页字符连续无裁切。
 - Mini-player 占位状态与统一 bottom region。
 
 Gate D：用户无需网络完成“打开 -> 找到内容 -> 阅读 -> 收藏 -> 搜索 -> 续读”；截图和长文矩阵通过。
@@ -812,18 +839,19 @@ Gate D：用户无需网络完成“打开 -> 找到内容 -> 阅读 -> 收藏 -
 交付：
 
 - MediaSessionService、ExoPlayer、系统通知和远程控制。
-- Android delivery config、DownloadService、checksum、Wi-Fi only、删除和存储 UI。
-- 同卷 resume/异卷从头、倍速、睡眠定时和进度持久化。
+- Android delivery config、独立主 host、DownloadService/Manager、Range 恢复与 bytes/SHA-256。
+- 当前卷/下一卷、预取提升、A→B 原子切换、迟到 selection、同卷 resume/异卷从头、倍速、睡眠定时和进度持久化。
+- 按 Phase 0 决策实施自动缓存、计费网络和清理；不顺带创建已从 iOS 删除的技术存储管理页。
 - Mini-player 跨 tab、后台和进程重建。
 - 真实音频格式、CDN Range 和 OEM 后台基准。
 
-Gate E：至少三类真机完成 2 小时后台播放、断网下载恢复、耳机/蓝牙和杀进程测试。
+Gate E：至少三类真机完成 2 小时后台播放、断网/Range 下载恢复、坏文件拒绝、缓存压力、耳机/蓝牙和杀进程测试；所有 iOS 音频行为 fixtures 在 Android 通过。
 
 ### Phase 5：系统集成（3-5 周）
 
 交付：
 
-- Glance 小/中/大 Widget。
+- Glance 小/中/大 Widget、系统 pin 流程和 launcher-specific fallback 引导。
 - 每日提醒和权限教育。
 - 文字、`.txt`、单图/多图分享与语义文件名。
 - 来源、隐私、反馈和开源许可页面。
@@ -928,6 +956,8 @@ ADR 必须包含 context、decision、alternatives、consequences、验证方式
 | 分页位置漂移 | 字号/旋转后跳到错误页 | stable paragraph anchor、缓存 key 和 migration tests |
 | 包名或签名失误 | 上传占位包、非 Play 无法升级 | 发布前人工 Gate、publisher-owned keys、runbook |
 | 音频继续膨胀 Git | clone/CI 越来越慢 | 外部存储、manifest/checksum、禁止新增大二进制 |
+| 把 iOS 应急 CDN 当 Android 主源 | Range/中断恢复失败、整卷重下 | 独立主 host prototype、delivery config、真实网络测试 |
+| 复制 Swift 硬编码 catalog | 新经典改四份常量、hash 漂移 | F2 canonical manifest + generator，Android 只消费生成结果 |
 | CDN 在大陆不可用 | 下载慢或失败 | 渠道 host adapter、目标网络实测、镜像策略 |
 | Gradle/Compose 依赖快速变化 | AI 使用过期 API | 固定版本、官方文档、月度受控升级 |
 | AI 生成伪测试/伪成功 | job 只打印结果 | 强制真实命令、artifact、失败退出和二次 review |
@@ -942,11 +972,13 @@ ADR 必须包含 context、decision、alternatives、consequences、验证方式
 - 干净克隆能用文档中的一条命令构建和测试。
 - 正文、目录、简繁、来源和音频 manifest 全部通过 schema/content 校验。
 - P0 功能均有自动测试或记录原因的真机验收证据。
-- 同卷 resume、异卷从头的音频行为通过共享 fixture 和真机测试。
+- 当前卷/下一卷、预取提升、A→B 原子切换、迟到 selection、同卷 resume/异卷从头、取消/空间不足/坏文件等音频行为通过共享 fixture 和真机测试。
+- 主音频 host 支持 Range/恢复并在目标地区验证；现有 iOS `workers.dev` 应急 endpoint 不作为通过依据。
 - Mini-player 在所有主 tab 和导航模式中紧贴 footer，无重复 inset。
 - 当前阅读字体不会因长文或分享缩小；200% font scale 无遮挡。
 - 分享页面即时出现；1,800/9,000/20,000 字报告证明分页、体积和内存可控。
 - 后台播放、离线下载、Widget、提醒、深链在目标 API/OEM 设备通过。
+- Widget 设置入口只展示实际支持的尺寸/样式，并在支持的 launcher 走系统 pin 流程；不存在虚构第三样式。
 - 反馈 contract 证明只发送 `productID`、公开 App 版本和用户正文，服务不可用不影响离线核心功能。
 - R8 release build、升级、Room migration、低存储和离线场景通过。
 - 包名、签名备份、隐私/Data safety、来源、权利和商店资料由人工批准。
@@ -961,21 +993,22 @@ ADR 必须包含 context、decision、alternatives、consequences、验证方式
 2. 首发范围是仅 Google Play，还是同步准备某些大陆商店。
 3. `minSdk 26` 是否接受；若要支持 23-25，需要明确目标设备理由。
 4. 每款独立 app-signing key 的保管人和离线恢复位置。
-5. 音频/CDN 的供应商、地区和预算边界。
-6. 确认首版只移植现有收藏，不把新笔记功能混入 Android P0；若改变范围，应作为独立产品决定。
-7. 自动云备份首版关闭的隐私决定。
-8. 真机池和 20-30 名 closed testers 的来源。
+5. 音频主 CDN/object storage 的供应商、Range/恢复、地区和预算边界；现有应急 `workers.dev` 不参与选择。
+6. 音频采用自动当前卷/下一卷，还是首版就提供 Wi-Fi-only、手动 pin/逐卷管理；推荐先自动、后按证据增加高级控制。
+7. 确认首版只移植现有收藏，不把新笔记功能混入 Android P0；若改变范围，应作为独立产品决定。
+8. 自动云备份首版关闭的隐私决定。
+9. 真机池和 20-30 名 closed testers 的来源。
 
 ## 26. 建议的首批实施任务
 
 决策通过后，按以下小 PR 开始，避免一次创建巨大脚手架：
 
-1. **Android 决策 PR：** 验证 Gate F2 输入，记录原生 Compose、多 App 模块、minSdk/package/signing checklist；不复制 schema v1。
+1. **Android 决策 PR：** 验证 Gate F2 输入，记录原生 Compose、多 App 模块、minSdk/package/signing、音频 UX 与主 host checklist；不复制 schema v1。
 2. **构建 PR：** `android/` Wrapper、version catalog、build-logic、空楞严 App、真实 CI。
-3. **内容 PR：** Android generated assets、内容校验、BookRepository 和跨平台 fixtures。
+3. **内容 PR：** Android generated assets、book/audio manifest 校验、BookRepository 和跨平台 fixtures；证明不依赖 Swift catalog。
 4. **阅读垂直切片 PR：** 首页 -> 卷 -> 滚动阅读 -> 续读，覆盖一卷真实楞严数据。
 5. **长文/分页 PR：** 完成字号、分页、旋转、大字体和 2 万字基准。
-6. **音频垂直切片 PR：** 一卷 CDN 音频、后台播放、同卷 resume/异卷从头、Mini-player。
-7. **系统能力 PR：** 下载、Widget、提醒和分享分别独立实施与验证。
+6. **音频垂直切片 PR：** 一卷独立主 CDN 音频、Range 恢复、bytes/SHA-256、当前/下一卷、预取提升、同卷 resume/异卷从头和 Mini-player。
+7. **系统能力 PR：** Widget/pin 引导、提醒和分享分别独立实施与验证。
 
 完成楞严 Gate H 后再创建 `:apps:jingang`。如果第二款产品需要复制通用代码，先修正共享边界；如果只需 manifest、内容和资源，则说明平台设计达到目标。
