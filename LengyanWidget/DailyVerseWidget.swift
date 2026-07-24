@@ -15,6 +15,7 @@
 
 import WidgetKit
 import SwiftUI
+import UIKit
 
 private enum WidgetL10n {
     private static var usesSimplifiedChinese: Bool {
@@ -107,6 +108,303 @@ func dynamicFontSize(
         size -= 1
     }
     return best
+}
+
+/// 中号和大号使用真实楷体度量与更细的 0.5pt 搜索。
+/// 小号与锁屏继续使用上面的旧算法，避免本次优化改变其既有版式。
+private func fittedWidgetFontSize(
+    text: String,
+    availableWidth: CGFloat,
+    availableHeight: CGFloat,
+    lineSpacing: CGFloat,
+    minSize: CGFloat,
+    maxSize: CGFloat,
+    sizeCategory: ContentSizeCategory
+) -> CGFloat {
+    var size = maxSize
+    while true {
+        if measuredWidgetTextHeight(
+            text,
+            width: availableWidth,
+            fontSize: size,
+            lineSpacing: lineSpacing,
+            sizeCategory: sizeCategory
+        ) <= availableHeight + 0.5 {
+            return size
+        }
+        guard size > minSize else { return minSize }
+        size = max(minSize, size - 0.5)
+    }
+}
+
+/// 保留完整句优先，其次在逗号处收束，最后才硬截断。
+private func semanticallyClippedWidgetText(_ text: String, limit: Int) -> String {
+    guard limit > 1 else { return String(text.prefix(max(0, limit))) }
+    if text.count <= limit { return text }
+    let head = String(text.prefix(limit))
+    if let sentenceEnd = head.lastIndex(where: { "。；！？".contains($0) }) {
+        return String(head[...sentenceEnd])
+    }
+    if let comma = head.lastIndex(where: { "，、".contains($0) }) {
+        return String(head[..<comma]) + "…"
+    }
+    return String(text.prefix(limit - 1)) + "…"
+}
+
+/// Core Text/SwiftUI 的楷体行高大于字号本身，不能只用 `fontSize + spacing`
+/// 推算。这里用与界面相同的 STKaiti 和段落行距测量真实排版高度。
+private func measuredWidgetTextHeight(
+    _ text: String,
+    width: CGFloat,
+    fontSize: CGFloat,
+    lineSpacing: CGFloat,
+    sizeCategory: ContentSizeCategory
+) -> CGFloat {
+    guard !text.isEmpty, width > 0, fontSize > 0 else { return 0 }
+    let font = scaledWidgetFont(size: fontSize, sizeCategory: sizeCategory)
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.lineBreakMode = .byWordWrapping
+    paragraph.lineSpacing = lineSpacing
+    return ceil(
+        (text as NSString).boundingRect(
+            with: CGSize(width: width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [
+                .font: font,
+                .paragraphStyle: paragraph,
+            ],
+            context: nil
+        ).height
+    )
+}
+
+private func scaledWidgetFont(
+    size: CGFloat,
+    sizeCategory: ContentSizeCategory
+) -> UIFont {
+    let baseFont = UIFont(name: "STKaiti", size: size)
+        ?? UIFont.systemFont(ofSize: size)
+    let traits = UITraitCollection(
+        preferredContentSizeCategory: sizeCategory.uiKitContentSizeCategory
+    )
+    return UIFontMetrics(forTextStyle: .body).scaledFont(
+        for: baseFont,
+        compatibleWith: traits
+    )
+}
+
+private func widgetTextLineLimit(
+    availableHeight: CGFloat,
+    fontSize: CGFloat,
+    lineSpacing: CGFloat,
+    sizeCategory: ContentSizeCategory
+) -> Int {
+    let lineHeight = ceil(
+        scaledWidgetFont(size: fontSize, sizeCategory: sizeCategory).lineHeight
+    )
+    return max(1, Int((availableHeight + lineSpacing) / (lineHeight + lineSpacing)))
+}
+
+/// 直接对实际经文逐步二分，在最低字号下寻找可以安全展示的最长语义片段。
+/// 这也覆盖标点禁则造成的额外换行，不依赖“每个 CJK 字都等宽”的假设。
+private func fittedWidgetText(
+    _ text: String,
+    availableWidth: CGFloat,
+    availableHeight: CGFloat,
+    fontSize: CGFloat,
+    lineSpacing: CGFloat,
+    sizeCategory: ContentSizeCategory
+) -> String {
+    guard text.count > 1 else { return text }
+    if measuredWidgetTextHeight(
+        text,
+        width: availableWidth,
+        fontSize: fontSize,
+        lineSpacing: lineSpacing,
+        sizeCategory: sizeCategory
+    ) <= availableHeight + 0.5 {
+        return text
+    }
+
+    var lowerBound = 1
+    var upperBound = text.count - 1
+    var best = String(text.prefix(1))
+    while lowerBound <= upperBound {
+        let candidate = (lowerBound + upperBound + 1) / 2
+        let clipped = semanticallyClippedWidgetText(text, limit: candidate)
+        if measuredWidgetTextHeight(
+            clipped,
+            width: availableWidth,
+            fontSize: fontSize,
+            lineSpacing: lineSpacing,
+            sizeCategory: sizeCategory
+        ) <= availableHeight + 0.5 {
+            best = clipped
+            lowerBound = candidate + 1
+        } else {
+            upperBound = candidate - 1
+        }
+    }
+    return best
+}
+
+private extension ContentSizeCategory {
+    var uiKitContentSizeCategory: UIContentSizeCategory {
+        switch self {
+        case .extraSmall: return .extraSmall
+        case .small: return .small
+        case .medium: return .medium
+        case .large: return .large
+        case .extraLarge: return .extraLarge
+        case .extraExtraLarge: return .extraExtraLarge
+        case .extraExtraExtraLarge: return .extraExtraExtraLarge
+        case .accessibilityMedium: return .accessibilityMedium
+        case .accessibilityLarge: return .accessibilityLarge
+        case .accessibilityExtraLarge: return .accessibilityExtraLarge
+        case .accessibilityExtraExtraLarge: return .accessibilityExtraExtraLarge
+        case .accessibilityExtraExtraExtraLarge: return .accessibilityExtraExtraExtraLarge
+        @unknown default: return .large
+        }
+    }
+}
+
+/// Widget family 的外框由系统决定；这里只根据系统给出的真实容器尺寸分配正文。
+/// 短文放大到克制的上限，长文守住可读底线，极小设备则先完整句语义截短。
+enum WidgetVerseLayout {
+    static let mediumHorizontalPadding: CGFloat = 18
+    static let mediumVerticalPadding: CGFloat = 14
+    static let mediumLineSpacing: CGFloat = 5
+    static let mediumMinimumFontSize: CGFloat = 13.5
+    static let mediumMaximumFontSize: CGFloat = 20
+
+    static let largeOuterHorizontalPadding: CGFloat = 18
+    static let largeBodyHorizontalPadding: CGFloat = 4
+    static let largeHeaderHeight: CGFloat = 54
+    static let largeFooterHeight: CGFloat = 56
+    static let largeLineSpacing: CGFloat = 5.5
+    static let largeMinimumFontSize: CGFloat = 13.5
+    static let largeMaximumFontSize: CGFloat = 24
+
+    static func mediumDisplayText(
+        _ text: String,
+        containerSize: CGSize,
+        sizeCategory: ContentSizeCategory = .large
+    ) -> String {
+        let availableSize = mediumAvailableSize(containerSize)
+        return fittedWidgetText(
+            text,
+            availableWidth: availableSize.width,
+            availableHeight: availableSize.height,
+            fontSize: mediumMinimumFontSize,
+            lineSpacing: mediumLineSpacing,
+            sizeCategory: sizeCategory
+        )
+    }
+
+    static func mediumFontSize(
+        text: String,
+        containerSize: CGSize,
+        sizeCategory: ContentSizeCategory = .large
+    ) -> CGFloat {
+        let availableSize = mediumAvailableSize(containerSize)
+        return fittedWidgetFontSize(
+            text: text,
+            availableWidth: availableSize.width,
+            availableHeight: availableSize.height,
+            lineSpacing: mediumLineSpacing,
+            minSize: mediumMinimumFontSize,
+            maxSize: mediumMaximumFontSize,
+            sizeCategory: sizeCategory
+        )
+    }
+
+    static func mediumLineLimit(
+        fontSize: CGFloat,
+        containerSize: CGSize,
+        sizeCategory: ContentSizeCategory = .large
+    ) -> Int {
+        widgetTextLineLimit(
+            availableHeight: mediumAvailableSize(containerSize).height,
+            fontSize: fontSize,
+            lineSpacing: mediumLineSpacing,
+            sizeCategory: sizeCategory
+        )
+    }
+
+    static func largeDisplayText(
+        _ text: String,
+        containerSize: CGSize,
+        hasSource: Bool,
+        sizeCategory: ContentSizeCategory = .large
+    ) -> String {
+        let availableSize = largeAvailableSize(containerSize, hasSource: hasSource)
+        return fittedWidgetText(
+            text,
+            availableWidth: availableSize.width,
+            availableHeight: availableSize.height,
+            fontSize: largeMinimumFontSize,
+            lineSpacing: largeLineSpacing,
+            sizeCategory: sizeCategory
+        )
+    }
+
+    static func largeFontSize(
+        text: String,
+        containerSize: CGSize,
+        hasSource: Bool,
+        sizeCategory: ContentSizeCategory = .large
+    ) -> CGFloat {
+        let availableSize = largeAvailableSize(containerSize, hasSource: hasSource)
+        return fittedWidgetFontSize(
+            text: text,
+            availableWidth: availableSize.width,
+            availableHeight: availableSize.height,
+            lineSpacing: largeLineSpacing,
+            minSize: largeMinimumFontSize,
+            maxSize: largeMaximumFontSize,
+            sizeCategory: sizeCategory
+        )
+    }
+
+    static func largeLineLimit(
+        fontSize: CGFloat,
+        containerSize: CGSize,
+        hasSource: Bool,
+        sizeCategory: ContentSizeCategory = .large
+    ) -> Int {
+        widgetTextLineLimit(
+            availableHeight: largeAvailableSize(containerSize, hasSource: hasSource).height,
+            fontSize: fontSize,
+            lineSpacing: largeLineSpacing,
+            sizeCategory: sizeCategory
+        )
+    }
+
+    static func mediumAvailableSize(_ containerSize: CGSize) -> CGSize {
+        CGSize(
+            width: max(1, containerSize.width - mediumHorizontalPadding * 2),
+            height: max(1, containerSize.height - mediumVerticalPadding * 2)
+        )
+    }
+
+    static func largeAvailableSize(
+        _ containerSize: CGSize,
+        hasSource: Bool
+    ) -> CGSize {
+        CGSize(
+            width: max(
+                1,
+                containerSize.width
+                    - (largeOuterHorizontalPadding + largeBodyHorizontalPadding) * 2
+            ),
+            height: max(
+                1,
+                containerSize.height
+                    - largeHeaderHeight
+                    - (hasSource ? largeFooterHeight : 0)
+            )
+        )
+    }
 }
 
 // MARK: - Timeline Entry
@@ -274,31 +572,37 @@ struct SmallVerseView: View {
 
 struct MediumVerseView: View {
     let entry: DailyVerseEntry
+    @Environment(\.sizeCategory) private var sizeCategory
 
     var body: some View {
         ZStack {
             LegacyWidgetBackground()
 
             GeometryReader { proxy in
-                let horizontalPadding: CGFloat = 18
-                let verticalPadding: CGFloat = 14
-                let sutra = entry.mediumText
-                let size = dynamicFontSize(
-                    charCount: sutra.count,
-                    availableWidth: max(CGFloat(240), proxy.size.width - horizontalPadding * 2),
-                    availableHeight: max(CGFloat(110), proxy.size.height - verticalPadding * 2),
-                    lineSpacing: 5,
-                    minSize: 13.5,
-                    maxSize: 14.5
+                let sutra = WidgetVerseLayout.mediumDisplayText(
+                    entry.mediumText,
+                    containerSize: proxy.size,
+                    sizeCategory: sizeCategory
+                )
+                let size = WidgetVerseLayout.mediumFontSize(
+                    text: sutra,
+                    containerSize: proxy.size,
+                    sizeCategory: sizeCategory
+                )
+                let lineLimit = WidgetVerseLayout.mediumLineLimit(
+                    fontSize: size,
+                    containerSize: proxy.size,
+                    sizeCategory: sizeCategory
                 )
                 Text(sutra)
                     .font(WidgetTokens.sutraFont(size: size))
                     .foregroundColor(WidgetTokens.sutraText)
-                    .lineSpacing(5)
+                    .lineSpacing(WidgetVerseLayout.mediumLineSpacing)
+                    .lineLimit(lineLimit)
                     .multilineTextAlignment(.leading)
                     .minimumScaleFactor(0.9)
-                    .padding(.horizontal, horizontalPadding)
-                    .padding(.vertical, verticalPadding)
+                    .padding(.horizontal, WidgetVerseLayout.mediumHorizontalPadding)
+                    .padding(.vertical, WidgetVerseLayout.mediumVerticalPadding)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             }
         }
@@ -309,41 +613,116 @@ struct MediumVerseView: View {
 
 struct LargeVerseView: View {
     let entry: DailyVerseEntry
+    @Environment(\.sizeCategory) private var sizeCategory
 
     var body: some View {
         ZStack(alignment: .leading) {
             LegacyWidgetBackground()
 
-            // 主内容 — 顶部题眉 + 正文 + 底部卷名页脚（细发丝线分隔）
-            VStack(alignment: .center, spacing: 0) {
-                // 经卷题眉 — 全名「大佛顶首楞严经」，庄重不单薄
-                Text(WidgetL10n.sutraHeader)
-                    .font(WidgetTokens.sutraFont(size: 13))
-                    .foregroundColor(WidgetTokens.textTertiary)
-                    .tracking(3)
-                    .padding(.top, 18)
-                    .padding(.bottom, 18)
+            GeometryReader { proxy in
+                let hasSource = !entry.source.isEmpty
+                let sutra = WidgetVerseLayout.largeDisplayText(
+                    entry.largeText,
+                    containerSize: proxy.size,
+                    hasSource: hasSource,
+                    sizeCategory: sizeCategory
+                )
+                let bodyHeight = WidgetVerseLayout.largeAvailableSize(
+                    proxy.size,
+                    hasSource: hasSource
+                ).height
+                let contentWidth = max(
+                    1,
+                    proxy.size.width - WidgetVerseLayout.largeOuterHorizontalPadding * 2
+                )
+                let bodyWidth = max(
+                    1,
+                    contentWidth - WidgetVerseLayout.largeBodyHorizontalPadding * 2
+                )
+                let size = WidgetVerseLayout.largeFontSize(
+                    text: sutra,
+                    containerSize: proxy.size,
+                    hasSource: hasSource,
+                    sizeCategory: sizeCategory
+                )
+                let lineLimit = WidgetVerseLayout.largeLineLimit(
+                    fontSize: size,
+                    containerSize: proxy.size,
+                    hasSource: hasSource,
+                    sizeCategory: sizeCategory
+                )
 
-                // 经文正文 — 左对齐，紧随题眉
-                sutraBody
-                    .padding(.horizontal, 4)
+                // 三段使用绝对区域，不让正文的固有高度挤压题眉或出处。
+                // 短文在正文区垂直居中，长文则只在自己的区域内展开。
+                ZStack(alignment: .top) {
+                    layoutAnchor
+                        .frame(
+                            width: contentWidth,
+                            height: WidgetVerseLayout.largeHeaderHeight
+                        )
+                        .overlay {
+                            Text(WidgetL10n.sutraHeader)
+                                .font(.custom("STKaiti", fixedSize: 13))
+                                .foregroundColor(WidgetTokens.textTertiary)
+                                .tracking(3)
+                                .fixedSize(horizontal: true, vertical: true)
+                        }
+                        .position(
+                            x: proxy.size.width / 2,
+                            y: WidgetVerseLayout.largeHeaderHeight / 2
+                        )
 
-                Spacer(minLength: 12)
+                    layoutAnchor
+                        .frame(
+                            width: bodyWidth,
+                            height: bodyHeight
+                        )
+                        .overlay(alignment: .leading) {
+                            Text(sutra)
+                                .font(WidgetTokens.sutraFont(size: size))
+                                .foregroundColor(WidgetTokens.sutraText)
+                                .lineSpacing(WidgetVerseLayout.largeLineSpacing)
+                                .lineLimit(lineLimit)
+                                .multilineTextAlignment(.leading)
+                                .minimumScaleFactor(0.9)
+                        }
+                        .clipped()
+                        .position(
+                            x: proxy.size.width / 2,
+                            y: WidgetVerseLayout.largeHeaderHeight + bodyHeight / 2
+                        )
 
-                // 卷名页脚 — 细发丝线 + 极淡小字，提供每日定位感
-                if !entry.source.isEmpty {
-                    VStack(spacing: 8) {
-                        hairlineDivider
-                        Text(entry.source)
-                            .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
-                            .foregroundColor(WidgetTokens.textTertiary)
-                            .tracking(1)
+                    if hasSource {
+                        layoutAnchor
+                        .frame(
+                            width: contentWidth,
+                            height: WidgetVerseLayout.largeFooterHeight
+                        )
+                        .overlay {
+                            VStack(spacing: 8) {
+                                hairlineDivider
+                                Text(entry.source)
+                                    .font(WidgetTokens.bodyFont(size: 11, weight: .regular))
+                                    .foregroundColor(WidgetTokens.textTertiary)
+                                    .tracking(1)
+                                    .fixedSize(horizontal: true, vertical: true)
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .position(
+                            x: proxy.size.width / 2,
+                            y: WidgetVerseLayout.largeHeaderHeight
+                                + bodyHeight
+                                + WidgetVerseLayout.largeFooterHeight / 2
+                        )
                     }
-                    .padding(.bottom, 16)
                 }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .top
+                )
             }
-            .padding(.leading, 18)
-            .padding(.trailing, 18)
         }
     }
 
@@ -354,28 +733,11 @@ struct LargeVerseView: View {
             .frame(width: 28, height: 0.5)
     }
 
-    /// 经文正文：统一字号线性连贯 — 不再把首句当「破题」标题，
-    /// 否则会把「阿难，…」一句完整的话砍成标题+正文两截，割裂阅读。
-    /// 动态字号：大组件可以比小/中组件稍大，但仍优先容纳完整段落。
-    @ViewBuilder
-    private var sutraBody: some View {
-        let raw = entry.fullText.isEmpty ? entry.text : entry.fullText.normalized
-        // 底线 14pt：300 字极限经文仍可容下；上限 17pt 避免短段落过度放大。
-        let size = dynamicFontSize(
-            charCount: raw.count,
-            availableWidth: 320,
-            availableHeight: 290,
-            lineSpacing: 6,
-            minSize: 14,
-            maxSize: 17
-        )
-        Text(raw)
-            .font(WidgetTokens.sutraFont(size: size))
-            .foregroundColor(WidgetTokens.sutraText)
-            .lineSpacing(6)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
+    /// 非零 alpha 防止 SwiftUI 折叠透明区域；视觉上不可见，仅稳定 overlay 提案。
+    private var layoutAnchor: Color {
+        Color.primary.opacity(0.001)
     }
+
 }
 
 // MARK: - Lock Screen / StandBy Accessories
@@ -434,33 +796,14 @@ private extension DailyVerseEntry {
         clippedFullText(limit: 58)
     }
 
-    /// Medium 专用：约 120 字完整段落，减少中号组件无意义空白。
-    /// 按句号切分，累计到上限；不够则硬截断。
+    /// Medium 专用：优先展示约 120 字；较小设备再按真实排版保留完整句。
     var mediumText: String {
-        let limit = 120
-        let src = fullBodyText
-        if src.count <= limit { return src }
-        // 按完整句子（。；！？）累计
-        var result = ""
-        let chars = Array(src)
-        var buffer = ""
-        for ch in chars {
-            buffer.append(ch)
-            if "。；！？".contains(ch) {
-                if (result + buffer).count <= limit {
-                    result += buffer
-                    buffer = ""
-                } else {
-                    break
-                }
-            }
-        }
-        if result.isEmpty {
-            // 无合适句号切分点，硬截断
-            let end = src.index(src.startIndex, offsetBy: limit - 2, limitedBy: src.endIndex) ?? src.endIndex
-            return String(src[..<end]) + "…"
-        }
-        return result
+        semanticallyClippedWidgetText(fullBodyText, limit: 120)
+    }
+
+    /// Large 专用：通常显示完整段落；系统给出的尺寸较小时不以极小字硬塞 300 字。
+    var largeText: String {
+        semanticallyClippedWidgetText(fullBodyText, limit: 300)
     }
 
     /// inline 用一行短文本，避免锁屏顶部截断。
@@ -474,17 +817,7 @@ private extension DailyVerseEntry {
     }
 
     private func clippedFullText(limit: Int) -> String {
-        let src = fullBodyText
-        if src.count <= limit { return src }
-        let head = String(src.prefix(limit))
-        if let sentenceEnd = head.lastIndex(where: { "。；！？".contains($0) }) {
-            return String(head[...sentenceEnd])
-        }
-        if let comma = head.lastIndex(where: { "，、".contains($0) }) {
-            return String(head[..<comma]) + "…"
-        }
-        let end = src.index(src.startIndex, offsetBy: max(1, limit - 1), limitedBy: src.endIndex) ?? src.endIndex
-        return String(src[..<end]) + "…"
+        semanticallyClippedWidgetText(fullBodyText, limit: limit)
     }
 
     var sourceShort: String {

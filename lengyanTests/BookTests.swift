@@ -8,6 +8,7 @@
 
 import XCTest
 import UIKit
+import SwiftUI
 import AVFoundation
 import MediaPlayer
 @testable import lengyan
@@ -530,6 +531,325 @@ class lengyanTests: XCTestCase {
         }
 
         wait(for: [completed], timeout: 3)
+    }
+
+    func testWidgetTypographyUsesAvailableMediumAndLargeSpaceForShortVerses() {
+        let shortVerseLength = 52
+        let mediumSize = CGSize(width: 338, height: 158)
+        let largeSize = CGSize(width: 338, height: 354)
+
+        XCTAssertEqual(
+            WidgetVerseLayout.mediumFontSize(
+                text: String(repeating: "见", count: shortVerseLength),
+                containerSize: mediumSize
+            ),
+            20
+        )
+        XCTAssertEqual(
+            WidgetVerseLayout.largeFontSize(
+                text: String(repeating: "见", count: shortVerseLength),
+                containerSize: largeSize,
+                hasSource: true
+            ),
+            24
+        )
+
+        let longMediumSize = WidgetVerseLayout.mediumFontSize(
+            text: String(repeating: "见", count: 120),
+            containerSize: mediumSize
+        )
+        XCTAssertLessThan(longMediumSize, 20)
+        XCTAssertGreaterThanOrEqual(
+            longMediumSize,
+            WidgetVerseLayout.mediumMinimumFontSize
+        )
+    }
+
+    func testWidgetTypographyCapsLongPassagesBeforeCrossingReadableFloor() {
+        let compactMedium = CGSize(width: 292, height: 141)
+        let compactLarge = CGSize(width: 292, height: 311)
+        let roomyLarge = CGSize(width: 362, height: 379)
+
+        let passage = String(repeating: "见", count: 300)
+        let compactMediumText = WidgetVerseLayout.mediumDisplayText(
+            String(passage.prefix(120)),
+            containerSize: compactMedium
+        )
+        let compactLargeText = WidgetVerseLayout.largeDisplayText(
+            passage,
+            containerSize: compactLarge,
+            hasSource: true
+        )
+        let roomyLargeText = WidgetVerseLayout.largeDisplayText(
+            passage,
+            containerSize: roomyLarge,
+            hasSource: true
+        )
+
+        XCTAssertGreaterThanOrEqual(compactMediumText.count, 70)
+        XCTAssertLessThan(compactMediumText.count, 120)
+        XCTAssertGreaterThan(compactLargeText.count, compactMediumText.count)
+        XCTAssertLessThanOrEqual(compactLargeText.count, 300)
+        XCTAssertGreaterThan(roomyLargeText.count, compactLargeText.count)
+        XCTAssertLessThanOrEqual(roomyLargeText.count, 300)
+    }
+
+    func testWidgetTypographyFitsEveryProviderLengthAcrossSystemFrameRange() {
+        let mediumFrames = [
+            CGSize(width: 292, height: 141),
+            CGSize(width: 338, height: 158),
+            CGSize(width: 362, height: 169),
+            CGSize(width: 380, height: 178),
+        ]
+        let largeFrames = [
+            CGSize(width: 292, height: 311),
+            CGSize(width: 338, height: 354),
+            CGSize(width: 362, height: 379),
+            CGSize(width: 380, height: 380),
+        ]
+        let sizeCategories: [(swiftUI: ContentSizeCategory, uiKit: UIContentSizeCategory)] = [
+            (.extraSmall, .extraSmall),
+            (.large, .large),
+            (.extraExtraExtraLarge, .extraExtraExtraLarge),
+            (.accessibilityExtraExtraExtraLarge, .accessibilityExtraExtraExtraLarge),
+        ]
+
+        for frame in mediumFrames {
+            for category in sizeCategories {
+                let available = WidgetVerseLayout.mediumAvailableSize(frame)
+
+                for sourceLength in 1...300 {
+                    let candidate = String(
+                        repeating: "见",
+                        count: min(sourceLength, 120)
+                    )
+                    let displayedText = WidgetVerseLayout.mediumDisplayText(
+                        candidate,
+                        containerSize: frame,
+                        sizeCategory: category.swiftUI
+                    )
+                    let fontSize = WidgetVerseLayout.mediumFontSize(
+                        text: displayedText,
+                        containerSize: frame,
+                        sizeCategory: category.swiftUI
+                    )
+                    let measuredHeight = measuredWidgetTextHeight(
+                        text: displayedText,
+                        fontSize: fontSize,
+                        width: available.width,
+                        lineSpacing: WidgetVerseLayout.mediumLineSpacing,
+                        contentSizeCategory: category.uiKit
+                    )
+
+                    XCTAssertGreaterThanOrEqual(
+                        fontSize,
+                        WidgetVerseLayout.mediumMinimumFontSize
+                    )
+                    XCTAssertLessThanOrEqual(
+                        fontSize,
+                        WidgetVerseLayout.mediumMaximumFontSize
+                    )
+                    XCTAssertLessThanOrEqual(
+                        measuredHeight,
+                        available.height + 1,
+                        "Medium length \(sourceLength), category \(category.swiftUI), does not fit \(frame) at \(fontSize)pt"
+                    )
+                }
+            }
+        }
+
+        for frame in largeFrames {
+            for hasSource in [false, true] {
+                for category in sizeCategories {
+                    let available = WidgetVerseLayout.largeAvailableSize(
+                        frame,
+                        hasSource: hasSource
+                    )
+                    for sourceLength in 1...300 {
+                        let candidate = String(repeating: "见", count: sourceLength)
+                        let displayedText = WidgetVerseLayout.largeDisplayText(
+                            candidate,
+                            containerSize: frame,
+                            hasSource: hasSource,
+                            sizeCategory: category.swiftUI
+                        )
+                        let fontSize = WidgetVerseLayout.largeFontSize(
+                            text: displayedText,
+                            containerSize: frame,
+                            hasSource: hasSource,
+                            sizeCategory: category.swiftUI
+                        )
+                        let measuredHeight = measuredWidgetTextHeight(
+                            text: displayedText,
+                            fontSize: fontSize,
+                            width: available.width,
+                            lineSpacing: WidgetVerseLayout.largeLineSpacing,
+                            contentSizeCategory: category.uiKit
+                        )
+
+                        XCTAssertGreaterThanOrEqual(
+                            fontSize,
+                            WidgetVerseLayout.largeMinimumFontSize
+                        )
+                        XCTAssertLessThanOrEqual(
+                            fontSize,
+                            WidgetVerseLayout.largeMaximumFontSize
+                        )
+                        XCTAssertLessThanOrEqual(
+                            measuredHeight,
+                            available.height + 1,
+                            "Large length \(sourceLength), source \(hasSource), category \(category.swiftUI), does not fit \(frame) at \(fontSize)pt"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    @MainActor
+    func testWidgetShortAndLongVerseLayoutsRenderInSystemFamilyFrames() {
+        let shortText = "是故阿难！汝今当知，见明之时，见非是明；见暗之时，见非是暗；见空之时，见非是空；见塞之时，见非是塞。"
+        let longText = Array(repeating: shortText, count: 6).joined()
+        let shortEntry = DailyVerseEntry(
+            date: Date(),
+            text: shortText,
+            fullText: shortText,
+            source: "卷一 · 先定离缘第一义",
+            path: "/A2/B1",
+            theme: "sepia"
+        )
+        let longEntry = DailyVerseEntry(
+            date: Date(),
+            text: shortText,
+            fullText: longText,
+            source: "卷一 · 先定离缘第一义",
+            path: "/A2/B1",
+            theme: "sepia"
+        )
+
+        let renderCases: [(String, CGSize, AnyView)] = [
+            (
+                "Widget-Small-Compact",
+                CGSize(width: 141, height: 141),
+                AnyView(SmallVerseView(entry: shortEntry))
+            ),
+            (
+                "Widget-Medium-Compact-Short",
+                CGSize(width: 292, height: 141),
+                AnyView(MediumVerseView(entry: shortEntry))
+            ),
+            (
+                "Widget-Medium-Compact-Long",
+                CGSize(width: 292, height: 141),
+                AnyView(MediumVerseView(entry: longEntry))
+            ),
+            (
+                "Widget-Medium-Short",
+                CGSize(width: 338, height: 158),
+                AnyView(MediumVerseView(entry: shortEntry))
+            ),
+            (
+                "Widget-Large-Compact-Short",
+                CGSize(width: 292, height: 311),
+                AnyView(LargeVerseView(entry: shortEntry))
+            ),
+            (
+                "Widget-Large-Compact-Long",
+                CGSize(width: 292, height: 311),
+                AnyView(LargeVerseView(entry: longEntry))
+            ),
+            (
+                "Widget-Large-Short",
+                CGSize(width: 338, height: 354),
+                AnyView(LargeVerseView(entry: shortEntry))
+            ),
+            (
+                "Widget-Large-Long",
+                CGSize(width: 338, height: 354),
+                AnyView(LargeVerseView(entry: longEntry))
+            ),
+        ]
+
+        for (name, size, view) in renderCases {
+            let image = renderWidget(view, size: size)
+            XCTAssertEqual(image.size, size)
+            XCTAssertGreaterThan(
+                image.pngData()?.count ?? 0,
+                3_000,
+                "\(name) should contain rendered text, not an empty surface"
+            )
+            let attachment = XCTAttachment(image: image)
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+    }
+
+    @MainActor
+    private func renderWidget(_ content: AnyView, size: CGSize) -> UIImage {
+        WidgetTokens.resolveTheme(from: "sepia")
+        let rootView = content
+            .frame(width: size.width, height: size.height)
+            .background(WidgetTokens.background)
+            .environment(\.sizeCategory, .large)
+
+        if #available(iOS 16.0, *) {
+            let renderer = ImageRenderer(content: rootView)
+            renderer.proposedSize = ProposedViewSize(size)
+            renderer.scale = 2
+            if let image = renderer.uiImage {
+                return image
+            }
+        }
+
+        let controller = UIHostingController(rootView: rootView)
+        let window = UIWindow(frame: CGRect(origin: .zero, size: size))
+        window.rootViewController = controller
+        window.isHidden = false
+        controller.view.bounds = CGRect(origin: .zero, size: size)
+        controller.view.backgroundColor = .clear
+        controller.view.setNeedsLayout()
+        controller.view.layoutIfNeeded()
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 2
+        let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+        }
+        window.isHidden = true
+        return image
+    }
+
+    private func measuredWidgetTextHeight(
+        text: String,
+        fontSize: CGFloat,
+        width: CGFloat,
+        lineSpacing: CGFloat,
+        contentSizeCategory: UIContentSizeCategory
+    ) -> CGFloat {
+        let baseFont = UIFont(name: "STKaiti", size: fontSize)
+            ?? UIFont.systemFont(ofSize: fontSize)
+        let traits = UITraitCollection(
+            preferredContentSizeCategory: contentSizeCategory
+        )
+        let font = UIFontMetrics(forTextStyle: .body).scaledFont(
+            for: baseFont,
+            compatibleWith: traits
+        )
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.lineBreakMode = .byWordWrapping
+        paragraph.lineSpacing = lineSpacing
+        return ceil(
+            (text as NSString).boundingRect(
+                with: CGSize(width: width, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                attributes: [
+                    .font: font,
+                    .paragraphStyle: paragraph,
+                ],
+                context: nil
+            ).height
+        )
     }
 
     func testAudioTrackRowsAdaptContinuouslyWithoutChangingPhoneOrLandscape() {
