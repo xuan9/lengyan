@@ -494,9 +494,13 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     private func configureTableViewWithDesignSystem() {
-        // Apply unified color system colors
-        tableView.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 满屏宣纸
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        let bgColor = SutraDesignTokens.shared.color(for: .background)
+        tableView.backgroundColor = bgColor
+        view.backgroundColor = bgColor
+
+        let bgView = UIView()
+        bgView.backgroundColor = bgColor
+        tableView.backgroundView = bgView
 
         // Enhanced zen styling
         tableView.separatorStyle = .none

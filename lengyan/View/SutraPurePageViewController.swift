@@ -346,14 +346,24 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
         )
     }
 
+    private func updatePageViewControllerThemeColors() {
+        let bgColor = SutraDesignTokens.shared.color(for: .background)
+        self.view.backgroundColor = bgColor
+        self.view.subviews.forEach { subview in
+            subview.backgroundColor = bgColor
+            if let scrollView = subview as? UIScrollView {
+                scrollView.backgroundColor = bgColor
+            }
+        }
+    }
+
     @objc private func themeDidChange() {
         UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
-            let bgColor = SutraDesignTokens.shared.color(for: .background)
-            self.view.backgroundColor = bgColor
+            self.updatePageViewControllerThemeColors()
             self.applyNavigationBarAppearance()
             self.updateNavigationBarState()
             self.viewControllers?.forEach { vc in
-                vc.view.backgroundColor = bgColor
+                vc.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
                 if let pureContentVC = vc as? SutraPurePageContentViewController {
                     pureContentVC.themeDidChange()
                 }
