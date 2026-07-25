@@ -64,6 +64,7 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
             }
             self.tree = resolvedTree
             self.treeView.reloadData()
+            self.restoreExpandedNodes()
             if let currentPath = self.path, !currentPath.isEmpty, currentPath != "/" {
                 self.openPath(
                     currentPath,
@@ -745,15 +746,23 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
     }
     
     func treeView(_ treeView:RATreeView, didExpandRowForItem item:Any){
-        guard let itemNS = item as? NSDictionary,
-              let cell = treeView.cell(forItem: item) else { return }
-        updateCellText(cell, for: itemNS)
+        guard let itemNS = item as? NSDictionary else { return }
+        if let cell = treeView.cell(forItem: item) {
+            updateCellText(cell, for: itemNS)
+        }
+        if let path = itemNS["path"] as? String {
+            Prefers.shared.recordOutlineNodeExpanded(path: path)
+        }
     }
     
     func treeView(_ treeView:RATreeView, didCollapseRowForItem item:Any){
-        guard let itemNS = item as? NSDictionary,
-              let cell = treeView.cell(forItem: item) else { return }
-        updateCellText(cell, for: itemNS)
+        guard let itemNS = item as? NSDictionary else { return }
+        if let cell = treeView.cell(forItem: item) {
+            updateCellText(cell, for: itemNS)
+        }
+        if let path = itemNS["path"] as? String {
+            Prefers.shared.recordOutlineNodeCollapsed(path: path)
+        }
     }
     
     func treeView(_ treeView:RATreeView,  didSelectRowForItem item:Any){
@@ -786,4 +795,42 @@ class SutraIndexViewController: UIViewController, RATreeViewDataSource, RATreeVi
         NotificationCenter.default.removeObserver(self)
     }
     
+    // MARK: - Outline Node Expansion Persistence Helpers
+    private func findNode(byPath targetPath: String, in rootNode: NSDictionary?) -> NSDictionary? {
+        guard let rootNode else { return nil }
+        if (rootNode["path"] as? String) == targetPath {
+            return rootNode
+        }
+        guard let children = rootNode["children"] as? NSArray else { return nil }
+        for child in children {
+            if let childDict = child as? NSDictionary {
+                if (childDict["path"] as? String) == targetPath {
+                    return childDict
+                }
+                if let found = findNode(byPath: targetPath, in: childDict) {
+                    return found
+                }
+            }
+        }
+        return nil
+    }
+
+    private func restoreExpandedNodes() {
+        let savedPaths = Prefers.shared.expandedOutlinePaths
+        guard !savedPaths.isEmpty else { return }
+
+        // Sort by path depth (fewer components first) so parent nodes expand before children
+        let sortedPaths = savedPaths.sorted {
+            $0.components(separatedBy: "/").count < $1.components(separatedBy: "/").count
+        }
+
+        let rootNS = self.tree as NSDictionary?
+        for path in sortedPaths {
+            if let node = findNode(byPath: path, in: rootNS) {
+                if !treeView.isCell(forItemExpanded: node) {
+                    treeView.expandRow(forItem: node, expandChildren: false, with: RATreeViewRowAnimationNone)
+                }
+            }
+        }
+    }
 }

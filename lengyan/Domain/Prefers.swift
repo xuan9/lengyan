@@ -459,6 +459,37 @@ class Prefers: NSObject, PrefersProtocol {
         save(snapshot, forKey: Prefers.outlineResumeSnapshotKey)
     }
 
+    // MARK: - Outline Expansion Persistence
+    var expandedOutlinePaths: Set<String> {
+        get {
+            guard let array = userDefaults.array(forKey: "expandedOutlinePaths") as? [String] else {
+                return []
+            }
+            return Set(array)
+        }
+        set {
+            userDefaults.set(Array(newValue), forKey: "expandedOutlinePaths")
+        }
+    }
+
+    func recordOutlineNodeExpanded(path: String) {
+        guard !path.isEmpty && path != "/" else { return }
+        var current = expandedOutlinePaths
+        if !current.contains(path) {
+            current.insert(path)
+            expandedOutlinePaths = current
+        }
+    }
+
+    func recordOutlineNodeCollapsed(path: String) {
+        guard !path.isEmpty && path != "/" else { return }
+        var current = expandedOutlinePaths
+        if current.contains(path) {
+            current.remove(path)
+            expandedOutlinePaths = current
+        }
+    }
+
     /// An intermediate V2 build also wrote chapter progress into the canonical
     /// key. Preserve that value once before repurposing the key for outlines.
     private func preserveLegacyCanonicalChapterIfNeeded() {
