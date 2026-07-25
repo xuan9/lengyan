@@ -408,8 +408,8 @@ struct ModernFavoritesView: View {
             .frame(width: rootGeo.size.width, height: rootGeo.size.height)
             .background(themeBackgroundColor)
         }
-        .background(themeBackgroundColor)
-        .edgesIgnoringSafeArea(.bottom)
+        .background(themeBackgroundColor.ignoresSafeArea())
+        .ignoresSafeArea()
     }
 
     private func tabBarOverlapHeight(in viewFrame: CGRect) -> CGFloat {
@@ -667,8 +667,14 @@ private extension View {
 
 // MARK: - HostingController — viewWillAppear 时立即隐藏导航栏，避免返回时闪烁
 class FavoritesHostingController: UIHostingController<ModernFavoritesView> {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .clear
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        view.backgroundColor = .clear
         navigationController?.setNavigationBarHidden(true, animated: false)
     }
 }
