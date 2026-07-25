@@ -188,6 +188,7 @@ struct ModernSettingsView: View {
             }
             .readingContentWidth()
         }
+        .id(themeVersion)
         .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
         .alert(L10n.str("settings_notification_alert_title"), isPresented: $showPermissionDeniedAlert) {
@@ -208,6 +209,7 @@ struct ModernSettingsView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
             selectedTheme = SutraDesignTokens.shared.currentTheme
+            themeVersion += 1
         }
     }
 

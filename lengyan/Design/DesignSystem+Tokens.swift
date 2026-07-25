@@ -336,16 +336,6 @@ public final class SutraDesignTokens {
         }
 
         setTheme(nextTheme)
-
-        // Animate theme transition with cross-dissolve
-        if let window = applicationWindows().first {
-            UIView.transition(with: window,
-                              duration: 0.3,
-                              options: .transitionCrossDissolve,
-                              animations: {
-                // Force UI update
-            })
-        }
     }
 
     private func applyTheme(_ theme: SutraTheme) {
