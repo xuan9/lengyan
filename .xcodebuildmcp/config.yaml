@@ -1,0 +1,11 @@
+# XcodeBuildMCP 配置
+schemaVersion: 1
+
+# 启用 UI automation 工作流
+enabledWorkflows:
+  - simulator
+  - ui-automation
+  - debugging
+
+# UI automation 设置
+uiDebuggerGuardMode: error

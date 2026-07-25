@@ -311,7 +311,17 @@ public final class SutraDesignTokens {
     public func setTheme(_ theme: SutraTheme) {
         // Keep the dark palette implemented but unreachable until night reading
         // is deliberately enabled in a future release.
-        currentTheme = Self.enabledTheme(theme)
+        let enabledTheme = Self.enabledTheme(theme)
+        let updateTheme = {
+            guard self.currentTheme != enabledTheme else { return }
+            self.currentTheme = enabledTheme
+        }
+
+        if Thread.isMainThread {
+            updateTheme()
+        } else {
+            DispatchQueue.main.async(execute: updateTheme)
+        }
     }
 
     public func toggleTheme() {

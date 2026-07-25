@@ -116,7 +116,6 @@ struct ModernSettingsView: View {
     @Environment(\.sizeCategory) private var sizeCategory
     @State private var fontSizeLevel: Int = Prefers.shared.fontSizeLevel
     @State private var selectedTheme: SutraTheme = SutraDesignTokens.shared.currentTheme
-    @State private var themeVersion: Int = 0
     @State private var isReminderOn: Bool = Prefers.shared.isDailyReminderOn
     @State private var reminderHour: Int = Prefers.shared.reminderHour
     @State private var reminderMinute: Int = Prefers.shared.reminderMinute
@@ -188,7 +187,7 @@ struct ModernSettingsView: View {
             }
             .readingContentWidth()
         }
-        .id(themeVersion)
+        .accessibilityIdentifier("settings.root")
         .background(SutraDesignSystem.backgroundColor())
         .edgesIgnoringSafeArea(.bottom)
         .alert(L10n.str("settings_notification_alert_title"), isPresented: $showPermissionDeniedAlert) {
@@ -209,7 +208,6 @@ struct ModernSettingsView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
             selectedTheme = SutraDesignTokens.shared.currentTheme
-            themeVersion += 1
         }
     }
 
@@ -315,7 +313,7 @@ struct ModernSettingsView: View {
     }
 
     private func changeTheme(_ theme: SutraTheme) {
-        selectedTheme = theme
+        guard theme != SutraDesignTokens.shared.currentTheme else { return }
         SutraDesignTokens.shared.setTheme(theme)
     }
 

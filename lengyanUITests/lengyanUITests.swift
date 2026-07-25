@@ -1168,6 +1168,30 @@ class lengyanUITests: XCTestCase {
         )
     }
 
+    func testRapidThemeSwitchingKeepsSettingsContentVisible() {
+        let app = launchHomeApp(readingState: .start)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+        tabBar.buttons.element(boundBy: 3).tap()
+
+        let settingsRoot = app.scrollViews["settings.root"]
+        let scriptureTheme = app.buttons["古籍"]
+        let paperTheme = app.buttons["宣纸"]
+
+        XCTAssertTrue(settingsRoot.waitForExistence(timeout: 3))
+        XCTAssertTrue(scriptureTheme.waitForExistence(timeout: 3))
+        XCTAssertTrue(paperTheme.waitForExistence(timeout: 3))
+
+        for index in 0..<16 {
+            let themeButton = index.isMultiple(of: 2) ? paperTheme : scriptureTheme
+            themeButton.tap()
+
+            XCTAssertTrue(settingsRoot.exists, "Settings root disappeared after theme switch \(index + 1)")
+            XCTAssertTrue(app.staticTexts["主题"].exists, "Theme controls disappeared after switch \(index + 1)")
+            XCTAssertEqual(tabBar.buttons.count, 4, "Tab bar changed after theme switch \(index + 1)")
+        }
+    }
+
     func testNightReadingThemeIsNotExposed() {
         let app = launchHomeApp(readingState: .start)
         let tabBar = app.tabBars.firstMatch
