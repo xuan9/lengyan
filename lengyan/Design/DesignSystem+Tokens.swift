@@ -359,11 +359,20 @@ public final class SutraDesignTokens {
             self.applicationWindows().forEach { window in
                 let backgroundColor = self.color(for: .background)
                 window.backgroundColor = backgroundColor
-                window.rootViewController?.view.backgroundColor = backgroundColor
                 window.overrideUserInterfaceStyle = self.interfaceStyle(for: theme)
 
-                if let tabBarController = window.rootViewController as? UITabBarController {
-                    self.applyCurrentTheme(to: tabBarController.tabBar)
+                if let root = window.rootViewController {
+                    root.view.backgroundColor = backgroundColor
+                    if let tabBarController = root as? UITabBarController {
+                        self.applyCurrentTheme(to: tabBarController.tabBar)
+                        tabBarController.viewControllers?.forEach { vc in
+                            vc.view.backgroundColor = backgroundColor
+                            if let nav = vc as? UINavigationController {
+                                nav.view.backgroundColor = backgroundColor
+                                nav.topViewController?.view.backgroundColor = backgroundColor
+                            }
+                        }
+                    }
                 }
             }
         }

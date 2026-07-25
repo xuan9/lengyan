@@ -279,6 +279,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDelegate, RATreeView
     }
 
     @objc private func themeDidChangeForFrontViewController() {
+        guard isViewLoaded && view.window != nil else { return }
         UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
             self.applyThemeColorsToView()
             self.configureTreeViewWithDesignSystem()

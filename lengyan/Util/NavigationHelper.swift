@@ -69,8 +69,14 @@ class NavBarHostingController<T: View>: UIHostingController<T> {
         fatalError("init(coder:) is not supported")
     }
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
         if showsNavBar {
             navigationController?.navigationBar.isHidden = false
             navigationController?.setNavigationBarHidden(false, animated: animated)

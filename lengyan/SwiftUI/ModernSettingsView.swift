@@ -208,7 +208,6 @@ struct ModernSettingsView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
             selectedTheme = SutraDesignTokens.shared.currentTheme
-            themeVersion += 1
         }
     }
 
@@ -314,9 +313,7 @@ struct ModernSettingsView: View {
     }
 
     private func changeTheme(_ theme: SutraTheme) {
-        withAnimation(.easeInOut(duration: 0.25)) {
-            selectedTheme = theme
-        }
+        selectedTheme = theme
         SutraDesignTokens.shared.setTheme(theme)
     }
 
@@ -700,9 +697,6 @@ struct WidgetGuideView: View {
         .onAppear(perform: refreshInstallation)
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             refreshInstallation()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
-            themeVersion += 1
         }
     }
 
