@@ -284,7 +284,6 @@ struct ModernFavoritesView: View {
                                         }
                                         .padding(.horizontal, 10)
                                     }
-                                    .padding(.bottom, tabBarOverlapHeight + 24)
                                 }
                             }
                         }
@@ -386,7 +385,7 @@ struct ModernFavoritesView: View {
                                     .padding(.horizontal, 10)
                                     .readingContentWidth()
                                 }
-                                .padding(.bottom, tabBarOverlapHeight + 24)
+                                .padding(.bottom, tabBarOverlapHeight)
                             }
                         }
                     }
@@ -407,8 +406,8 @@ struct ModernFavoritesView: View {
             .frame(width: rootGeo.size.width, height: rootGeo.size.height)
             .background(themeBackgroundColor)
         }
-        .background(themeBackgroundColor.ignoresSafeArea())
-        .ignoresSafeArea()
+        .background(themeBackgroundColor.ignoresSafeArea(.all, edges: .top))
+        .ignoresSafeArea(.all, edges: .top)
     }
 
     private func tabBarOverlapHeight(in viewFrame: CGRect) -> CGFloat {
@@ -713,7 +712,7 @@ struct SwiftUISutraReader: UIViewControllerRepresentable {
             pageVC.isEmbedded = true
             childVC = pageVC
         }
-        
+
         let navController = SutraNavigationController(rootViewController: childVC)
         navController.navigationBar.isHidden = false
         return navController

@@ -82,7 +82,7 @@ class SutraTableViewCell: UITableViewCell {
         textView.textContainerInset = UIEdgeInsets(
             top: 12,
             left: 16,
-            bottom: 24, // 下留白更大，产生自然的段落间隔
+            bottom: 24,
             right: 16
         )
 
@@ -363,7 +363,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
 
     private func applyThemeColorsToView() {
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background) // 视界极致统一
+        let bgColor = SutraDesignTokens.shared.color(for: .background)
+        view.backgroundColor = bgColor // 视界极致统一
+        tableView.backgroundColor = bgColor // 确保表格视图背景色正确
     }
 
     private func setupThemeObserverForView() {
@@ -499,12 +501,14 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         // Enhanced zen styling
         tableView.separatorStyle = .none
         tableView.showsVerticalScrollIndicator = false
+        tableView.contentInsetAdjustmentBehavior = .never
+        tableView.tableFooterView = nil
 
         // Design system spacing
         tableView.contentInset = UIEdgeInsets(
             top: 24,
             left: 0,
-            bottom: 40,
+            bottom: 100,
             right: 0
         )
 
@@ -584,7 +588,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
             bottom: 40,
             right: 0
         )
-        
+
         // Scroll indicators should match the content layout
         tableView.verticalScrollIndicatorInsets = UIEdgeInsets(
             top: 24,
@@ -707,13 +711,13 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
     
     override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        if (indexPath as NSIndexPath).row == contents.count {
-            return 100;
-        }else{
-            return UITableView.automaticDimension;
-        }
-        
+        return UITableView.automaticDimension;
     }
+
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension;
+    }
+
     // MARK: - Table view data source
     
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -723,7 +727,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return contents.count + 1
+        return contents.count
     }
     
     func paragraphOf(text:String, font:UIFont?) -> NSAttributedString{
@@ -740,10 +744,6 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if (indexPath as NSIndexPath).row == contents.count {
-            return self.zenActionRow();
-        }
-
         // SAFE: Use optional binding instead of forced cast
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "SutraTableViewCell", for: indexPath) as? SutraTableViewCell else {
             print("⚠️ ERROR: Failed to dequeue SutraTableViewCell")
@@ -776,7 +776,9 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
     
     func zenActionRow() -> UITableViewCell{
         let cell = UITableViewCell()
-        cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        let bgColor = SutraDesignTokens.shared.color(for: .background)
+        cell.backgroundColor = bgColor
+        cell.contentView.backgroundColor = bgColor
         cell.selectionStyle = .none
         return cell
     }

@@ -70,7 +70,7 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
         sutraTextView.textColor = SutraDesignTokens.shared.color(for: .sutraText)
 
         // 增加基础上下呼吸空间，左右边距将在 viewDidLayoutSubviews 中动态计算
-        sutraTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 24, right: 12)
+        sutraTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 100, right: 12)
 
         // 恢复系统默认的 safeArea 适配机制，保护灵动岛和底部 Home Indicator 不被文字遮挡
         sutraTextView.contentInsetAdjustmentBehavior = .always
@@ -130,7 +130,7 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
             containerWidth: view.bounds.width,
             containerHeight: view.bounds.height
         )
-        sutraView?.textContainerInset = UIEdgeInsets(top: 12, left: horizontalInset, bottom: 24, right: horizontalInset)
+        sutraView?.textContainerInset = UIEdgeInsets(top: 12, left: horizontalInset, bottom: 100, right: horizontalInset)
 
         let newWidth = view.bounds.width
         let widthChanged = lastLaidOutWidth > 0

@@ -280,13 +280,20 @@ class SutraFrontViewController: UIViewController, RATreeViewDelegate, RATreeView
     }
 
     @objc private func themeDidChangeForFrontViewController() {
-        guard isViewLoaded && view.window != nil else { return }
+        guard isViewLoaded else { return }
+
+        // Check if view is visible
+        let isVisible = view.window != nil
+
         UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
             self.applyThemeColorsToView()
             self.configureTreeViewWithDesignSystem()
-            self.setupHeaderView(self.view.bounds.size)
-            self.setupFooterView(self.view.bounds.size)
-            self.treeView?.reloadData()
+            if isVisible {
+                // Only reload data and recreate views when view is visible
+                self.setupHeaderView(self.view.bounds.size)
+                self.setupFooterView(self.view.bounds.size)
+                self.treeView?.reloadData()
+            }
         }, completion: nil)
     }
 

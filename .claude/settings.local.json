@@ -7,7 +7,6 @@
       "mcp__XcodeBuildMCP__session_show_defaults",
       "mcp__XcodeBuildMCP__discover_projs",
       "mcp__XcodeBuildMCP__list_schemes",
-      ".*",
       "Bash(./scripts/build_and_install_device.sh)",
       "Bash(find /Users/fuxuan/github/lengyan -name \"*.swift\" -type f -exec grep -l \"\\\\.accessibility\" {})",
       "mcp__mobile-mcp__mobile_list_available_devices",
