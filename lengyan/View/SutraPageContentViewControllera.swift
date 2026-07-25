@@ -232,12 +232,17 @@ class SutraTableViewCell: UITableViewCell {
 
     // MARK: - Theme Support
     public func applyThemeColors() {
-        backgroundColor = SutraDesignTokens.shared.color(for: .background) // 细胞底色同样是净色
-        containerView.backgroundColor = .clear // 透明度直接露底
+        let bgColor = SutraDesignTokens.shared.color(for: .background)
+        backgroundColor = bgColor
+        contentView.backgroundColor = bgColor
+        containerView.backgroundColor = .clear
+        if let textView {
+            textView.backgroundColor = bgColor
+        }
 
         // Refresh text colors based on content type
-        if !contentType.isEmpty {
-            configureWithZenStyle(content: textView.text, type: contentType)
+        if let text = textView?.text, !contentType.isEmpty {
+            configureWithZenStyle(content: text, type: contentType)
         }
     }
 
@@ -388,6 +393,13 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
             self.applyThemeColorsToView()
             self.configureTableViewWithDesignSystem()
+            self.tableView.visibleCells.forEach { cell in
+                if let zenCell = cell as? SutraTableViewCell {
+                    zenCell.applyThemeColors()
+                } else {
+                    cell.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+                }
+            }
             self.tableView.reloadData()
         }, completion: nil)
     }
