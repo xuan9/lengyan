@@ -306,6 +306,7 @@ struct ModernFavoritesView: View {
                             } else if let selected = activeSelectedItem {
                                 SwiftUISutraReader(path: selected.path, hasChildren: selected.hasChildren)
                                     .id(selected.path)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                             } else {
                                 // If selectedItem is nil (i.e. empty personal favorites)
                                 ZenPlaceholderView(
@@ -316,6 +317,7 @@ struct ModernFavoritesView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(themeBackgroundColor)
+                        .clipped()
                     }
                     .onAppear {
                         viewModel.loadAll()
@@ -713,8 +715,16 @@ struct SwiftUISutraReader: UIViewControllerRepresentable {
             childVC = pageVC
         }
 
+        // This navigation controller is nested inside the Favorites tab's
+        // SwiftUI detail pane. UIKit still discovers the outer UITabBarController
+        // and shortens its root view by one tab-bar height unless the embedded
+        // reader explicitly extends through the inherited bottom-bar region.
+        childVC.edgesForExtendedLayout = [.bottom]
+        childVC.extendedLayoutIncludesOpaqueBars = true
+
         let navController = SutraNavigationController(rootViewController: childVC)
         navController.navigationBar.isHidden = false
+        navController.view.accessibilityIdentifier = "reader.navigationContainer"
         return navController
     }
 

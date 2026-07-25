@@ -183,6 +183,13 @@ class SutraTableViewCell: UITableViewCell {
         if let borderLayer = containerView.layer.sublayers?.first(where: { $0.name == "zenAnchorLine" }) {
             borderLayer.frame = CGRect(x: 4, y: 16, width: 1, height: max(0, containerView.bounds.height - 32))
         }
+
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            let contentFits = textView.contentSize.height <= textView.bounds.height + 1
+            accessibilityValue = contentFits
+                ? "fits"
+                : "clipped: content=\(textView.contentSize.height), bounds=\(textView.bounds.height)"
+        }
     }
 
     private func updateReadingColumn(for width: CGFloat) {
@@ -307,6 +314,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        tableView.accessibilityIdentifier = "reader.paged.table"
 
         // Apply Zen Temple Serenity Design System
         applyZenTempleSerenityDesignSystem()
@@ -765,6 +773,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
 
         // Apply comprehensive zen styling
         cell.configureWithZenStyle(content: textContent, type: contentType)
+        cell.accessibilityIdentifier = "reader.paged.cell.\(row)"
         cell.textView.accessibilityIdentifier = "reader.paged.body.\(row)"
 
         // 含蓄的禅意入场动画

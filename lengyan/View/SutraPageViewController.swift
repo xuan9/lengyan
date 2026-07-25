@@ -394,14 +394,10 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         pageContent.pageIndex = index
         pageContent.parentReader = self
  
-        let frame = self.view.frame;
-        // 使用 safeAreaInsets 而非 navigationBar 高度，
-        // 这样无论导航栏是否隐藏（hidesBarsOnSwipe），内容都不会被灵动岛遮挡
-        let topInset = self.view.safeAreaInsets.top
- 
-        pageContent.view.frame = CGRect(
-            origin: CGPoint(x: frame.origin.x, y: frame.origin.y + topInset),
-            size: CGSize(width: frame.size.width, height: frame.size.height - topInset))
+        // Child-controller frames use the page view controller's local
+        // coordinate space. Using `view.frame` here shifts embedded readers by
+        // the navigation container's origin and clips the bottom of the page.
+        pageContent.view.frame = self.view.bounds
  
         // Apply Zen Temple Serenity design enhancement
         enhancePageViewController(pageContent)

@@ -1036,6 +1036,50 @@ class lengyanUITests: XCTestCase {
         XCTAssertFalse(app.otherElements["reader.outlineIndex"].exists)
     }
 
+    func testIPadFavoritesTreeReaderDoesNotDuplicateBottomSafeArea() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("Favorites split-detail layout is iPad-only")
+        }
+
+        let rootPath = "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K1"
+        let app = launchHomeApp(
+            readingState: .start,
+            userLikes: [rootPath]
+        )
+
+        let tabBar = app.tabBars.firstMatch
+        let favoritesTab = tabBar.buttons.element(boundBy: 2)
+        XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3))
+        favoritesTab.tap()
+
+        let reader = app.otherElements["reader.tree"]
+        let navigationContainer = app.otherElements["reader.navigationContainer"]
+        let body = app.textViews["reader.tree.body"]
+        XCTAssertTrue(navigationContainer.waitForExistence(timeout: 5))
+        XCTAssertTrue(reader.waitForExistence(timeout: 5))
+        XCTAssertTrue(body.waitForExistence(timeout: 5))
+        XCTAssertEqual(
+            reader.frame.maxY,
+            tabBar.frame.minY,
+            accuracy: 1,
+            "The right reader must fill the pane down to the tab bar. Navigation: \(navigationContainer.frame), reader: \(reader.frame), tab bar: \(tabBar.frame)"
+        )
+        XCTAssertGreaterThanOrEqual(
+            body.frame.maxY,
+            reader.frame.maxY - 1,
+            "The embedded tree reader body must fill the detail pane. Body: \(body.frame), reader: \(reader.frame)"
+        )
+        XCTAssertTrue(
+            (reader.value as? String)?.contains("bottom-safe") == true,
+            "The embedded reader must not apply the outer tab bar safe area twice; got \(String(describing: reader.value))"
+        )
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Favorites tree reader - full bottom viewport"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
     func testIPadFavoritesLongLeafBodyReflowsWithoutClipping() throws {
         guard UIDevice.current.userInterfaceIdiom == .pad else {
             throw XCTSkip("Favorites split-detail layout is iPad-only")
@@ -1053,9 +1097,34 @@ class lengyanUITests: XCTestCase {
         favoritesTab.tap()
 
         let reader = app.otherElements["reader.paged"]
+        let readerTable = app.tables["reader.paged.table"]
+        let bodyCell = app.cells["reader.paged.cell.0"]
         let body = app.textViews["reader.paged.body.0"]
+        let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(reader.waitForExistence(timeout: 5))
+        XCTAssertTrue(readerTable.waitForExistence(timeout: 5))
+        XCTAssertTrue(bodyCell.waitForExistence(timeout: 5))
         XCTAssertTrue(body.waitForExistence(timeout: 5))
+        XCTAssertEqual(
+            bodyCell.value as? String,
+            "fits",
+            "The complete wrapped text must fit inside its self-sized cell; got \(String(describing: bodyCell.value))"
+        )
+        XCTAssertEqual(
+            reader.frame.maxY,
+            tabBar.frame.minY,
+            accuracy: 1,
+            "The embedded Favorites reader must end above the tab bar. Reader: \(reader.frame), tab bar: \(tabBar.frame)"
+        )
+        XCTAssertGreaterThanOrEqual(
+            readerTable.frame.maxY,
+            reader.frame.maxY - 1,
+            "The UIKit page viewport must fill the reader. Table: \(readerTable.frame), reader: \(reader.frame)"
+        )
+        let portraitScreenshot = XCTAttachment(screenshot: app.screenshot())
+        portraitScreenshot.name = "Favorites reader - portrait"
+        portraitScreenshot.lifetime = .keepAlways
+        add(portraitScreenshot)
         let portraitHeight = body.frame.height
         XCTAssertGreaterThan(
             portraitHeight,
@@ -1070,6 +1139,26 @@ class lengyanUITests: XCTestCase {
             throw XCTSkip("The simulator did not acknowledge landscape orientation")
         }
         XCTAssertTrue(body.waitForExistence(timeout: 3))
+        XCTAssertEqual(
+            bodyCell.value as? String,
+            "fits",
+            "The complete rotated text must fit inside its self-sized cell; got \(String(describing: bodyCell.value))"
+        )
+        XCTAssertEqual(
+            reader.frame.maxY,
+            tabBar.frame.minY,
+            accuracy: 1,
+            "The rotated Favorites reader must end above the tab bar. Reader: \(reader.frame), tab bar: \(tabBar.frame)"
+        )
+        XCTAssertGreaterThanOrEqual(
+            readerTable.frame.maxY,
+            reader.frame.maxY - 1,
+            "The rotated UIKit page viewport must fill the reader. Table: \(readerTable.frame), reader: \(reader.frame)"
+        )
+        let landscapeScreenshot = XCTAttachment(screenshot: app.screenshot())
+        landscapeScreenshot.name = "Favorites reader - landscape"
+        landscapeScreenshot.lifetime = .keepAlways
+        add(landscapeScreenshot)
         let landscapeHeight = body.frame.height
         XCTAssertGreaterThan(landscapeHeight, app.frame.height + 100)
         XCTAssertLessThan(

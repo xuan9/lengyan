@@ -72,11 +72,15 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
         // 增加基础上下呼吸空间，左右边距将在 viewDidLayoutSubviews 中动态计算
         sutraTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 24, right: 12)
 
-        // 恢复系统默认的 safeArea 适配机制，保护灵动岛和底部 Home Indicator 不被文字遮挡
-        sutraTextView.contentInsetAdjustmentBehavior = .always
+        // The embedded Favorites pane already ends above the tab bar. Applying
+        // UIKit's automatic inset again shortens the visible reader viewport.
+        sutraTextView.contentInsetAdjustmentBehavior = parentReader?.isEmbedded == true
+            ? .never
+            : .always
 
         let text = Book.shared.getSutraAttributeString(meta)
         sutraTextView.attributedText = text
+        sutraTextView.accessibilityIdentifier = "reader.tree.body"
         view.addSubview(sutraTextView)
 
         sutraTextView.translatesAutoresizingMaskIntoConstraints = false
@@ -131,6 +135,8 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
             containerHeight: view.bounds.height
         )
         sutraView?.textContainerInset = UIEdgeInsets(top: 12, left: horizontalInset, bottom: 24, right: horizontalInset)
+
+        updateUITestScrollMetrics()
 
         let newWidth = view.bounds.width
         let widthChanged = lastLaidOutWidth > 0
@@ -342,10 +348,26 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateStableTextPosition()
+        updateUITestScrollMetrics()
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         parentReader?.confirmReadingInteraction()
+    }
+
+    private func updateUITestScrollMetrics() {
+        guard ProcessInfo.processInfo.arguments.contains("--uitesting"),
+              let sutraView else { return }
+
+        let bottomInsetIsSafe = sutraView.adjustedContentInset.bottom <= 1
+        let visibleBottom = sutraView.contentOffset.y
+            + sutraView.bounds.height
+            - sutraView.adjustedContentInset.bottom
+        let contentBottomIsVisible = visibleBottom >= sutraView.contentSize.height - 1
+        parentReader?.view.accessibilityValue = [
+            bottomInsetIsSafe ? "bottom-safe" : "duplicated-bottom-inset",
+            contentBottomIsVisible ? "bottom-visible" : "scrollable"
+        ].joined(separator: "|")
     }
 
     func updateHeader(_ item:[String:Any]){
