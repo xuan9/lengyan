@@ -147,6 +147,7 @@ private final class HomeActionButton: UIButton {
 
 class SutraFrontViewController: UIViewController, RATreeViewDelegate, RATreeViewDataSource {
     var treeView: RATreeView!
+    private weak var verseLabel: UILabel?
     private weak var outlineResumeButton: HomeActionButton?
     private weak var continueListeningButton: HomeActionButton?
     private var audioObserverCancellables = Set<AnyCancellable>()
@@ -393,6 +394,12 @@ class SutraFrontViewController: UIViewController, RATreeViewDelegate, RATreeView
         ])
         subTitle.attributedText = attributedSubTitle
         header.addSubview(subTitle)
+        self.verseLabel = subTitle
+        if !Book.shared.loaded {
+            subTitle.alpha = 0
+        } else {
+            subTitle.alpha = 1.0
+        }
 
         let nextY = verseY + verseHeight + buttonSectionTopGap
 
@@ -1263,18 +1270,34 @@ class SutraFrontViewController: UIViewController, RATreeViewDelegate, RATreeView
     
     func showList(){
         print("🔥 showList() called - Book.shared.loaded = \(Book.shared.loaded)")
-        self.tree = Book.shared.getKeyItems();
 
-        if let tree = self.tree {
-            print("🔥 Tree loaded with \(tree.count) items")
-        } else {
-            print("🔥 ERROR - tree is nil! Book data may not be loaded properly.")
-        }
+        let updateDataAndDisplay = { [weak self] in
+            guard let self else { return }
+            self.tree = Book.shared.getKeyItems()
 
-        print("🔥 Reloading treeView...")
-        DispatchQueue.main.async {
+            if let tree = self.tree {
+                print("🔥 Tree loaded with \(tree.count) items")
+            } else {
+                print("🔥 ERROR - tree is nil! Book data may not be loaded properly.")
+            }
+
+            print("🔥 Reloading treeView...")
             self.treeView.reloadData()
             print("🔥 TreeView has \(self.treeView.visibleCells()?.count ?? 0) visible cells")
+
+            if let verseLabel = self.verseLabel, verseLabel.alpha < 1.0 {
+                UIView.animate(withDuration: 0.3) {
+                    verseLabel.alpha = 1.0
+                }
+            }
+        }
+
+        if Book.shared.loaded {
+            updateDataAndDisplay()
+        } else {
+            Book.shared.loadDataWithCompletionHandler { _ in
+                updateDataAndDisplay()
+            }
         }
     }
     
