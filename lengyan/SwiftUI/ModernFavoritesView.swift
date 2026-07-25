@@ -306,7 +306,6 @@ struct ModernFavoritesView: View {
                             } else if let selected = activeSelectedItem {
                                 SwiftUISutraReader(path: selected.path, hasChildren: selected.hasChildren)
                                     .id(selected.path)
-                                    .padding(.bottom, tabBarOverlapHeight)
                             } else {
                                 // If selectedItem is nil (i.e. empty personal favorites)
                                 ZenPlaceholderView(

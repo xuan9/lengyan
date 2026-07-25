@@ -508,7 +508,7 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         tableView.contentInset = UIEdgeInsets(
             top: 24,
             left: 0,
-            bottom: 100,
+            bottom: 24,
             right: 0
         )
 
