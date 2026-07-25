@@ -225,6 +225,11 @@ struct ModernFavoritesView: View {
         selectedItem ?? viewModel.favorites.first ?? viewModel.curatedItems.first
     }
 
+    private var themeBackgroundColor: Color {
+        _ = themeVersion
+        return Color(uiColor: SutraDesignTokens.shared.color(for: .background))
+    }
+
     private var isWideScreen: Bool {
         if UIDevice.current.userInterfaceIdiom != .pad { return false }
         let width = UIApplication.shared.connectedScenes
@@ -284,7 +289,7 @@ struct ModernFavoritesView: View {
                             }
                         }
                         .frame(width: 320)
-                        .background(SutraDesignSystem.backgroundColor())
+                        .background(themeBackgroundColor)
 
                         // Divider Line
                         Rectangle()
@@ -312,7 +317,7 @@ struct ModernFavoritesView: View {
                             }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(SutraDesignSystem.backgroundColor())
+                        .background(themeBackgroundColor)
                     }
                     .onAppear {
                         viewModel.loadAll()
@@ -386,7 +391,7 @@ struct ModernFavoritesView: View {
                             }
                         }
                     }
-                    .background(SutraDesignSystem.backgroundColor())
+                    .background(themeBackgroundColor)
                     .onAppear {
                         viewModel.loadAll()
                         hideNavBar()
@@ -401,7 +406,9 @@ struct ModernFavoritesView: View {
                 }
             }
             .frame(width: rootGeo.size.width, height: rootGeo.size.height)
+            .background(themeBackgroundColor)
         }
+        .background(themeBackgroundColor)
         .edgesIgnoringSafeArea(.bottom)
     }
 
