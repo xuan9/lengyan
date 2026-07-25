@@ -569,9 +569,10 @@ class SutraFrontViewController: UIViewController, RATreeViewDelegate, RATreeView
         // truncate inside stable slots and can never make the same iPad jump
         // between one and two rows.
         // AppDelegate intentionally overrides the tab bar's horizontal size class to
-        // compact on newer iPadOS versions. Use the real container width here so a
-        // full-width large iPad still gets one row, while split/compact windows and iPad mini use two.
-        let usesSingleActionRow = isPad && size.width >= 800
+        // compact on newer iPadOS versions. Use the real container width here so only
+        // extra-large iPad windows (width >= 1000pt) get one row, while regular iPads
+        // in portrait and iPad mini use two rows.
+        let usesSingleActionRow = isPad && size.width >= 1000
         let actionLeading = horizontalPadding
         let actionTrailing = chapterTenButton?.frame.maxX ?? (cw - horizontalPadding)
         let availableWidth = max(0, actionTrailing - actionLeading)
