@@ -380,6 +380,10 @@ class SutraPageContentViewController: UITableViewController, SutraPage{
         )
     }
 
+    @objc public func themeDidChange() {
+        themeDidChangeForViewController()
+    }
+
     @objc private func themeDidChangeForViewController() {
         UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
             self.applyThemeColorsToView()

@@ -190,6 +190,10 @@ class SutraPurePageContentViewController: UIViewController, UITextViewDelegate, 
         NotificationCenter.default.removeObserver(self, name: .fontSizeDidChange, object: nil)
     }
 
+    @objc public func themeDidChange() {
+        themeDidChangeEvent()
+    }
+
     @objc private func themeDidChangeEvent() {
         UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
             self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)

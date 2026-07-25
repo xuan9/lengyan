@@ -85,6 +85,30 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         self.setViewControllers([getViewControllerAtIndex(index: page)] as [UIViewController], direction: UIPageViewController.NavigationDirection.forward, animated: false, completion: nil)
 
         self.setTitle()
+        self.setupThemeObserver()
+    }
+
+    private func setupThemeObserver() {
+        NotificationCenter.default.removeObserver(self, name: .themeDidChange, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(themeDidChange),
+            name: .themeDidChange,
+            object: nil
+        )
+    }
+
+    @objc private func themeDidChange() {
+        UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
+            let bgColor = SutraDesignTokens.shared.color(for: .background)
+            self.view.backgroundColor = bgColor
+            self.viewControllers?.forEach { vc in
+                vc.view.backgroundColor = bgColor
+                if let pageContentVC = vc as? SutraPageContentViewController {
+                    pageContentVC.themeDidChange()
+                }
+            }
+        }, completion: nil)
     }
 
     func updatePage(to index: Int) {

@@ -348,9 +348,16 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
 
     @objc private func themeDidChange() {
         UIView.transition(with: self.view, duration: 0.4, options: [.transitionCrossDissolve, .curveEaseInOut], animations: {
-            self.view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+            let bgColor = SutraDesignTokens.shared.color(for: .background)
+            self.view.backgroundColor = bgColor
             self.applyNavigationBarAppearance()
             self.updateNavigationBarState()
+            self.viewControllers?.forEach { vc in
+                vc.view.backgroundColor = bgColor
+                if let pureContentVC = vc as? SutraPurePageContentViewController {
+                    pureContentVC.themeDidChange()
+                }
+            }
         }, completion: nil)
     }
 

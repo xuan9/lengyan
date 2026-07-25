@@ -707,7 +707,16 @@ struct SwiftUISutraReader: UIViewControllerRepresentable {
         return navController
     }
 
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        if let nav = uiViewController as? UINavigationController {
+            let bgColor = SutraDesignTokens.shared.color(for: .background)
+            nav.navigationBar.backgroundColor = bgColor
+            nav.view.backgroundColor = bgColor
+            if let topVC = nav.topViewController {
+                topVC.view.backgroundColor = bgColor
+            }
+        }
+    }
 }
 
 // MARK: - ZenPlaceholderView for empty split view state
