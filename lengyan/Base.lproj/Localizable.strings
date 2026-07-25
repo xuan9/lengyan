@@ -22,6 +22,10 @@
 "home_continue_listening_with_time_format" = "續聽 · %@ %@";
 "home_continue_listening_accessibility_format" = "續聽，%@";
 "home_continue_listening_accessibility_with_time_format" = "續聽，%@，%@";
+"home_now_playing_format" = "正在播放 · %@";
+"home_now_playing_with_time_format" = "正在播放 · %@ %@";
+"home_now_playing_accessibility_format" = "正在播放，%@";
+"home_now_playing_accessibility_with_time_format" = "正在播放，%@，%@";
 "home_start_listening" = "開始聽經";
 "home_search" = "搜尋";
 "home_search_accessibility" = "搜尋經文和科判";
@@ -93,7 +97,8 @@
 
 "downloading_text" = "正在下載...";
 "audio_preparing_track_format" = "正在準備 %@ · %d%%";
-"audio_preparing_fallback_track_format" = "正在使用備用線路準備 %@ · %d%%";
+"audio_preparing_track" = "正在準備...";
+"audio_preparing_fallback_track_format" = "正在準備 %@ · %d%%";
 "audio_preparing_short" = "準備中";
 "welcoming_sutra" = "正在迎請經典…";
 "download_failed" = "下載失敗，请稍後重試";

@@ -6,6 +6,7 @@
 //  Copyright © 2016年 xuan. All rights reserved.
 //
 
+import Combine
 import Foundation
 import UIKit
 import UserNotifications
@@ -91,6 +92,22 @@ private final class HomeActionButton: UIButton {
         setContentAlignment(alignment)
     }
 
+    func updateText(_ text: String, symbolName: String? = nil, accessibilityLabel: String? = nil) {
+        actionLabel.text = text
+        if let accessibilityLabel {
+            self.accessibilityLabel = accessibilityLabel
+        }
+        if let symbolName {
+            let configuration = UIImage.SymbolConfiguration(
+                pointSize: 14,
+                weight: .regular,
+                scale: .small
+            )
+            markerView.image = UIImage(systemName: symbolName, withConfiguration: configuration)
+                ?? UIImage(systemName: "circle.fill", withConfiguration: configuration)
+        }
+    }
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -128,13 +145,18 @@ private final class HomeActionButton: UIButton {
     }
 }
 
-class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeViewDelegate{
-    
-    fileprivate var treeView: RATreeView!
+class SutraFrontViewController: UIViewController, RATreeViewDelegate, RATreeViewDataSource {
+    var treeView: RATreeView!
+    private weak var outlineResumeButton: HomeActionButton?
+    private weak var continueListeningButton: HomeActionButton?
+    private var audioObserverCancellables = Set<AnyCancellable>()
     internal var tree:[[String]]?;
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        self.edgesForExtendedLayout = .all
+        self.extendedLayoutIncludesOpaqueBars = true
 
         print("🔥 === SUTRA FRONT VIEW LOADING ===")
         print("🔥 viewDidLoad() - view.bounds: \(self.view.bounds)")
@@ -179,15 +201,20 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        // 先隐藏导航栏，避免黄色闪现
-        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        // 隐藏导航栏（跟随转场动画平滑过渡，避免返回时顶部页面突跳）
+        self.navigationController?.setNavigationBarHidden(true, animated: animated)
         self.navigationController?.hidesBarsOnSwipe = false
 
         // Refresh design system on appearance
         applyZenTempleSerenityDesignSystem()
 
-        // Rebuild header to refresh both reading-resume entries.
-        setupHeaderView(self.view.bounds.size)
+        // Rebuild header only if needed or bounds changed to prevent tableHeaderView layout jumps
+        if self.treeView.treeHeaderView == nil {
+            setupHeaderView(self.view.bounds.size)
+        } else {
+            updateHomeOutlineButtonState()
+            updateHomeListeningButtonState()
+        }
 
         // 设置导航栏外观（隐藏状态下设置，供子页面返回时使用）
         let navColor = SutraDesignTokens.shared.color(for: .navigationBar)
@@ -211,8 +238,6 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // 确保首页导航栏完全隐藏
-        self.navigationController?.setNavigationBarHidden(true, animated: false)
         // 禁用残留的手势识别器，防止点击/滑动弹出空白导航栏吞掉首次点击事件。
         // 子页面（阅读页）会在各自的 viewWillAppear 中重新启用。
         self.navigationController?.barHideOnTapGestureRecognizer.isEnabled = false
@@ -340,7 +365,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         ])
         titleLabel.textAlignment = .center
         titleLabel.sizeToFit()
-        titleLabel.frame = CGRect(x: 0, y: titleTopPadding, width: width, height: titleHeight)
+        titleLabel.frame = CGRect(x: 0, y: titleTopPadding, width: width, height: titleHeight).integral
         header.addSubview(titleLabel)
 
         // 经题下方金线
@@ -352,7 +377,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // 📜 开经偈 - 分为匀称的两行
         let subTitle = UILabel()
         let verseY = titleLineY + verseGap
-        subTitle.frame = CGRect(x: cx + rs(16), y: verseY, width: cw - rs(32), height: verseHeight)
+        subTitle.frame = CGRect(x: cx + rs(16), y: verseY, width: cw - rs(32), height: verseHeight).integral
         let subTitleText = L10n.str("kai_jing_ji")
         subTitle.font = verseFont
         subTitle.numberOfLines = 2
@@ -457,6 +482,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         outlineResumeButton.accessibilityLabel = outlineAccessibilityLabel
         outlineResumeButton.addTarget(self, action: #selector(continueOutlineReading), for: .touchUpInside)
         toolRow.addSubview(outlineResumeButton)
+        self.outlineResumeButton = outlineResumeButton
 
         let listeningText: String
         let listeningAccessibilityLabel: String
@@ -506,6 +532,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         continueListeningButton.accessibilityLabel = listeningAccessibilityLabel
         continueListeningButton.addTarget(self, action: #selector(continueListening), for: .touchUpInside)
         toolRow.addSubview(continueListeningButton)
+        self.continueListeningButton = continueListeningButton
+        setupAudioObserverForHomeButton()
 
         let searchText = L10n.str("home_search")
         let searchButton = makeHomeActionButton(
@@ -542,8 +570,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         // between one and two rows.
         // AppDelegate intentionally overrides the tab bar's horizontal size class to
         // compact on newer iPadOS versions. Use the real container width here so a
-        // full-width iPad still gets one row, while split/compact windows use two.
-        let usesSingleActionRow = isPad && size.width >= 720
+        // full-width large iPad still gets one row, while split/compact windows and iPad mini use two.
+        let usesSingleActionRow = isPad && size.width >= 800
         let actionLeading = horizontalPadding
         let actionTrailing = chapterTenButton?.frame.maxX ?? (cw - horizontalPadding)
         let availableWidth = max(0, actionTrailing - actionLeading)
@@ -956,12 +984,120 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             tabBarController.selectedIndex = 1
         }
         
+        // 只有当音频已经在播放中时，才仅跳转不重启；
+        // 如果处于暂停/未播放状态，帮用户启动播放（恢复上次进度或播放第一卷）
+        if AudioPlayerObserver.shared.isPlaying {
+            return
+        }
+
         let lastPlayFile = Prefers.shared.lastPlayFile?.first
         if lastPlayFile == nil || lastPlayFile!.isEmpty {
             AudioManager.shared.playChapter(chapter: 0)
         } else {
             AudioManager.shared.startPlayback()
         }
+    }
+
+    private func updateHomeOutlineButtonState() {
+        guard let outlineResumeButton else { return }
+
+        let outlineTarget = validatedOutlineResumeTarget()
+        let outlineText: String
+        let outlineAccessibilityLabel: String
+        switch outlineTarget {
+        case let .paged(path, _), let .tree(path):
+            let name = Book.shared.itemOfPath(path)["name"] as? String ?? ""
+            let fullOutlineDetail = name.isEmpty
+                ? L10n.str("home_resume_unknown")
+                : name
+            outlineText = String(
+                format: L10n.str("home_resume_format"),
+                fullOutlineDetail
+            )
+            outlineAccessibilityLabel = String(
+                format: L10n.str("home_resume_accessibility_format"),
+                fullOutlineDetail
+            )
+        case .chapter, nil:
+            outlineText = L10n.str("home_start_reading")
+            outlineAccessibilityLabel = L10n.str("home_start_reading_accessibility")
+        }
+
+        outlineResumeButton.updateText(
+            outlineText,
+            symbolName: "scroll",
+            accessibilityLabel: outlineAccessibilityLabel
+        )
+    }
+
+    private func setupAudioObserverForHomeButton() {
+        audioObserverCancellables.removeAll()
+        
+        Publishers.CombineLatest3(
+            AudioPlayerObserver.shared.$currentTime,
+            AudioPlayerObserver.shared.$isPlaying,
+            AudioPlayerObserver.shared.$currentTrack
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] _, _, _ in
+            self?.updateHomeListeningButtonState()
+        }
+        .store(in: &audioObserverCancellables)
+    }
+
+    private func updateHomeListeningButtonState() {
+        guard let continueListeningButton else { return }
+
+        let lastPlayFile = Prefers.shared.lastPlayFile?.first
+        let hasListening = lastPlayFile != nil && !lastPlayFile!.isEmpty
+        let isPlaying = AudioPlayerObserver.shared.isPlaying
+
+        let listeningText: String
+        let listeningAccessibilityLabel: String
+        let iconName: String = isPlaying ? "pause.fill" : "play.fill"
+
+        if hasListening, let trackInfo = getLastPlayTrackInfo() {
+            let seconds = isPlaying ? AudioPlayerObserver.shared.currentTime : Prefers.shared.lastPlayTime
+            let minutes = Int(seconds) / 60
+            let remainingSeconds = Int(seconds) % 60
+            let formattedTime = String(format: "%02d:%02d", minutes, remainingSeconds)
+
+            let formatKey = isPlaying ? "home_now_playing_with_time_format" : "home_continue_listening_with_time_format"
+            let noTimeFormatKey = isPlaying ? "home_now_playing_format" : "home_continue_listening_format"
+            let accessTimeKey = isPlaying ? "home_now_playing_accessibility_with_time_format" : "home_continue_listening_accessibility_with_time_format"
+            let accessNoTimeKey = isPlaying ? "home_now_playing_accessibility_format" : "home_continue_listening_accessibility_format"
+
+            if seconds >= 1.0 {
+                listeningText = String(
+                    format: L10n.str(formatKey),
+                    trackInfo.name,
+                    formattedTime
+                )
+                listeningAccessibilityLabel = String(
+                    format: L10n.str(accessTimeKey),
+                    trackInfo.name,
+                    formattedTime
+                )
+            } else {
+                listeningText = String(
+                    format: L10n.str(noTimeFormatKey),
+                    trackInfo.name
+                )
+                listeningAccessibilityLabel = String(
+                    format: L10n.str(accessNoTimeKey),
+                    trackInfo.name
+                )
+            }
+        } else {
+            listeningText = L10n.str("home_start_listening")
+            listeningAccessibilityLabel = L10n.str("home_start_listening")
+        }
+
+        continueListeningButton.updateText(
+            listeningText,
+            symbolName: iconName,
+            accessibilityLabel: listeningAccessibilityLabel
+        )
     }
 
     // MARK: - Daily Reminder Prompt
@@ -1059,7 +1195,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
             sutraVC.path = lastPath
             sutraVC.hidesBottomBarWhenPushed = true
             sutraVC.onDismiss = { [weak self] in
-                self?.navigationController?.setNavigationBarHidden(false, animated: false)
+                self?.navigationController?.setNavigationBarHidden(true, animated: false)
             }
             self.navigationController?.pushViewController(sutraVC, animated: true)
         case let .paged(lastPath, savedPageIndex):
@@ -1083,7 +1219,7 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
                 sutraVC.path = lastPath
                 sutraVC.hidesBottomBarWhenPushed = true
                 sutraVC.onDismiss = { [weak self] in
-                    self?.navigationController?.setNavigationBarHidden(false, animated: false)
+                    self?.navigationController?.setNavigationBarHidden(true, animated: false)
                 }
                 self.navigationController?.pushViewController(sutraVC, animated: true)
                 return
@@ -1159,8 +1295,8 @@ class SutraFrontViewController: UIViewController, RATreeViewDataSource, RATreeVi
         let sutraVC = SutraPurePageViewController.init( transitionStyle:.scroll, navigationOrientation:.horizontal, options: .none)
         sutraVC.path = path
         sutraVC.hidesBottomBarWhenPushed = true
-        sutraVC.onDismiss = {
-            self.navigationController?.setNavigationBarHidden(false, animated: false)
+        sutraVC.onDismiss = { [weak self] in
+            self?.navigationController?.setNavigationBarHidden(true, animated: false)
         }
         self.navigationController?.setNavigationBarHidden(false, animated: false)
         self.navigationController?.pushViewController(sutraVC, animated: true)

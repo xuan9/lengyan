@@ -23,6 +23,10 @@
 "home_continue_listening_with_time_format" = "续听 · %@ %@";
 "home_continue_listening_accessibility_format" = "续听，%@";
 "home_continue_listening_accessibility_with_time_format" = "续听，%@，%@";
+"home_now_playing_format" = "正在播放 · %@";
+"home_now_playing_with_time_format" = "正在播放 · %@ %@";
+"home_now_playing_accessibility_format" = "正在播放，%@";
+"home_now_playing_accessibility_with_time_format" = "正在播放，%@，%@";
 "home_start_listening" = "开始听经";
 "home_search" = "搜索";
 "home_search_accessibility" = "搜索经文和科判";
@@ -163,7 +167,8 @@
 "audio_empty_prompt" = "请轻触卷名听经";
 "audio_immersive_title" = "听\n经";
 "audio_preparing_track_format" = "正在准备 %@ · %d%%";
-"audio_preparing_fallback_track_format" = "正在使用备用线路准备 %@ · %d%%";
+"audio_preparing_track" = "正在准备...";
+"audio_preparing_fallback_track_format" = "正在准备 %@ · %d%%";
 "audio_preparing_short" = "准备中";
 "audio_error_out_of_space" = "存储空间不足，无法下载音频";
 "audio_error_too_big" = "音频文件过大";

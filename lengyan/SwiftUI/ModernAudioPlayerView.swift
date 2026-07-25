@@ -211,26 +211,32 @@ struct ModernAudioPlayerView: View {
     }
 
     private var playButtonShowsDownload: Bool {
-        isCurrentTrackDownloading || isWaitingWithoutPlayableTrack
+        isCurrentTrackDownloading || isWaitingWithoutPlayableTrack || (manager.pendingAssetID != nil && manager.downloadStatus[manager.pendingAssetID!] != .downloaded)
     }
 
     private var playButtonDownloadProgress: Double {
-        isWaitingWithoutPlayableTrack
-            ? manager.pendingTrackProgress
-            : currentTrackDownloadProgress
+        if let pendingID = manager.pendingAssetID,
+           let prog = manager.downloadProgress[pendingID] {
+            return prog
+        }
+        return currentTrackDownloadProgress
     }
 
     private var pendingPreparationText: String? {
-        guard let name = manager.pendingTrackName else { return nil }
-        return String(
-            format: L10n.str(
-                manager.pendingUsesFallback
-                    ? "audio_preparing_fallback_track_format"
-                    : "audio_preparing_track_format"
-            ),
-            name,
-            Int((manager.pendingTrackProgress * 100).rounded())
-        )
+        guard let pendingID = manager.pendingAssetID,
+              manager.downloadStatus[pendingID] != .downloaded,
+              manager.pendingTrackName != nil else { return nil }
+        return L10n.str("audio_preparing_track")
+    }
+
+    private var displayTrackTitle: String {
+        if let track = audioObserver.currentTrack, !track.isEmpty {
+            return track
+        } else if let pendingTrackName = manager.pendingTrackName {
+            return pendingTrackName
+        } else {
+            return L10n.str("audio_empty_prompt")
+        }
     }
 
     // MARK: - Reusable Player Controls
@@ -301,11 +307,14 @@ struct ModernAudioPlayerView: View {
                     Text("/")
                     Text(AudioManager.formatTime(audioObserver.totalTime))
                 }
+            } else if audioObserver.currentTime > 0 {
+                Text(AudioManager.formatTime(audioObserver.currentTime))
             } else {
                 Text(" ")
             }
         }
         .font(.system(size: 11, weight: .medium, design: .monospaced))
+        .animation(.easeInOut(duration: 0.2), value: audioObserver.currentTime)
     }
 
     // MARK: - Layout 1: List Mode Player Bar (Glassmorphism Pill)
@@ -321,38 +330,32 @@ struct ModernAudioPlayerView: View {
                     playButton
 
                     VStack(alignment: .leading, spacing: 4) {
-                        if let track = audioObserver.currentTrack, !track.isEmpty {
-                            Text(track)
-                                .font(SutraTypographyBridge.uiBody(weight: .medium))
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
-                                .accessibilityIdentifier("audio_player_current_track")
-                        } else if let pendingTrackName = manager.pendingTrackName {
-                            Text(pendingTrackName)
-                                .font(SutraTypographyBridge.uiBody(weight: .medium))
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
-                                .accessibilityIdentifier("audio_player_pending_track")
-                        } else {
-                            Text(L10n.str("audio_empty_prompt"))
-                                .font(SutraTypographyBridge.uiCaption(weight: .light))
-                                .tracking(2)
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
-                        }
+                        Text(displayTrackTitle)
+                            .font(SutraTypographyBridge.uiBody(weight: .medium))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                            .id(displayTrackTitle)
+                            .transition(.opacity)
+                            .animation(.easeInOut(duration: 0.25), value: displayTrackTitle)
+                            .accessibilityIdentifier("audio_player_current_track")
 
-                        if let pendingPreparationText {
-                            Text(pendingPreparationText)
-                                .font(SutraTypographyBridge.uiCaption(weight: .regular))
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                                .accessibilityIdentifier("audio_player_pending_status")
-                        } else if isCurrentTrackDownloading {
-                            ZenBreathingText(text: L10n.str("downloading_text"))
-                        } else {
-                            timeDisplay
-                                .foregroundColor(.secondary)
+                        Group {
+                            if let pendingPreparationText {
+                                Text(pendingPreparationText)
+                                    .font(.system(size: 11, weight: .regular))
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .accessibilityIdentifier("audio_player_pending_status")
+                            } else if isCurrentTrackDownloading {
+                                ZenBreathingText(text: L10n.str("downloading_text"))
+                            } else {
+                                timeDisplay
+                                    .foregroundColor(.secondary)
+                            }
                         }
+                        .frame(height: 16, alignment: .leading)
+                        .animation(.easeInOut(duration: 0.25), value: audioObserver.currentTrack)
                     }
 
                     Spacer()
@@ -369,7 +372,11 @@ struct ModernAudioPlayerView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color(SutraDesignTokens.shared.color(for: .card)).opacity(0.96))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(Color(SutraDesignTokens.shared.color(for: .primary)).opacity(0.12), lineWidth: 0.75)
             )
             .shadow(color: Color.black.opacity(0.12), radius: 24, x: 0, y: 12)
             .padding(.horizontal, 16)
@@ -468,6 +475,9 @@ struct ModernAudioPlayerView: View {
                         Text(AudioManager.formatTime(audioObserver.currentTime))
                             .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
                         Text(AudioManager.formatTime(audioObserver.totalTime))
+                            .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
+                    } else if audioObserver.currentTime > 0 {
+                        Text(AudioManager.formatTime(audioObserver.currentTime))
                             .foregroundColor(Color(red: 0.45, green: 0.12, blue: 0.10))
                     } else {
                         Text(" ")
@@ -671,6 +681,7 @@ struct ModernAudioPlayerView: View {
         rowHeight: CGFloat
     ) -> some View {
         let status = manager.downloadStatus[file] ?? .notDownloaded
+        let isDownloading = (status == .downloading) && (manager.pendingAssetID == file)
         let progress = manager.downloadProgress[file] ?? 0
         let isCurrent = audioObserver.currentTrack == name
         let isPlaying = isCurrent && audioObserver.isPlaying
@@ -697,7 +708,7 @@ struct ModernAudioPlayerView: View {
                 Spacer()
 
                 // 右侧状态指示
-                if status == .downloading {
+                if isDownloading {
                     HStack(spacing: 7) {
                         Text(L10n.str("audio_preparing_short"))
                             .font(SutraTypographyBridge.uiCaption(weight: .regular))
@@ -722,7 +733,7 @@ struct ModernAudioPlayerView: View {
             .frame(minHeight: rowHeight)
 
             // 下载进度条（静默，无文字）
-            if status == .downloading {
+            if isDownloading {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         Rectangle()
@@ -781,9 +792,10 @@ private struct ZenBreathingText: View {
 
     var body: some View {
         Text(text)
-            .font(SutraTypographyBridge.uiCaption(weight: .light))
+            .font(.system(size: 11, weight: .regular))
             .foregroundColor(Color(SutraDesignTokens.shared.color(for: .textSecondary)))
             .lineLimit(1)
+            .truncationMode(.tail)
             .opacity(isBreathing ? 0.35 : 1.0)
             .onAppear {
                 withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {

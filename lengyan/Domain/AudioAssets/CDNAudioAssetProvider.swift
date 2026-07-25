@@ -95,10 +95,13 @@ struct CDNAudioFallbackConfiguration: Sendable {
 }
 
 enum CDNAudioCache {
-    static let maximumFileCount = 2
-    static let maximumByteCount: Int64 = 48 * 1_024 * 1_024
+    static let maximumFileCount = Int.max
+    static let maximumByteCount = Int64.max
+    static let maxUnusedAge: TimeInterval = 28 * 24 * 3600 // 4周（28天）无访问才过期
     private static let accessOrderDefaultsKey =
         "audioAssets.cdnCacheAccessOrderV1"
+    private static let accessTimestampsDefaultsKey =
+        "audioAssets.cdnCacheAccessTimestampsV1"
 
     private struct CachedFile {
         let assetID: String
@@ -115,6 +118,23 @@ enum CDNAudioCache {
         ) { url, component in
             url.appendingPathComponent(String(component), isDirectory: false)
         }
+    }
+
+    static var defaultCacheDirectory: URL {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("AudioFallback", isDirectory: true)
+    }
+
+    static func isCached(
+        assetID: String,
+        cacheDirectory: URL = CDNAudioCache.defaultCacheDirectory,
+        fileManager: FileManager = .default
+    ) -> Bool {
+        guard let asset = AudioAssetCatalog.descriptor(for: assetID) else { return false }
+        let url = asset.cdnRelativePath.split(separator: "/").reduce(cacheDirectory) { url, component in
+            url.appendingPathComponent(String(component), isDirectory: false)
+        }
+        return fileManager.fileExists(atPath: url.path)
     }
 
     static func prepareStorage(
@@ -149,12 +169,6 @@ enum CDNAudioCache {
             isDirectory: true
         )
         try? fileManager.removeItem(at: stagingDirectory)
-        trim(
-            configuration: configuration,
-            protecting: [],
-            fileManager: fileManager,
-            defaults: defaults
-        )
     }
 
     static func touch(
@@ -167,6 +181,12 @@ enum CDNAudioCache {
         accessOrder.removeAll { $0 == assetID }
         accessOrder.append(assetID)
         defaults.set(accessOrder, forKey: accessOrderDefaultsKey)
+
+        var timestamps = defaults.dictionary(
+            forKey: accessTimestampsDefaultsKey
+        ) as? [String: TimeInterval] ?? [:]
+        timestamps[assetID] = Date().timeIntervalSince1970
+        defaults.set(timestamps, forKey: accessTimestampsDefaultsKey)
     }
 
     static func trim(
@@ -175,7 +195,9 @@ enum CDNAudioCache {
         fileManager: FileManager = .default,
         defaults: UserDefaults = .standard,
         maximumFileCount: Int = CDNAudioCache.maximumFileCount,
-        maximumByteCount: Int64 = CDNAudioCache.maximumByteCount
+        maximumByteCount: Int64 = CDNAudioCache.maximumByteCount,
+        maxUnusedAge: TimeInterval = CDNAudioCache.maxUnusedAge,
+        now: Date = Date()
     ) {
         var files: [CachedFile] = []
         for asset in AudioAssetCatalog.descriptors {
@@ -190,37 +212,29 @@ enum CDNAudioCache {
             )
         }
 
-        let existingIDs = Set(files.map(\.assetID))
-        var seenIDs = Set<String>()
-        var accessOrder = defaults.stringArray(
-            forKey: accessOrderDefaultsKey
-        )?.filter {
-            existingIDs.contains($0) && seenIDs.insert($0).inserted
-        } ?? []
-        let orderedIDs = Set(accessOrder)
-        accessOrder.append(contentsOf: AudioAssetCatalog.orderedIDs.filter {
-            existingIDs.contains($0) && !orderedIDs.contains($0)
-        })
-        let accessRanks = Dictionary(
-            uniqueKeysWithValues: accessOrder.enumerated().map {
-                ($0.element, $0.offset)
-            }
-        )
+        let timestamps = defaults.dictionary(
+            forKey: accessTimestampsDefaultsKey
+        ) as? [String: TimeInterval] ?? [:]
+        let nowTimestamp = now.timeIntervalSince1970
 
         var fileCount = files.count
         var byteCount = files.reduce(Int64(0)) { $0 + $1.byteCount }
         let candidates = files
             .filter { !protectedAssetIDs.contains($0.assetID) }
             .sorted { lhs, rhs in
-                accessRanks[lhs.assetID, default: 0]
-                    < accessRanks[rhs.assetID, default: 0]
+                let lhsTime = timestamps[lhs.assetID] ?? 0
+                let rhsTime = timestamps[rhs.assetID] ?? 0
+                return lhsTime < rhsTime
             }
 
         var removedIDs = Set<String>()
         for candidate in candidates {
-            guard fileCount > maximumFileCount || byteCount > maximumByteCount else {
-                break
-            }
+            let lastAccess = timestamps[candidate.assetID] ?? nowTimestamp
+            let isExpired = (nowTimestamp - lastAccess) > maxUnusedAge
+            let exceedsLimits = fileCount > maximumFileCount || byteCount > maximumByteCount
+
+            guard isExpired || exceedsLimits else { continue }
+
             do {
                 try fileManager.removeItem(
                     at: candidate.url.deletingLastPathComponent()
@@ -232,10 +246,23 @@ enum CDNAudioCache {
                 // Best-effort cache maintenance; a later pass retries it.
             }
         }
-        defaults.set(
-            accessOrder.filter { !removedIDs.contains($0) },
+
+        let existingIDs = Set(files.map(\.assetID).filter { !removedIDs.contains($0) })
+        var seenIDs = Set<String>()
+        let accessOrder = defaults.stringArray(
             forKey: accessOrderDefaultsKey
-        )
+        )?.filter {
+            existingIDs.contains($0) && seenIDs.insert($0).inserted
+        } ?? []
+
+        defaults.set(accessOrder, forKey: accessOrderDefaultsKey)
+        if !removedIDs.isEmpty {
+            var updatedTimestamps = timestamps
+            for removedID in removedIDs {
+                updatedTimestamps.removeValue(forKey: removedID)
+            }
+            defaults.set(updatedTimestamps, forKey: accessTimestampsDefaultsKey)
+        }
     }
 
     static func validate(
@@ -817,6 +844,23 @@ actor CDNAudioAssetProvider: AudioAssetProvider {
                 return entry.asset.id
             }
         )
+        CDNAudioCache.trim(
+            configuration: configuration,
+            protecting: protectedAssetIDs,
+            fileManager: fileManager
+        )
+    }
+
+    func cleanExpiredStorage(protecting additionalProtectedIDs: Set<String> = []) {
+        var protectedAssetIDs = Set<String>(
+            entries.values.compactMap { entry -> String? in
+                guard !entry.consumers.isEmpty
+                        || !entry.leaseIDs.isEmpty
+                        || entry.task != nil else { return nil }
+                return entry.asset.id
+            }
+        )
+        protectedAssetIDs.formUnion(additionalProtectedIDs)
         CDNAudioCache.trim(
             configuration: configuration,
             protecting: protectedAssetIDs,

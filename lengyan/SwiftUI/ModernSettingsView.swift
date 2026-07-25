@@ -116,13 +116,13 @@ struct ModernSettingsView: View {
     @Environment(\.sizeCategory) private var sizeCategory
     @State private var fontSizeLevel: Int = Prefers.shared.fontSizeLevel
     @State private var selectedTheme: SutraTheme = SutraDesignTokens.shared.currentTheme
+    @State private var themeVersion: Int = 0
     @State private var isReminderOn: Bool = Prefers.shared.isDailyReminderOn
     @State private var reminderHour: Int = Prefers.shared.reminderHour
     @State private var reminderMinute: Int = Prefers.shared.reminderMinute
     @State private var showPermissionDeniedAlert: Bool = false
     @State private var widgetInstallation: WidgetInstallationState?
     @State private var isSyncingReminderState: Bool = false
-
     private var sizeLabels: [String] {
         [
             L10n.str("settings_font_size_xs"),
@@ -205,6 +205,10 @@ struct ModernSettingsView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             refreshWidgetInstallState()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
+            selectedTheme = SutraDesignTokens.shared.currentTheme
+            themeVersion += 1
         }
     }
 
@@ -312,8 +316,8 @@ struct ModernSettingsView: View {
     private func changeTheme(_ theme: SutraTheme) {
         withAnimation(.easeInOut(duration: 0.25)) {
             selectedTheme = theme
-            SutraDesignTokens.shared.setTheme(theme)
         }
+        SutraDesignTokens.shared.setTheme(theme)
     }
 
     // MARK: - 小组件
@@ -401,7 +405,17 @@ struct ModernSettingsView: View {
             Spacer()
             Toggle("", isOn: $isReminderOn)
                 .labelsHidden()
-                .tint(Color(SutraDesignTokens.shared.color(for: .primary)))
+                .tint(SutraDesignSystem.color(.primary))
+                .overlay(
+                    Capsule()
+                        .stroke(
+                            isReminderOn
+                                ? Color.clear
+                                : SutraDesignSystem.color(.border).opacity(0.4),
+                            lineWidth: 0.75
+                        )
+                        .padding(1)
+                )
                 .onChange(of: isReminderOn) { on in
                     guard !isSyncingReminderState else { return }
                     handleReminderToggle(on)
@@ -470,6 +484,8 @@ struct ModernSettingsView: View {
             ), displayedComponents: .hourAndMinute)
             .datePickerStyle(.compact)
             .labelsHidden()
+            .colorScheme(.light)
+            .tint(SutraDesignSystem.color(.primary))
         }
         .padding(.vertical, 18)
     }
@@ -655,9 +671,16 @@ struct WidgetGuideView: View {
         ))
     }
 
+    @State private var themeVersion: Int = 0
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if supportsLockScreen {
+                    placementPicker
+                        .padding(.top, 20)
+                }
+
                 headerCard
                     .padding(.top, 22)
 
@@ -670,13 +693,16 @@ struct WidgetGuideView: View {
                     .padding(.top, 28)
                     .padding(.bottom, 80)
             }
-            .padding(.horizontal, 28)
+            .padding(.horizontal, 36)
             .readingContentWidth()
         }
         .background(SutraDesignSystem.backgroundColor())
         .onAppear(perform: refreshInstallation)
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             refreshInstallation()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
+            themeVersion += 1
         }
     }
 
@@ -739,37 +765,12 @@ struct WidgetGuideView: View {
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("widget_guide_header")
 
-            if supportsLockScreen {
-                placementPicker
-                    .padding(.top, 20)
-            }
-
             if !sizeCategory.isAccessibilityCategory {
                 guideIllustration
                     .padding(.top, 22)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(SutraDesignSystem.color(.card).opacity(0.62))
-                LinearGradient(
-                    colors: [
-                        SutraDesignSystem.color(.primary).opacity(0.065),
-                        Color.clear,
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-            }
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(SutraDesignSystem.color(.primary).opacity(0.14), lineWidth: 0.75)
-        )
     }
 
     private var headerTitle: String {
@@ -885,12 +886,6 @@ struct WidgetGuideView: View {
                         lineWidth: 0.75
                     )
             )
-            .shadow(
-                color: SutraDesignSystem.color(.shadow).opacity(isSelected ? 0.08 : 0),
-                radius: 5,
-                x: 0,
-                y: 2
-            )
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -962,18 +957,10 @@ struct WidgetGuideView: View {
                     Rectangle()
                         .fill(SutraDesignSystem.color(.primary).opacity(0.1))
                         .frame(height: 0.5)
-                        .padding(.leading, 16 + stepNumberDiameter + 14)
+                        .padding(.leading, stepNumberDiameter + 14)
                 }
             }
         }
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(SutraDesignSystem.color(.card).opacity(0.54))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(SutraDesignSystem.color(.primary).opacity(0.11), lineWidth: 0.75)
-        )
     }
 
     private var usageNote: some View {
@@ -1044,8 +1031,8 @@ private struct WidgetGuideStepRow: View {
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 17)
+        .padding(.horizontal, 0)
+        .padding(.vertical, 14)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(number). \(step.title). \(step.body)")
     }
@@ -1075,12 +1062,6 @@ private struct WidgetGuideDeviceFrame<Content: View>: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 30)
                     .stroke(SutraDesignSystem.color(.textPrimary).opacity(0.2), lineWidth: 1.25)
-            )
-            .shadow(
-                color: SutraDesignSystem.color(.shadow).opacity(0.12),
-                radius: 16,
-                x: 0,
-                y: 9
             )
     }
 }
@@ -1164,22 +1145,18 @@ private struct WidgetGuideLockScreenIllustration: View {
     }
 
     private var lockScreenWidget: some View {
-        Text(L10n.str("widget_guide_preview_verse"))
-            .font(.system(size: 10.5, weight: .regular, design: .serif))
-            .lineSpacing(2)
-            .lineLimit(3)
-        .foregroundColor(SutraDesignSystem.color(.textPrimary))
-        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(SutraDesignSystem.color(.card).opacity(0.76))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(SutraDesignSystem.color(.primary).opacity(0.56), lineWidth: 1.35)
-        )
+        HStack(spacing: 0) {
+            Text(L10n.str("widget_guide_preview_verse"))
+                .font(.system(size: 8.5, weight: .regular, design: .serif))
+                .lineSpacing(1.5)
+                .lineLimit(3)
+                .foregroundColor(SutraDesignSystem.color(.textPrimary).opacity(0.9))
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .frame(width: 78, height: 48, alignment: .leading)
+
+            Spacer()
+        }
     }
 }
 
@@ -1269,11 +1246,7 @@ private struct WidgetGuideHomeScreenIllustration: View {
         .padding(.vertical, 7)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(SutraDesignSystem.color(.card).opacity(0.76))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(SutraDesignSystem.color(.primary).opacity(0.32), lineWidth: 0.9)
+                .fill(SutraDesignSystem.color(.card).opacity(0.65))
         )
     }
 }

@@ -551,7 +551,7 @@ public final class SutraDesignTokens {
         itemAppearance.focused.titlePositionAdjustment = titlePositionAdjustment
     }
 
-    private func interfaceStyle(for theme: SutraTheme) -> UIUserInterfaceStyle {
+    public func interfaceStyle(for theme: SutraTheme) -> UIUserInterfaceStyle {
         switch theme {
         case .light, .sepia: return .light
         case .dark: return .dark

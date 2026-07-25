@@ -69,9 +69,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         SutraDesignTokens.shared.loadSavedTheme()
         SutraDesignTokens.shared.applyThemeToApp()
 
-        // Setup main UI
-        setupMainUI()
-
         // Set notification delegate
         UNUserNotificationCenter.current().delegate = self
         registerNotificationCategory()
@@ -90,11 +87,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return true
     }
 
-    private func setupMainUI() {
-        // Create main window
-        let window = UIWindow(frame: UIScreen.main.bounds)
+    // MARK: - UISceneSession Lifecycle
+
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
+    }
+
+    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {}
+
+    func setupMainUI(window: UIWindow) {
         let backgroundColor = SutraDesignTokens.shared.color(for: .background)
         window.backgroundColor = backgroundColor
+        window.overrideUserInterfaceStyle = SutraDesignTokens.shared.interfaceStyle(for: SutraDesignTokens.shared.currentTheme)
         self.window = window
 
         // Create and setup the main tab bar controller
@@ -314,6 +318,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // MARK: - Widget Deep Link
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        return handleOpenURL(url)
+    }
+
+    @discardableResult
+    func handleOpenURL(_ url: URL) -> Bool {
         // 处理 Widget 深链：lengyan://verse?path=/A2/B1/...
         guard url.scheme == "lengyan", url.host == "verse" else { return false }
 

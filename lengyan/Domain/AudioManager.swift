@@ -83,7 +83,7 @@ final class AudioManager: ObservableObject {
     private var playbackGeneration: UUID?
     private var prefetchTriggeredGeneration: UUID?
     private var requestedAssetID: String?
-    private var pendingAssetID: String?
+    private(set) var pendingAssetID: String?
     private var playingAssetID: String?
     private var resumableAssetID: String?
     private var lifecycleObservers: [NSObjectProtocol] = []
@@ -158,19 +158,37 @@ final class AudioManager: ObservableObject {
         }
 
         isLoading = false
+
+        for group in mediaGroups {
+            for file in group.files {
+                if CDNAudioCache.isCached(assetID: file) {
+                    downloadStatus[file] = .downloaded
+                }
+            }
+        }
+
         resumeLastPlayback()
     }
 
     func resumeLastPlayback() {
         guard let file = Prefers.shared.lastPlayFile?.first,
               AudioAssetCatalog.descriptor(for: file) != nil,
-              mediaGroups.contains(where: { $0.files.contains(file) }) else {
+              mediaGroups.contains(where: { $0.files.contains(file) }),
+              let trackInfo = track(for: file) else {
             resumableAssetID = nil
             return
         }
-        // Keep the resume candidate separate from playing state. Merely opening
-        // the player must not update Now Playing or start a next-pack prefetch.
+        // Keep the resume candidate separate from playing state, while populating
+        // last known track info and progress for immediate UI reflection.
         resumableAssetID = file
+        audioObserver.currentTrack = trackInfo.name
+        audioObserver.lastPlayFile = (trackInfo.name, file, trackInfo.fileExtension)
+        if Prefers.shared.lastPlayTime > 0 {
+            audioObserver.currentTime = Prefers.shared.lastPlayTime
+        }
+        if Prefers.shared.lastTotalTime > 0 {
+            audioObserver.totalTime = Prefers.shared.lastTotalTime
+        }
     }
 
     // MARK: - Selection and Delivery
@@ -251,7 +269,6 @@ final class AudioManager: ObservableObject {
             return
         }
 
-        let previousPending = pendingAssetID
         let generation = UUID()
         selectionGeneration = generation
         requestedAssetID = file
@@ -261,15 +278,12 @@ final class AudioManager: ObservableObject {
         resumableAssetID = file
         downloadErrorMessage = nil
 
-        if let previousPending,
-           previousPending != file,
-           previousPending != playingAssetID {
-            downloadStatus[previousPending] = .notDownloaded
-            downloadProgress.removeValue(forKey: previousPending)
+        if downloadStatus[file] != .downloaded {
+            downloadStatus[file] = .downloading
+            if downloadProgress[file] == nil {
+                downloadProgress[file] = 0
+            }
         }
-
-        downloadStatus[file] = .downloading
-        downloadProgress[file] = 0
         // Explicit user intent always receives immediate acknowledgement. The
         // current title remains unchanged while another volume is prepared.
         audioObserver.showPlayerBar = true
@@ -315,12 +329,17 @@ final class AudioManager: ObservableObject {
         switch event {
         case .queued:
             guard selectionGeneration == generation else { return }
-            downloadStatus[descriptor.id] = .downloading
+            if downloadStatus[descriptor.id] != .downloaded {
+                downloadStatus[descriptor.id] = .downloading
+            }
         case .fallbackActivated:
             guard selectionGeneration == generation else { return }
             pendingUsesFallback = true
         case .progress(let fraction):
             guard selectionGeneration == generation else { return }
+            if downloadStatus[descriptor.id] != .downloaded {
+                downloadStatus[descriptor.id] = .downloading
+            }
             downloadProgress[descriptor.id] = min(max(fraction, 0), 1)
         case .ready(let lease):
             guard selectionGeneration == generation,
@@ -359,6 +378,7 @@ final class AudioManager: ObservableObject {
         if priorSavedFile != descriptor.id {
             playCount = 0
             Prefers.shared.lastPlayTime = 0
+            Prefers.shared.lastTotalTime = 0
         }
 
         do {
@@ -388,6 +408,8 @@ final class AudioManager: ObservableObject {
 
         if priorSavedFile == descriptor.id, Prefers.shared.lastPlayTime > 0 {
             audioObserver.seek(to: Prefers.shared.lastPlayTime)
+        } else {
+            audioObserver.clearSeekProtection()
         }
 
         if autoplay {
@@ -664,7 +686,21 @@ final class AudioManager: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { await self?.assetCoordinator.shutdown() }
+            self?.audioObserver.saveCurrentProgressImmediately()
+            Task {
+                await self?.assetCoordinator.cleanExpiredStorage()
+                await self?.assetCoordinator.shutdown()
+            }
+        }
+        let background = NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.audioObserver.saveCurrentProgressImmediately()
+            Task {
+                await self?.assetCoordinator.cleanExpiredStorage()
+            }
         }
         let lowDisk = NotificationCenter.default.addObserver(
             forName: NSNotification.Name.NSBundleResourceRequestLowDiskSpace,
@@ -684,7 +720,7 @@ final class AudioManager: ObservableObject {
             guard !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
             self?.startNextPrefetchIfNeeded()
         }
-        lifecycleObservers = [memory, terminate, lowDisk, power]
+        lifecycleObservers = [memory, terminate, background, lowDisk, power]
     }
 
     // MARK: - Helpers

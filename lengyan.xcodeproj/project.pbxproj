@@ -72,6 +72,7 @@
 		1372181C1D402B720037332A /* SutraPurePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181B1D402B720037332A /* SutraPurePageViewController.swift */; };
 		1372181E1D402E340037332A /* SutraPurePageContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1372181D1D402E340037332A /* SutraPurePageContentViewController.swift */; };
 		1390730D1D109193003A3333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A3333 /* AppDelegate.swift */; };
+		1390730D1D109193003A9999 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390730C1D109193003A9999 /* SceneDelegate.swift */; };
 		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* BookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* BookTests.swift */; };
 		A7C2E4F10000000000000002 /* ReadingResumeStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C2E4F10000000000000001 /* ReadingResumeStateTests.swift */; };
@@ -259,6 +260,7 @@
 		1382E5311EAB341900EBE749 /* todo.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; };
 		139073091D109193003A3333 /* lengyan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lengyan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1390730C1D109193003A3333 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		1390730C1D109193003A9999 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		139073181D109194003A3333 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1390731A1D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1390731F1D109194003A3333 /* lengyanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -536,6 +538,7 @@
 				132014771F12B9850081FDDB /* Localizable.strings */,
 				1361D0831F647C6A00426DB6 /* InfoPlist.strings */,
 				1390730C1D109193003A3333 /* AppDelegate.swift */,
+				1390730C1D109193003A9999 /* SceneDelegate.swift */,
 				139073521D1093D8003A3333 /* lengyan-Bridging-Header.h */,
 				1382E5311EAB341900EBE749 /* todo.txt */,
 				4D7F77DC4F17404198E7918E /* Fonts */,
@@ -959,6 +962,7 @@
 				135D60631D173B1B00029090 /* Book.swift in Sources */,
 				13FE31F523678EFD00F632E9 /* Constants.swift in Sources */,
 				1390730D1D109193003A3333 /* AppDelegate.swift in Sources */,
+				1390730D1D109193003A9999 /* SceneDelegate.swift in Sources */,
 				130E8CA41D1B360B00D0855A /* SutraIndexViewController.swift in Sources */,
 				3BF29E40DB63BEF90783469B /* ZenTabHeaderView.swift in Sources */,
 				A68C1C994600674BC5F7FB08 /* SutraAcknowledgmentsView.swift in Sources */,

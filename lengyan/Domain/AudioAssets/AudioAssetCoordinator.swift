@@ -236,6 +236,18 @@ actor AudioAssetCoordinator {
         persistAccessTimes()
     }
 
+    func cleanExpiredStorage(protecting additionalIDs: Set<String> = []) async {
+        var protectedIDs = additionalIDs
+        if let currentLease { protectedIDs.insert(currentLease.assetID) }
+        if let pending { protectedIDs.insert(pending.asset.id) }
+        if let requestedAssetID { protectedIDs.insert(requestedAssetID) }
+        if let prefetch { protectedIDs.insert(prefetch.asset.id) }
+
+        if let cdnProvider = provider as? CDNAudioAssetProvider {
+            await cdnProvider.cleanExpiredStorage(protecting: protectedIDs)
+        }
+    }
+
     func shutdown() async {
         await stopAndReleaseAll()
         await provider.shutdown()

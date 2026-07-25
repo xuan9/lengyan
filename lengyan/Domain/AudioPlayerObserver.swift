@@ -120,26 +120,29 @@ class AudioPlayerObserver: NSObject, ObservableObject {
 
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: DispatchQueue.main) { [weak self] time in
-            guard let self = self, let currentItem = player.currentItem else { return }
+            guard let self = self, let currentItem = player.currentItem, !self.isSeeking else { return }
 
             let currentTimeSeconds = CMTimeGetSeconds(time)
             let durationSeconds = CMTimeGetSeconds(currentItem.duration)
 
             if currentTimeSeconds.isFinite && currentTimeSeconds >= 0 {
                 self.currentTime = currentTimeSeconds
+                if abs(currentTimeSeconds - Prefers.shared.lastPlayTime) >= 1.0 {
+                    Prefers.shared.lastPlayTime = currentTimeSeconds
+                }
             } else {
                 self.currentTime = 0
             }
 
             if (self.totalTime.isNaN || self.totalTime == 0) && durationSeconds.isFinite && durationSeconds > 0 {
                 self.totalTime = durationSeconds
+                Prefers.shared.lastTotalTime = durationSeconds
             }
 
-            // 每5秒更新一次锁屏进度并记录播放位置
+            // 每5秒更新一次锁屏进度
             if currentTimeSeconds - self.lastNowPlayingUpdateTime >= 5.0 {
                 self.lastNowPlayingUpdateTime = currentTimeSeconds
                 self.updateNowPlayingInfo()
-                Prefers.shared.lastPlayTime = currentTimeSeconds
             }
         }
 
@@ -248,14 +251,35 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         commandCenter.previousTrackCommand.removeTarget(self)
     }
 
+    func saveCurrentProgressImmediately() {
+        if currentTime.isFinite && currentTime > 0 {
+            Prefers.shared.lastPlayTime = currentTime
+        }
+        if totalTime.isFinite && totalTime > 0 {
+            Prefers.shared.lastTotalTime = totalTime
+        }
+    }
+
+    private var isSeeking = false
+
     func seek(to seconds: Double) {
         guard let player = queuePlayer else { return }
         let time = CMTime(seconds: seconds, preferredTimescale: 600)
-        player.seek(to: time, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
+        isSeeking = true
         self.currentTime = seconds
         self.lastNowPlayingUpdateTime = seconds
         self.updateNowPlayingInfo()
         Prefers.shared.lastPlayTime = seconds
+
+        player.seek(to: time, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.isSeeking = false
+            }
+        }
+    }
+
+    func clearSeekProtection() {
+        isSeeking = false
     }
 
     func replaceItem(with url: URL) throws {
@@ -264,9 +288,13 @@ class AudioPlayerObserver: NSObject, ObservableObject {
         guard item.asset.isReadable else {
             throw AudioAssetError.missingLocalFile(url.path)
         }
+        isSeeking = true
         queuePlayer?.removeAllItems()
         queuePlayer?.insert(item, after: nil)
         hasReportedPlaybackStartForCurrentItem = false
+        currentTime = 0
+        totalTime = 0
+        lastNowPlayingUpdateTime = 0
     }
 
     func stopAndRemoveItem() {

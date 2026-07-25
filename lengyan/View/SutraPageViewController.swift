@@ -125,6 +125,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         prioritizeInteractivePopGesture()
         isReaderVisible = true
         resumeReadingCheckpointIfNeeded()
+        persistCurrentReading()
     }
 
     private func prioritizeInteractivePopGesture() {

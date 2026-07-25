@@ -224,6 +224,11 @@ class Prefers: NSObject, PrefersProtocol {
         set { userDefaults.set(newValue, forKey: "lastPlayTime") }
     }
 
+    var lastTotalTime: Double {
+        get { userDefaults.double(forKey: "lastTotalTime") }
+        set { userDefaults.set(newValue, forKey: "lastTotalTime") }
+    }
+
     var lastPlayMode: Int? {
         get {
             let mode = userDefaults.integer(forKey: Prefers.playModeKey)
