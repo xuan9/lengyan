@@ -71,12 +71,12 @@ class NavBarHostingController<T: View>: UIHostingController<T> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        view.backgroundColor = .clear
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        view.backgroundColor = SutraDesignTokens.shared.color(for: .background)
+        view.backgroundColor = .clear
         if showsNavBar {
             navigationController?.navigationBar.isHidden = false
             navigationController?.setNavigationBarHidden(false, animated: animated)

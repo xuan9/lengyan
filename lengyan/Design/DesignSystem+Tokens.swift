@@ -366,10 +366,8 @@ public final class SutraDesignTokens {
                     if let tabBarController = root as? UITabBarController {
                         self.applyCurrentTheme(to: tabBarController.tabBar)
                         tabBarController.viewControllers?.forEach { vc in
-                            vc.view.backgroundColor = backgroundColor
                             if let nav = vc as? UINavigationController {
                                 nav.view.backgroundColor = backgroundColor
-                                nav.topViewController?.view.backgroundColor = backgroundColor
                             }
                         }
                     }
