@@ -1,183 +1,99 @@
-name: CI Pipeline
+name: Verify
 
 on:
   push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  audio-catalog:
-    runs-on: macos-latest
-
+  node:
+    name: Catalogs and Worker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
-    - name: Set up Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: server/package-lock.json
 
-    - name: Verify canonical audio manifest
-      run: |
-        node scripts/generate-audio-manifest.mjs --check
-        node scripts/verify-audio-fallback-catalogs.mjs
-        node --test CloudflareAudioFallback/tests/*.test.mjs
+      - name: Verify catalogs and feedback Worker
+        run: ./verify.sh node
 
-  test:
-    runs-on: macos-latest
-
-    strategy:
-      matrix:
-        xcode-version: ['15.0']
-
+  ios:
+    name: iOS Unit and Build
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
-    - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode-version }}.app/Contents/Developer
+      - name: Show toolchain
+        run: xcodebuild -version
 
-    - name: Show Xcode version
-      run: xcodebuild -version
+      - name: Run unit tests
+        run: ./verify.sh ios-unit
 
-    - name: Cache Swift packages
-      uses: actions/cache@v4
-      with:
-        path: .build
-        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-        restore-keys: |
-          ${{ runner.os }}-spm-
+      - name: Build all iOS targets
+        run: ./verify.sh ios-build
 
-    - name: Resolve dependencies
-      run: swift package resolve
-
-    - name: Generate Xcode project
-      run: swift package generate-xcodeproj
-
-    - name: Run unit tests
-      run: |
-        xcodebuild test \
-          -project lengyan.xcodeproj \
-          -scheme lengyan \
-          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0' \
-          -enableCodeCoverage YES \
-          -derivedDataPath .derivedData \
-          CODE_COVERAGE_FORMAT=lcov
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: .derivedData/Logs/Test/*.xcresult
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-
-    - name: Build for iOS
-      run: |
-        xcodebuild build \
-          -project lengyan.xcodeproj \
-          -scheme lengyan \
-          -destination 'generic/platform=iOS' \
-          -archivePath lengyan.xcarchive \
-          CODE_SIGN_IDENTITY="" \
-          CODE_SIGNING_REQUIRED=NO \
-          CODE_SIGNING_ALLOWED=NO
-
-  quality:
-    runs-on: macos-latest
-
+  ios-ui-smoke:
+    name: iOS UI Smoke
+    runs-on: macos-26
+    timeout-minutes: 35
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
-    - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
+      - name: Run high-risk UI workflows
+        run: ./verify.sh ios-ui-smoke
 
-    - name: Install SwiftLint
-      run: |
-        if ! command -v swiftlint &> /dev/null; then
-          brew install swiftlint
-        fi
-
-    - name: Run SwiftLint
-      run: swiftlint --strict
-
-    - name: Check for code coverage threshold
-      run: |
-        # This will be implemented after test coverage is established
-        echo "Quality gate: Minimum 60% test coverage required"
-        echo "Current implementation: 30% (moving target)"
-
-  build:
-    runs-on: macos-latest
-    needs: test
-
-    strategy:
-      matrix:
-        configuration: [Debug, Release]
-
+  ios-archive:
+    name: iOS Production Archive
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' &&
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'))
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
-    - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
 
-    - name: Build app
-      run: |
-        xcodebuild archive \
-          -project lengyan.xcodeproj \
-          -scheme lengyan \
-          -configuration ${{ matrix.configuration }} \
-          -destination 'generic/platform=iOS' \
-          -archivePath build/lengyan.xcarchive \
-          CODE_SIGN_IDENTITY="" \
-          CODE_SIGNING_REQUIRED=NO \
-          CODE_SIGNING_ALLOWED=NO
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: lengyan-${{ matrix.configuration }}
-        path: build/lengyan.xcarchive
-        retention-days: 30
-
-  accessibility:
-    runs-on: macos-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
-
-    - name: Run accessibility tests
-      run: |
-        # Placeholder for accessibility testing
-        # Will be implemented in Phase 3
-        echo "Running accessibility audit..."
-        echo "✓ VoiceOver support verified"
-        echo "✓ Dynamic type support verified"
-        echo "✓ Color contrast WCAG AA compliant"
-
-  performance:
-    runs-on: macos-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
-
-    - name: Run performance tests
-      run: |
-        # Placeholder for performance testing
-        # Will be implemented in Phase 4
-        echo "Running performance benchmarks..."
-        echo "✓ App launch time < 2s"
-        echo "✓ Memory usage < 100MB"
-        echo "✓ CPU usage < 50%"
+      - name: Package and verify production archive
+        run: ./verify.sh ios-archive

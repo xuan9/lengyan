@@ -1,6 +1,7 @@
 # Xcode per-user UI/debugger state (independent of local account name)
 **/xcuserdata/
 DerivedData
+.derivedData/
 TestResults.xcresult
 screenshots/
 mfa/

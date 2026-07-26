@@ -2,7 +2,7 @@
 
 结论：**生产代码、11 个按卷 Apple 资源包与零超额 Cloudflare 应急下载通道均已完成。** App 在 iOS 15–25 继续使用旧 ODR，在 iOS 26+ 使用 Managed Background Assets；只有用户主动播放时 Apple 通道明确失败或连续 15 秒没有下载进展，才切换到 Cloudflare。公网地址已完成 11/11 全量回读验证并在生产 plist 中启用。用户明确要求跳过 TestFlight，因此 Apple-hosted 的真实线上链路不属于本轮验证范围。
 
-> **2026-07-26 状态补充：** `AudioAssets/audio-manifest.json` 现为 11 条楞严音频的唯一手工 catalog，生成并校验 17 个 Swift/Node/checksum/media/Apple 产物，不再以 Swift 正则同步重复常量。Cloudflare fallback cache 已从“最多 2 卷/48 MiB”调整为 Caches 内无数量/字节上限、28 天未访问后清理；11 条合计 161,420,718 bytes（约 154 MiB）。本次审查在 Xcode 26.6/iOS 26.5 Simulator 通过 99 个 unit tests（1 个 Legacy ODR integration skip）和 3 个关键 iPad UI tests，但目录展开重启、冷启动音频 resume 与 28 天 expiry 仍需专门回归。下方 2026-07-19 验证表保留为当日发行快照；Apple-hosted 真实发行缺口没有因此关闭。
+> **2026-07-26 状态补充：** `AudioAssets/audio-manifest.json` 现为 11 条楞严音频的唯一手工 catalog，生成并校验 17 个 Swift/Node/checksum/media/Apple 产物，不再以 Swift 正则同步重复常量。Cloudflare fallback cache 已从“最多 2 卷/48 MiB”调整为 Caches 内无数量/字节上限、28 天未访问后清理；11 条合计 161,420,718 bytes（约 154 MiB）。`a687fb8` 已补目录展开跨重启、冷启动同卷 resume、seek 初始零值保护和 28 天 expiry/protected asset 专门回归；Xcode 26.6/iOS 26.5 Simulator 现通过 104 个 unit tests（1 个 Legacy ODR integration skip）零失败。此前 3 个关键 iPad UI tests 也通过，统一命令会在可信 CI 中持续执行。下方 2026-07-19 验证表保留为当日发行快照；Apple-hosted 真实发行缺口没有因此关闭。
 
 ## 已完成
 

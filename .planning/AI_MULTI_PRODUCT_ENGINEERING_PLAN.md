@@ -1,8 +1,8 @@
 # AI 驱动的多经典产品工程与维护计划
 
 **日期：** 2026-07-26\
-**版本：** v4（结合 7 月 21–26 日音频清单、播放恢复和 UI 稳定性提交复核后）\
-**状态：** 实施前主决策稿\
+**版本：** v6（Foundation 0 已关闭；Foundation 1 仓库实现完成，托管证据待跑）\
+**状态：** 实施中\
 **适用产品：** 《楞严经》《金刚经》《圆觉经》《六祖坛经》及后续单经产品
 
 ### 文档职责与权威关系
@@ -80,31 +80,31 @@ iOS 与 Android 最困难的部分分别依赖 AVFoundation/WidgetKit/UIKit/Swif
 - `AudioAssets/audio-manifest.json` 已成为楞严现行音频 catalog 的唯一手工输入，生成 Swift、Node、checksum、媒体索引和 11 个 Apple manifests；本地 `--check` 与 CI audio-catalog job 已建立。
 - Widget 已支持小/中/大与锁屏尺寸、首次添加引导和刷新恢复；新增了短/长经句、系统尺寸和可读字号下限的渲染测试。简繁体、提醒、分享长图和文字导出已有实现。
 - 当前 Xcode 工程包含 App、Asset Downloader Extension、Unit Tests、UI Tests 和 Widget 五个 Target；App Scheme 已提交为 shared scheme。
-- 最新已提交代码为 `241fb0c`，已包含 iPad 自适应、目录展开状态、主题即时刷新、收藏 split-detail 底部布局和 Widget 渲染修复；但审查时仍有 4 个收藏详情稳定性相关文件未提交，因此它只能作为 committed checkpoint，不能直接宣布为新 F0 reference。
-- 2026-07-26 使用 Xcode 26.6/iOS 26.5 Simulator 实测 99 个 unit tests（1 个 Legacy ODR integration skip）零失败，并通过 3 个针对 iPad 收藏底部布局、取消收藏后详情稳定性和快速主题切换的 UI tests；这些结果仍需在最终干净 reference commit 上重跑并归档。
+- `a299864` 已收敛此前 4 个收藏详情稳定性 pending 文件，`bf3d790` 是干净的计划/代码 checkpoint；`a687fb8` 在其上补齐迁移关键行为回归，形成当前 F0 behavior reference。
+- 2026-07-26 使用 Xcode 26.6/iOS 26.5 Simulator 在 `a687fb8` 实测 104 个 unit tests（1 个 Legacy ODR integration skip）零失败；目录展开跨重启、冷启动同卷 resume、seek 初始零值保护和 28 天 cache expiry/protected asset 均有专门测试。此前 3 个 iPad 收藏/主题 UI tests 已通过，并已纳入统一 UI smoke 命令。
 
 因此需要的是**产品化抽象和质量基础设施**，不是重新开发阅读器。
 
-### 3.2 开始扩展前必须处理的问题
+### 3.2 审计问题及处理状态
 
 1. `Book.swift` 写死 `lengyanjing-*` 五类资源名称。
 2. `Constants.swift` 写死大量楞严路径、精选路径和十卷假设。
 3. `ReadingResumeResolver`、首页、分享文件名、Widget、URL Scheme、Bundle ID、ODR Tag 和发布脚本仍含产品硬编码。
 4. `Book.shared`、`AudioManager.shared`、`Prefers.shared` 让视图直接依赖全局单例，测试和多产品注入困难。
-5. App Scheme 已从 `xcuserdata` 移到 `xcshareddata`；但新 Asset Downloader Extension 的 Archive、pack 校验和目标级 scheme 仍未收敛到统一 `verify.sh`。
-6. CI 在没有 `Package.swift` 的情况下执行 `swift package resolve` 和 `generate-xcodeproj`，流程本身不可成立。
-7. CI 的无障碍、性能和覆盖率门槛目前只是输出成功文字，没有执行真实检查。
-8. 根目录 `CLAUDE.md`、`REQUIREMENTS.md` 和部分架构报告已与现状不一致，会误导后续 AI。
+5. App Scheme 已从 `xcuserdata` 移到 `xcshareddata`；App、Widget、Asset Downloader Extension、11 个 pack 和双栈 Archive 现已收敛到根 `verify.sh`。签名和 App Store 关联仍是外部发行 Gate。
+6. 旧 CI 在没有 `Package.swift` 的情况下执行无效 Swift Package 命令；Foundation 1 已删除这些命令，改为调用本地同一验证入口，托管首跑仍需形成证据。
+7. 旧 CI 的无障碍、性能和覆盖率 job 只是输出成功文字；Foundation 1 已删除假 job。重新加入任何质量门槛前必须先有真实测量器和失败阈值。
+8. 根 `AGENTS.md` 现为唯一 agent 入口，`CLAUDE.md` 已改为指针，`REQUIREMENTS.md` 已重写为当前产品约束；其他历史报告继续按权威顺序逐步归档，不阻塞 contracts。
 9. `.git` 约 693MB、Git pack 约 673MB；索引仍有 21 个大型 MP3/M4A 母源/发布文件和 1 个约 7KB 的 M0 smoke 音频。新产品继续这样存放会恶化克隆和 CI。
 10. 当前 `AudioAssets/audio-manifest.json` 已消除 11 条音频在 Swift/Node/checksum/Apple manifests 之间的多重手工权威和 Swift 正则解析；但它仍包含 `sourceDirectory`、`cdnPathPrefix` 和 Apple pack 配置，且缺少正文映射、renditions、codec、duration、权利引用与内容版本，因此是**楞严交付 catalog v1**，不是 Gate F2 的最终跨产品 artifact schema。
 11. `generate-audio-manifest.mjs` 能生成并检查 17 个产物，但输出路径、locale 和 Apple 配置仍写死楞严结构，检查还直接读取 Git 内完整 M4A。它需要演进为产品无关生成器，并让普通代码 CI 不必克隆/哈希全部发布音频。
-12. `241fb0c` 之后仍有 `ModernFavoritesView`、两个 reader controller 和 UI tests 的未提交修改；在这些修改完成 review、测试并形成干净提交前，没有新的 F0 候选。即使工作区转净，也仍需归档命令结果、截图、已知问题和发行约束。
+12. 此前 `241fb0c` 后的收藏详情未提交修改已由 `a299864` 收敛；F0 命令、结果与真实发行缺口记录在 `docs/quality/REFERENCE_BASELINE_2026-07-26.md`。后续迁移不再依赖未提交文件。
 13. 仓库包含反馈 Worker/D1，以及 Apple/Cloudflare 音频网络交付；“完全本地”已不再是完整数据流描述。当前 `PRIVACY.md` 尚未说明外部音频托管链路，后续需同时描述必要的网络请求、服务方、用途和保留边界。
-14. CI 新增的 audio-catalog job 会真实执行 generator、catalog 和 Node tests，应保留；但其余 job 仍固定 Xcode 15/iOS 17、执行不存在的 Swift Package 命令，并保留假无障碍、假性能和假覆盖率 job。根工具链还应统一到反馈 Worker 要求的 Node 22+，第三方 Actions 仍需固定 commit SHA。
+14. Foundation 1 已将 Node 固定为 22.17.1，把第三方 GitHub Actions 固定到 commit SHA，并以 Xcode 26 runner 执行真实脚本；GitLab 源仓库自动跑 portable Node gate，macOS build/archive 在有资格的 runner 上手动取证。两套托管配置都需首跑成功后才可关闭 Gate F1。
 15. Apple 双栈生产代码、11 个 pack 和 Cloudflare 全量回读已验证，但 App Store Connect 上传/关联、签名 Validate、TestFlight、Apple-hosted 真下载以及目标地区真机网络仍未验证；这部分是外部发行 Gate，不能由模拟器测试替代。
 16. 当前仓库没有 Android/Gradle/Kotlin 工程；Android 是从零建立原生实现并按行为移植，不存在可继续扩建的旧 Android 代码基线。
 17. Cloudflare fallback cache 已从“2 卷/48MiB”改为无文件数/字节上限、28 天未访问后清理；现有 11 条合计 161,420,718 bytes（约 154MiB）。当前单产品应急场景可继续观察，但多产品和 Android 必须显式确定单产品与全局预算，不能只复制时间淘汰策略。
-18. 新增的目录展开持久化、冷启动音频 resume 和 28 天过期策略尚无各自的专门自动回归测试；现有 unit suite 通过不能替代这些特定行为证据。
+18. `a687fb8` 已为目录展开跨重启、冷启动同卷 resume、seek 初始零值保护和 28 天 expiry/protected asset 增加专门回归；迁移时必须保留这些测试和 stable behavior fixtures。
 
 这些问题不表示不可实施，而是定义了实施顺序：**先建立可信基线，再抽象，再接第二款产品。**
 
@@ -588,24 +588,26 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 
 这不是一个完全串行的项目。正确依赖是“先共享基线与 contracts，再让 iOS 产品化和 Android 楞严基准并行；内容工作可并行，产品发布仍顺序验证”。
 
-### Foundation 0：整理当前基线（3-5 个工作日）
+### Foundation 0：整理当前基线（已完成）
 
-- 以 `8172e47..241fb0c` 的 22 个后续提交和当前 4 文件 pending diff 为审计范围；先完成 pending 收藏详情修复的 review/提交，再以所得干净 commit 作为候选，不直接沿用 `8172e47` 或把 dirty worktree 当 reference。
-- 归档 Xcode 26.6 下 99 unit tests 与关键 iPad UI tests 的命令/xcresult，并补目录展开重启、冷启动音频 resume 和 cache expiry 的专门回归；最终候选上重跑。
+- 以 `8172e47..bf3d790` 为审计范围；收藏详情 pending diff 已在 `a299864` 收敛，`bf3d790` 提供干净 checkpoint，`a687fb8` 提供迁移关键行为锁定。
+- 已归档 Xcode 26.6 下 104 unit tests（1 个预期 skip）和关键 iPad UI tests，并补目录展开重启、冷启动音频 resume、seek 零值保护和 cache expiry 专门回归。
 - 将 Apple-hosted 未验证项、Cloudflare 地区限制和隐私文案缺口列为明确 release blockers/accepted risks，不用单元测试结果掩盖。
 - 固定最终可安装 reference commit；后续分享、导航、Widget、音频或服务端修复不得与架构迁移混成一个提交。
 
 **Gate F0：** reference commit、迁移输入和行为基线可定位；没有依赖未提交用户文件才能恢复的关键状态。
 
-### Foundation 1：可信仓库（1-2 周）
+### Foundation 1：可信仓库（仓库实现完成，托管 Gate 待关闭）
 
-- 保留已提交的 shared App Scheme；新增根 `AGENTS.md`、工具链检查和统一 `verify.sh`，并覆盖 App、Widget、Asset Downloader Extension 与音频 Archive 校验。
-- 保留真实 audio-catalog job；把根 Node 基线统一到 22+，修正 CI 中不存在的 Swift Package 命令、无法编译 iOS 26 extension 的 Xcode 15 工具链和假通过 quality jobs。
-- 建立 `.github/CODEOWNERS`、required checks 和最小权限 workflow；第三方 Action 固定到 commit SHA。
-- 更新或归档冲突的 `CLAUDE.md`、`REQUIREMENTS.md`。
-- 把已经存在的反馈 Worker lockfile/tests 接入 CI，并补迁移、部署和 privacy data-flow 检查。
+- 已保留 shared App Scheme；新增根 `AGENTS.md`、工具链检查和统一 `verify.sh`，覆盖 App、Widget、Asset Downloader Extension 与音频 Archive 校验。
+- 已保留真实 audio-catalog 检查；根 Node 固定为 22.17.1，删除不存在的 Swift Package 命令和假通过 quality jobs，iOS CI 改用 Xcode 26 runner。
+- 已在根目录建立 GitHub/GitLab 均可识别的 `CODEOWNERS`；GitHub workflow 使用最小权限且第三方 Action 固定到 commit SHA，GitLab 源仓库有真实 portable gate。
+- 已将 `CLAUDE.md` 收敛为入口指针，并把 `REQUIREMENTS.md` 更新为当前楞严产品边界。
+- 反馈 Worker lockfile、14 个 tests、语法、Wrangler dry-run 和 high-severity audit 已进入公共命令；privacy data-flow 文案仍归 I0 外部发行闭环。
 
 **Gate F1：** 干净克隆可用一条公共命令构建/测试当前 iOS App；CI 每个绿色 job 都有真实执行证据。
+
+**当前状态：** 本地公共命令、unit/build/UI/archive 均通过；Gate F1 只剩 GitLab/GitHub 首个托管 pipeline 的可定位成功记录和 required-check 设置，不能因配置文件已提交而提前宣布关闭。
 
 ### Foundation 2：共享内容契约（2-4 周）
 
@@ -729,7 +731,7 @@ AI 不得通过创建占位商店 App、生成生产 key、提高最低系统、
 
 ## 17. 最终建议
 
-**可以实施，近期提交已证明楞严音频 catalog 可以单源生成，provider 边界和高风险 UI 回归也能由 Codex + 真实测试约束，但两平台不能各自形成一套产品框架。下一项工作是先把当前收藏详情 pending diff 收敛成干净 reference，修复真实 CI，再将现行楞严交付 catalog 演进为“跨产品 artifact + 平台 delivery”契约；不是重写下载器，也不是立即创建新 App。Gate F2 后再让 iOS 模块化与 Android 楞严并行；共享经文、身份、音频 artifact 和行为证据，UI、播放、Widget、存储与发布保持平台原生。**
+**可以实施。F0 已由干净 checkpoint、104 个 unit tests 和迁移关键专门回归关闭；当前工作是完成统一验证入口和真实 CI，再将现行楞严交付 catalog 演进为“跨产品 artifact + 平台 delivery”契约。Gate F2 前不创建新 App 壳；Gate F2 后让 iOS 模块化与 Android 楞严有限并行，共享经文、身份、音频 artifact 和行为证据，UI、播放、Widget、存储与发布保持平台原生。**
 
 ## 参考
 

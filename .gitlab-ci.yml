@@ -1,0 +1,52 @@
+stages:
+  - verify
+  - release-evidence
+
+default:
+  interruptible: true
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+node:
+  stage: verify
+  image: node:22.17.1-bookworm-slim
+  timeout: 20m
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  cache:
+    key:
+      files:
+        - server/package-lock.json
+    paths:
+      - .npm/
+  script:
+    - ./verify.sh node
+
+.macos-release-evidence:
+  stage: release-evidence
+  tags:
+    - saas-macos-medium-m1
+  image: macos-26-xcode-26
+  allow_failure: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+    - when: never
+
+ios-build:
+  extends: .macos-release-evidence
+  timeout: 45m
+  script:
+    - ./verify.sh ios-build
+
+ios-archive:
+  extends: .macos-release-evidence
+  timeout: 60m
+  script:
+    - ./verify.sh ios-archive

@@ -1,5 +1,13 @@
 # Helper Scripts
 
+## Repository Verification
+
+Use the root `./verify.sh` command for local and CI verification. It is the
+public entry point for audio catalogs, the feedback Worker, iOS unit tests, all
+embedded iOS targets, focused UI smoke tests, and production archive checks.
+Run `./verify.sh --help` for the command list. CI must call this script instead
+of maintaining a second set of build commands.
+
 ## Cloudflare Audio Fallback
 
 `AudioAssets/audio-manifest.json` is the only hand-edited audio catalog.

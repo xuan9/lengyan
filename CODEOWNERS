@@ -1,0 +1,12 @@
+# Default ownership and release-sensitive areas.
+* @xuan9
+
+/Products/ @xuan9
+/Contracts/ @xuan9
+/AudioAssets/ @xuan9
+/BackgroundAssets/ @xuan9
+/server/ @xuan9
+/scripts/ @xuan9
+/.github/ @xuan9
+/.gitlab-ci.yml @xuan9
+/verify.sh @xuan9
