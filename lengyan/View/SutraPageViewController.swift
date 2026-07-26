@@ -335,6 +335,7 @@ class SutraPageViewController: UIPageViewController, UIPageViewControllerDataSou
         let isLiked = Prefers.shared.isLike(path!)
         let bookmarkIcon = UIImage(systemName: isLiked ? "bookmark.fill" : "bookmark")
         let bookmarkButton = UIBarButtonItem(image: bookmarkIcon, style: .plain, target: self, action: isLiked ? #selector(unlike) : #selector(like))
+        bookmarkButton.accessibilityIdentifier = "reader.bookmarkButton"
 
         // 按钮颜色
         let secondaryTextColor = SutraDesignTokens.shared.color(for: .textSecondary)

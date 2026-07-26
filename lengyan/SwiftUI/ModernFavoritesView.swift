@@ -182,6 +182,29 @@ class FavoritesViewModel: ObservableObject {
         }
     }
 
+    func refreshPersonalFavorites() {
+        let paths = Prefers.shared.userLikes
+
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") || ProcessInfo.processInfo.arguments.contains("--snapshot-mode") {
+            let items = loadItems(from: paths)
+            FavoritesCache.shared.cacheFavorites(items, paths: paths)
+            withAnimation(.easeInOut(duration: 0.2)) {
+                favorites = items
+            }
+            return
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let items = self.loadItems(from: paths)
+            FavoritesCache.shared.cacheFavorites(items, paths: paths)
+            DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    self.favorites = items
+                }
+            }
+        }
+    }
+
     private func loadItems(from paths: [String]) -> [FavoriteItem] {
         var items: [FavoriteItem] = []
         for path in paths {
@@ -340,8 +363,8 @@ struct ModernFavoritesView: View {
                         }
                     }
                     .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
-                        FavoritesCache.invalidateOnFavoriteChange()
-                        viewModel.loadAll()
+                        selectedItem = activeSelectedItem
+                        viewModel.refreshPersonalFavorites()
                     }
                     .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
                         themeVersion += 1
@@ -397,8 +420,7 @@ struct ModernFavoritesView: View {
                         hideNavBar()
                     }
                     .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
-                        FavoritesCache.invalidateOnFavoriteChange()
-                        viewModel.loadAll()
+                        viewModel.refreshPersonalFavorites()
                     }
                     .onReceive(NotificationCenter.default.publisher(for: .themeDidChange)) { _ in
                         themeVersion += 1
@@ -725,6 +747,7 @@ struct SwiftUISutraReader: UIViewControllerRepresentable {
         let navController = SutraNavigationController(rootViewController: childVC)
         navController.navigationBar.isHidden = false
         navController.view.accessibilityIdentifier = "reader.navigationContainer"
+        navController.view.accessibilityValue = path
         return navController
     }
 

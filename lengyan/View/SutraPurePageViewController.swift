@@ -256,6 +256,7 @@ class SutraPurePageViewController: UIPageViewController, UIPageViewControllerDat
             target: self,
             action: #selector(like)
         )
+        bookmarkBtn.accessibilityIdentifier = "reader.bookmarkButton"
         bookmarkBtn.tintColor = secondaryColor
         if #available(iOS 26.0, *) {
             bookmarkBtn.hidesSharedBackground = true

@@ -999,6 +999,36 @@ class lengyanUITests: XCTestCase {
         XCTAssertFalse(app.buttons["reader.outlineButton"].exists)
     }
 
+    func testIPadFavoriteToggleKeepsSplitDetailReaderStable() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("Favorites split-detail stability is iPad-only")
+        }
+
+        let rootPath = "/A2/B1/C2/D1/E2/F1/G1/H1/I2/J1/K1"
+        let app = launchHomeApp(
+            readingState: .start,
+            userLikes: [rootPath]
+        )
+        let favoritesTab = app.tabBars.firstMatch.buttons.element(boundBy: 2)
+        XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3))
+        favoritesTab.tap()
+
+        let detailReader = app.otherElements["reader.navigationContainer"]
+        XCTAssertTrue(detailReader.waitForExistence(timeout: 5))
+        XCTAssertEqual(detailReader.value as? String, rootPath)
+
+        let bookmarkButton = app.buttons["reader.bookmarkButton"]
+        XCTAssertTrue(bookmarkButton.waitForExistence(timeout: 3))
+        bookmarkButton.tap()
+
+        XCTAssertTrue(detailReader.exists)
+        XCTAssertEqual(
+            detailReader.value as? String,
+            rootPath,
+            "Removing the selected favorite must not replace the split-detail reader"
+        )
+    }
+
     func testIPadFavoritesDetailOutlineCanReturnToRootReader() throws {
         guard UIDevice.current.userInterfaceIdiom == .pad else {
             throw XCTSkip("Favorites split-detail navigation is iPad-only")
