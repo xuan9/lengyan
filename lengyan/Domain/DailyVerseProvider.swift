@@ -127,8 +127,10 @@ final class DailyVerseProvider {
     private static let widgetKind = "DailyVerseWidget"
     private static let scheduleLock = NSLock()
     private let widgetTimelineReloader: () -> Void
+    private let userDefaults: UserDefaults
 
     private init() {
+        userDefaults = .standard
         widgetTimelineReloader = {
             if #available(iOS 14.0, *) {
                 WidgetCenter.shared.reloadTimelines(ofKind: DailyVerseProvider.widgetKind)
@@ -136,9 +138,13 @@ final class DailyVerseProvider {
         }
     }
 
-    /// Internal initializer for testing the Widget reload side effect.
-    init(widgetTimelineReloader: @escaping () -> Void) {
+    /// Internal initializer for isolated persistence and Widget side-effect tests.
+    init(
+        widgetTimelineReloader: @escaping () -> Void,
+        userDefaults: UserDefaults
+    ) {
         self.widgetTimelineReloader = widgetTimelineReloader
+        self.userDefaults = userDefaults
     }
 
     // MARK: - Public API
@@ -217,8 +223,8 @@ final class DailyVerseProvider {
     // MARK: - Persistent Schedule
     private let scheduleKey = "DailyVerseSchedule"
     private var scheduledVerses: [String: String] {
-        get { UserDefaults.standard.dictionary(forKey: scheduleKey) as? [String: String] ?? [:] }
-        set { UserDefaults.standard.set(newValue, forKey: scheduleKey) }
+        get { userDefaults.dictionary(forKey: scheduleKey) as? [String: String] ?? [:] }
+        set { userDefaults.set(newValue, forKey: scheduleKey) }
     }
 
     /// 获取特定日期的锁定路径，供内部和 ReminderManager 使用

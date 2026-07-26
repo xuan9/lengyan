@@ -130,7 +130,7 @@ class WidgetDataSyncTests: XCTestCase {
         }
     }
 
-    func testRepeatedWidgetDataSyncSkipsUnchangedWriteAndRefresh() {
+    func testRepeatedWidgetDataSyncSkipsUnchangedWriteAndRefresh() throws {
         guard let defaults = UserDefaults(suiteName: SharedVerseData.appGroupID) else {
             XCTFail("Expected Widget App Group defaults to be available")
             return
@@ -142,12 +142,16 @@ class WidgetDataSyncTests: XCTestCase {
         _ = sharedProvider.syncWidgetData()
 
         var reloadCount = 0
-        let provider = DailyVerseProvider {
-            reloadCount += 1
-        }
+        let scheduleSuiteName = "WidgetDataSyncTests.DailyVerse.\(UUID().uuidString)"
+        let scheduleDefaults = try XCTUnwrap(UserDefaults(suiteName: scheduleSuiteName))
+        let provider = DailyVerseProvider(
+            widgetTimelineReloader: { reloadCount += 1 },
+            userDefaults: scheduleDefaults
+        )
 
         let originalData = defaults.data(forKey: SharedVerseData.defaultsKey)
         defer {
+            scheduleDefaults.removePersistentDomain(forName: scheduleSuiteName)
             if let originalData {
                 defaults.set(originalData, forKey: SharedVerseData.defaultsKey)
             } else {

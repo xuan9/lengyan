@@ -150,16 +150,14 @@ final class BehaviorContractTests: XCTestCase {
     }
 
     func testDailyVerseProviderPreservesAnExistingStoredSchedule() throws {
-        let defaults = UserDefaults.standard
+        let suiteName = "BehaviorContractTests.DailyVerse.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         let scheduleKey = "DailyVerseSchedule"
-        let previousSchedule = defaults.object(forKey: scheduleKey)
-        defer {
-            if let previousSchedule {
-                defaults.set(previousSchedule, forKey: scheduleKey)
-            } else {
-                defaults.removeObject(forKey: scheduleKey)
-            }
-        }
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let provider = DailyVerseProvider(
+            widgetTimelineReloader: {},
+            userDefaults: defaults
+        )
 
         let formatter = ISO8601DateFormatter()
         let date = try XCTUnwrap(formatter.date(from: "2026-07-25T16:30:00Z"))
@@ -169,7 +167,7 @@ final class BehaviorContractTests: XCTestCase {
         )
         defaults.set([dateKey: "/A1/B1/C1"], forKey: scheduleKey)
 
-        XCTAssertEqual(DailyVerseProvider.shared.getPath(for: date), "/A1/B1/C1")
+        XCTAssertEqual(provider.getPath(for: date), "/A1/B1/C1")
         XCTAssertEqual(
             defaults.dictionary(forKey: scheduleKey) as? [String: String],
             [dateKey: "/A1/B1/C1"]
