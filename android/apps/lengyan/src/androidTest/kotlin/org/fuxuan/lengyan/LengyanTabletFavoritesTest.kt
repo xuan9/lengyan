@@ -41,6 +41,12 @@ class LengyanTabletFavoritesTest {
         }
 
         try {
+            composeRule.waitUntil(timeoutMillis = 10_000) {
+                runCatching {
+                    composeRule.onNodeWithTag("bottom.favorites", useUnmergedTree = true)
+                        .assertIsDisplayed()
+                }.isSuccess
+            }
             composeRule.onNodeWithTag("bottom.favorites", useUnmergedTree = true)
                 .assertIsDisplayed()
                 .performClick()
