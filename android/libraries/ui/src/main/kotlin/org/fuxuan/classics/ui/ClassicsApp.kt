@@ -40,12 +40,15 @@ import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.fuxuan.classics.core.AppContainer
+import org.fuxuan.classics.core.behavior.LegacyLocationResolution
+import org.fuxuan.classics.core.behavior.LegacyLocationUsage
 import org.fuxuan.classics.core.behavior.ParagraphTextAnchor
 import org.fuxuan.classics.core.behavior.OutlineDisclosurePolicy
 import org.fuxuan.classics.core.behavior.ReadingAnchorOrigin
 import org.fuxuan.classics.core.behavior.ReadingAnchorSelectionPolicy
 import org.fuxuan.classics.core.behavior.ReadingMode
 import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
+import org.fuxuan.classics.core.behavior.ScriptureDeepLink
 import org.fuxuan.classics.core.behavior.VolumeReadingDocument
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.ProductManifest
@@ -94,6 +97,8 @@ data class VolumeReaderRoute(
 fun ClassicsApp(
     container: AppContainer,
     modifier: Modifier = Modifier,
+    pendingDeepLink: ScriptureDeepLink? = null,
+    onDeepLinkConsumed: (ScriptureDeepLink) -> Unit = {},
     onDarkThemeChanged: (Boolean) -> Unit = {},
 ) {
     val preferences by container.userPreferencesRepository.preferences.collectAsState(initial = null)
@@ -114,7 +119,12 @@ fun ClassicsApp(
             if (currentPreferences == null) {
                 LoadingScreen(title = container.product.displayName)
             } else {
-                ContentNavigation(container = container, preferences = currentPreferences)
+                ContentNavigation(
+                    container = container,
+                    preferences = currentPreferences,
+                    pendingDeepLink = pendingDeepLink,
+                    onDeepLinkConsumed = onDeepLinkConsumed,
+                )
             }
         }
     }
@@ -124,6 +134,8 @@ fun ClassicsApp(
 private fun ContentNavigation(
     container: AppContainer,
     preferences: ProductPreferences,
+    pendingDeepLink: ScriptureDeepLink?,
+    onDeepLinkConsumed: (ScriptureDeepLink) -> Unit,
 ) {
     var retryKey by remember { mutableIntStateOf(0) }
     val loadState by produceState<ContentLoadState>(
@@ -154,6 +166,8 @@ private fun ContentNavigation(
             container = container,
             loaded = state.value,
             preferences = preferences,
+            pendingDeepLink = pendingDeepLink,
+            onDeepLinkConsumed = onDeepLinkConsumed,
         )
     }
 }
@@ -163,6 +177,8 @@ private fun LoadedContentNavigation(
     container: AppContainer,
     loaded: LoadedContent,
     preferences: ProductPreferences,
+    pendingDeepLink: ScriptureDeepLink?,
+    onDeepLinkConsumed: (ScriptureDeepLink) -> Unit,
 ) {
     val readBackStack = rememberNavBackStack(HomeRoute)
     val favoritesBackStack = rememberNavBackStack(FavoritesRoute)
@@ -191,6 +207,46 @@ private fun LoadedContentNavigation(
     val favorites by favoritesFlow.collectAsState(initial = emptyList())
     val favoriteParagraphIDs = remember(favorites) {
         favorites.mapNotNullTo(mutableSetOf(), Favorite::paragraphID)
+    }
+
+    LaunchedEffect(pendingDeepLink, loaded) {
+        val deepLink = pendingDeepLink ?: return@LaunchedEffect
+        try {
+            if (deepLink.productID != loaded.product.productID) return@LaunchedEffect
+            val resolution = container.bookRepository.resolveLegacyLocation(
+                legacyPath = deepLink.legacyPath,
+                usage = LegacyLocationUsage.RESUME,
+            )
+            val mapped = resolution as? LegacyLocationResolution.Mapped
+                ?: return@LaunchedEffect
+            val paragraph = mapped.paragraphID?.let(loaded.content::paragraph)
+                ?: return@LaunchedEffect
+            val volumeID = paragraph.volumeID ?: return@LaunchedEffect
+            val openedAt = timestampAfter(
+                preferences.readingProgress?.updatedAtEpochMilliseconds,
+            )
+            selectedDestination = TopLevelDestination.READING
+            readBackStack.popToRoot()
+            readBackStack.add(
+                VolumeReaderRoute(
+                    volumeID = volumeID,
+                    paragraphID = paragraph.paragraphID,
+                    requestedAtEpochMilliseconds = openedAt,
+                ),
+            )
+            container.userPreferencesRepository.saveReadingProgress(
+                ReadingProgress(
+                    productID = loaded.product.productID,
+                    editionID = loaded.book.editionID,
+                    paragraphID = paragraph.paragraphID,
+                    characterOffset = 0,
+                    mode = ReadingMode.CHAPTER,
+                    updatedAtEpochMilliseconds = openedAt,
+                ),
+            )
+        } finally {
+            onDeepLinkConsumed(deepLink)
+        }
     }
 
     fun toggleFavorite(anchor: ParagraphTextAnchor) {

@@ -660,7 +660,7 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 ### Track A：Android 楞严与多产品
 
 - Gate F2 后按 `.planning/ANDROID_MULTI_PRODUCT_PORTING_PLAN.md` 建立 Android 原生工程。
-- 当前 Android 楞严已完成工程/CI、共享 contracts、产品隔离持久化、十卷 1,262 段连续阅读、稳定码点续读、2 万字双字号门禁、简繁精确搜索、收藏闭环、主题/简繁/字号设置、不会重复 bottom inset 的统一底部区域，以及覆盖 1,669 节点/1,155 叶节点的持久科判目录；现有 iOS runtime 未被替换。Phase 3 仍需完成分页、自适应平板收藏详情、完整 TalkBack 和 deep link，不能把当前垂直切片描述为可发布 App。
+- 当前 Android 楞严已完成工程/CI、共享 contracts、产品隔离持久化、十卷 1,262 段连续阅读、稳定码点续读、2 万字双字号门禁、简繁精确搜索、收藏闭环、主题/简繁/字号设置、不会重复 bottom inset 的统一底部区域、覆盖 1,669 节点/1,155 叶节点的持久科判目录，以及从产品专属 Intent 到稳定段落的 legacy deep-link 闭环；现有 iOS runtime 未被替换。Phase 3 仍需完成分页、自适应平板收藏详情和完整 TalkBack，不能把当前垂直切片描述为可发布 App。
 - 《楞严经》生产级 Android 在有限并行下预计 16-24 周，**不包含 Foundation 0-2**；各阶段完全串行或外部验证受阻时应按最多约 27 周预留。它可与 Track I1/I2 并行，但共享 schema 修改需同一 PR 验证两平台。
 - Android 楞严发布 Gate 通过后才创建《金刚经》Android module；经文/权利/音频已批准后的 Android 增量工程预计 4-6 周。
 - Android 后续顺序同样是《金刚经》→《圆觉经》→《六祖坛经》。

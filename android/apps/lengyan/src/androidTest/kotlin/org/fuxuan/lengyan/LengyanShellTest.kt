@@ -1,7 +1,9 @@
 package org.fuxuan.lengyan
 
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasSetTextAction
@@ -23,6 +25,8 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.fuxuan.classics.core.behavior.LegacyLocationResolution
+import org.fuxuan.classics.core.behavior.LegacyLocationUsage
 import org.fuxuan.classics.core.behavior.ReadingMode
 import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
 import org.fuxuan.classics.core.behavior.SearchDocumentKind
@@ -175,6 +179,40 @@ class LengyanShellTest {
             runBlocking {
                 container.userPreferencesRepository.preferences.first().expandedSectionIDs
             },
+        )
+    }
+
+    @Test
+    fun acceptedVerseIntentOpensTheResolvedParagraphInTheExistingActivity() {
+        val container = (composeRule.activity.application as LengyanApplication).container
+        val legacyPath = "/A2/B1/C1"
+        val resolution = runBlocking {
+            container.bookRepository.resolveLegacyLocation(
+                legacyPath = legacyPath,
+                usage = LegacyLocationUsage.RESUME,
+            )
+        } as LegacyLocationResolution.Mapped
+        val expectedParagraphID = requireNotNull(resolution.paragraphID)
+        runBlocking { container.userPreferencesRepository.saveReadingProgress(null) }
+
+        val deepLink = Uri.Builder()
+            .scheme("lengyan")
+            .authority("verse")
+            .appendQueryParameter("path", legacyPath)
+            .build()
+        composeRule.activity.startActivity(
+            Intent(Intent.ACTION_VIEW, deepLink)
+                .setPackage(composeRule.activity.packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+        )
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            currentProgress()?.paragraphID == expectedParagraphID
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) { readerIsDisplayed() }
+        assertEquals(
+            expectedParagraphID,
+            currentProgress()?.paragraphID,
         )
     }
 
