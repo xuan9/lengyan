@@ -27,14 +27,24 @@ printf '\n==> Android managed-device UI smoke Gate\n'
   :libraries:ui:compactPhoneApi35DebugAndroidTest \
   :apps:lengyan:compactPhoneApi35DebugAndroidTest
 
+printf '\n==> Android tablet split-detail Gate\n'
+"${android_root}/gradlew" \
+  --no-daemon \
+  --project-dir "${android_root}" \
+  :apps:lengyan:tabletApi35DebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=org.fuxuan.lengyan.LengyanTabletFavoritesTest
+
 data_report="${android_root}/libraries/data/build/reports/androidTests/managedDevice/debug/compactPhoneApi35/index.html"
 ui_report="${android_root}/libraries/ui/build/reports/androidTests/managedDevice/debug/compactPhoneApi35/index.html"
 app_report="${android_root}/apps/lengyan/build/reports/androidTests/managedDevice/debug/compactPhoneApi35/index.html"
+tablet_report="${android_root}/apps/lengyan/build/reports/androidTests/managedDevice/debug/tabletApi35/index.html"
 [[ -s "${data_report}" ]] || fail "managed-device report was not produced at ${data_report}"
 [[ -s "${ui_report}" ]] || fail "managed-device report was not produced at ${ui_report}"
 [[ -s "${app_report}" ]] || fail "managed-device report was not produced at ${app_report}"
+[[ -s "${tablet_report}" ]] || fail "managed-device report was not produced at ${tablet_report}"
 
 printf '\nAndroid managed-device verification passed.\n'
 printf 'Data report: %s\n' "${data_report}"
 printf 'UI report: %s\n' "${ui_report}"
 printf 'App report: %s\n' "${app_report}"
+printf 'Tablet report: %s\n' "${tablet_report}"

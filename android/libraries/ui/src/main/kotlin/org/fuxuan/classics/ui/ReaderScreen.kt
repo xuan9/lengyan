@@ -60,6 +60,7 @@ internal fun ReaderScreen(
     initialAnchor: ParagraphTextAnchor?,
     highlightCharacterCount: Int = 0,
     favoriteParagraphIDs: Set<String> = emptySet(),
+    showBackButton: Boolean = true,
     onBack: () -> Unit,
     onToggleFavorite: (ParagraphTextAnchor) -> Unit = {},
     onSaveProgress: suspend (ParagraphTextAnchor) -> Unit,
@@ -160,7 +161,9 @@ internal fun ReaderScreen(
                         style = MaterialTheme.typography.titleMedium.copy(letterSpacing = 0.sp),
                     )
                 },
-                navigationIcon = { BackButton(strings.back, onBack) },
+                navigationIcon = {
+                    if (showBackButton) BackButton(strings.back, onBack)
+                },
                 actions = {
                     val isFavorite = currentAnchor.paragraphID in favoriteParagraphIDs
                     IconButton(

@@ -38,8 +38,9 @@ the same user result and consumes the shared stable-ID content contract. A
 content update cannot leave invisible or invalid disclosure state behind. The
 directory defaults to the outline; the ten-volume list remains one tab away.
 
-Pagination, tablet split-detail behavior, broader TalkBack traversal, and typed
-deep links remain separate Gate D work.
+Reader pagination remains deferred by ADR 0006, and broader TalkBack traversal
+remains separate Gate D work. Tablet split-detail behavior and typed deep links
+are covered by ADRs 0012 and 0011 respectively.
 
 ## Verification
 

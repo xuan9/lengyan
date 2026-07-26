@@ -39,7 +39,8 @@ Run the public command from the repository root:
 Do not replace these with a narrower module task in a completion report. The
 managed-device command currently verifies the shell, packaged Lengyan contracts,
 cross-script search, DataStore, Room, the Room v1 schema origin, the real volume
-reader, stable rotation resume, and complete 20,000-character layout at default
-and 200% system font scale. Automated screenshot matrices, measured long-text
-performance, audio, and OEM Gates are added as their phases become implemented;
-absence of those tasks must not be reported as success.
+reader, stable rotation resume, complete 20,000-character layout at default and
+200% system font scale, and the Pixel Tablet favorites split-detail lifecycle.
+Automated screenshot matrices, measured long-text performance, audio, and OEM
+Gates are added as their phases become implemented; absence of those tasks must
+not be reported as success.

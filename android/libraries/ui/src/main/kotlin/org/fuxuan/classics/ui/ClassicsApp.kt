@@ -471,6 +471,30 @@ private fun LoadedContentNavigation(
                                     )
                                 }
                             },
+                            detailContent = { target ->
+                                val detailRoute = remember(target) {
+                                    VolumeReaderRoute(
+                                        volumeID = target.volumeID,
+                                        paragraphID = target.anchor.paragraphID,
+                                        characterOffset = target.anchor.characterOffset,
+                                        requestedAtEpochMilliseconds = timestampAfter(
+                                            resumeRoute?.requestedAtEpochMilliseconds,
+                                        ),
+                                    )
+                                }
+                                ReaderDestination(
+                                    container = container,
+                                    loaded = loaded,
+                                    preferences = preferences,
+                                    strings = strings,
+                                    route = detailRoute,
+                                    resumeRoute = resumeRoute,
+                                    favoriteParagraphIDs = favoriteParagraphIDs,
+                                    showBackButton = false,
+                                    onBack = {},
+                                    onToggleFavorite = ::toggleFavorite,
+                                )
+                            },
                         )
                     }
                     entry<VolumeReaderRoute> { route ->
@@ -521,6 +545,7 @@ private fun ReaderDestination(
     route: VolumeReaderRoute,
     resumeRoute: VolumeReaderRoute?,
     favoriteParagraphIDs: Set<String>,
+    showBackButton: Boolean = true,
     onBack: () -> Unit,
     onToggleFavorite: (ParagraphTextAnchor) -> Unit,
 ) {
@@ -537,6 +562,7 @@ private fun ReaderDestination(
         initialAnchor = launchState.anchor,
         highlightCharacterCount = launchState.highlightCharacterCount,
         favoriteParagraphIDs = favoriteParagraphIDs,
+        showBackButton = showBackButton,
         onBack = onBack,
         onToggleFavorite = onToggleFavorite,
         onSaveProgress = { anchor ->

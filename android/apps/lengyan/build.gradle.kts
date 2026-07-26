@@ -27,6 +27,11 @@ android {
                     apiLevel = 35
                     systemImageSource = "aosp-atd"
                 }
+                create("tabletApi35") {
+                    device = "Pixel Tablet"
+                    apiLevel = 35
+                    systemImageSource = "aosp-atd"
+                }
             }
         }
     }

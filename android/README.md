@@ -26,9 +26,11 @@ The command runs every JVM unit test, Android lint, debug and unsigned release
 builds, and compiles the instrumentation APK. Generated outputs stay under
 module `build/` directories.
 
-Run `./verify.sh android-ui-smoke` to install and launch the app on the pinned
-API 35 Gradle-managed compact phone. This requires the Android Emulator; Gradle
-provisions the AOSP automated-test-device image when necessary.
+Run `./verify.sh android-ui-smoke` to install and exercise the app on pinned API
+35 Gradle-managed compact-phone and Pixel Tablet profiles. The compact profile
+runs the full persistence, content, reader, and shell suite; the tablet profile
+runs the adaptive favorites split-detail lifecycle. This requires the Android
+Emulator; Gradle provisions the AOSP automated-test-device image when necessary.
 
 ## Modules
 

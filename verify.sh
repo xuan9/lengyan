@@ -199,7 +199,7 @@ Commands:
   audio-catalog   Canonical audio manifest and generated catalog checks
   server          Feedback Worker install, tests, syntax, and dry-run build
   android         Android unit tests, lint, debug APK, and release APK
-  android-ui-smoke Android persistence, reader, and long-text tests on managed API 35
+  android-ui-smoke Android phone and tablet behavior tests on managed API 35
   ios-unit        All iOS unit tests on an available simulator
   ios-build       Release build of the app and embedded extensions
   ios-ui-smoke    Focused iPad favorites and rapid-theme UI tests
