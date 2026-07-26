@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "fixtureID": "lengyan.legacy-favorites-migration.v1",
+  "behavior": "legacy-favorites-migration",
+  "cases": [
+    {
+      "name": "legacy curated entries are removed while personal and unresolved entries survive",
+      "input": {
+        "legacyLikes": [
+          "/A2/B1/C2/D1/E2/F1/G1/H1/I1/J2",
+          "/A1/B1/C1",
+          "/A1/B1/C1",
+          "/retired/path"
+        ],
+        "storedUserLikes": null,
+        "curatedLegacyPaths": [
+          "/A2/B1/C2/D1/E2/F1/G1/H1/I1/J2"
+        ]
+      },
+      "expected": {
+        "userLikes": [
+          "/A1/B1/C1",
+          "/retired/path"
+        ]
+      }
+    },
+    {
+      "name": "new personal favorites take precedence and keep first occurrence order",
+      "input": {
+        "legacyLikes": [
+          "/A1/B1/C1"
+        ],
+        "storedUserLikes": [
+          "/A2/B2/C2",
+          "/A2/B2/C2",
+          "/A1/B1/C2"
+        ],
+        "curatedLegacyPaths": []
+      },
+      "expected": {
+        "userLikes": [
+          "/A2/B2/C2",
+          "/A1/B1/C2"
+        ]
+      }
+    },
+    {
+      "name": "an explicitly empty personal list does not resurrect old legacy likes",
+      "input": {
+        "legacyLikes": [
+          "/A1/B1/C1"
+        ],
+        "storedUserLikes": [],
+        "curatedLegacyPaths": []
+      },
+      "expected": {
+        "userLikes": []
+      }
+    }
+  ]
+}

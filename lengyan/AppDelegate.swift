@@ -11,6 +11,26 @@ import UserNotifications
 import AVFoundation
 import SwiftUI
 
+struct LengyanDeepLink: Equatable {
+    let productID: String
+    let legacyPath: String
+}
+
+enum LengyanDeepLinkParser {
+    static func parse(_ url: URL) -> LengyanDeepLink? {
+        guard url.scheme == "lengyan", url.host == "verse",
+              let components = URLComponents(
+                url: url,
+                resolvingAgainstBaseURL: false
+              ),
+              let path = components.queryItems?.first(where: { $0.name == "path" })?.value,
+              !path.isEmpty else {
+            return nil
+        }
+        return LengyanDeepLink(productID: "lengyan", legacyPath: path)
+    }
+}
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
@@ -324,15 +344,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     @discardableResult
     func handleOpenURL(_ url: URL) -> Bool {
         // 处理 Widget 深链：lengyan://verse?path=/A2/B1/...
-        guard url.scheme == "lengyan", url.host == "verse" else { return false }
-
-        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-           let pathItem = components.queryItems?.first(where: { $0.name == "path" }),
-           let path = pathItem.value, !path.isEmpty {
-            openNotificationItem(path: path)
-            return true
-        }
-        return false
+        guard let deepLink = LengyanDeepLinkParser.parse(url) else { return false }
+        openNotificationItem(path: deepLink.legacyPath)
+        return true
     }
 
 }

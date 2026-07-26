@@ -613,18 +613,18 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 
 - 已建立 `ProductManifest`、`BookManifest`、content package、audio artifact、source manifest、behavior fixture 的 Draft 2020-12 schema，以及稳定 ID 与 canonical UTF-8/NFC/hash 规则。
 - 已登记四个产品：楞严是 `legacy-migration`；金刚、圆觉、坛经只处于 `source-review`。四份 commit-pinned CBETA XML 仅作受限校勘参考，未导入正文，默认商业权利会阻断发布。
-- 独立 Node validator 已校验产品间引用、楞严十个 legacy JSON 哈希、现行 11 条音频逐项兼容、source/rights gate 和首批跨平台 fixtures，并通过负向测试；已接入根 `verify.sh contracts` 和 Node CI。
+- 独立 Node validator 已校验产品间引用、楞严十个 legacy JSON 哈希、现行 11 条音频逐项兼容、source/rights gate 和 8 类跨平台 fixtures，并通过负向测试；已接入根 `verify.sh contracts` 和 Node CI。
 - 已将 11 条楞严音频拆为 product-neutral artifact、iOS/Android delivery 与 repository tooling input；十卷映射到稳定 volume ID，codec/profile、duration、bytes、SHA-256 和 immutable artifact key 完整。旧 `AudioAssets/audio-manifest.json` 成为生成投影，连同原有 17 个下游产物保持逐字节兼容。
 - 已把现有楞严数据生成两套 `legacy-migration` 结构化包：每套 1,262 段、1,669 个 section，并建立覆盖全部旧节点的 path map；现有 iOS runtime 与 `lengyan/data/` 保持不变。
 - 生产 chapter map 可可靠定位 1,133/1,155 个 leaf path；其余 22 项保留旧路径和提示但明确 `volumeID: null`，不得由 AI 猜测。逐段测试证明正文只发生 288 处确定性的 CRLF-to-LF 规范化。
-- 继续补搜索、每日经句、续读/收藏迁移 fixtures；现有首批 fixtures 已覆盖分享文件名、legacy 深链和同卷 resume/异卷从头播放。
+- 8 份共享 fixtures 已覆盖搜索简繁匹配/片段、按时区与内容版本选择每日经句、续读归一化、旧收藏迁移、legacy path 到 stable location、分享文件名、深链和同卷 resume/异卷从头播放；现有 iOS XCTest 直接读取同一 JSON 并执行生产 policy。
 - 停止新增大音频到 Git，确定 CDN/object storage 和 artifact/delivery 分层。
 
-**当前工程未完成项：** 搜索/每日经句/续读/收藏迁移 fixtures，以及现有 iOS 对共享 fixtures 的 adapter。完整 legacy map、可逆 migration package 与 artifact/delivery 生成链拆分已完成，但不能据此宣称 canonical，也不能把 planned Android delivery 当作已选定主站。
+**当前工程状态：** Foundation 2 的本地工程条件已完成：完整 legacy map、可逆 migration package、artifact/delivery 生成链、8 类 fixtures 与 iOS adapter 均由公共验证命令执行。现有 iOS 仍保留 legacy 存储格式；stable resolver 先作为迁移证明，后续切换必须另做可回滚的数据迁移。上述完成不代表正文 canonical，也不能把 planned Android delivery 当作已选定主站。
 
 **并行发布阻断项：** 楞严 authoritative source/rights/text review 与 22 项卷映射裁定继续记录为人工治理工作；它们阻止 canonical promotion 和正式新渠道发布，但不阻止用锁定的现有正文快照开发、测试 Android 兼容实现。Android 自身 fixture adapter 在 Phase 2/Gate C 完成，不能循环地作为创建 Android 工程之前的 F2 条件。
 
-**Gate F2：** 独立 validator 可在 macOS/Linux 校验楞严；schema v1、fixtures 和迁移报告经过 review。Android 工程和新产品 Target 都以此 Gate 为前置。
+**Gate F2（本地工程 Gate 已通过）：** 独立 validator 可在 macOS/Linux 校验楞严；schema v1、8 类 fixtures、iOS adapter 和迁移报告已 review。Node 22.17.1 公共 Gate 通过，Xcode 26.6/iOS 26.5 Simulator 共 114 项测试（1 项真实 ODR 环境测试按预期跳过）零失败。Android 工程可进入 Phase 1；托管 CI 证据、权威正文与发行权利仍分别受 F1 和 release Gate 管理。
 
 ### Track I：iOS 产品化
 

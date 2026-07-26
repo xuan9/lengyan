@@ -76,6 +76,7 @@
 		139073191D109194003A3333 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 139073171D109194003A3333 /* LaunchScreen.storyboard */; };
 		139073241D109194003A3333 /* BookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139073231D109194003A3333 /* BookTests.swift */; };
 		A7C2E4F10000000000000002 /* ReadingResumeStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C2E4F10000000000000001 /* ReadingResumeStateTests.swift */; };
+		A7C2E4F20000000000000002 /* BehaviorContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C2E4F20000000000000001 /* BehaviorContractTests.swift */; };
 		A11CE0000000000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A11CE0000000000000000001 /* PrivacyInfo.xcprivacy */; };
 		A11CE0000000000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A11CE0000000000000000003 /* PrivacyInfo.xcprivacy */; };
 		1390732F1D109194003A3333 /* lengyanUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1390732E1D109194003A3333 /* lengyanUITests.swift */; };
@@ -266,6 +267,7 @@
 		1390731F1D109194003A3333 /* lengyanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lengyanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		139073231D109194003A3333 /* BookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTests.swift; sourceTree = "<group>"; };
 		A7C2E4F10000000000000001 /* ReadingResumeStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingResumeStateTests.swift; sourceTree = "<group>"; };
+		A7C2E4F20000000000000001 /* BehaviorContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorContractTests.swift; sourceTree = "<group>"; };
 		139073251D109194003A3333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A11CE0000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A11CE0000000000000000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -553,6 +555,7 @@
 				BAA100000000000000000009 /* AudioAssetCoordinatorTests.swift */,
 				BA000000000000000000001C /* LegacyODRM0IntegrationTests.swift */,
 				A7C2E4F10000000000000001 /* ReadingResumeStateTests.swift */,
+				A7C2E4F20000000000000001 /* BehaviorContractTests.swift */,
 				CB1B21E12EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift */,
 				139073251D109194003A3333 /* Info.plist */,
 			);
@@ -996,6 +999,7 @@
 				BAA100000000000000000109 /* AudioAssetCoordinatorTests.swift in Sources */,
 				BA000000000000000000001D /* LegacyODRM0IntegrationTests.swift in Sources */,
 				A7C2E4F10000000000000002 /* ReadingResumeStateTests.swift in Sources */,
+				A7C2E4F20000000000000002 /* BehaviorContractTests.swift in Sources */,
 				CB1B21E22EBB1C8D00A1ADB7 /* WidgetDataSyncTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

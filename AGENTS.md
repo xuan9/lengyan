@@ -100,6 +100,9 @@ Canonical scripture is protected data, not ordinary copy:
 - Keep product differences in typed product/content manifests only when they
   are stable configuration. Product-specific experiences belong in thin app
   modules, not in a universal flag matrix.
+- Cross-platform behavior changes must update `Contracts/BehaviorFixtures/`
+  and keep both native adapters reading those JSON files directly. Do not copy
+  fixture cases into Swift or Kotlin test source.
 - Lengyan audio identity lives in `Products/lengyan/audio-artifacts.json`;
   platform routing and repository source paths live in its `Platform/` and
   `Tooling/` contracts. Run the generator in `--check` mode and never edit

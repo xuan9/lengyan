@@ -185,7 +185,7 @@ test("validates the checked-in product contracts", async () => {
   const report = await validateRepository({ repositoryRoot });
   assert.equal(report.productCount, 4);
   assert.equal(report.audioArtifactCount, 11);
-  assert.equal(report.fixtureCount, 3);
+  assert.equal(report.fixtureCount, 8);
   assert.equal(report.contentPackageCount, 2);
   assert.equal(report.legacyPathMappingCount, 1669);
   assert.equal(report.audioDeliveryCount, 2);
@@ -399,6 +399,54 @@ test("detects fixture drift from executable naming behavior", async () => {
   try {
     await mutateJSON(root, "Contracts/BehaviorFixtures/share-file-name.json", (fixture) => {
       fixture.cases[0].expected.fileName = "text.jpg";
+    });
+    await expectValidationIssue(root, "but contract produces");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("detects drift from deterministic daily verse selection", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Contracts/BehaviorFixtures/daily-verse-selection.json", (fixture) => {
+      fixture.cases[0].expected.selectedID = "p4";
+    });
+    await expectValidationIssue(root, "but contract produces");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("detects a search fixture that points at another result path", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Contracts/BehaviorFixtures/search-text.json", (fixture) => {
+      fixture.cases[0].expected.resultPath = "/wrong/path";
+    });
+    await expectValidationIssue(root, "search result path differs from its source path");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("reports an incomplete matching search fixture without crashing", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Contracts/BehaviorFixtures/search-text.json", (fixture) => {
+      fixture.cases[0].expected.snippet = null;
+    });
+    await expectValidationIssue(root, "search match/result fields disagree");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("detects legacy location fixture drift from the generated map", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Contracts/BehaviorFixtures/legacy-location-resolution.json", (fixture) => {
+      fixture.cases[0].expected.sectionID = "lengyan.s999999";
     });
     await expectValidationIssue(root, "but contract produces");
   } finally {

@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "fixtureID": "shared.reading-resume.v1",
+  "behavior": "reading-resume",
+  "cases": [
+    {
+      "name": "volume reading restores its zero-based chapter and positive offset",
+      "input": {
+        "mode": "chapter",
+        "path": null,
+        "pageIndex": null,
+        "chapter": 2,
+        "chapterOffset": 125.5
+      },
+      "expected": {
+        "target": {
+          "mode": "chapter",
+          "chapter": 2,
+          "chapterOffset": 125.5
+        }
+      }
+    },
+    {
+      "name": "negative volume offsets normalize to the beginning",
+      "input": {
+        "mode": "chapter",
+        "path": null,
+        "pageIndex": null,
+        "chapter": 0,
+        "chapterOffset": -4
+      },
+      "expected": {
+        "target": {
+          "mode": "chapter",
+          "chapter": 0,
+          "chapterOffset": 0
+        }
+      }
+    },
+    {
+      "name": "chapter outside the ten-volume corpus is rejected",
+      "input": {
+        "mode": "chapter",
+        "path": null,
+        "pageIndex": null,
+        "chapter": 10,
+        "chapterOffset": 20
+      },
+      "expected": {
+        "target": null
+      }
+    },
+    {
+      "name": "negative page index normalizes to the first page",
+      "input": {
+        "mode": "paged",
+        "path": "/A2/B1/C1",
+        "pageIndex": -3,
+        "chapter": null,
+        "chapterOffset": null
+      },
+      "expected": {
+        "target": {
+          "mode": "paged",
+          "path": "/A2/B1/C1",
+          "pageIndex": 0
+        }
+      }
+    },
+    {
+      "name": "tree reading restores the exact legacy path",
+      "input": {
+        "mode": "tree",
+        "path": "/A2/B2/C2",
+        "pageIndex": null,
+        "chapter": null,
+        "chapterOffset": null
+      },
+      "expected": {
+        "target": {
+          "mode": "tree",
+          "path": "/A2/B2/C2"
+        }
+      }
+    },
+    {
+      "name": "outline root is not a resumable location",
+      "input": {
+        "mode": "tree",
+        "path": "/",
+        "pageIndex": null,
+        "chapter": null,
+        "chapterOffset": null
+      },
+      "expected": {
+        "target": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "fixtureID": "shared.search-text.v1",
+  "behavior": "search-text",
+  "cases": [
+    {
+      "name": "simplified query finds traditional scripture and preserves display script",
+      "input": {
+        "text": "若能轉物，則同如來。",
+        "query": "转物",
+        "path": "/A2/B1/search-1",
+        "maxLength": 50
+      },
+      "expected": {
+        "normalizedText": "若能转物，则同如来。",
+        "normalizedQuery": "转物",
+        "matches": true,
+        "resultPath": "/A2/B1/search-1",
+        "snippet": "若能轉物，則同如來。"
+      }
+    },
+    {
+      "name": "traditional query finds simplified scripture",
+      "input": {
+        "text": "如来密因修证了义。",
+        "query": "修證",
+        "path": "/A2/B1/search-2",
+        "maxLength": 50
+      },
+      "expected": {
+        "normalizedText": "如来密因修证了义。",
+        "normalizedQuery": "修证",
+        "matches": true,
+        "resultPath": "/A2/B1/search-2",
+        "snippet": "如来密因修证了义。"
+      }
+    },
+    {
+      "name": "snippet replaces a line break without changing the source characters",
+      "input": {
+        "text": "佛告阿難：\n汝當諦聽。",
+        "query": "阿难",
+        "path": "/A2/B1/search-3",
+        "maxLength": 50
+      },
+      "expected": {
+        "normalizedText": "佛告阿难：\n汝当谛听。",
+        "normalizedQuery": "阿难",
+        "matches": true,
+        "resultPath": "/A2/B1/search-3",
+        "snippet": "佛告阿難： 汝當諦聽。"
+      }
+    },
+    {
+      "name": "snippet starts at the nearest punctuation before a middle match",
+      "input": {
+        "text": "甲乙丙丁，戊己庚辛，若能轉物，則同如來。",
+        "query": "转物",
+        "path": "/A2/B1/search-4",
+        "maxLength": 16
+      },
+      "expected": {
+        "normalizedText": "甲乙丙丁，戊己庚辛，若能转物，则同如来。",
+        "normalizedQuery": "转物",
+        "matches": true,
+        "resultPath": "/A2/B1/search-4",
+        "snippet": "若能轉物，則同如來。"
+      }
+    },
+    {
+      "name": "nonmatching text has no result location or snippet",
+      "input": {
+        "text": "如是我聞。",
+        "query": "菩提",
+        "path": "/A2/B1/search-5",
+        "maxLength": 50
+      },
+      "expected": {
+        "normalizedText": "如是我闻。",
+        "normalizedQuery": "菩提",
+        "matches": false,
+        "resultPath": null,
+        "snippet": null
+      }
+    }
+  ]
+}

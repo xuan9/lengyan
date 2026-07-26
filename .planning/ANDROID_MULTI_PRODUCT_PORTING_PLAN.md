@@ -67,7 +67,7 @@ Android 版本可以实施，也应从第一天按多经典产品建设。推荐
 - Apple primary 明确失败或 15 秒无进展时，只有用户主动播放才进入 Cloudflare fallback；取消、本机空间不足和静默预取失败不得触发公网回退。
 - 当前 Cloudflare Static Assets 会忽略 Range 并返回完整文件，且没有中国大陆 SLA。其 content-addressed key 与 bytes/SHA-256 校验可以复用，host 和下载实现不能作为 Android 主链路。
 - 楞严音频已拆为 product-neutral artifact、iOS/Android delivery 与 tooling input；`AudioAssets/audio-manifest.json` 及原 17 个 Swift/Node/Apple 下游文件均为逐字节兼容的生成输出。Android 只读取 artifact contract；其 delivery 当前明确为 `planned`，没有伪用 iOS Cloudflare 应急源。
-- Gate F2 的迁移层已落地：`Contracts/Schemas/`、四个 `Products/<id>/` 清单、楞严两套 `legacy-migration` 包、覆盖 1,669 个旧节点的完整 path map、分层 audio contracts、source/rights gate 和首批 behavior fixtures 可由 `./verify.sh contracts` 在 macOS/Linux 独立校验。它精确复现现有产品但不冒充 authoritative edition；Android 仍须等待剩余 fixture/iOS-adapter 工程审查完成，不能因已有 schema 就提前跳过 Gate。
+- Gate F2 的迁移层与本地工程 Gate 已完成：`Contracts/Schemas/`、四个 `Products/<id>/` 清单、楞严两套 `legacy-migration` 包、覆盖 1,669 个旧节点的完整 path map、分层 audio contracts、source/rights gate 和 8 类 behavior fixtures 可由 `./verify.sh contracts` 在 macOS/Linux 独立校验；iOS XCTest 已直接读取同一 JSON 执行生产 policy。它精确复现现有产品但不冒充 authoritative edition，Android 可进入 Phase 1，不能跳过自己的 fixture adapter 和 Gate C。
 - iOS 已取消技术性的音频存储设置页，改为按需准备和自动缓存/清理；其 fallback 当前无容量上限、按 28 天未访问淘汰，11 条全部缓存约 154MiB。这是现状而非 Android requirement，Phase 0 必须明确 Data Saver/Wi-Fi、单产品与全局 cache budget、清理和可选 pin。
 - 冷启动续播现在会即时持久化并保护异步 seek；Android 必须把“同一卷在进程重建后恢复且不会被初始 0 覆盖”加入 Media3 fixture 和杀进程测试。
 - 目录 disclosure state 现在还会跨重启持久化；Android 使用稳定 node ID 和产品命名空间保存，内容升级时过滤失效节点。
@@ -786,7 +786,7 @@ Android developer verification 已进入分阶段实施，2026-09-30 起先在�
 
 ## 20. 分阶段实施计划
 
-本计划以跨平台主计划 **Gate F2 已通过**为前置：可信 CI、schema v1、stable IDs、可逆的楞严 `legacy-migration` 内容、完整 path map、audio artifact manifest 和共享 fixtures 已存在。Android 不重复发明这些源文件，只实现 Android adapter 和测试 runner。权威来源、权利与逐字校勘仍是发布 Gate，但不阻止以锁定的现有正文快照开展兼容工程。
+本计划的跨平台主计划 **Gate F2 本地工程条件已通过**：schema v1、stable IDs、可逆的楞严 `legacy-migration` 内容、完整 path map、分层 audio contracts、8 类共享 fixtures 和 iOS adapter 已存在。Android 不重复发明这些源文件，只实现 Android adapter 和测试 runner。F1 的托管 CI 首跑证据仍单独追踪；权威来源、权利与逐字校勘仍是发布 Gate，但不阻止以锁定的现有正文快照开展兼容工程。
 
 时间是假设“一名产品负责人 + Codex 持续开发 + 必要人工内容/真机复核”的日历估算，不是纯编码小时，也**不包含 Foundation 0-2**。阶段可有限重叠，但质量 Gate 不可跳过。
 

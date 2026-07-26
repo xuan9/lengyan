@@ -1027,7 +1027,158 @@ function expectedDeepLink(input) {
   return { accepted: false };
 }
 
-function validateBehaviorFixture(document, issues) {
+function uniqueInOrder(values) {
+  const seen = new Set();
+  return values.filter((value) => {
+    if (seen.has(value)) {
+      return false;
+    }
+    seen.add(value);
+    return true;
+  });
+}
+
+function localDateKey(instant, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    calendar: "gregory",
+    numberingSystem: "latn",
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date(instant));
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
+function fnv1a64(value) {
+  let hash = 14_695_981_039_346_656_037n;
+  for (const byte of Buffer.from(value, "utf8")) {
+    hash ^= BigInt(byte);
+    hash = BigInt.asUintN(64, hash * 1_099_511_628_211n);
+  }
+  return hash;
+}
+
+function expectedDailyVerseSelection(input) {
+  const localDate = localDateKey(input.instant, input.timeZone);
+  const uniqueCandidates = uniqueInOrder(input.candidateIDs.filter(Boolean));
+  const filtered = uniqueCandidates.filter((candidate) => candidate !== input.excludedID);
+  const eligible = filtered.length > 0 ? filtered : uniqueCandidates;
+  const dayNumber = Math.floor(Date.parse(`${localDate}T00:00:00Z`) / 86_400_000);
+  const dayIndex = ((dayNumber % eligible.length) + eligible.length) % eligible.length;
+  const offset = Number(
+    fnv1a64(`${input.productID}\0${input.contentVersion}`) % BigInt(eligible.length)
+  );
+  return {
+    localDate,
+    selectedID: eligible[(dayIndex + offset) % eligible.length]
+  };
+}
+
+function expectedReadingResume(input) {
+  if (input.mode === "chapter") {
+    if (!Number.isInteger(input.chapter) || input.chapter < 0 || input.chapter >= 10) {
+      return { target: null };
+    }
+    const offset = Number.isFinite(input.chapterOffset) && input.chapterOffset > 0
+      ? input.chapterOffset
+      : 0;
+    return {
+      target: {
+        mode: "chapter",
+        chapter: input.chapter,
+        chapterOffset: offset
+      }
+    };
+  }
+  if (!input.path || input.path === "/") {
+    return { target: null };
+  }
+  if (input.mode === "paged") {
+    return {
+      target: {
+        mode: "paged",
+        path: input.path,
+        pageIndex: Math.max(input.pageIndex ?? 0, 0)
+      }
+    };
+  }
+  return { target: { mode: "tree", path: input.path } };
+}
+
+function expectedLegacyFavorites(input) {
+  const source = input.storedUserLikes ?? input.legacyLikes.filter(
+    (path) => !input.curatedLegacyPaths.includes(path)
+  );
+  return { userLikes: uniqueInOrder(source) };
+}
+
+function expectedLegacyLocation(input, legacyLocationsByProduct) {
+  if (!input.legacyPath || input.legacyPath === "/") {
+    return { status: "invalid", sectionID: null, paragraphID: null };
+  }
+  const location = legacyLocationsByProduct.get(input.productID)?.get(input.legacyPath);
+  if (!location) {
+    return { status: "unresolved", sectionID: null, paragraphID: null };
+  }
+  return {
+    status: "mapped",
+    sectionID: location.sectionID,
+    paragraphID: location.directParagraphIDs[0] ?? location.firstDescendantParagraphID ?? null
+  };
+}
+
+function validateSearchFixtureCase(entry, issues, label) {
+  const { input, expected } = entry;
+  const hasResult = typeof expected.resultPath === "string"
+    && typeof expected.snippet === "string";
+  requireCondition(
+    expected.matches === hasResult,
+    issues,
+    label,
+    `${entry.name} search match/result fields disagree`
+  );
+  if (expected.matches) {
+    if (!hasResult) {
+      return;
+    }
+    requireCondition(
+      expected.resultPath === input.path,
+      issues,
+      label,
+      `${entry.name} search result path differs from its source path`
+    );
+    requireCondition(
+      expected.normalizedQuery.length > 0 && expected.normalizedText.includes(expected.normalizedQuery),
+      issues,
+      label,
+      `${entry.name} normalized search strings do not contain the match`
+    );
+    requireCondition(
+      !expected.snippet.includes("\n") && expected.snippet.length <= input.maxLength + 3,
+      issues,
+      label,
+      `${entry.name} search snippet is not display-safe`
+    );
+  } else {
+    requireCondition(
+      expected.resultPath === null && expected.snippet === null,
+      issues,
+      label,
+      `${entry.name} nonmatching search case still has a result`
+    );
+    requireCondition(
+      expected.normalizedQuery.length > 0
+        && !expected.normalizedText.includes(expected.normalizedQuery),
+      issues,
+      label,
+      `${entry.name} is marked nonmatching but normalized text contains the query`
+    );
+  }
+}
+
+function validateBehaviorFixture(document, issues, { legacyLocationsByProduct }) {
   const fixture = document.data;
   assertUnique(fixture.cases.map((entry) => entry.name), issues, document.label, "behavior case name");
   for (const entry of fixture.cases) {
@@ -1055,6 +1206,30 @@ function validateBehaviorFixture(document, issues) {
         break;
       case "deep-link":
         expected = expectedDeepLink(entry.input);
+        break;
+      case "search-text":
+        validateSearchFixtureCase(entry, issues, document.label);
+        continue;
+      case "daily-verse-selection":
+        try {
+          expected = expectedDailyVerseSelection(entry.input);
+        } catch (error) {
+          addIssue(
+            issues,
+            document.label,
+            `${entry.name} cannot evaluate date/time zone (${error.message})`
+          );
+          continue;
+        }
+        break;
+      case "reading-resume":
+        expected = expectedReadingResume(entry.input);
+        break;
+      case "legacy-favorites-migration":
+        expected = expectedLegacyFavorites(entry.input);
+        break;
+      case "legacy-location-resolution":
+        expected = expectedLegacyLocation(entry.input, legacyLocationsByProduct);
         break;
       default:
         continue;
@@ -1117,6 +1292,7 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
   let audioDeliveryCount = 0;
   let audioBuildInputCount = 0;
   let legacyPathMappingCount = 0;
+  const legacyLocationsByProduct = new Map();
 
   for (const entry of productEntries) {
     const productDirectory = join(productsDirectory, entry.name);
@@ -1271,6 +1447,10 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
         ? await readJSON(legacyMapPath, root, issues, readCache)
         : null;
       if (validateWithSchema(ajv, schemaIDs.legacyMap, legacyDocument, issues)) {
+        legacyLocationsByProduct.set(
+          product.productID,
+          new Map(legacyDocument.data.paths.map((entry) => [entry.legacyPath, entry]))
+        );
         productLegacyPathCount = validateLegacyMapSemantics({
           legacyDocument,
           book,
@@ -1388,7 +1568,7 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
     const fixtureDocument = await readJSON(join(fixturesDirectory, entry.name), root, issues, readCache);
     if (validateWithSchema(ajv, schemaIDs.behavior, fixtureDocument, issues)) {
       fixtureIDs.push(fixtureDocument.data.fixtureID);
-      validateBehaviorFixture(fixtureDocument, issues);
+      validateBehaviorFixture(fixtureDocument, issues, { legacyLocationsByProduct });
     }
   }
   assertUnique(fixtureIDs, issues, "Contracts/BehaviorFixtures", "fixtureID");

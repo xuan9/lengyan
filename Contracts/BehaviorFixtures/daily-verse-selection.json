@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "fixtureID": "shared.daily-verse-selection.v1",
+  "behavior": "daily-verse-selection",
+  "cases": [
+    {
+      "name": "Shanghai local date advances after its midnight",
+      "input": {
+        "productID": "lengyan",
+        "contentVersion": "legacy-1",
+        "instant": "2026-07-25T16:30:00Z",
+        "timeZone": "Asia/Shanghai",
+        "candidateIDs": [
+          "p1",
+          "p2",
+          "p3",
+          "p4"
+        ],
+        "excludedID": null
+      },
+      "expected": {
+        "localDate": "2026-07-26",
+        "selectedID": "p1"
+      }
+    },
+    {
+      "name": "the same instant still belongs to the prior Oslo local date",
+      "input": {
+        "productID": "lengyan",
+        "contentVersion": "legacy-1",
+        "instant": "2026-07-25T16:30:00Z",
+        "timeZone": "Europe/Oslo",
+        "candidateIDs": [
+          "p1",
+          "p2",
+          "p3",
+          "p4"
+        ],
+        "excludedID": null
+      },
+      "expected": {
+        "localDate": "2026-07-25",
+        "selectedID": "p4"
+      }
+    },
+    {
+      "name": "different instants on one local date keep one selection",
+      "input": {
+        "productID": "lengyan",
+        "contentVersion": "legacy-1",
+        "instant": "2026-07-26T15:00:00Z",
+        "timeZone": "Asia/Shanghai",
+        "candidateIDs": [
+          "p1",
+          "p2",
+          "p3",
+          "p4"
+        ],
+        "excludedID": null
+      },
+      "expected": {
+        "localDate": "2026-07-26",
+        "selectedID": "p1"
+      }
+    },
+    {
+      "name": "content version participates in deterministic rotation",
+      "input": {
+        "productID": "lengyan",
+        "contentVersion": "legacy-2",
+        "instant": "2026-07-25T16:30:00Z",
+        "timeZone": "Asia/Shanghai",
+        "candidateIDs": [
+          "p1",
+          "p2",
+          "p3",
+          "p4"
+        ],
+        "excludedID": null
+      },
+      "expected": {
+        "localDate": "2026-07-26",
+        "selectedID": "p2"
+      }
+    },
+    {
+      "name": "last read candidate is excluded when alternatives exist",
+      "input": {
+        "productID": "lengyan",
+        "contentVersion": "legacy-1",
+        "instant": "2026-07-25T16:30:00Z",
+        "timeZone": "Asia/Shanghai",
+        "candidateIDs": [
+          "p1",
+          "p2",
+          "p3",
+          "p4"
+        ],
+        "excludedID": "p1"
+      },
+      "expected": {
+        "localDate": "2026-07-26",
+        "selectedID": "p2"
+      }
+    },
+    {
+      "name": "duplicate only candidate remains available after exclusion",
+      "input": {
+        "productID": "lengyan",
+        "contentVersion": "legacy-1",
+        "instant": "2026-07-25T16:30:00Z",
+        "timeZone": "Asia/Shanghai",
+        "candidateIDs": [
+          "only",
+          "only"
+        ],
+        "excludedID": "only"
+      },
+      "expected": {
+        "localDate": "2026-07-26",
+        "selectedID": "only"
+      }
+    }
+  ]
+}

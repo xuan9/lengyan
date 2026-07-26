@@ -20,6 +20,85 @@ struct DailyVerse {
     let date: Date             // 对应日期
 }
 
+enum DailyVerseSelectionPolicy {
+    static func localDateKey(for date: Date, timeZone: TimeZone) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_US_POSIX")
+        calendar.timeZone = timeZone
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        return String(
+            format: "%04d-%02d-%02d",
+            components.year ?? 0,
+            components.month ?? 0,
+            components.day ?? 0
+        )
+    }
+
+    static func selectedID(
+        productID: String,
+        contentVersion: String,
+        date: Date,
+        timeZone: TimeZone,
+        candidateIDs: [String],
+        excluding excludedID: String?
+    ) -> String? {
+        var seen = Set<String>()
+        let uniqueCandidates = candidateIDs.filter {
+            !$0.isEmpty && seen.insert($0).inserted
+        }
+        guard !uniqueCandidates.isEmpty else { return nil }
+
+        let filtered = uniqueCandidates.filter { $0 != excludedID }
+        let eligible = filtered.isEmpty ? uniqueCandidates : filtered
+        let day = localDayNumber(for: date, timeZone: timeZone)
+        let dayIndex = positiveModulo(day, eligible.count)
+        let versionOffset = stableOffset(
+            productID: productID,
+            contentVersion: contentVersion,
+            count: eligible.count
+        )
+        return eligible[(dayIndex + versionOffset) % eligible.count]
+    }
+
+    private static func localDayNumber(for date: Date, timeZone: TimeZone) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_US_POSIX")
+        calendar.timeZone = timeZone
+        let startOfDay = calendar.startOfDay(for: date)
+        let epoch = calendar.date(from: DateComponents(
+            calendar: calendar,
+            timeZone: timeZone,
+            year: 1970,
+            month: 1,
+            day: 1
+        )) ?? Date(timeIntervalSince1970: 0)
+        return calendar.dateComponents([.day], from: epoch, to: startOfDay).day ?? 0
+    }
+
+    private static func positiveModulo(_ value: Int, _ divisor: Int) -> Int {
+        let remainder = value % divisor
+        return remainder >= 0 ? remainder : remainder + divisor
+    }
+
+    private static func stableOffset(
+        productID: String,
+        contentVersion: String,
+        count: Int
+    ) -> Int {
+        var hash: UInt64 = 14_695_981_039_346_656_037
+        for byte in "\(productID)\u{0}\(contentVersion)".utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 1_099_511_628_211
+        }
+        return Int(hash % UInt64(count))
+    }
+}
+
+enum LengyanDailyVerseConfiguration {
+    static let productID = "lengyan"
+    static let contentVersion = "legacy-1"
+}
+
 /// 每日经文提供者
 /// 基于日期的确定性轮换算法，同一天总是返回同一句经文
 final class DailyVerseProvider {
@@ -151,27 +230,32 @@ final class DailyVerseProvider {
         Self.scheduleLock.lock()
         defer { Self.scheduleLock.unlock() }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateStr = formatter.string(from: date)
+        let timeZone = TimeZone.current
+        let dateStr = DailyVerseSelectionPolicy.localDateKey(
+            for: date,
+            timeZone: timeZone
+        )
         
         var schedule = self.scheduledVerses
         if let savedPath = schedule[dateStr] {
             return savedPath
         }
-        
-        var pool = buildPool(userLikes: selection.userLikes)
-        if let lastRead = selection.lastReadPath {
-            pool.removeAll { $0 == lastRead }
-        }
-        if pool.isEmpty {
-            pool = [DEFAULT_STARTS.first ?? "/A1/B1/C1"]
+        let legacyDateStr = legacyScheduleDateKey(for: date)
+        if legacyDateStr != dateStr, let savedPath = schedule[legacyDateStr] {
+            schedule[dateStr] = savedPath
+            self.scheduledVerses = schedule
+            return savedPath
         }
         
-        // 使用自 Unix 纪元以来的天数，无缝跨越月份
-        let epochDays = Int(date.timeIntervalSince1970 / 86400)
-        let idx = epochDays % pool.count
-        let path = pool[idx]
+        let pool = buildPool(userLikes: selection.userLikes)
+        let path = DailyVerseSelectionPolicy.selectedID(
+            productID: LengyanDailyVerseConfiguration.productID,
+            contentVersion: LengyanDailyVerseConfiguration.contentVersion,
+            date: date,
+            timeZone: timeZone,
+            candidateIDs: pool,
+            excluding: selection.lastReadPath
+        ) ?? DEFAULT_STARTS.first ?? "/A1/B1/C1"
         
         schedule[dateStr] = path
         
@@ -184,6 +268,12 @@ final class DailyVerseProvider {
         self.scheduledVerses = schedule
         
         return path
+    }
+
+    private func legacyScheduleDateKey(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
     }
 
     // MARK: - Core Selection Logic
@@ -265,17 +355,6 @@ final class DailyVerseProvider {
             userLikes: Prefers.shared.userLikes,
             lastReadPath: lastReadPath
         )
-    }
-
-    // MARK: - Date Hashing
-
-    /// 计算自 Unix 纪元以来的天数，保证同一天返回相同索引
-    private func dayIndex(for date: Date) -> Int {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: date)
-        let epoch = calendar.startOfDay(for: Date(timeIntervalSince1970: 0))
-        let days = calendar.dateComponents([.day], from: epoch, to: startOfDay).day ?? 0
-        return abs(days)
     }
 
     // MARK: - Text Processing

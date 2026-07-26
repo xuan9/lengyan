@@ -19,6 +19,101 @@ struct MergedSearchResult: Identifiable {
     var hasSutra: Bool { sutraMatch != nil }
 }
 
+enum SearchTextPolicy {
+    static func normalized(_ text: String) -> String {
+        text.simplified
+    }
+
+    static func matches(text: String, query: String) -> Bool {
+        let normalizedQuery = normalized(query)
+        return matches(text: text, normalizedQuery: normalizedQuery)
+    }
+
+    static func matches(text: String, normalizedQuery: String) -> Bool {
+        !normalizedQuery.isEmpty && normalized(text).contains(normalizedQuery)
+    }
+
+    static func snippet(from text: String, query: String, maxLength: Int) -> String {
+        let normalizedText = normalized(text)
+        let normalizedQuery = normalized(query)
+
+        guard let range = normalizedText.range(of: normalizedQuery) else {
+            return String(text.prefix(maxLength))
+        }
+
+        let startDistance = normalizedText.distance(
+            from: normalizedText.startIndex,
+            to: range.lowerBound
+        )
+        let endDistance = normalizedText.distance(
+            from: normalizedText.startIndex,
+            to: range.upperBound
+        )
+        let originalRangeLower = text.index(text.startIndex, offsetBy: startDistance)
+        let originalRangeUpper = text.index(text.startIndex, offsetBy: endDistance)
+        let start = text.index(
+            originalRangeLower,
+            offsetBy: -maxLength / 3,
+            limitedBy: text.startIndex
+        ) ?? text.startIndex
+        let end = text.index(
+            originalRangeUpper,
+            offsetBy: maxLength * 2 / 3,
+            limitedBy: text.endIndex
+        ) ?? text.endIndex
+        let raw = String(text[start..<end])
+        let cleaned = raw.replacingOccurrences(of: "\n", with: " ")
+
+        var adjusted = start > text.startIndex
+            ? smartTruncateFront(cleaned, query: query)
+            : cleaned
+        adjusted = trimLeadingPunctuation(adjusted)
+
+        if adjusted.count > maxLength {
+            return String(adjusted.prefix(maxLength)) + "..."
+        }
+        return adjusted
+    }
+
+    private static func smartTruncateFront(_ text: String, query: String) -> String {
+        let breakCharacters: Set<Character> = [
+            "，", "。", "、", "；", "：", "！", "？", "…", "—", "（", "《", "」", "』", "\\", " "
+        ]
+        let normalizedText = normalized(text)
+        let normalizedQuery = normalized(query)
+
+        guard let matchRange = normalizedText.range(of: normalizedQuery) else {
+            return text
+        }
+        let beforeMatch = normalizedText[normalizedText.startIndex..<matchRange.lowerBound]
+        var lastPunctuation: String.Index?
+        for index in beforeMatch.indices where breakCharacters.contains(beforeMatch[index]) {
+            let afterPunctuation = normalizedText.index(after: index)
+            if afterPunctuation <= matchRange.lowerBound {
+                lastPunctuation = afterPunctuation
+            }
+        }
+
+        guard let cut = lastPunctuation, cut < matchRange.lowerBound else {
+            return text
+        }
+        let distance = normalizedText.distance(from: normalizedText.startIndex, to: cut)
+        let originalCutIndex = text.index(text.startIndex, offsetBy: distance)
+        return String(text[originalCutIndex...])
+    }
+
+    private static func trimLeadingPunctuation(_ text: String) -> String {
+        let punctuation: Set<Character> = [
+            "，", "。", "、", "；", "：", "！", "？", "…", "—", "）", "」", "』", "》", " ", ","
+        ]
+        var index = text.startIndex
+        while index < text.endIndex, punctuation.contains(text[index]) {
+            index = text.index(after: index)
+        }
+        return String(text[index...])
+    }
+}
+
 class SearchService {
 
     static let shared = SearchService()
@@ -28,7 +123,7 @@ class SearchService {
     func mergedSearch(query: String) -> [MergedSearchResult] {
         guard !query.isEmpty, Book.shared.loaded else { return [] }
 
-        let simplifiedQuery = query.simplified
+        let normalizedQuery = SearchTextPolicy.normalized(query)
         var outlineByPath: [String: String] = [:]
         var sutraByPath: [String: String] = [:]
 
@@ -36,7 +131,7 @@ class SearchService {
         if let index = Book.shared.index {
             for item in index {
                 guard let name = item["name"], let path = item["path"] else { continue }
-                if name.simplified.contains(simplifiedQuery) {
+                if SearchTextPolicy.matches(text: name, normalizedQuery: normalizedQuery) {
                     outlineByPath[path] = snippet(from: name, query: query, maxLen: 50)
                 }
             }
@@ -47,7 +142,7 @@ class SearchService {
             for (path, sections) in contents {
                 for section in sections {
                     guard section["type"] == "sutra", let text = section["content"] else { continue }
-                    if text.simplified.contains(simplifiedQuery) {
+                    if SearchTextPolicy.matches(text: text, normalizedQuery: normalizedQuery) {
                         sutraByPath[path] = snippet(from: text, query: query, maxLen: 50)
                         break
                     }
@@ -91,80 +186,7 @@ class SearchService {
 
     /// 截取匹配关键词周围的文本片段，智能断句
     private func snippet(from text: String, query: String, maxLen: Int) -> String {
-        let simplifiedText = text.simplified
-        let simplifiedQuery = query.simplified
-
-        guard let range = simplifiedText.range(of: simplifiedQuery) else {
-            return String(text.prefix(maxLen))
-        }
-
-        let startDist = simplifiedText.distance(from: simplifiedText.startIndex, to: range.lowerBound)
-        let endDist = simplifiedText.distance(from: simplifiedText.startIndex, to: range.upperBound)
-
-        let origRangeLower = text.index(text.startIndex, offsetBy: startDist)
-        let origRangeUpper = text.index(text.startIndex, offsetBy: endDist)
-
-        let start = text.index(origRangeLower, offsetBy: -maxLen/3, limitedBy: text.startIndex) ?? text.startIndex
-        let end = text.index(origRangeUpper, offsetBy: maxLen * 2/3, limitedBy: text.endIndex) ?? text.endIndex
-        let raw = String(text[start..<end])
-        let cleaned = raw.replacingOccurrences(of: "\n", with: " ")
-
-        // 智能断句：如果截取开头不是原文开头，找到最近的自然断点
-        var adjusted: String
-        if start > text.startIndex {
-            adjusted = smartTruncateFront(cleaned, query: query)
-        } else {
-            adjusted = cleaned
-        }
-
-        // 兜底：去掉开头残留的标点符号
-        adjusted = trimLeadingPunctuation(adjusted)
-
-        if adjusted.count > maxLen {
-            return String(adjusted.prefix(maxLen)) + "..."
-        }
-        return adjusted
-    }
-
-    /// 在匹配词之前找到最近的自然断句点（中文标点后），从标点后开始截取
-    private func smartTruncateFront(_ text: String, query: String) -> String {
-        // 中文断句标点
-        let breakChars: Set<Character> = ["，", "。", "、", "；", "：", "！", "？", "…", "—", "（", "《", "」", "』", "\\", " "]
-
-        let simplifiedText = text.simplified
-        let simplifiedQuery = query.simplified
-
-        guard let matchRange = simplifiedText.range(of: simplifiedQuery) else { return text }
-        let beforeMatch = simplifiedText[simplifiedText.startIndex..<matchRange.lowerBound]
-
-        // 在匹配词之前，找最后一个标点位置作为截断点
-        var lastPunctuation: String.Index?
-        for idx in beforeMatch.indices {
-            if breakChars.contains(beforeMatch[idx]) {
-                let afterPunct = simplifiedText.index(after: idx)
-                if afterPunct <= matchRange.lowerBound {
-                    lastPunctuation = afterPunct
-                }
-            }
-        }
-
-        if let cut = lastPunctuation, cut < matchRange.lowerBound {
-            let dist = simplifiedText.distance(from: simplifiedText.startIndex, to: cut)
-            let origCutIndex = text.index(text.startIndex, offsetBy: dist)
-            return String(text[origCutIndex...])
-        }
-        // 没找到合适的标点，保留原始截断
-        return text
-    }
-
-    /// 去掉字符串开头的标点符号和空格
-    private func trimLeadingPunctuation(_ text: String) -> String {
-        let punctuation: Set<Character> = ["，", "。", "、", "；", "：", "！", "？", "…", "—", "）", "」", "』", "》", " ", ","]
-        var idx = text.startIndex
-        while idx < text.endIndex, punctuation.contains(text[idx]) {
-            idx = text.index(after: idx)
-        }
-        return String(text[idx...])
+        SearchTextPolicy.snippet(from: text, query: query, maxLength: maxLen)
     }
 
     /// 获取父级科判名称作为出处

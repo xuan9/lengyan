@@ -12,6 +12,21 @@
     },
     {
       "$ref": "#/$defs/deepLink"
+    },
+    {
+      "$ref": "#/$defs/searchText"
+    },
+    {
+      "$ref": "#/$defs/dailyVerseSelection"
+    },
+    {
+      "$ref": "#/$defs/readingResume"
+    },
+    {
+      "$ref": "#/$defs/legacyFavoritesMigration"
+    },
+    {
+      "$ref": "#/$defs/legacyLocationResolution"
     }
   ],
   "$defs": {
@@ -287,6 +302,516 @@
             "legacyPath": {
               "type": "string",
               "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "searchText": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/fixtureHeader"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "behavior": {
+              "const": "search-text"
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/searchTextCase"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "searchTextCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "query",
+            "path",
+            "maxLength"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "query": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxLength": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 200
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "normalizedText",
+            "normalizedQuery",
+            "matches",
+            "resultPath",
+            "snippet"
+          ],
+          "properties": {
+            "normalizedText": {
+              "type": "string"
+            },
+            "normalizedQuery": {
+              "type": "string"
+            },
+            "matches": {
+              "type": "boolean"
+            },
+            "resultPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "snippet": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "dailyVerseSelection": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/fixtureHeader"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "behavior": {
+              "const": "daily-verse-selection"
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dailyVerseSelectionCase"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "dailyVerseSelectionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "productID",
+            "contentVersion",
+            "instant",
+            "timeZone",
+            "candidateIDs",
+            "excludedID"
+          ],
+          "properties": {
+            "productID": {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/productID"
+            },
+            "contentVersion": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "instant": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+            },
+            "timeZone": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidateIDs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "excludedID": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "localDate",
+            "selectedID"
+          ],
+          "properties": {
+            "localDate": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            "selectedID": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "readingResume": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/fixtureHeader"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "behavior": {
+              "const": "reading-resume"
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/readingResumeCase"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "readingResumeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "path",
+            "pageIndex",
+            "chapter",
+            "chapterOffset"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "chapter",
+                "paged",
+                "tree"
+              ]
+            },
+            "path": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "pageIndex": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "chapter": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "chapterOffset": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "target"
+          ],
+          "properties": {
+            "target": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/readingResumeTarget"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "readingResumeTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "chapter",
+            "paged",
+            "tree"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pageIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chapter": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "chapterOffset": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "legacyFavoritesMigration": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/fixtureHeader"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "behavior": {
+              "const": "legacy-favorites-migration"
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/legacyFavoritesMigrationCase"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "legacyFavoritesMigrationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "legacyLikes",
+            "storedUserLikes",
+            "curatedLegacyPaths"
+          ],
+          "properties": {
+            "legacyLikes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "storedUserLikes": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "curatedLegacyPaths": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "userLikes"
+          ],
+          "properties": {
+            "userLikes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "legacyLocationResolution": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/fixtureHeader"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "behavior": {
+              "const": "legacy-location-resolution"
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/legacyLocationResolutionCase"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "legacyLocationResolutionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "productID",
+            "legacyPath",
+            "usage"
+          ],
+          "properties": {
+            "productID": {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/productID"
+            },
+            "legacyPath": {
+              "type": "string"
+            },
+            "usage": {
+              "enum": [
+                "favorite",
+                "resume"
+              ]
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "sectionID",
+            "paragraphID"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "mapped",
+                "invalid",
+                "unresolved"
+              ]
+            },
+            "sectionID": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "paragraphID": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         }

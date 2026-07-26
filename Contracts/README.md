@@ -26,6 +26,14 @@ do not belong here.
 - `Schemas/behavior-fixture.schema.json`: cross-platform behavior examples.
 - `BehaviorFixtures/`: accepted behavior that both native platforms must run.
 
+The eight v1 behavior fixtures cover audio resume, share filenames, deep links,
+Traditional/Simplified search and snippets, time-zone-aware daily selection,
+reading resume normalization, legacy favorite migration, and legacy path to
+stable location resolution. `lengyanTests/BehaviorContractTests.swift` reads
+these checked-in JSON files directly and runs them against the production iOS
+policies. Android JVM tests must consume the same files rather than copying
+their cases into Kotlin source.
+
 The independent validator is in `tools/content-validator/` and runs through:
 
 ```bash

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "fixtureID": "lengyan.legacy-location-resolution.v1",
+  "behavior": "legacy-location-resolution",
+  "cases": [
+    {
+      "name": "leaf favorite maps to its stable section and direct paragraph",
+      "input": {
+        "productID": "lengyan",
+        "legacyPath": "/A1/B1/C1",
+        "usage": "favorite"
+      },
+      "expected": {
+        "status": "mapped",
+        "sectionID": "lengyan.s000004",
+        "paragraphID": "lengyan.p000001"
+      }
+    },
+    {
+      "name": "branch resume maps to the first descendant paragraph",
+      "input": {
+        "productID": "lengyan",
+        "legacyPath": "/A1/B1",
+        "usage": "resume"
+      },
+      "expected": {
+        "status": "mapped",
+        "sectionID": "lengyan.s000003",
+        "paragraphID": "lengyan.p000001"
+      }
+    },
+    {
+      "name": "existing curated path maps without inventing a new locator",
+      "input": {
+        "productID": "lengyan",
+        "legacyPath": "/A2/B1/C2/D1/E2/F1/G1/H1/I1/J2",
+        "usage": "favorite"
+      },
+      "expected": {
+        "status": "mapped",
+        "sectionID": "lengyan.s000037",
+        "paragraphID": "lengyan.p000024"
+      }
+    },
+    {
+      "name": "late branch remains addressable near the end of the corpus",
+      "input": {
+        "productID": "lengyan",
+        "legacyPath": "/A2/B2/C2/D2/E2/F1/G2",
+        "usage": "resume"
+      },
+      "expected": {
+        "status": "mapped",
+        "sectionID": "lengyan.s001641",
+        "paragraphID": "lengyan.p001241"
+      }
+    },
+    {
+      "name": "outline root is invalid for persisted user state",
+      "input": {
+        "productID": "lengyan",
+        "legacyPath": "",
+        "usage": "resume"
+      },
+      "expected": {
+        "status": "invalid",
+        "sectionID": null,
+        "paragraphID": null
+      }
+    },
+    {
+      "name": "unknown legacy path is retained as unresolved instead of guessed",
+      "input": {
+        "productID": "lengyan",
+        "legacyPath": "/retired/path",
+        "usage": "favorite"
+      },
+      "expected": {
+        "status": "unresolved",
+        "sectionID": null,
+        "paragraphID": null
+      }
+    }
+  ]
+}
