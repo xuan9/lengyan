@@ -61,9 +61,9 @@ class HomeLargeTextTest {
             }
         }
 
-        composeRule.onNodeWithText("選擇卷目").assertIsDisplayed()
+        composeRule.onNodeWithText("經文目錄").assertIsDisplayed()
         composeRule.onNodeWithText("搜索").assertIsDisplayed()
-        val volumeBounds = composeRule.onNodeWithTag("home.volumes")
+        val volumeBounds = composeRule.onNodeWithTag("home.directory")
             .assertIsDisplayed()
             .fetchSemanticsNode()
             .boundsInRoot

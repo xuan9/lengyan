@@ -1,6 +1,7 @@
 package org.fuxuan.classics.data.repository
 
 import kotlinx.coroutines.runBlocking
+import org.fuxuan.classics.core.behavior.OutlineDisclosurePolicy
 import org.fuxuan.classics.core.behavior.ParagraphTextAnchor
 import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
 import org.fuxuan.classics.core.behavior.SearchDocumentKind
@@ -159,5 +160,23 @@ class LengyanContractRepositoryTest {
                 content.firstParagraphInSubtree(section.sectionID),
             )
         }
+    }
+
+    @Test
+    fun fullyExpandedOutlineReachesEveryRealLeafExactlyOnce() = runBlocking {
+        val content = DefaultBookRepository(source).content("zh-Hant")
+        val rows = OutlineDisclosurePolicy.visibleRows(
+            content = content,
+            expandedSectionIDs = OutlineDisclosurePolicy.expandableSectionIDs(content),
+        )
+        val leafSectionIDs = content.leafSections().map { it.sectionID }
+        val visibleLeafSectionIDs = rows
+            .filterNot { it.hasChildren }
+            .map { it.section.sectionID }
+
+        assertEquals(content.sections.size, rows.size)
+        assertEquals(leafSectionIDs, visibleLeafSectionIDs)
+        assertEquals(1_155, visibleLeafSectionIDs.size)
+        assertEquals(visibleLeafSectionIDs.size, visibleLeafSectionIDs.toSet().size)
     }
 }

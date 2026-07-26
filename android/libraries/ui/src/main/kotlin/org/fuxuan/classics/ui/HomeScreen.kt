@@ -133,7 +133,7 @@ internal fun HomeScreen(
                         onClick = onBrowseVolumes,
                         modifier = Modifier
                             .weight(1f)
-                            .testTag("home.volumes")
+                            .testTag("home.directory")
                             .height(secondaryActionHeight),
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = secondaryActionPadding,
@@ -144,7 +144,7 @@ internal fun HomeScreen(
                             modifier = Modifier.padding(end = 8.dp),
                         )
                         Text(
-                            text = strings.chooseVolume,
+                            text = strings.scriptureDirectory,
                             maxLines = 2,
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.sp),

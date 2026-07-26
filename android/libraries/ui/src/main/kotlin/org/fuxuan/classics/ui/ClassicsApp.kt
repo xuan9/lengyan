@@ -41,6 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.fuxuan.classics.core.AppContainer
 import org.fuxuan.classics.core.behavior.ParagraphTextAnchor
+import org.fuxuan.classics.core.behavior.OutlineDisclosurePolicy
 import org.fuxuan.classics.core.behavior.ReadingAnchorOrigin
 import org.fuxuan.classics.core.behavior.ReadingAnchorSelectionPolicy
 import org.fuxuan.classics.core.behavior.ReadingMode
@@ -173,6 +174,17 @@ private fun LoadedContentNavigation(
     val resumeRoute = remember(loaded, preferences.readingProgress) {
         loaded.resumeRoute(preferences.readingProgress)
     }
+    val expandedSectionIDs = remember(loaded.content, preferences.expandedSectionIDs) {
+        OutlineDisclosurePolicy.sanitizeExpandedSectionIDs(
+            content = loaded.content,
+            sectionIDs = preferences.expandedSectionIDs,
+        )
+    }
+    LaunchedEffect(loaded.content, preferences.expandedSectionIDs, expandedSectionIDs) {
+        if (expandedSectionIDs != preferences.expandedSectionIDs) {
+            container.userPreferencesRepository.setExpandedSectionIDs(expandedSectionIDs)
+        }
+    }
     val favoritesFlow = remember(container.favoriteRepository, loaded.book.editionID) {
         container.favoriteRepository.favorites(loaded.book.editionID)
     }
@@ -257,16 +269,54 @@ private fun LoadedContentNavigation(
                         )
                     }
                     entry<VolumeListRoute> {
-                        VolumeListScreen(
+                        ContentBrowserScreen(
                             content = loaded.content,
                             strings = strings,
                             resumeRoute = resumeRoute,
+                            expandedSectionIDs = expandedSectionIDs,
+                            onExpandedSectionIDsChanged = { sectionIDs ->
+                                navigationScope.launch {
+                                    container.userPreferencesRepository.setExpandedSectionIDs(
+                                        OutlineDisclosurePolicy.sanitizeExpandedSectionIDs(
+                                            content = loaded.content,
+                                            sectionIDs = sectionIDs,
+                                        ),
+                                    )
+                                }
+                            },
                             onBack = { readBackStack.removeLastOrNull() },
                             onOpenVolume = { volumeID ->
                                 readBackStack.add(
                                     resumeRoute?.takeIf { it.volumeID == volumeID }
                                         ?: VolumeReaderRoute(volumeID),
                                 )
+                            },
+                            onOpenParagraph = { paragraph ->
+                                val volumeID = paragraph.volumeID
+                                if (volumeID != null) {
+                                    val openedAt = timestampAfter(
+                                        resumeRoute?.requestedAtEpochMilliseconds,
+                                    )
+                                    readBackStack.add(
+                                        VolumeReaderRoute(
+                                            volumeID = volumeID,
+                                            paragraphID = paragraph.paragraphID,
+                                            requestedAtEpochMilliseconds = openedAt,
+                                        ),
+                                    )
+                                    navigationScope.launch {
+                                        container.userPreferencesRepository.saveReadingProgress(
+                                            ReadingProgress(
+                                                productID = loaded.product.productID,
+                                                editionID = loaded.book.editionID,
+                                                paragraphID = paragraph.paragraphID,
+                                                characterOffset = 0,
+                                                mode = ReadingMode.CHAPTER,
+                                                updatedAtEpochMilliseconds = openedAt,
+                                            ),
+                                        )
+                                    }
+                                }
                             },
                         )
                     }

@@ -3,15 +3,18 @@ package org.fuxuan.lengyan
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -27,6 +30,7 @@ import org.fuxuan.classics.core.persistence.Favorite
 import org.fuxuan.classics.core.persistence.ReadingProgress
 import org.fuxuan.classics.core.persistence.ThemePreference
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -54,7 +58,7 @@ class LengyanShellTest {
             composeRule.onNodeWithContentDescription("返回", useUnmergedTree = true).performClick()
             composeRule.waitForIdle()
         }
-        composeRule.onNodeWithText("選擇卷目", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithText("經文目錄", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test
@@ -65,13 +69,113 @@ class LengyanShellTest {
 
     @Test
     fun opensTheFirstRealVolumeFromTheHomeScreen() {
-        composeRule.onNodeWithText("選擇卷目", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("經文目錄", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("directory.tab.volumes", useUnmergedTree = true)
+            .performClick()
         composeRule.onNodeWithText("楞嚴經 卷一").performClick()
 
         composeRule.onNodeWithText(
             "如是我聞，一時佛在室羅筏城，祇桓精舍。",
             substring = true,
         ).assertIsDisplayed()
+    }
+
+    @Test
+    fun outlineExpansionPersistsAndInvalidIDsAreRemoved() {
+        val container = (composeRule.activity.application as LengyanApplication).container
+        val content = runBlocking { container.bookRepository.content("zh-Hant") }
+        val root = content.rootSections().first()
+        val firstChild = content.childrenOf(root.sectionID).first()
+        runBlocking {
+            container.userPreferencesRepository.setExpandedSectionIDs(
+                setOf("lengyan.s999999"),
+            )
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runBlocking {
+                container.userPreferencesRepository.preferences.first().expandedSectionIDs.isEmpty()
+            }
+        }
+
+        composeRule.onNodeWithText("經文目錄", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("outline.row.${root.sectionID}", useUnmergedTree = true)
+            .assertIsDisplayed()
+        assertTrue(
+            composeRule.onAllNodesWithTag(
+                "outline.row.${firstChild.sectionID}",
+                useUnmergedTree = true,
+            ).fetchSemanticsNodes().isEmpty(),
+        )
+
+        composeRule.onNodeWithTag("outline.row.${root.sectionID}", useUnmergedTree = true)
+            .performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runBlocking {
+                root.sectionID in container.userPreferencesRepository.preferences.first()
+                    .expandedSectionIDs
+            }
+        }
+        composeRule.onNodeWithTag("outline.row.${firstChild.sectionID}", useUnmergedTree = true)
+            .assertIsDisplayed()
+
+        composeRule.onNodeWithTag("bottom.favorites", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("bottom.reading", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("outline.row.${firstChild.sectionID}", useUnmergedTree = true)
+            .assertIsDisplayed()
+
+        composeRule.activityRule.scenario.recreate()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            outlineIsDisplayed() || homeIsDisplayed()
+        }
+        if (homeIsDisplayed()) {
+            composeRule.onNodeWithText("經文目錄", useUnmergedTree = true).performClick()
+        }
+        composeRule.onNodeWithTag("outline.row.${firstChild.sectionID}", useUnmergedTree = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun deepOutlineLeafOpensItsExactFirstParagraphAndReturnsToTheBranch() {
+        val container = (composeRule.activity.application as LengyanApplication).container
+        val content = runBlocking { container.bookRepository.content("zh-Hant") }
+        val leaf = content.leafSections().last()
+        val expectedParagraph = requireNotNull(content.firstParagraphInSubtree(leaf.sectionID))
+        val expandedAncestors = content.sectionPath(leaf.sectionID)
+            .dropLast(1)
+            .mapTo(linkedSetOf()) { it.sectionID }
+        runBlocking {
+            container.userPreferencesRepository.setExpandedSectionIDs(expandedAncestors)
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runBlocking {
+                container.userPreferencesRepository.preferences.first().expandedSectionIDs ==
+                    expandedAncestors
+            }
+        }
+
+        composeRule.onNodeWithText("經文目錄", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("outline.list", useUnmergedTree = true)
+            .performScrollToNode(hasTestTag("outline.row.${leaf.sectionID}"))
+        composeRule.onNodeWithTag("outline.row.${leaf.sectionID}", useUnmergedTree = true)
+            .assertIsDisplayed()
+            .performClick()
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            currentProgress()?.paragraphID == expectedParagraph.paragraphID
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) { readerIsDisplayed() }
+        composeRule.onNodeWithContentDescription("返回", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) { outlineIsDisplayed() }
+        composeRule.onNodeWithTag("outline.list", useUnmergedTree = true)
+            .performScrollToNode(hasTestTag("outline.row.${leaf.sectionID}"))
+        composeRule.onNodeWithTag("outline.row.${leaf.sectionID}", useUnmergedTree = true)
+            .assertIsDisplayed()
+        assertEquals(
+            expandedAncestors,
+            runBlocking {
+                container.userPreferencesRepository.preferences.first().expandedSectionIDs
+            },
+        )
     }
 
     @Test
@@ -333,7 +437,11 @@ class LengyanShellTest {
     }
 
     private fun homeIsDisplayed(): Boolean = runCatching {
-        composeRule.onNodeWithText("選擇卷目", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithText("經文目錄", useUnmergedTree = true).assertIsDisplayed()
+    }.isSuccess
+
+    private fun outlineIsDisplayed(): Boolean = runCatching {
+        composeRule.onNodeWithTag("outline.list", useUnmergedTree = true).assertIsDisplayed()
     }.isSuccess
 
     private fun backIsDisplayed(): Boolean = runCatching {
