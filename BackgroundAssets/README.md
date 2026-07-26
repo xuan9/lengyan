@@ -1,10 +1,13 @@
 # Production Managed Audio Packs
 
-[`../AudioAssets/audio-manifest.json`](../AudioAssets/audio-manifest.json) is
-the only hand-edited source for audio IDs, order, localized titles, integrity
-metadata, Apple pack settings, and Cloudflare paths. The production catalog
-currently contains 11 Apple-hosted `onDemand` packs; array order in that file
-is playback and prefetch order.
+[`../AudioAssets/audio-manifest.json`](../AudioAssets/audio-manifest.json) is a
+generated compatibility projection consumed by the production scripts. Audio
+identity and integrity come from `Products/lengyan/audio-artifacts.json`; Apple
+provider settings come from `Products/lengyan/Platform/ios/audio-delivery.json`;
+repository source/output paths come from
+`Products/lengyan/Tooling/audio-input.json`. The production catalog currently
+contains 11 Apple-hosted `onDemand` packs; artifact array order remains playback
+and prefetch order.
 
 Each pack contains one file at `Audio/<asset-id>.m4a`. The source remains the
 existing ODR-tagged file under `lengyan/屏東能淨協會讀誦`; packaging stages a
@@ -16,7 +19,7 @@ Package and verify all packs:
 scripts/package-production-audio-packs.sh
 ```
 
-After editing the canonical manifest, regenerate and check every derived
+After editing a source contract, regenerate and check every compatibility
 catalog before packaging:
 
 ```sh

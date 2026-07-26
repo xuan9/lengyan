@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "productID": "lengyan",
+  "platform": "android",
+  "deliveryVersion": "planned-v1",
+  "state": "planned",
+  "artifactManifest": "audio-artifacts.json",
+  "selectedRenditionID": null,
+  "providers": [],
+  "releaseBlockers": [
+    "Select and verify a primary HTTPS host with byte-range resume in target regions.",
+    "Benchmark AAC and Opus renditions on the Android device matrix before selecting a rendition.",
+    "Define metered-network, prefetch, cache-budget, and eviction policy in the Android delivery ADR."
+  ]
+}

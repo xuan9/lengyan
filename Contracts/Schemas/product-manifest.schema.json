@@ -68,6 +68,9 @@
         },
         "audio": {
           "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "audioBuild": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
         }
       }
     },
@@ -127,6 +130,9 @@
             "planned",
             "retired"
           ]
+        },
+        "audioDelivery": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
         }
       }
     }
@@ -165,10 +171,14 @@
             "properties": {
               "audio": {
                 "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+              },
+              "audioBuild": {
+                "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
               }
             },
             "required": [
-              "audio"
+              "audio",
+              "audioBuild"
             ]
           }
         }

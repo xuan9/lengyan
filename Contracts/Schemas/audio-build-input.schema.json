@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fuxuan:classic-apps:contracts:audio-build-input:v1",
+  "title": "Classic Apps Repository Audio Build Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "productID",
+    "artifactManifest",
+    "sourceDirectory"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/schemaVersion"
+    },
+    "productID": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/productID"
+    },
+    "artifactManifest": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+    },
+    "deliveryManifest": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+    },
+    "selectedRenditionID": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]*$"
+    },
+    "sourceDirectory": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+    },
+    "legacyProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "swiftCatalog",
+        "nodeCatalog",
+        "checksumCatalog",
+        "healthDocument",
+        "appleManifestDirectory",
+        "mediaIndexes"
+      ],
+      "properties": {
+        "manifest": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "swiftCatalog": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "nodeCatalog": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "checksumCatalog": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "healthDocument": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "appleManifestDirectory": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "mediaIndexes": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/locale"
+          },
+          "additionalProperties": {
+            "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "legacyProjection": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "legacyProjection"
+        ]
+      },
+      "then": {
+        "properties": {
+          "deliveryManifest": {
+            "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+          },
+          "selectedRenditionID": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]*$"
+          }
+        },
+        "required": [
+          "deliveryManifest",
+          "selectedRenditionID"
+        ]
+      }
+    }
+  ]
+}

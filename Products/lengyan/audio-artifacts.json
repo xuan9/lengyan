@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "productID": "lengyan",
   "catalogID": "lengyan.audio",
-  "catalogVersion": "legacy-v1-projection",
+  "catalogVersion": "v1",
   "contractState": "legacy-migration",
   "contentVersion": "legacy-1",
   "supportedLocales": [
@@ -19,9 +19,6 @@
     "reuseEligibility": "blocked",
     "statement": "The current app names the performer, but this repository does not contain written authorization proving reuse in new products or delivery channels."
   },
-  "compatibility": {
-    "deliveryManifest": "AudioAssets/audio-manifest.json"
-  },
   "artifacts": [
     {
       "artifactID": "lengyan.audio.ly01",
@@ -32,19 +29,23 @@
         "zh-Hans": "楞严经 卷一"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 1
+        "legacyVolume": 1,
+        "volumeID": "lengyan.v000001"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly01.m4a",
+          "artifactKey": "audio/v1/981ed4e96be6bf23694d3ad4dda4958fc987295fa895d229df1138f87674ae5a/ly01.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2045805,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 11408933,
           "sha256": "981ed4e96be6bf23694d3ad4dda4958fc987295fa895d229df1138f87674ae5a"
         }
@@ -59,19 +60,23 @@
         "zh-Hans": "楞严经 卷二"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 2
+        "legacyVolume": 2,
+        "volumeID": "lengyan.v000002"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly02.m4a",
+          "artifactKey": "audio/v1/86e26f96f26f51c7d94bb9763ae8da5cdc2d7c29f4e3f963ffbc19629725f472/ly02.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2683716,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 14772155,
           "sha256": "86e26f96f26f51c7d94bb9763ae8da5cdc2d7c29f4e3f963ffbc19629725f472"
         }
@@ -86,19 +91,23 @@
         "zh-Hans": "楞严经 卷三"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 3
+        "legacyVolume": 3,
+        "volumeID": "lengyan.v000003"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly03.m4a",
+          "artifactKey": "audio/v1/b2170f364da0d44dd7b1242c73b784eb0f8243e19946591cbdeee90a7b670d55/ly03.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2838805,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 15582450,
           "sha256": "b2170f364da0d44dd7b1242c73b784eb0f8243e19946591cbdeee90a7b670d55"
         }
@@ -113,19 +122,23 @@
         "zh-Hans": "楞严经 卷四"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 4
+        "legacyVolume": 4,
+        "volumeID": "lengyan.v000004"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly04.m4a",
+          "artifactKey": "audio/v1/34dbd536f603b32ac4fc0316201cd65fe8fbbee504196470fce2b4ac4fa7c840/ly04.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2971115,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 16602673,
           "sha256": "34dbd536f603b32ac4fc0316201cd65fe8fbbee504196470fce2b4ac4fa7c840"
         }
@@ -140,19 +153,23 @@
         "zh-Hans": "楞严经 卷五"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 5
+        "legacyVolume": 5,
+        "volumeID": "lengyan.v000005"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly05.m4a",
+          "artifactKey": "audio/v1/f8669fe34c8bd95093679c7d25e16dfdb72cc8d15601987dbaf49bb3dde6151c/ly05.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2355148,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 13012100,
           "sha256": "f8669fe34c8bd95093679c7d25e16dfdb72cc8d15601987dbaf49bb3dde6151c"
         }
@@ -167,19 +184,23 @@
         "zh-Hans": "楞严经 卷六"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 6
+        "legacyVolume": 6,
+        "volumeID": "lengyan.v000006"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly06.m4a",
+          "artifactKey": "audio/v1/53ce455f3a20cc09e49f05ae2632fafd8c1c686529d5bf9ecdd32f3465a39828/ly06.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2570579,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 14330690,
           "sha256": "53ce455f3a20cc09e49f05ae2632fafd8c1c686529d5bf9ecdd32f3465a39828"
         }
@@ -194,19 +215,23 @@
         "zh-Hans": "楞严经 卷七"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 7
+        "legacyVolume": 7,
+        "volumeID": "lengyan.v000007"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly07.m4a",
+          "artifactKey": "audio/v1/c4b879afc23d06fbcf4af2ed81d5b9680797fa0860a0f9804531da95668813a7/ly07.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2992718,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 16483037,
           "sha256": "c4b879afc23d06fbcf4af2ed81d5b9680797fa0860a0f9804531da95668813a7"
         }
@@ -221,19 +246,23 @@
         "zh-Hans": "楞严经 卷八"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 8
+        "legacyVolume": 8,
+        "volumeID": "lengyan.v000008"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly08.m4a",
+          "artifactKey": "audio/v1/7a31de382ed9bfc523ec4a49792055249d378a32c8d5cde8b8b3bea928b01e96/ly08.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2801319,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 15602303,
           "sha256": "7a31de382ed9bfc523ec4a49792055249d378a32c8d5cde8b8b3bea928b01e96"
         }
@@ -248,19 +277,23 @@
         "zh-Hans": "楞严经 卷九"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 9
+        "legacyVolume": 9,
+        "volumeID": "lengyan.v000009"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly09.m4a",
+          "artifactKey": "audio/v1/a0f8ad5c1cdde15243d150e510368f43d327fe42f5ef1e362e704971cedde801/ly09.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 3796819,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 21116150,
           "sha256": "a0f8ad5c1cdde15243d150e510368f43d327fe42f5ef1e362e704971cedde801"
         }
@@ -275,19 +308,23 @@
         "zh-Hans": "楞严经 卷十"
       },
       "contentMapping": {
-        "status": "legacy-unmapped",
+        "status": "mapped",
         "bookID": "lengyanjing",
-        "legacyVolume": 10
+        "legacyVolume": 10,
+        "volumeID": "lengyan.v000010"
       },
       "rightsReference": "lengyan.audio-rights.legacy",
       "renditions": [
         {
           "renditionID": "m4a-legacy",
           "fileName": "ly10.m4a",
+          "artifactKey": "audio/v1/e531560f540e74fd3088201de8e164007dfb71434ec55f43d751c92b11feff2c/ly10.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 2970148,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 16590672,
           "sha256": "e531560f540e74fd3088201de8e164007dfb71434ec55f43d751c92b11feff2c"
         }
@@ -310,10 +347,13 @@
         {
           "renditionID": "m4a-legacy",
           "fileName": "lyz1.m4a",
+          "artifactKey": "audio/v1/33734314186b1229a08b85169c6b481ed9401cf94ae636f4b36340f11d1db2e0/lyz1.m4a",
           "mediaType": "audio/mp4",
           "fileExtension": "m4a",
-          "codec": null,
-          "durationMilliseconds": null,
+          "codec": "mp4a.40.29",
+          "durationMilliseconds": 1095000,
+          "sampleRateHertz": 22050,
+          "channels": 2,
           "bytes": 5919555,
           "sha256": "33734314186b1229a08b85169c6b481ed9401cf94ae636f4b36340f11d1db2e0"
         }

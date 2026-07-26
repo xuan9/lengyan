@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fuxuan:classic-apps:contracts:audio-delivery:v1",
+  "title": "Classic Apps Platform Audio Delivery",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "productID",
+    "platform",
+    "deliveryVersion",
+    "state",
+    "artifactManifest",
+    "selectedRenditionID",
+    "providers"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/schemaVersion"
+    },
+    "productID": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/productID"
+    },
+    "platform": {
+      "enum": [
+        "ios",
+        "android"
+      ]
+    },
+    "deliveryVersion": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "state": {
+      "enum": [
+        "production",
+        "development",
+        "planned",
+        "retired"
+      ]
+    },
+    "artifactManifest": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+    },
+    "selectedRenditionID": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z][a-z0-9.-]*$"
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/appleODRProvider"
+          },
+          {
+            "$ref": "#/$defs/appleManagedProvider"
+          },
+          {
+            "$ref": "#/$defs/httpsProvider"
+          }
+        ]
+      }
+    },
+    "releaseBlockers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "providerID": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]*$"
+    },
+    "appleODRProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerID",
+        "kind",
+        "role",
+        "minimumOSMajor",
+        "maximumOSMajor",
+        "tagTemplate",
+        "bundleFileTemplate"
+      ],
+      "properties": {
+        "providerID": {
+          "$ref": "#/$defs/providerID"
+        },
+        "kind": {
+          "const": "apple-on-demand-resources"
+        },
+        "role": {
+          "const": "primary"
+        },
+        "minimumOSMajor": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+        },
+        "maximumOSMajor": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+        },
+        "tagTemplate": {
+          "const": "{legacyTrackID}"
+        },
+        "bundleFileTemplate": {
+          "const": "{fileName}"
+        }
+      }
+    },
+    "appleManagedProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerID",
+        "kind",
+        "role",
+        "minimumOSMajor",
+        "assetPackIDTemplate",
+        "relativePathTemplate",
+        "downloadPolicy",
+        "platforms"
+      ],
+      "properties": {
+        "providerID": {
+          "$ref": "#/$defs/providerID"
+        },
+        "kind": {
+          "const": "apple-managed-background-assets"
+        },
+        "role": {
+          "const": "primary"
+        },
+        "minimumOSMajor": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+        },
+        "assetPackIDTemplate": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9.-]+\\{legacyTrackID\\}$"
+        },
+        "relativePathTemplate": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+/\\{fileName\\}$"
+        },
+        "downloadPolicy": {
+          "const": "onDemand"
+        },
+        "platforms": {
+          "const": [
+            "iOS"
+          ]
+        }
+      }
+    },
+    "httpsProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerID",
+        "kind",
+        "role",
+        "minimumOSMajor",
+        "baseURLConfigurationKey",
+        "artifactKeySource",
+        "activation",
+        "byteRangeSupport",
+        "prefetchAllowed"
+      ],
+      "properties": {
+        "providerID": {
+          "$ref": "#/$defs/providerID"
+        },
+        "kind": {
+          "const": "https"
+        },
+        "role": {
+          "enum": [
+            "primary",
+            "fallback"
+          ]
+        },
+        "minimumOSMajor": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+        },
+        "baseURLConfigurationKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "enabledConfigurationKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifactKeySource": {
+          "const": "rendition"
+        },
+        "activation": {
+          "enum": [
+            "always",
+            "user-playback-after-primary-failure-or-stall"
+          ]
+        },
+        "stallTimeoutConfigurationKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "byteRangeSupport": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "unverified"
+          ]
+        },
+        "prefetchAllowed": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "activation": {
+                "const": "user-playback-after-primary-failure-or-stall"
+              }
+            },
+            "required": [
+              "activation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "enabledConfigurationKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stallTimeoutConfigurationKey": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "enabledConfigurationKey",
+              "stallTimeoutConfigurationKey"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "production",
+              "development"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "selectedRenditionID": {
+            "type": "string"
+          },
+          "providers": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "planned"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "releaseBlockers": {
+            "type": "array",
+            "minItems": 1
+          }
+        },
+        "required": [
+          "releaseBlockers"
+        ]
+      }
+    }
+  ]
+}

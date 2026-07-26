@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "productID": "lengyan",
+  "artifactManifest": "audio-artifacts.json",
+  "deliveryManifest": "Platform/ios/audio-delivery.json",
+  "selectedRenditionID": "m4a-legacy",
+  "sourceDirectory": "lengyan/屏東能淨協會讀誦",
+  "legacyProjection": {
+    "manifest": "AudioAssets/audio-manifest.json",
+    "swiftCatalog": "lengyan/Domain/AudioAssets/AudioManifest.generated.swift",
+    "nodeCatalog": "CloudflareAudioFallback/src/catalog.mjs",
+    "checksumCatalog": "BackgroundAssets/audio-source-sha256.txt",
+    "healthDocument": "CloudflareAudioFallback/static/lengyan-audio-fallback",
+    "appleManifestDirectory": "BackgroundAssets/Manifests",
+    "mediaIndexes": {
+      "zh-Hant": "lengyan/data/lengyanjing-media.json",
+      "zh-Hans": "lengyan/data/simplified/lengyanjing-media.json"
+    }
+  }
+}

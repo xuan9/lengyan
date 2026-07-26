@@ -23,6 +23,8 @@ const schemaFiles = {
   book: "book-manifest.schema.json",
   source: "source-manifest.schema.json",
   audio: "audio-artifact-manifest.schema.json",
+  audioDelivery: "audio-delivery.schema.json",
+  audioBuildInput: "audio-build-input.schema.json",
   content: "content-package.schema.json",
   legacyMap: "legacy-map.schema.json",
   behavior: "behavior-fixture.schema.json"
@@ -33,6 +35,8 @@ const schemaIDs = {
   book: "urn:fuxuan:classic-apps:contracts:book-manifest:v1",
   source: "urn:fuxuan:classic-apps:contracts:source-manifest:v1",
   audio: "urn:fuxuan:classic-apps:contracts:audio-artifact-manifest:v1",
+  audioDelivery: "urn:fuxuan:classic-apps:contracts:audio-delivery:v1",
+  audioBuildInput: "urn:fuxuan:classic-apps:contracts:audio-build-input:v1",
   content: "urn:fuxuan:classic-apps:contracts:content-package:v1",
   legacyMap: "urn:fuxuan:classic-apps:contracts:legacy-map:v1",
   behavior: "urn:fuxuan:classic-apps:contracts:behavior-fixture:v1"
@@ -645,7 +649,7 @@ function validateLegacyMapSemantics({ legacyDocument, book, contentDocuments, is
   return legacyMap.paths.length;
 }
 
-async function validateAudioManifest({ audioDocument, product, book, repositoryRoot, issues, readCache }) {
+function validateAudioManifest({ audioDocument, product, book, contentDocuments, issues }) {
   const audio = audioDocument.data;
   requireCondition(audio.productID === product.productID, issues, audioDocument.label, "productID does not match product");
   requireCondition(audio.catalogID.startsWith(`${product.productID}.audio`), issues, audioDocument.label, "catalogID is outside product namespace");
@@ -660,69 +664,314 @@ async function validateAudioManifest({ audioDocument, product, book, repositoryR
 
   assertUnique(audio.artifacts.map((artifact) => artifact.artifactID), issues, audioDocument.label, "audio artifactID");
   assertUnique(audio.artifacts.map((artifact) => artifact.legacyTrackID).filter(Boolean), issues, audioDocument.label, "legacy track ID");
+  const volumeByID = new Map(
+    (contentDocuments[0]?.data.volumes ?? []).map((volume) => [volume.volumeID, volume])
+  );
   const fileNames = [];
+  const artifactKeys = [];
+  const renditionHashes = [];
   for (const artifact of audio.artifacts) {
     requireCondition(artifact.artifactID.startsWith(`${product.productID}.audio.`), issues, audioDocument.label, `artifactID outside product namespace: ${artifact.artifactID}`);
     requireCondition(artifact.rightsReference === audio.rights.rightsID, issues, audioDocument.label, `${artifact.artifactID} has an unknown rights reference`);
     requireCondition(artifact.contentMapping.bookID === book.bookID, issues, audioDocument.label, `${artifact.artifactID} maps to another book`);
+    if (artifact.contentMapping.status === "mapped") {
+      const volume = volumeByID.get(artifact.contentMapping.volumeID);
+      requireCondition(Boolean(volume), issues, audioDocument.label, `${artifact.artifactID} maps to an unknown volume`);
+      if (artifact.contentMapping.legacyVolume !== undefined && volume) {
+        requireCondition(
+          artifact.contentMapping.legacyVolume === volume.number,
+          issues,
+          audioDocument.label,
+          `${artifact.artifactID} legacy volume differs from stable volume`
+        );
+      }
+    } else {
+      requireCondition(
+        artifact.contentMapping.volumeID === undefined,
+        issues,
+        audioDocument.label,
+        `${artifact.artifactID} is unmapped but declares a stable volume`
+      );
+    }
     localesMatch(artifact.titles, product.supportedLocales, issues, audioDocument.label);
     assertUnique(artifact.renditions.map((rendition) => rendition.renditionID), issues, audioDocument.label, `renditionID in ${artifact.artifactID}`);
     fileNames.push(...artifact.renditions.map((rendition) => rendition.fileName));
+    artifactKeys.push(...artifact.renditions.map((rendition) => rendition.artifactKey));
+    renditionHashes.push(...artifact.renditions.map((rendition) => rendition.sha256));
+
+    for (const rendition of artifact.renditions) {
+      requireCondition(
+        rendition.fileName.endsWith(`.${rendition.fileExtension}`),
+        issues,
+        audioDocument.label,
+        `${artifact.artifactID} filename and extension differ`
+      );
+      requireCondition(
+        rendition.artifactKey.endsWith(
+          `/${audio.catalogVersion}/${rendition.sha256}/${rendition.fileName}`
+        ),
+        issues,
+        audioDocument.label,
+        `${artifact.artifactID} artifact key is not content-addressed for this catalog`
+      );
+    }
 
     if (audio.contractState === "release-ready") {
       requireCondition(artifact.contentMapping.status === "mapped", issues, audioDocument.label, `${artifact.artifactID} lacks canonical content mapping`);
-      for (const rendition of artifact.renditions) {
-        requireCondition(Boolean(rendition.codec), issues, audioDocument.label, `${artifact.artifactID} lacks codec metadata`);
-        requireCondition(Number.isInteger(rendition.durationMilliseconds), issues, audioDocument.label, `${artifact.artifactID} lacks duration metadata`);
-      }
     }
   }
   assertUnique(fileNames, issues, audioDocument.label, "audio rendition filename");
+  assertUnique(artifactKeys, issues, audioDocument.label, "audio rendition artifact key");
+  assertUnique(renditionHashes, issues, audioDocument.label, "audio rendition SHA-256");
 
   if (audio.rights.reuseEligibility === "eligible") {
     requireCondition(audio.rights.status !== "legacy-unverified", issues, audioDocument.label, "unverified audio rights cannot be reusable");
   }
 
-  if (!audio.compatibility) {
+  return audio;
+}
+
+function validateAudioDelivery({ deliveryDocument, product, platformID, audio, issues }) {
+  const delivery = deliveryDocument.data;
+  const platform = product.platforms[platformID];
+  requireCondition(delivery.productID === product.productID, issues, deliveryDocument.label, "productID does not match product");
+  requireCondition(delivery.platform === platformID, issues, deliveryDocument.label, "platform does not match product link");
+  requireCondition(delivery.state === platform.state, issues, deliveryDocument.label, "delivery state does not match product platform state");
+  requireCondition(delivery.artifactManifest === product.manifests.audio, issues, deliveryDocument.label, "artifactManifest does not match product audio link");
+  assertUnique(delivery.providers.map((provider) => provider.providerID), issues, deliveryDocument.label, "audio providerID");
+
+  if (["production", "development"].includes(delivery.state)) {
+    requireCondition(
+      delivery.providers.some((provider) => provider.role === "primary"),
+      issues,
+      deliveryDocument.label,
+      "active delivery has no primary provider"
+    );
+    requireCondition(
+      delivery.releaseBlockers === undefined,
+      issues,
+      deliveryDocument.label,
+      "active delivery still declares release blockers"
+    );
+  }
+
+  if (delivery.selectedRenditionID !== null) {
+    for (const artifact of audio.artifacts) {
+      requireCondition(
+        artifact.renditions.some(
+          (rendition) => rendition.renditionID === delivery.selectedRenditionID
+        ),
+        issues,
+        deliveryDocument.label,
+        `${artifact.artifactID} lacks selected rendition ${delivery.selectedRenditionID}`
+      );
+    }
+  }
+
+  for (const provider of delivery.providers) {
+    if (provider.kind.startsWith("apple-")) {
+      requireCondition(
+        platformID === "ios",
+        issues,
+        deliveryDocument.label,
+        `${provider.providerID} is Apple-specific but linked to ${platformID}`
+      );
+    }
+    if (provider.kind === "apple-on-demand-resources") {
+      requireCondition(
+        provider.minimumOSMajor <= provider.maximumOSMajor,
+        issues,
+        deliveryDocument.label,
+        `${provider.providerID} has an invalid OS range`
+      );
+    }
+    if (provider.kind === "https" && provider.role === "fallback") {
+      requireCondition(
+        provider.prefetchAllowed === false,
+        issues,
+        deliveryDocument.label,
+        `${provider.providerID} fallback must not be used for prefetch`
+      );
+    }
+    if (
+      platformID === "android" &&
+      ["production", "development"].includes(delivery.state) &&
+      provider.kind === "https" &&
+      provider.role === "primary"
+    ) {
+      requireCondition(
+        provider.byteRangeSupport === "supported",
+        issues,
+        deliveryDocument.label,
+        `${provider.providerID} Android primary must support byte ranges`
+      );
+    }
+  }
+
+  return delivery;
+}
+
+async function validateAudioBuildInput({
+  buildDocument,
+  product,
+  audio,
+  deliveryByPlatform,
+  repositoryRoot,
+  issues,
+  readCache
+}) {
+  const build = buildDocument.data;
+  requireCondition(build.productID === product.productID, issues, buildDocument.label, "productID does not match product");
+  requireCondition(build.artifactManifest === product.manifests.audio, issues, buildDocument.label, "artifactManifest does not match product audio link");
+  resolveContained(repositoryRoot, build.sourceDirectory, issues, buildDocument.label);
+
+  const matchingPlatforms = build.deliveryManifest === undefined
+    ? []
+    : Object.entries(product.platforms)
+      .filter(([, platform]) => platform.audioDelivery === build.deliveryManifest)
+      .map(([platformID]) => platformID);
+  if (build.deliveryManifest !== undefined) {
+    requireCondition(
+      matchingPlatforms.length === 1,
+      issues,
+      buildDocument.label,
+      "deliveryManifest does not match exactly one product platform link"
+    );
+  }
+  const selectedPlatformID = matchingPlatforms[0];
+  const selectedDelivery = selectedPlatformID
+    ? deliveryByPlatform.get(selectedPlatformID)
+    : undefined;
+  if (build.selectedRenditionID !== undefined) {
+    requireCondition(
+      build.selectedRenditionID === selectedDelivery?.selectedRenditionID,
+      issues,
+      buildDocument.label,
+      "selected rendition differs from linked platform delivery"
+    );
+    for (const artifact of audio.artifacts) {
+      requireCondition(
+        artifact.renditions.some(
+          (rendition) => rendition.renditionID === build.selectedRenditionID
+        ),
+        issues,
+        buildDocument.label,
+        `${artifact.artifactID} lacks build-input rendition ${build.selectedRenditionID}`
+      );
+    }
+  }
+
+  if (!build.legacyProjection) {
+    return;
+  }
+  requireCondition(
+    selectedPlatformID === "ios",
+    issues,
+    buildDocument.label,
+    "legacy projection requires the iOS delivery contract"
+  );
+  localesMatch(build.legacyProjection.mediaIndexes, product.supportedLocales, issues, buildDocument.label);
+
+  for (const [key, value] of Object.entries(build.legacyProjection)) {
+    if (key === "mediaIndexes") {
+      for (const mediaPath of Object.values(value)) {
+        resolveContained(repositoryRoot, mediaPath, issues, buildDocument.label);
+      }
+    } else {
+      resolveContained(repositoryRoot, value, issues, buildDocument.label);
+    }
+  }
+
+  const projectionPath = resolveContained(
+    repositoryRoot,
+    build.legacyProjection.manifest,
+    issues,
+    buildDocument.label
+  );
+  const projectionDocument = projectionPath
+    ? await readJSON(projectionPath, repositoryRoot, issues, readCache)
+    : null;
+  if (!projectionDocument) {
+    return;
+  }
+  const projection = projectionDocument.data;
+  requireCondition(projection.sourceDirectory === build.sourceDirectory, issues, projectionDocument.label, "legacy sourceDirectory differs from build input");
+  requireCondition(projection.catalogVersion === audio.catalogVersion, issues, projectionDocument.label, "legacy catalogVersion differs from artifact manifest");
+  requireCondition(Array.isArray(projection.tracks), issues, projectionDocument.label, "legacy delivery manifest has no tracks");
+  if (!Array.isArray(projection.tracks)) {
     return;
   }
 
-  const deliveryPath = resolveContained(repositoryRoot, audio.compatibility.deliveryManifest, issues, audioDocument.label);
-  const deliveryDocument = deliveryPath
-    ? await readJSON(deliveryPath, repositoryRoot, issues, readCache)
-    : null;
-  if (!deliveryDocument) {
-    return;
-  }
-  const delivery = deliveryDocument.data;
-  requireCondition(Array.isArray(delivery.tracks), issues, deliveryDocument.label, "legacy delivery manifest has no tracks");
-  if (!Array.isArray(delivery.tracks)) {
-    return;
-  }
-  requireCondition(delivery.tracks.length === audio.artifacts.length, issues, audioDocument.label, "legacy delivery track count differs from artifact manifest");
-  for (let index = 0; index < Math.min(delivery.tracks.length, audio.artifacts.length); index += 1) {
-    const track = delivery.tracks[index];
-    const artifact = audio.artifacts[index];
-    const rendition = artifact.renditions[0];
-    requireCondition(artifact.legacyTrackID === track.id, issues, audioDocument.label, `legacy track order/ID differs at index ${index}`);
-    requireCondition(rendition.fileName === `${track.id}.${delivery.fileExtension}`, issues, audioDocument.label, `${artifact.artifactID} filename differs from delivery catalog`);
-    requireCondition(rendition.bytes === track.bytes, issues, audioDocument.label, `${artifact.artifactID} byte count differs from delivery catalog`);
-    requireCondition(rendition.sha256 === track.sha256, issues, audioDocument.label, `${artifact.artifactID} SHA-256 differs from delivery catalog`);
+  const selected = audio.artifacts.map((artifact) => ({
+    artifact,
+    rendition: artifact.renditions.find(
+      (rendition) => rendition.renditionID === build.selectedRenditionID
+    )
+  }));
+  requireCondition(projection.tracks.length === selected.length, issues, buildDocument.label, "legacy delivery track count differs from artifact manifest");
+  for (let index = 0; index < Math.min(projection.tracks.length, selected.length); index += 1) {
+    const track = projection.tracks[index];
+    const { artifact, rendition } = selected[index];
+    if (!rendition) {
+      continue;
+    }
+    requireCondition(artifact.legacyTrackID === track.id, issues, buildDocument.label, `legacy track order/ID differs at index ${index}`);
+    requireCondition(rendition.fileName === `${track.id}.${projection.fileExtension}`, issues, buildDocument.label, `${artifact.artifactID} filename differs from delivery catalog`);
+    requireCondition(rendition.bytes === track.bytes, issues, buildDocument.label, `${artifact.artifactID} byte count differs from delivery catalog`);
+    requireCondition(rendition.sha256 === track.sha256, issues, buildDocument.label, `${artifact.artifactID} SHA-256 differs from delivery catalog`);
+    requireCondition(
+      rendition.artifactKey === `${projection.cdnPathPrefix}/${projection.catalogVersion}/${track.sha256}/${rendition.fileName}`,
+      issues,
+      buildDocument.label,
+      `${artifact.artifactID} artifact key differs from delivery catalog`
+    );
     for (const locale of product.supportedLocales) {
       requireCondition(
         artifact.titles[locale] === track.titles?.[locale],
         issues,
-        audioDocument.label,
+        buildDocument.label,
         `${artifact.artifactID} ${locale} title differs from delivery catalog`
       );
     }
   }
   for (const locale of product.supportedLocales) {
-    requireCondition(audio.performers[locale] === delivery.localizations?.[locale]?.artist, issues, audioDocument.label, `${locale} performer differs from delivery catalog`);
+    requireCondition(
+      audio.performers[locale] === projection.localizations?.[locale]?.artist,
+      issues,
+      buildDocument.label,
+      `${locale} performer differs from delivery catalog`
+    );
   }
 
-  // The compatibility catalog has its own generator/schema and is validated by
-  // verify.sh audio-catalog. It is intentionally not validated as an artifact manifest.
+  const managedProvider = selectedDelivery?.providers.find(
+    (provider) => provider.kind === "apple-managed-background-assets"
+  );
+  if (managedProvider) {
+    requireCondition(
+      managedProvider.assetPackIDTemplate === `${projection.apple?.assetPackIDPrefix}{legacyTrackID}`,
+      issues,
+      buildDocument.label,
+      "managed asset-pack template differs from delivery catalog"
+    );
+    requireCondition(
+      managedProvider.relativePathTemplate === `${projection.apple?.relativeDirectory}/{fileName}`,
+      issues,
+      buildDocument.label,
+      "managed relative-path template differs from delivery catalog"
+    );
+    requireCondition(
+      managedProvider.downloadPolicy === projection.apple?.downloadPolicy,
+      issues,
+      buildDocument.label,
+      "managed download policy differs from delivery catalog"
+    );
+    requireCondition(
+      JSON.stringify(managedProvider.platforms) === JSON.stringify(projection.apple?.platforms),
+      issues,
+      buildDocument.label,
+      "managed platforms differ from delivery catalog"
+    );
+  }
 }
 
 function expectedAudioDecision(input) {
@@ -865,6 +1114,8 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
   const summaries = [];
   let contentPackageCount = 0;
   let audioArtifactCount = 0;
+  let audioDeliveryCount = 0;
+  let audioBuildInputCount = 0;
   let legacyPathMappingCount = 0;
 
   for (const entry of productEntries) {
@@ -885,6 +1136,32 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
       productDocument.label,
       "audio manifest requires the audio capability"
     );
+    requireCondition(
+      !product.manifests.audioBuild || product.manifests.audio,
+      issues,
+      productDocument.label,
+      "audio build input requires an audio artifact manifest"
+    );
+    for (const [platformID, platform] of Object.entries(product.platforms)) {
+      requireCondition(
+        !platform.audioDelivery || product.features.audio,
+        issues,
+        productDocument.label,
+        `${platformID} audio delivery requires the audio capability`
+      );
+      if (
+        product.features.audio &&
+        ["production", "development"].includes(product.lifecycle) &&
+        ["production", "development"].includes(platform.state)
+      ) {
+        requireCondition(
+          Boolean(platform.audioDelivery),
+          issues,
+          productDocument.label,
+          `${platformID} active audio product has no delivery manifest`
+        );
+      }
+    }
     if (["production", "development"].includes(product.lifecycle)) {
       requireCondition(
         product.features.audio === Boolean(product.manifests.audio),
@@ -892,6 +1169,14 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
         productDocument.label,
         "audio feature and audio manifest link must agree"
       );
+      if (product.features.audio) {
+        requireCondition(
+          Boolean(product.manifests.audioBuild),
+          issues,
+          productDocument.label,
+          "active audio product has no reproducible build input"
+        );
+      }
     }
 
     const bookPath = resolveContained(productDirectory, product.manifests.book, issues, productDocument.label);
@@ -1003,20 +1288,75 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
     }
 
     let productAudioCount = 0;
+    let audio = null;
     if (product.manifests.audio) {
       const audioPath = resolveContained(productDirectory, product.manifests.audio, issues, productDocument.label);
       const audioDocument = audioPath ? await readJSON(audioPath, root, issues, readCache) : null;
       if (validateWithSchema(ajv, schemaIDs.audio, audioDocument, issues)) {
-        await validateAudioManifest({
+        audio = validateAudioManifest({
           audioDocument,
           product,
           book,
-          repositoryRoot: root,
-          issues,
-          readCache
+          contentDocuments,
+          issues
         });
         productAudioCount = audioDocument.data.artifacts.length;
         audioArtifactCount += productAudioCount;
+      }
+    }
+
+    const deliveryByPlatform = new Map();
+    for (const [platformID, platform] of Object.entries(product.platforms)) {
+      if (!platform.audioDelivery) {
+        continue;
+      }
+      const deliveryPath = resolveContained(
+        productDirectory,
+        platform.audioDelivery,
+        issues,
+        productDocument.label
+      );
+      const deliveryDocument = deliveryPath
+        ? await readJSON(deliveryPath, root, issues, readCache)
+        : null;
+      if (validateWithSchema(ajv, schemaIDs.audioDelivery, deliveryDocument, issues)) {
+        if (audio) {
+          const delivery = validateAudioDelivery({
+            deliveryDocument,
+            product,
+            platformID,
+            audio,
+            issues
+          });
+          deliveryByPlatform.set(platformID, delivery);
+        }
+        audioDeliveryCount += 1;
+      }
+    }
+
+    if (product.manifests.audioBuild) {
+      const buildPath = resolveContained(
+        productDirectory,
+        product.manifests.audioBuild,
+        issues,
+        productDocument.label
+      );
+      const buildDocument = buildPath
+        ? await readJSON(buildPath, root, issues, readCache)
+        : null;
+      if (validateWithSchema(ajv, schemaIDs.audioBuildInput, buildDocument, issues)) {
+        if (audio) {
+          await validateAudioBuildInput({
+            buildDocument,
+            product,
+            audio,
+            deliveryByPlatform,
+            repositoryRoot: root,
+            issues,
+            readCache
+          });
+        }
+        audioBuildInputCount += 1;
       }
     }
 
@@ -1062,6 +1402,8 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
     productCount: summaries.length,
     contentPackageCount,
     audioArtifactCount,
+    audioDeliveryCount,
+    audioBuildInputCount,
     legacyPathMappingCount,
     fixtureCount: fixtureIDs.length,
     warnings
@@ -1069,9 +1411,13 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
 }
 
 function printReport(report) {
+  const audioBuildLabel = report.audioBuildInputCount === 1
+    ? "audio build-input manifest"
+    : "audio build-input manifests";
   console.log(
     `Validated ${report.productCount} products, ${report.contentPackageCount} structured content packages, ` +
-      `${report.audioArtifactCount} audio artifacts, ${report.legacyPathMappingCount} legacy path mappings, ` +
+      `${report.audioArtifactCount} audio artifacts, ${report.audioDeliveryCount} delivery manifests, ` +
+      `${report.audioBuildInputCount} ${audioBuildLabel}, ${report.legacyPathMappingCount} legacy path mappings, ` +
       `and ${report.fixtureCount} behavior fixtures.`
   );
   for (const product of report.products) {

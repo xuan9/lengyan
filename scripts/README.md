@@ -10,10 +10,16 @@ of maintaining a second set of build commands.
 
 ## Cloudflare Audio Fallback
 
-`AudioAssets/audio-manifest.json` is the only hand-edited audio catalog.
-`generate-audio-manifest.mjs` validates the source M4A files and generates the
-Swift, Apple, Cloudflare, checksum and localized media catalogs. Its `--check`
-mode fails if a generated file drifts from the canonical manifest.
+`Products/lengyan/audio-artifacts.json` is the product-neutral identity and
+integrity catalog. `Products/lengyan/Platform/ios/audio-delivery.json` selects
+the production providers, while `Products/lengyan/Tooling/audio-input.json`
+holds repository-local source and compatibility-output paths.
+
+`generate-audio-manifest.mjs` validates those inputs and every source M4A, then
+generates `AudioAssets/audio-manifest.json` plus the existing Swift, Apple,
+Cloudflare, checksum, and localized media catalogs. Its `--check` mode fails if
+any generated output drifts. Do not edit the legacy manifest or its downstream
+outputs directly.
 
 `deploy-cloudflare-audio-fallback.sh` verifies and publishes the canonical
 immutable audio files as zero-overage Workers Static Assets. It does not create

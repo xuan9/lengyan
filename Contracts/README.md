@@ -19,6 +19,10 @@ do not belong here.
   outline paths to stable section and paragraph identities.
 - `Schemas/audio-artifact-manifest.schema.json`: product-neutral audio identity,
   content mapping, renditions, checksums, and rights. Delivery is separate.
+- `Schemas/audio-delivery.schema.json`: typed iOS/Android provider selection and
+  platform delivery state; it contains no artifact identity or secret.
+- `Schemas/audio-build-input.schema.json`: repository-local source and generated
+  compatibility-output paths used by reproducible release tooling.
 - `Schemas/behavior-fixture.schema.json`: cross-platform behavior examples.
 - `BehaviorFixtures/`: accepted behavior that both native platforms must run.
 
@@ -32,6 +36,11 @@ The Lengyan migration packages and path map are deterministic generated files.
 `./verify.sh contracts` regenerates them in memory and rejects any checked-in
 file that differs. See `Products/lengyan/Content/README.md` before changing an
 input or generated artifact.
+
+Lengyan audio follows the same source/generated rule. The artifact manifest,
+platform delivery files, and tooling input under `Products/lengyan/` are the
+reviewed inputs. `AudioAssets/audio-manifest.json` is now a generated legacy
+projection so the production iOS and Cloudflare code can remain unchanged.
 
 ## Release Meaning
 

@@ -16,14 +16,27 @@ import path from "node:path";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.dirname(scriptDirectory);
-const manifestPath = path.join(repositoryRoot, "AudioAssets/audio-manifest.json");
-const manifestDirectory = path.join(repositoryRoot, "BackgroundAssets/Manifests");
-const supportedLocales = ["zh-Hant", "zh-Hans"];
 
-const mode = process.argv[2] ?? "--write";
-if (!["--check", "--write"].includes(mode) || process.argv.length > 3) {
-  console.error("usage: scripts/generate-audio-manifest.mjs [--check|--write]");
-  process.exit(64);
+function parseArguments(argumentsList) {
+  let mode = "--write";
+  let productID = "lengyan";
+  let modeSeen = false;
+  for (let index = 0; index < argumentsList.length; index += 1) {
+    const argument = argumentsList[index];
+    if (["--check", "--write"].includes(argument) && !modeSeen) {
+      mode = argument;
+      modeSeen = true;
+    } else if (argument === "--product" && argumentsList[index + 1]) {
+      productID = argumentsList[index + 1];
+      index += 1;
+    } else {
+      throw new Error(
+        "usage: scripts/generate-audio-manifest.mjs [--check|--write] [--product PRODUCT_ID]",
+      );
+    }
+  }
+  assert.match(productID, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/, "invalid product ID");
+  return { mode, productID };
 }
 
 function exactKeys(value, expected, label) {
@@ -31,13 +44,22 @@ function exactKeys(value, expected, label) {
   assert.deepEqual(Object.keys(value).sort(), [...expected].sort(), `${label} has unexpected keys`);
 }
 
-function relativeRepositoryPath(value, label) {
+function repositoryRelativePath(value, label) {
   assert.equal(typeof value, "string", `${label} must be a string`);
   assert.ok(value.length > 0, `${label} must not be empty`);
-  assert.equal(path.isAbsolute(value), false, `${label} must be repository-relative`);
-  const normalized = path.normalize(value);
-  assert.ok(normalized !== ".." && !normalized.startsWith(`..${path.sep}`), `${label} must stay inside the repository`);
+  assert.equal(value.includes("\\"), false, `${label} must use forward slashes`);
+  assert.equal(path.posix.isAbsolute(value), false, `${label} must be repository-relative`);
+  const normalized = path.posix.normalize(value);
+  assert.ok(normalized !== ".." && !normalized.startsWith("../"), `${label} must stay inside the repository`);
   return normalized;
+}
+
+function productRelativePath(productDirectory, value, label) {
+  return path.join(productDirectory, repositoryRelativePath(value, label));
+}
+
+async function readJSON(filePath) {
+  return JSON.parse(await readFile(filePath, "utf8"));
 }
 
 async function sha256(filePath) {
@@ -56,80 +78,247 @@ function json(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+function requiredProvider(delivery, kind) {
+  const matches = delivery.providers.filter((provider) => provider.kind === kind);
+  assert.equal(matches.length, 1, `iOS delivery must define exactly one ${kind} provider`);
+  return matches[0];
+}
+
+const { mode, productID } = parseArguments(process.argv.slice(2));
+const productDirectory = path.join(repositoryRoot, "Products", productID);
+const product = await readJSON(path.join(productDirectory, "product.json"));
+assert.equal(product.productID, productID, "product manifest ID does not match its directory");
+assert.ok(product.manifests?.audio, "product manifest has no audio artifact link");
+assert.ok(product.manifests?.audioBuild, "product manifest has no audio build-input link");
+assert.ok(product.platforms?.ios?.audioDelivery, "product manifest has no iOS audio delivery link");
+
+const artifactPath = productRelativePath(
+  productDirectory,
+  product.manifests.audio,
+  "product.manifests.audio",
+);
+const buildInputPath = productRelativePath(
+  productDirectory,
+  product.manifests.audioBuild,
+  "product.manifests.audioBuild",
+);
+const deliveryPath = productRelativePath(
+  productDirectory,
+  product.platforms.ios.audioDelivery,
+  "product.platforms.ios.audioDelivery",
+);
+const [artifactManifest, buildInput, delivery] = await Promise.all([
+  readJSON(artifactPath),
+  readJSON(buildInputPath),
+  readJSON(deliveryPath),
+]);
+
 exactKeys(
-  manifest,
+  buildInput,
   [
     "schemaVersion",
-    "catalogVersion",
+    "productID",
+    "artifactManifest",
+    "deliveryManifest",
+    "selectedRenditionID",
     "sourceDirectory",
-    "fileExtension",
-    "cdnPathPrefix",
-    "apple",
-    "localizations",
-    "tracks",
+    "legacyProjection",
   ],
-  "audio manifest",
+  "audio build input",
 );
-assert.equal(manifest.schemaVersion, 1, "unsupported audio manifest schemaVersion");
-assert.match(manifest.catalogVersion, /^v[1-9][0-9]*$/, "catalogVersion must look like v1");
-assert.match(manifest.fileExtension, /^[a-z0-9]+$/, "fileExtension is invalid");
-assert.match(manifest.cdnPathPrefix, /^[a-z0-9][a-z0-9/-]*$/, "cdnPathPrefix is invalid");
+exactKeys(
+  buildInput.legacyProjection,
+  [
+    "manifest",
+    "swiftCatalog",
+    "nodeCatalog",
+    "checksumCatalog",
+    "healthDocument",
+    "appleManifestDirectory",
+    "mediaIndexes",
+  ],
+  "audio build input legacy projection",
+);
+assert.equal(buildInput.schemaVersion, 1, "unsupported audio build-input schemaVersion");
+assert.equal(buildInput.productID, productID, "audio build-input productID differs");
+assert.equal(buildInput.artifactManifest, product.manifests.audio, "audio build-input artifact link differs");
+assert.equal(
+  buildInput.deliveryManifest,
+  product.platforms.ios.audioDelivery,
+  "audio build-input delivery link differs",
+);
+
+assert.equal(artifactManifest.schemaVersion, 1, "unsupported audio artifact schemaVersion");
+assert.equal(artifactManifest.productID, productID, "audio artifact productID differs");
+assert.match(artifactManifest.catalogVersion, /^v[1-9][0-9]*$/, "catalogVersion must look like v1");
+assert.ok(
+  Array.isArray(artifactManifest.artifacts) && artifactManifest.artifacts.length > 0,
+  "audio artifacts must not be empty",
+);
+
+assert.equal(delivery.schemaVersion, 1, "unsupported audio delivery schemaVersion");
+assert.equal(delivery.productID, productID, "iOS delivery productID differs");
+assert.equal(delivery.platform, "ios", "audio generator requires iOS delivery");
+assert.equal(delivery.state, "production", "legacy projection requires production iOS delivery");
+assert.equal(delivery.artifactManifest, product.manifests.audio, "iOS delivery artifact link differs");
+assert.equal(
+  delivery.selectedRenditionID,
+  buildInput.selectedRenditionID,
+  "build-input and iOS selected rendition differ",
+);
+
+const odrProvider = requiredProvider(delivery, "apple-on-demand-resources");
+const managedProvider = requiredProvider(delivery, "apple-managed-background-assets");
+const httpsProvider = requiredProvider(delivery, "https");
+assert.equal(odrProvider.tagTemplate, "{legacyTrackID}", "legacy ODR tag template changed");
+assert.equal(odrProvider.bundleFileTemplate, "{fileName}", "legacy ODR file template changed");
+assert.equal(odrProvider.role, "primary", "legacy ODR must remain a primary provider");
+assert.equal(odrProvider.minimumOSMajor, 15, "legacy ODR minimum OS changed");
+assert.equal(odrProvider.maximumOSMajor, 25, "legacy ODR maximum OS changed");
+assert.equal(managedProvider.role, "primary", "Managed Background Assets must remain primary");
+assert.equal(managedProvider.minimumOSMajor, 26, "Managed Background Assets minimum OS changed");
+assert.equal(httpsProvider.artifactKeySource, "rendition", "HTTPS provider must use rendition artifact keys");
+assert.equal(httpsProvider.role, "fallback", "legacy HTTPS route must remain a fallback");
+assert.equal(httpsProvider.minimumOSMajor, 15, "legacy HTTPS fallback minimum OS changed");
+assert.equal(
+  httpsProvider.baseURLConfigurationKey,
+  "LengyanCDNAudioFallbackBaseURL",
+  "legacy HTTPS base-URL key changed",
+);
+assert.equal(
+  httpsProvider.enabledConfigurationKey,
+  "LengyanCDNAudioFallbackEnabled",
+  "legacy HTTPS enabled key changed",
+);
+assert.equal(
+  httpsProvider.stallTimeoutConfigurationKey,
+  "LengyanCDNAudioFallbackStallTimeoutSeconds",
+  "legacy HTTPS stall-timeout key changed",
+);
+assert.equal(
+  httpsProvider.activation,
+  "user-playback-after-primary-failure-or-stall",
+  "legacy HTTPS activation policy changed",
+);
+assert.equal(httpsProvider.byteRangeSupport, "unsupported", "legacy HTTPS range evidence changed");
+assert.equal(httpsProvider.prefetchAllowed, false, "legacy HTTPS fallback must not prefetch");
+
+const assetPackMarker = "{legacyTrackID}";
+assert.ok(
+  managedProvider.assetPackIDTemplate.endsWith(assetPackMarker),
+  "managed asset pack template must end with {legacyTrackID}",
+);
+const assetPackIDPrefix = managedProvider.assetPackIDTemplate.slice(0, -assetPackMarker.length);
+assert.match(assetPackIDPrefix, /^[A-Za-z0-9.-]+\.$/, "managed asset pack prefix is invalid");
+
+const relativePathMarker = "/{fileName}";
+assert.ok(
+  managedProvider.relativePathTemplate.endsWith(relativePathMarker),
+  "managed relative path template must end with /{fileName}",
+);
+const appleRelativeDirectory = managedProvider.relativePathTemplate.slice(
+  0,
+  -relativePathMarker.length,
+);
+assert.match(appleRelativeDirectory, /^[A-Za-z0-9_-]+$/, "managed relative directory is invalid");
+
+const supportedLocales = artifactManifest.supportedLocales;
+assert.deepEqual(
+  [...supportedLocales].sort(),
+  [...product.supportedLocales].sort(),
+  "artifact and product locales differ",
+);
+assert.deepEqual(
+  Object.keys(artifactManifest.performers).sort(),
+  [...supportedLocales].sort(),
+  "performer locales differ",
+);
+assert.deepEqual(
+  Object.keys(buildInput.legacyProjection.mediaIndexes).sort(),
+  [...supportedLocales].sort(),
+  "media-index locales differ",
+);
 
 const sourceDirectory = path.join(
   repositoryRoot,
-  relativeRepositoryPath(manifest.sourceDirectory, "sourceDirectory"),
+  repositoryRelativePath(buildInput.sourceDirectory, "sourceDirectory"),
 );
-exactKeys(
-  manifest.apple,
-  ["assetPackIDPrefix", "relativeDirectory", "downloadPolicy", "platforms"],
-  "apple configuration",
-);
-assert.match(manifest.apple.assetPackIDPrefix, /^[A-Za-z0-9.-]+\.$/, "assetPackIDPrefix is invalid");
-assert.match(manifest.apple.relativeDirectory, /^[A-Za-z0-9_-]+$/, "apple.relativeDirectory is invalid");
-assert.equal(manifest.apple.downloadPolicy, "onDemand", "only onDemand packs are supported");
-assert.deepEqual(manifest.apple.platforms, ["iOS"], "production packs must target iOS");
-
-exactKeys(manifest.localizations, supportedLocales, "localizations");
-for (const locale of supportedLocales) {
-  exactKeys(manifest.localizations[locale], ["artist"], `localizations.${locale}`);
-  assert.ok(manifest.localizations[locale].artist.length > 0, `${locale} artist must not be empty`);
-}
-
-assert.ok(Array.isArray(manifest.tracks) && manifest.tracks.length > 0, "tracks must not be empty");
 const identifiers = new Set();
 const hashes = new Set();
-for (const [index, track] of manifest.tracks.entries()) {
-  const label = `tracks[${index}]`;
-  exactKeys(track, ["id", "sha256", "bytes", "titles"], label);
-  assert.match(track.id, /^[a-z0-9]+$/, `${label}.id is invalid`);
-  assert.match(track.sha256, /^[a-f0-9]{64}$/, `${label}.sha256 is invalid`);
-  assert.ok(Number.isSafeInteger(track.bytes) && track.bytes > 0, `${label}.bytes is invalid`);
-  assert.equal(identifiers.has(track.id), false, `duplicate track id: ${track.id}`);
-  assert.equal(hashes.has(track.sha256), false, `duplicate track hash: ${track.sha256}`);
-  identifiers.add(track.id);
-  hashes.add(track.sha256);
-  exactKeys(track.titles, supportedLocales, `${label}.titles`);
-  for (const locale of supportedLocales) {
-    assert.ok(track.titles[locale].length > 0, `${label}.titles.${locale} must not be empty`);
-  }
+const fileNames = new Set();
+const selectedTracks = [];
+let fileExtension = null;
+let cdnPathPrefix = null;
 
-  const sourcePath = path.join(sourceDirectory, `${track.id}.${manifest.fileExtension}`);
+for (const [index, artifact] of artifactManifest.artifacts.entries()) {
+  const label = `artifacts[${index}]`;
+  assert.match(artifact.legacyTrackID, /^[a-z0-9]+$/, `${label}.legacyTrackID is invalid`);
+  assert.equal(identifiers.has(artifact.legacyTrackID), false, `duplicate legacy track ID: ${artifact.legacyTrackID}`);
+  identifiers.add(artifact.legacyTrackID);
+  assert.deepEqual(Object.keys(artifact.titles).sort(), [...supportedLocales].sort(), `${label} title locales differ`);
+
+  const renditions = artifact.renditions.filter(
+    (rendition) => rendition.renditionID === delivery.selectedRenditionID,
+  );
+  assert.equal(renditions.length, 1, `${label} must have exactly one selected rendition`);
+  const rendition = renditions[0];
+  assert.match(rendition.sha256, /^[a-f0-9]{64}$/, `${label} SHA-256 is invalid`);
+  assert.ok(Number.isSafeInteger(rendition.bytes) && rendition.bytes > 0, `${label} byte count is invalid`);
+  assert.equal(hashes.has(rendition.sha256), false, `duplicate audio hash: ${rendition.sha256}`);
+  assert.equal(fileNames.has(rendition.fileName), false, `duplicate audio filename: ${rendition.fileName}`);
+  hashes.add(rendition.sha256);
+  fileNames.add(rendition.fileName);
+
+  const expectedExtension = path.posix.extname(rendition.fileName).slice(1);
+  assert.equal(expectedExtension, rendition.fileExtension, `${label} filename extension differs`);
+  fileExtension ??= rendition.fileExtension;
+  assert.equal(rendition.fileExtension, fileExtension, "legacy projection requires one file extension");
+
+  const keySuffix = `/${artifactManifest.catalogVersion}/${rendition.sha256}/${rendition.fileName}`;
+  assert.ok(rendition.artifactKey.endsWith(keySuffix), `${label} artifact key is not immutable`);
+  const prefix = rendition.artifactKey.slice(0, -keySuffix.length);
+  assert.match(prefix, /^[a-z0-9][a-z0-9/-]*$/, `${label} artifact key prefix is invalid`);
+  cdnPathPrefix ??= prefix;
+  assert.equal(prefix, cdnPathPrefix, "legacy projection requires one artifact-key prefix");
+
+  const sourcePath = path.join(sourceDirectory, rendition.fileName);
   const sourceStat = await stat(sourcePath);
   assert.equal(sourceStat.isFile(), true, `audio source is not a file: ${sourcePath}`);
-  assert.equal(sourceStat.size, track.bytes, `audio byte count changed: ${track.id}`);
-  assert.equal(await sha256(sourcePath), track.sha256, `audio SHA-256 changed: ${track.id}`);
+  assert.equal(sourceStat.size, rendition.bytes, `audio byte count changed: ${artifact.legacyTrackID}`);
+  assert.equal(await sha256(sourcePath), rendition.sha256, `audio SHA-256 changed: ${artifact.legacyTrackID}`);
+
+  selectedTracks.push({ artifact, rendition });
 }
 
 const sourceFileNames = (await readdir(sourceDirectory))
-  .filter((fileName) => fileName.endsWith(`.${manifest.fileExtension}`))
+  .filter((fileName) => fileName.endsWith(`.${fileExtension}`))
   .sort();
-const expectedSourceFileNames = manifest.tracks
-  .map((track) => `${track.id}.${manifest.fileExtension}`)
-  .sort();
-assert.deepEqual(sourceFileNames, expectedSourceFileNames, "audio source directory and manifest differ");
+assert.deepEqual(sourceFileNames, [...fileNames].sort(), "audio source directory and artifact manifest differ");
 
-const swiftTracks = manifest.tracks.map((track) => (
+const legacyManifest = {
+  schemaVersion: 1,
+  catalogVersion: artifactManifest.catalogVersion,
+  sourceDirectory: buildInput.sourceDirectory,
+  fileExtension,
+  cdnPathPrefix,
+  apple: {
+    assetPackIDPrefix,
+    relativeDirectory: appleRelativeDirectory,
+    downloadPolicy: managedProvider.downloadPolicy,
+    platforms: managedProvider.platforms,
+  },
+  localizations: Object.fromEntries(
+    supportedLocales.map((locale) => [locale, { artist: artifactManifest.performers[locale] }]),
+  ),
+  tracks: selectedTracks.map(({ artifact, rendition }) => ({
+    id: artifact.legacyTrackID,
+    sha256: rendition.sha256,
+    bytes: rendition.bytes,
+    titles: artifact.titles,
+  })),
+};
+
+const swiftTracks = legacyManifest.tracks.map((track) => (
   `        Track(
             id: ${JSON.stringify(track.id)},
             sha256: ${JSON.stringify(track.sha256)},
@@ -148,12 +337,12 @@ enum GeneratedAudioManifest {
         let bytes: Int64
     }
 
-    static let catalogVersion = ${JSON.stringify(manifest.catalogVersion)}
-    static let fileExtension = ${JSON.stringify(manifest.fileExtension)}
-    static let cdnPathPrefix = ${JSON.stringify(manifest.cdnPathPrefix)}
-    static let appleAssetPackIDPrefix = ${JSON.stringify(manifest.apple.assetPackIDPrefix)}
-    static let appleRelativeDirectory = ${JSON.stringify(manifest.apple.relativeDirectory)}
-    static let nowPlayingArtist = ${JSON.stringify(manifest.localizations["zh-Hant"].artist)}
+    static let catalogVersion = ${JSON.stringify(legacyManifest.catalogVersion)}
+    static let fileExtension = ${JSON.stringify(legacyManifest.fileExtension)}
+    static let cdnPathPrefix = ${JSON.stringify(legacyManifest.cdnPathPrefix)}
+    static let appleAssetPackIDPrefix = ${JSON.stringify(legacyManifest.apple.assetPackIDPrefix)}
+    static let appleRelativeDirectory = ${JSON.stringify(legacyManifest.apple.relativeDirectory)}
+    static let nowPlayingArtist = ${JSON.stringify(legacyManifest.localizations["zh-Hant"].artist)}
 
     static let tracks: [Track] = [
 ${swiftTracks}
@@ -161,12 +350,12 @@ ${swiftTracks}
 }
 `;
 
-const nodeEntries = manifest.tracks.map((track) => (
+const nodeEntries = legacyManifest.tracks.map((track) => (
   `  [${JSON.stringify(track.id)}, ${JSON.stringify(track.sha256)}, ${swiftInteger(track.bytes)}],`
 )).join("\n");
 const generatedNodeCatalog = `// Generated by scripts/generate-audio-manifest.mjs. Do not edit.
 
-export const CATALOG_VERSION = ${JSON.stringify(manifest.catalogVersion)};
+export const CATALOG_VERSION = ${JSON.stringify(legacyManifest.catalogVersion)};
 
 const entries = [
 ${nodeEntries}
@@ -174,7 +363,7 @@ ${nodeEntries}
 
 export const AUDIO_ASSETS = Object.freeze(Object.fromEntries(entries.map(
   ([id, sha256, bytes]) => {
-    const key = \`${manifest.cdnPathPrefix}/\${CATALOG_VERSION}/\${sha256}/\${id}.${manifest.fileExtension}\`;
+    const key = \`${legacyManifest.cdnPathPrefix}/\${CATALOG_VERSION}/\${sha256}/\${id}.${legacyManifest.fileExtension}\`;
     return [
       \`/\${key}\`,
       Object.freeze({ id, sha256, bytes, key }),
@@ -183,60 +372,61 @@ export const AUDIO_ASSETS = Object.freeze(Object.fromEntries(entries.map(
 )));
 `;
 
+const projection = buildInput.legacyProjection;
+const outputPath = (value, label) => path.join(
+  repositoryRoot,
+  repositoryRelativePath(value, label),
+);
+const manifestDirectory = outputPath(
+  projection.appleManifestDirectory,
+  "legacyProjection.appleManifestDirectory",
+);
 const outputs = new Map([
+  [outputPath(projection.manifest, "legacyProjection.manifest"), json(legacyManifest)],
+  [outputPath(projection.swiftCatalog, "legacyProjection.swiftCatalog"), generatedSwift],
+  [outputPath(projection.nodeCatalog, "legacyProjection.nodeCatalog"), generatedNodeCatalog],
   [
-    path.join(repositoryRoot, "lengyan/Domain/AudioAssets/AudioManifest.generated.swift"),
-    generatedSwift,
+    outputPath(projection.checksumCatalog, "legacyProjection.checksumCatalog"),
+    `${legacyManifest.tracks.map((track) => `${track.sha256}  ${track.id}.${legacyManifest.fileExtension}`).join("\n")}\n`,
   ],
   [
-    path.join(repositoryRoot, "CloudflareAudioFallback/src/catalog.mjs"),
-    generatedNodeCatalog,
-  ],
-  [
-    path.join(repositoryRoot, "BackgroundAssets/audio-source-sha256.txt"),
-    `${manifest.tracks.map((track) => `${track.sha256}  ${track.id}.${manifest.fileExtension}`).join("\n")}\n`,
-  ],
-  [
-    path.join(repositoryRoot, "CloudflareAudioFallback/static/lengyan-audio-fallback"),
+    outputPath(projection.healthDocument, "legacyProjection.healthDocument"),
     json({
-      service: "lengyan-audio-fallback",
+      service: `${productID}-audio-fallback`,
       status: "ok",
-      catalogVersion: manifest.catalogVersion,
-      assetCount: manifest.tracks.length,
+      catalogVersion: legacyManifest.catalogVersion,
+      assetCount: legacyManifest.tracks.length,
       storage: "workers-static-assets",
     }),
   ],
 ]);
 
 for (const locale of supportedLocales) {
-  const mediaPath = locale === "zh-Hant"
-    ? "lengyan/data/lengyanjing-media.json"
-    : "lengyan/data/simplified/lengyanjing-media.json";
   outputs.set(
-    path.join(repositoryRoot, mediaPath),
+    outputPath(projection.mediaIndexes[locale], `legacyProjection.mediaIndexes.${locale}`),
     json([{
-      name: manifest.localizations[locale].artist,
-      extension: manifest.fileExtension,
-      files: manifest.tracks.map((track) => track.id),
-      names: manifest.tracks.map((track) => track.titles[locale]),
+      name: legacyManifest.localizations[locale].artist,
+      extension: legacyManifest.fileExtension,
+      files: legacyManifest.tracks.map((track) => track.id),
+      names: legacyManifest.tracks.map((track) => track.titles[locale]),
     }]),
   );
 }
 
 const expectedAppleManifestNames = new Set();
-for (const track of manifest.tracks) {
-  const assetPackID = `${manifest.apple.assetPackIDPrefix}${track.id}`;
+for (const track of legacyManifest.tracks) {
+  const assetPackID = `${legacyManifest.apple.assetPackIDPrefix}${track.id}`;
   const manifestName = `${assetPackID}.json`;
   expectedAppleManifestNames.add(manifestName);
   outputs.set(
     path.join(manifestDirectory, manifestName),
     json({
       assetPackID,
-      downloadPolicy: { [manifest.apple.downloadPolicy]: {} },
+      downloadPolicy: { [legacyManifest.apple.downloadPolicy]: {} },
       fileSelectors: [{
-        file: `${manifest.apple.relativeDirectory}/${track.id}.${manifest.fileExtension}`,
+        file: `${legacyManifest.apple.relativeDirectory}/${track.id}.${legacyManifest.fileExtension}`,
       }],
-      platforms: manifest.apple.platforms,
+      platforms: legacyManifest.apple.platforms,
     }),
   );
 }
@@ -251,7 +441,7 @@ const staleAppleManifestNames = [...actualAppleManifestNames]
 if (mode === "--write") {
   for (const fileName of staleAppleManifestNames) {
     assert.ok(
-      fileName.startsWith(manifest.apple.assetPackIDPrefix),
+      fileName.startsWith(legacyManifest.apple.assetPackIDPrefix),
       `refusing to remove an unmanaged Apple manifest: ${fileName}`,
     );
     await unlink(path.join(manifestDirectory, fileName));
@@ -260,36 +450,38 @@ if (mode === "--write") {
   assert.deepEqual(
     [...actualAppleManifestNames].sort(),
     [...expectedAppleManifestNames].sort(),
-    "BackgroundAssets/Manifests differs from the canonical manifest",
+    "Apple manifest directory differs from the audio contracts",
   );
 }
 
 if (mode === "--write") {
   let changed = staleAppleManifestNames.length;
-  for (const [outputPath, content] of outputs) {
-    await mkdir(path.dirname(outputPath), { recursive: true });
-    const current = await readFile(outputPath, "utf8").catch(() => null);
+  for (const [generatedPath, content] of outputs) {
+    await mkdir(path.dirname(generatedPath), { recursive: true });
+    const current = await readFile(generatedPath, "utf8").catch(() => null);
     if (current !== content) {
-      await writeFile(outputPath, content, "utf8");
+      await writeFile(generatedPath, content, "utf8");
       changed += 1;
     }
   }
-  console.log(`Generated ${outputs.size} audio catalog files (${changed} changed).`);
+  console.log(`Generated ${outputs.size} audio compatibility files for ${productID} (${changed} changed).`);
 } else {
   const stale = [];
-  for (const [outputPath, expected] of outputs) {
-    const actual = await readFile(outputPath, "utf8").catch(() => null);
+  for (const [generatedPath, expected] of outputs) {
+    const actual = await readFile(generatedPath, "utf8").catch(() => null);
     if (actual !== expected) {
-      stale.push(path.relative(repositoryRoot, outputPath));
+      stale.push(path.relative(repositoryRoot, generatedPath));
     }
   }
   if (stale.length > 0) {
-    console.error("Generated audio catalog files are stale:");
-    for (const outputPath of stale) {
-      console.error(`  ${outputPath}`);
+    console.error("Generated audio compatibility files are stale:");
+    for (const generatedPath of stale) {
+      console.error(`  ${generatedPath}`);
     }
     console.error("Run scripts/generate-audio-manifest.mjs --write");
     process.exit(1);
   }
-  console.log(`Audio manifest and ${outputs.size} generated files are consistent.`);
+  console.log(
+    `Audio artifact, delivery, build input, and ${outputs.size} generated compatibility files are consistent.`,
+  );
 }

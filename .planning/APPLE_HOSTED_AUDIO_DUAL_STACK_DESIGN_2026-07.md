@@ -5,7 +5,7 @@
 最低系统：iOS 15.0\
 状态：M1/M2 已实施；发布端 hosted 验证待后续补齐
 
-> **2026-07-26 实施更新：** 本文的 provider/lease/当前卷与下一卷状态机仍有效；生产实现还增加了只用于用户主动播放失败的 Cloudflare emergency fallback。`AudioAssets/audio-manifest.json` 已取代手工维护 `AudioAssetCatalog.swift`/Node/checksum/Apple manifests，生成 17 个兼容产物。fallback cache 现为 28 天未访问清理且无数量/字节上限，不再是 2 卷/48 MiB。当前实现状态、验证缺口和跨产品后续以 `BackgroundAssets/IMPLEMENTATION_STATUS_2026-07-19.md` 与 `.planning/AI_MULTI_PRODUCT_ENGINEERING_PLAN.md` 为准；本文的文件清单和里程碑保留为设计历史，不是运行时配置权威。
+> **2026-07-26 实施更新：** 本文的 provider/lease/当前卷与下一卷状态机仍有效；生产实现还增加了只用于用户主动播放失败的 Cloudflare emergency fallback。音频现已拆为 product-neutral artifact、iOS/Android delivery 与 tooling input；`AudioAssets/audio-manifest.json` 连同原 Swift/Node/checksum/Apple 文件均为兼容生成产物。fallback cache 现为 28 天未访问清理且无数量/字节上限，不再是 2 卷/48 MiB。当前实现状态、验证缺口和跨产品后续以 `BackgroundAssets/IMPLEMENTATION_STATUS_2026-07-19.md` 与 `.planning/AI_MULTI_PRODUCT_ENGINEERING_PLAN.md` 为准；本文的文件清单和里程碑保留为设计历史，不是运行时配置权威。
 
 > 2026-07-19 实施授权更新：用户明确要求不等待 TestFlight / Validate，
 > 直接完成双栈改造。因此 M0 发布闸门不再阻止实施，但未完成的

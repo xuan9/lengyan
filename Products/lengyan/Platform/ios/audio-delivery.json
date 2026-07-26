@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "productID": "lengyan",
+  "platform": "ios",
+  "deliveryVersion": "legacy-v1",
+  "state": "production",
+  "artifactManifest": "audio-artifacts.json",
+  "selectedRenditionID": "m4a-legacy",
+  "providers": [
+    {
+      "providerID": "legacy-odr",
+      "kind": "apple-on-demand-resources",
+      "role": "primary",
+      "minimumOSMajor": 15,
+      "maximumOSMajor": 25,
+      "tagTemplate": "{legacyTrackID}",
+      "bundleFileTemplate": "{fileName}"
+    },
+    {
+      "providerID": "managed-background-assets",
+      "kind": "apple-managed-background-assets",
+      "role": "primary",
+      "minimumOSMajor": 26,
+      "assetPackIDTemplate": "org.fuxuan.lengyan.audio.{legacyTrackID}",
+      "relativePathTemplate": "Audio/{fileName}",
+      "downloadPolicy": "onDemand",
+      "platforms": [
+        "iOS"
+      ]
+    },
+    {
+      "providerID": "cloudflare-emergency-fallback",
+      "kind": "https",
+      "role": "fallback",
+      "minimumOSMajor": 15,
+      "baseURLConfigurationKey": "LengyanCDNAudioFallbackBaseURL",
+      "enabledConfigurationKey": "LengyanCDNAudioFallbackEnabled",
+      "artifactKeySource": "rendition",
+      "activation": "user-playback-after-primary-failure-or-stall",
+      "stallTimeoutConfigurationKey": "LengyanCDNAudioFallbackStallTimeoutSeconds",
+      "byteRangeSupport": "unsupported",
+      "prefetchAllowed": false
+    }
+  ]
+}

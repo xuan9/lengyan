@@ -15,7 +15,8 @@
   "manifests": {
     "book": "book-manifest.json",
     "source": "source-manifest.json",
-    "audio": "audio-artifacts.json"
+    "audio": "audio-artifacts.json",
+    "audioBuild": "Tooling/audio-input.json"
   },
   "features": {
     "audio": true,
@@ -25,10 +26,12 @@
   },
   "platforms": {
     "ios": {
-      "state": "production"
+      "state": "production",
+      "audioDelivery": "Platform/ios/audio-delivery.json"
     },
     "android": {
-      "state": "planned"
+      "state": "planned",
+      "audioDelivery": "Platform/android/audio-delivery.json"
     }
   }
 }

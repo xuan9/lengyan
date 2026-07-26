@@ -77,7 +77,7 @@ iOS 与 Android 最困难的部分分别依赖 AVFoundation/WidgetKit/UIKit/Swif
 - SwiftUI 已用于听经、收藏、搜索、设置和分享。
 - `Book.shared` 已有资源加载和基本结构校验。
 - `AudioManager.shared` 已通过 `AudioAssetProvider` / `AudioAssetCoordinator` 处理资源 lease、后台播放、续播、下一卷预取与锁屏控制；冷启动播放位置恢复和生命周期保存已补强，系统和 CDN 分支不再散落在播放器中。
-- `AudioAssets/audio-manifest.json` 已成为楞严现行音频 catalog 的唯一手工输入，生成 Swift、Node、checksum、媒体索引和 11 个 Apple manifests；本地 `--check` 与 CI audio-catalog job 已建立。
+- `Products/lengyan/audio-artifacts.json`、iOS/Android delivery 与 tooling input 已成为分层音频输入；旧 manifest 及 Swift、Node、checksum、媒体索引和 11 个 Apple manifests 均由生成器兼容输出，本地 `--check` 与 CI audio-catalog job 已建立。
 - Widget 已支持小/中/大与锁屏尺寸、首次添加引导和刷新恢复；新增了短/长经句、系统尺寸和可读字号下限的渲染测试。简繁体、提醒、分享长图和文字导出已有实现。
 - 当前 Xcode 工程包含 App、Asset Downloader Extension、Unit Tests、UI Tests 和 Widget 五个 Target；App Scheme 已提交为 shared scheme。
 - `a299864` 已收敛此前 4 个收藏详情稳定性 pending 文件，`bf3d790` 是干净的计划/代码 checkpoint；`a687fb8` 在其上补齐迁移关键行为回归，形成当前 F0 behavior reference。
@@ -96,8 +96,8 @@ iOS 与 Android 最困难的部分分别依赖 AVFoundation/WidgetKit/UIKit/Swif
 7. 旧 CI 的无障碍、性能和覆盖率 job 只是输出成功文字；Foundation 1 已删除假 job。重新加入任何质量门槛前必须先有真实测量器和失败阈值。
 8. 根 `AGENTS.md` 现为唯一 agent 入口，`CLAUDE.md` 已改为指针，`REQUIREMENTS.md` 已重写为当前产品约束；其他历史报告继续按权威顺序逐步归档，不阻塞 contracts。
 9. `.git` 约 693MB、Git pack 约 673MB；索引仍有 21 个大型 MP3/M4A 母源/发布文件和 1 个约 7KB 的 M0 smoke 音频。新产品继续这样存放会恶化克隆和 CI。
-10. 当前 `AudioAssets/audio-manifest.json` 已消除 11 条音频在 Swift/Node/checksum/Apple manifests 之间的多重手工权威和 Swift 正则解析；但它仍包含 `sourceDirectory`、`cdnPathPrefix` 和 Apple pack 配置，且缺少正文映射、renditions、codec、duration、权利引用与内容版本，因此是**楞严交付 catalog v1**，不是 Gate F2 的最终跨产品 artifact schema。
-11. `generate-audio-manifest.mjs` 能生成并检查 17 个产物，但输出路径、locale 和 Apple 配置仍写死楞严结构，检查还直接读取 Git 内完整 M4A。它需要演进为产品无关生成器，并让普通代码 CI 不必克隆/哈希全部发布音频。
+10. 此项已解决：跨平台 artifact 不含 Apple/CDN/source 配置，并已具备 stable volume mapping、rendition、codec/profile、duration、权利、内容版本和 immutable key；旧 manifest 仅作生成兼容层。
+11. `generate-audio-manifest.mjs` 已从 product manifest 解析 artifact、iOS delivery、tooling input 与输出路径，并生成 18 个兼容文件；当前 source-verification Gate 仍会读取 Git 内完整 M4A。后续停止新增大音频并迁移到受控构建存储时，再把普通代码 CI 与 release/audio-integrity CI 分开。
 12. 此前 `241fb0c` 后的收藏详情未提交修改已由 `a299864` 收敛；F0 命令、结果与真实发行缺口记录在 `docs/quality/REFERENCE_BASELINE_2026-07-26.md`。后续迁移不再依赖未提交文件。
 13. 仓库包含反馈 Worker/D1，以及 Apple/Cloudflare 音频网络交付；“完全本地”已不再是完整数据流描述。当前 `PRIVACY.md` 尚未说明外部音频托管链路，后续需同时描述必要的网络请求、服务方、用途和保留边界。
 14. Foundation 1 已将 Node 固定为 22.17.1，把第三方 GitHub Actions 固定到 commit SHA，并以 Xcode 26 runner 执行真实脚本；GitLab 源仓库自动跑 portable Node gate，macOS build/archive 在有资格的 runner 上手动取证。两套托管配置都需首跑成功后才可关闭 Gate F1。
@@ -176,7 +176,7 @@ lengyan-app/
 │   │   ├── Content/
 │   │   ├── Assets.xcassets/
 │   │   ├── Localizations/
-│   │   ├── audio-manifest.json
+│   │   ├── audio-artifacts.json
 │   │   ├── SOURCE_MANIFEST.yml
 │   │   ├── StoreMetadata/
 │   │   │   ├── ios/
@@ -330,7 +330,7 @@ Bundle ID、application ID、签名 Team、App Group、渠道 host 等构建/交
 4. `scripts/bootstrap.sh --product jingang --audio` 只下载该产品所需资源并校验哈希。
 5. 普通代码 CI 不下载全部音频；音频集成和 Release CI 才获取完整资源。
 
-这一步的第一阶段已经完成：`AudioAssets/audio-manifest.json` 是现行楞严 catalog 的唯一手工输入，`generate-audio-manifest.mjs` 会校验源文件并生成 Swift、Node、checksum、两份媒体索引、静态健康信息和 11 个 Apple manifests，不再正则解析 Swift 源码。Gate F2 不重复做这次导入，而是在保留兼容输出的前提下，将它升级为产品无关 schema：artifact 层补正文映射、renditions、codec、duration、权利与内容版本，Apple/CDN/source path 移入平台 delivery/build 配置。
+楞严迁移现已完成：`audio-artifacts.json` 是跨平台身份与完整性输入，Apple/CDN/source path 分别位于 iOS delivery 与 tooling input；`generate-audio-manifest.mjs` 校验源文件并生成旧 manifest、Swift、Node、checksum、两份媒体索引、静态健康信息和 11 个 Apple manifests，不再正则解析 Swift 源码。Android delivery 明确保留为 `planned`，待主站和格式实测后再选择 rendition。
 
 不建议立即改写已有 673MB Git 历史。先停止继续增长；历史清理应作为独立、可回滚的仓库迁移项目处理。
 
@@ -473,7 +473,7 @@ Apple 已确认 ODR 从 iOS/iPadOS 27 起弃用并建议迁移；Managed Backgro
 
 9. **`Products/<id>/PRODUCT.md`**：用户、核心流程、MVP、非目标和验收标准。
 10. **`Products/<id>/SOURCE_MANIFEST.yml`**：底本、扫描/数字来源、权利、编辑、校对和修订历史。
-11. **`Products/<id>/audio-manifest.json`**：音频权利、renditions、哈希与正文版本对应关系。
+11. **`Products/<id>/audio-artifacts.json`**：音频权利、renditions、哈希与正文版本对应关系。
 12. **`Products/<id>/RELEASE_CHECKLIST.md`**：该产品两个平台的身份、内容、隐私和发布证据。
 
 ### P1：首个新产品上架前
@@ -614,13 +614,13 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 - 已建立 `ProductManifest`、`BookManifest`、content package、audio artifact、source manifest、behavior fixture 的 Draft 2020-12 schema，以及稳定 ID 与 canonical UTF-8/NFC/hash 规则。
 - 已登记四个产品：楞严是 `legacy-migration`；金刚、圆觉、坛经只处于 `source-review`。四份 commit-pinned CBETA XML 仅作受限校勘参考，未导入正文，默认商业权利会阻断发布。
 - 独立 Node validator 已校验产品间引用、楞严十个 legacy JSON 哈希、现行 11 条音频逐项兼容、source/rights gate 和首批跨平台 fixtures，并通过负向测试；已接入根 `verify.sh contracts` 和 Node CI。
-- 以已运行的 `AudioAssets/audio-manifest.json`/generator 为迁移输入，补齐跨产品 artifact 字段并拆出 iOS/Android delivery config；生成器参数化产品路径且继续对现有 17 个楞严产物做兼容校验。
+- 已将 11 条楞严音频拆为 product-neutral artifact、iOS/Android delivery 与 repository tooling input；十卷映射到稳定 volume ID，codec/profile、duration、bytes、SHA-256 和 immutable artifact key 完整。旧 `AudioAssets/audio-manifest.json` 成为生成投影，连同原有 17 个下游产物保持逐字节兼容。
 - 已把现有楞严数据生成两套 `legacy-migration` 结构化包：每套 1,262 段、1,669 个 section，并建立覆盖全部旧节点的 path map；现有 iOS runtime 与 `lengyan/data/` 保持不变。
 - 生产 chapter map 可可靠定位 1,133/1,155 个 leaf path；其余 22 项保留旧路径和提示但明确 `volumeID: null`，不得由 AI 猜测。逐段测试证明正文只发生 288 处确定性的 CRLF-to-LF 规范化。
 - 继续补搜索、每日经句、续读/收藏迁移 fixtures；现有首批 fixtures 已覆盖分享文件名、legacy 深链和同卷 resume/异卷从头播放。
 - 停止新增大音频到 Git，确定 CDN/object storage 和 artifact/delivery 分层。
 
-**当前工程未完成项：** artifact/delivery 生成链拆分、搜索/每日经句/续读/收藏迁移 fixtures，以及现有 iOS 对共享 fixtures 的 adapter。完整 legacy map 与可逆 migration package 已完成，但不能据此宣称 canonical。
+**当前工程未完成项：** 搜索/每日经句/续读/收藏迁移 fixtures，以及现有 iOS 对共享 fixtures 的 adapter。完整 legacy map、可逆 migration package 与 artifact/delivery 生成链拆分已完成，但不能据此宣称 canonical，也不能把 planned Android delivery 当作已选定主站。
 
 **并行发布阻断项：** 楞严 authoritative source/rights/text review 与 22 项卷映射裁定继续记录为人工治理工作；它们阻止 canonical promotion 和正式新渠道发布，但不阻止用锁定的现有正文快照开发、测试 Android 兼容实现。Android 自身 fixture adapter 在 Phase 2/Gate C 完成，不能循环地作为创建 Android 工程之前的 F2 条件。
 

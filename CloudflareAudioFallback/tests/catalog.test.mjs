@@ -9,7 +9,7 @@ const manifest = JSON.parse(
   await readFile(new URL("../../AudioAssets/audio-manifest.json", import.meta.url), "utf8"),
 );
 
-test("catalog exposes every canonical immutable content-addressed asset", () => {
+test("catalog exposes every artifact-derived immutable content-addressed asset", () => {
   assert.equal(CATALOG_VERSION, manifest.catalogVersion);
   assert.equal(Object.keys(AUDIO_ASSETS).length, manifest.tracks.length);
 

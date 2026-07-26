@@ -66,8 +66,8 @@ Android 版本可以实施，也应从第一天按多经典产品建设。推荐
 - 当前可观察语义是：A 播放期间请求 B 不提前中断 A；当前卷完整可用后原子切换；下一卷只维持一个预取；用户点中预取卷时提升同一任务；迟到结果不能抢占新选择。
 - Apple primary 明确失败或 15 秒无进展时，只有用户主动播放才进入 Cloudflare fallback；取消、本机空间不足和静默预取失败不得触发公网回退。
 - 当前 Cloudflare Static Assets 会忽略 Range 并返回完整文件，且没有中国大陆 SLA。其 content-addressed key 与 bytes/SHA-256 校验可以复用，host 和下载实现不能作为 Android 主链路。
-- 当前 `AudioAssets/audio-manifest.json` 已单源生成 17 个楞严 Swift/Node/Apple 产物并接入 CI 检查；Android 不再参与“消除四份手工 catalog”这一步，但也不能直接消费仍含 Apple/CDN/source path 的现行交付 catalog。Gate F2 仍需把它演进为跨产品 artifact schema 与 Android delivery config。
-- Gate F2 的内容迁移层已落地：`Contracts/Schemas/`、四个 `Products/<id>/` 清单、楞严两套 `legacy-migration` 包、覆盖 1,669 个旧节点的完整 path map、跨平台 audio artifact 投影、source/rights gate 和首批 behavior fixtures 可由 `./verify.sh contracts` 在 macOS/Linux 独立校验。它精确复现现有产品但不冒充 authoritative edition；Android 仍须等待 audio delivery 拆分和 F2 工程审查完成，不能因已有 schema 就提前创建产品 module。
+- 楞严音频已拆为 product-neutral artifact、iOS/Android delivery 与 tooling input；`AudioAssets/audio-manifest.json` 及原 17 个 Swift/Node/Apple 下游文件均为逐字节兼容的生成输出。Android 只读取 artifact contract；其 delivery 当前明确为 `planned`，没有伪用 iOS Cloudflare 应急源。
+- Gate F2 的迁移层已落地：`Contracts/Schemas/`、四个 `Products/<id>/` 清单、楞严两套 `legacy-migration` 包、覆盖 1,669 个旧节点的完整 path map、分层 audio contracts、source/rights gate 和首批 behavior fixtures 可由 `./verify.sh contracts` 在 macOS/Linux 独立校验。它精确复现现有产品但不冒充 authoritative edition；Android 仍须等待剩余 fixture/iOS-adapter 工程审查完成，不能因已有 schema 就提前跳过 Gate。
 - iOS 已取消技术性的音频存储设置页，改为按需准备和自动缓存/清理；其 fallback 当前无容量上限、按 28 天未访问淘汰，11 条全部缓存约 154MiB。这是现状而非 Android requirement，Phase 0 必须明确 Data Saver/Wi-Fi、单产品与全局 cache budget、清理和可选 pin。
 - 冷启动续播现在会即时持久化并保护异步 seek；Android 必须把“同一卷在进程重建后恢复且不会被初始 0 覆盖”加入 Media3 fixture 和杀进程测试。
 - 目录 disclosure state 现在还会跨重启持久化；Android 使用稳定 node ID 和产品命名空间保存，内容升级时过滤失效节点。
@@ -480,7 +480,7 @@ AudioAssetProvider
 首选 CDN/object storage + immutable versioned URLs：
 
 - 跨平台 `audio-manifest.json` 提供 audio/track ID、卷 ID、renditions、codec、duration、bytes、SHA-256、artifact key 和权利引用，不放渠道 host。
-- 现行楞严 `AudioAssets/audio-manifest.json` 已生成/校验 Swift、Node、checksum、媒体索引和 Apple manifests，Android 不读取或正则解析 Swift 源码。Gate F2 先把其中 Apple/CDN/source path 拆入平台配置，并补卷映射、renditions、codec、duration、权利和内容版本；Android 只消费演进后的跨平台 artifact 输出。
+- 现行楞严 artifact contract 已补 stable volume mapping、renditions、`mp4a.40.29`、duration、bytes/SHA-256、immutable key、权利和内容版本；Apple/CDN/source path 已移入 iOS delivery 与 tooling input。Android 不读取旧 manifest 或正则解析 Swift，只消费跨平台 artifact 输出。
 - `Products/<id>/Platform/android/audio-delivery.json` 选择 rendition 并把 artifact key 解析到当前渠道的 HTTPS host；生产 token/secret 不进入文件。
 - Media3 `DownloadService` / `DownloadManager` 处理后台离线下载和恢复。[Media3 downloading media](https://developer.android.com/media/media3/exoplayer/downloading-media)
 - 下载完成后校验长度和 SHA-256；损坏文件不可进入可播放状态。

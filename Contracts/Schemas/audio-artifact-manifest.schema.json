@@ -29,7 +29,7 @@
     },
     "catalogVersion": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
     },
     "contractState": {
       "enum": [
@@ -114,18 +114,6 @@
         }
       ]
     },
-    "compatibility": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "deliveryManifest"
-      ],
-      "properties": {
-        "deliveryManifest": {
-          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
-        }
-      }
-    },
     "artifacts": {
       "type": "array",
       "minItems": 1,
@@ -185,6 +173,10 @@
             "legacyVolume": {
               "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
             },
+            "volumeID": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*\\.v[0-9]{6}$"
+            },
             "paragraphStartID": {
               "type": "string",
               "minLength": 1
@@ -193,7 +185,32 @@
               "type": "string",
               "minLength": 1
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "mapped"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "volumeID": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]*\\.v[0-9]{6}$"
+                  }
+                },
+                "required": [
+                  "volumeID"
+                ]
+              }
+            }
+          ]
         },
         "rightsReference": {
           "type": "string",
@@ -214,10 +231,13 @@
       "required": [
         "renditionID",
         "fileName",
+        "artifactKey",
         "mediaType",
         "fileExtension",
         "codec",
         "durationMilliseconds",
+        "sampleRateHertz",
+        "channels",
         "bytes",
         "sha256"
       ],
@@ -230,6 +250,10 @@
           "type": "string",
           "pattern": "^[^/\\\\]+$"
         },
+        "artifactKey": {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[a-z0-9][a-z0-9._/-]*$"
+        },
         "mediaType": {
           "type": "string",
           "pattern": "^[a-z0-9.+-]+/[a-z0-9.+-]+$"
@@ -239,21 +263,19 @@
           "pattern": "^[a-z0-9]+$"
         },
         "codec": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": "string",
           "minLength": 1
         },
         "durationMilliseconds": {
-          "anyOf": [
-            {
-              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+        },
+        "sampleRateHertz": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+        },
+        "channels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
         },
         "bytes": {
           "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"

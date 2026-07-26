@@ -100,9 +100,11 @@ Canonical scripture is protected data, not ordinary copy:
 - Keep product differences in typed product/content manifests only when they
   are stable configuration. Product-specific experiences belong in thin app
   modules, not in a universal flag matrix.
-- `AudioAssets/audio-manifest.json` is the only hand-edited Lengyan audio
-  delivery catalog today. Run its generator in `--check` mode and never edit
-  generated Swift, Node, checksum, media, or Apple manifest outputs directly.
+- Lengyan audio identity lives in `Products/lengyan/audio-artifacts.json`;
+  platform routing and repository source paths live in its `Platform/` and
+  `Tooling/` contracts. Run the generator in `--check` mode and never edit
+  `AudioAssets/audio-manifest.json` or generated Swift, Node, checksum, media,
+  or Apple manifest outputs directly.
 - Large audio artifacts do not belong in new Git history. Artifact manifests
   carry hashes and rights metadata; platform delivery configuration chooses the
   host and download mechanism.

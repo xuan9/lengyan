@@ -1,9 +1,10 @@
 # Lengyan Audio Fallback Static Assets
 
 This assets-only Workers project exposes the immutable audio files declared in
-`../AudioAssets/audio-manifest.json`. `src/catalog.mjs` and the static health
-contract are generated from that canonical manifest. The project deliberately
-has no Worker script, R2 bucket, binding, or `run_worker_first` route. Production uses the free
+`../Products/lengyan/audio-artifacts.json`. `AudioAssets/audio-manifest.json`,
+`src/catalog.mjs`, and the static health contract are generated compatibility
+outputs. The project deliberately has no Worker script, R2 bucket, binding, or
+`run_worker_first` route. Production uses the free
 `lengyan-audio-fallback.dhyana9.workers.dev` HTTPS route until a custom domain
 is available.
 

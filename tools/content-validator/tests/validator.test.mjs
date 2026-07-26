@@ -188,10 +188,38 @@ test("validates the checked-in product contracts", async () => {
   assert.equal(report.fixtureCount, 3);
   assert.equal(report.contentPackageCount, 2);
   assert.equal(report.legacyPathMappingCount, 1669);
+  assert.equal(report.audioDeliveryCount, 2);
+  assert.equal(report.audioBuildInputCount, 1);
   assert.deepEqual(
     report.products.map((product) => product.productID),
     ["jingang", "lengyan", "tanjing", "yuanjue"]
   );
+});
+
+test("locks the reviewed Lengyan rendition metadata and stable volume mapping", async () => {
+  const audio = JSON.parse(
+    await readFile(join(repositoryRoot, "Products/lengyan/audio-artifacts.json"), "utf8")
+  );
+  const renditions = audio.artifacts.map((artifact) => artifact.renditions[0]);
+  assert.equal(
+    renditions.reduce((total, rendition) => total + rendition.bytes, 0),
+    161420718
+  );
+  assert.equal(
+    renditions.reduce((total, rendition) => total + rendition.durationMilliseconds, 0),
+    29121172
+  );
+  assert.deepEqual([...new Set(renditions.map((rendition) => rendition.codec))], ["mp4a.40.29"]);
+  assert.deepEqual([...new Set(renditions.map((rendition) => rendition.sampleRateHertz))], [22050]);
+  assert.deepEqual([...new Set(renditions.map((rendition) => rendition.channels))], [2]);
+  assert.deepEqual(
+    audio.artifacts.slice(0, 10).map((artifact) => artifact.contentMapping.volumeID),
+    Array.from(
+      { length: 10 },
+      (_, index) => `lengyan.v${String(index + 1).padStart(6, "0")}`
+    )
+  );
+  assert.equal(audio.artifacts[10].contentMapping.status, "legacy-unmapped");
 });
 
 test("does not allow pending source review to become release eligible", async () => {
@@ -243,6 +271,97 @@ test("detects drift from the production audio delivery catalog", async () => {
       audio.artifacts[0].renditions[0].bytes += 1;
     });
     await expectValidationIssue(root, "byte count differs from delivery catalog");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects audio mapped to a volume outside the content package", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Products/lengyan/audio-artifacts.json", (audio) => {
+      audio.artifacts[0].contentMapping.volumeID = "lengyan.v999999";
+    });
+    await expectValidationIssue(root, "maps to an unknown volume");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects an active delivery rendition missing from its artifacts", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Products/lengyan/Platform/ios/audio-delivery.json", (delivery) => {
+      delivery.selectedRenditionID = "m4a-missing";
+    });
+    await expectValidationIssue(root, "lacks selected rendition m4a-missing");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects an Apple delivery provider attached to Android", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Products/lengyan/Platform/android/audio-delivery.json", (delivery) => {
+      delivery.providers = [
+        {
+          providerID: "invalid-apple-provider",
+          kind: "apple-on-demand-resources",
+          role: "primary",
+          minimumOSMajor: 15,
+          maximumOSMajor: 25,
+          tagTemplate: "{legacyTrackID}",
+          bundleFileTemplate: "{fileName}"
+        }
+      ];
+    });
+    await expectValidationIssue(root, "is Apple-specific but linked to android");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects an Android primary that cannot resume byte ranges", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Products/lengyan/product.json", (product) => {
+      product.platforms.android.state = "development";
+    });
+    await mutateJSON(root, "Products/lengyan/Platform/android/audio-delivery.json", (delivery) => {
+      delivery.state = "development";
+      delivery.selectedRenditionID = "m4a-legacy";
+      delivery.providers = [
+        {
+          providerID: "android-primary",
+          kind: "https",
+          role: "primary",
+          minimumOSMajor: 26,
+          baseURLConfigurationKey: "AUDIO_BASE_URL",
+          artifactKeySource: "rendition",
+          activation: "always",
+          byteRangeSupport: "unsupported",
+          prefetchAllowed: true
+        }
+      ];
+      delete delivery.releaseBlockers;
+    });
+    await expectValidationIssue(root, "Android primary must support byte ranges");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("does not require new products to define a legacy audio projection", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Products/lengyan/Tooling/audio-input.json", (buildInput) => {
+      delete buildInput.deliveryManifest;
+      delete buildInput.selectedRenditionID;
+      delete buildInput.legacyProjection;
+    });
+    const report = await validateRepository({ repositoryRoot: root });
+    assert.equal(report.audioBuildInputCount, 1);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

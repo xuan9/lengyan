@@ -55,4 +55,4 @@ assert.deepEqual(
   manifest.tracks.map((track) => `${track.id}.${manifest.fileExtension}`).sort(),
 );
 
-console.log(`Verified ${manifest.tracks.length} exact canonical-manifest, source and generated catalog mappings.`);
+console.log(`Verified ${manifest.tracks.length} exact artifact-derived, source, and generated catalog mappings.`);
