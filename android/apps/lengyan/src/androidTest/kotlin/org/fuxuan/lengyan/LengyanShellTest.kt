@@ -71,6 +71,7 @@ class LengyanShellTest {
             }.isSuccess
         }
         composeRule.onNodeWithText("開始閱讀", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) { readerIsDisplayed() }
         val reader = composeRule.onNode(hasScrollAction(), useUnmergedTree = true)
 
         repeat(6) {
@@ -91,6 +92,7 @@ class LengyanShellTest {
                 composeRule.activity.resources.configuration.orientation ==
                     Configuration.ORIENTATION_LANDSCAPE
             }
+            composeRule.waitUntil(timeoutMillis = 10_000) { readerIsDisplayed() }
             composeRule.onNode(hasScrollAction(), useUnmergedTree = true).performTouchInput {
                 swipeUp(durationMillis = 180)
             }
@@ -124,6 +126,10 @@ class LengyanShellTest {
 
     private fun backIsDisplayed(): Boolean = runCatching {
         composeRule.onNodeWithContentDescription("返回", useUnmergedTree = true).assertIsDisplayed()
+    }.isSuccess
+
+    private fun readerIsDisplayed(): Boolean = runCatching {
+        composeRule.onNode(hasScrollAction(), useUnmergedTree = true).assertIsDisplayed()
     }.isSuccess
 
     private fun org.fuxuan.classics.core.content.ScriptureContent.paragraphIndex(

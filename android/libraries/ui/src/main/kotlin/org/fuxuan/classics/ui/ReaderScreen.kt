@@ -150,16 +150,9 @@ internal fun ReaderScreen(
                     ),
             ) {
                 SelectionContainer {
-                    val typography = readerTypography(fontSizeLevel)
-                    Text(
+                    ReaderText(
                         text = document.text,
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = typography.fontSize,
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = typography.lineHeight,
-                        letterSpacing = 0.sp,
-                        textAlign = TextAlign.Start,
+                        fontSizeLevel = fontSizeLevel,
                         onTextLayout = { nextLayout ->
                             val previousLayout = textLayout
                             if (
@@ -181,6 +174,27 @@ internal fun ReaderScreen(
             }
         }
     }
+}
+
+@Composable
+internal fun ReaderText(
+    text: String,
+    fontSizeLevel: Int,
+    modifier: Modifier = Modifier,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
+) {
+    val typography = readerTypography(fontSizeLevel)
+    Text(
+        text = text,
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.onBackground,
+        fontSize = typography.fontSize,
+        fontWeight = FontWeight.Normal,
+        lineHeight = typography.lineHeight,
+        letterSpacing = 0.sp,
+        textAlign = TextAlign.Start,
+        onTextLayout = onTextLayout,
+    )
 }
 
 private suspend fun TextLayoutResult.scrollOffsetFor(
