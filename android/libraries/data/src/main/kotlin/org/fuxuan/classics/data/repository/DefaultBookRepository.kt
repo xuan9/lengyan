@@ -4,6 +4,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.fuxuan.classics.core.content.AudioCatalog
+import org.fuxuan.classics.core.behavior.LegacyLocationResolution
+import org.fuxuan.classics.core.behavior.LegacyLocationResolver
+import org.fuxuan.classics.core.behavior.LegacyLocationUsage
+import org.fuxuan.classics.core.behavior.ScriptureSearchIndex
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.BookRepository
 import org.fuxuan.classics.core.content.ProductManifest
@@ -20,6 +24,8 @@ class DefaultBookRepository(
     private val productCache = AtomicReference<ProductManifest?>()
     private val bookCache = AtomicReference<BookManifest?>()
     private val audioCache = AtomicReference<LoadedAudioCatalog?>()
+    private val legacyResolverCache = AtomicReference<LoadedLegacyResolver?>()
+    private val searchIndexCache = AtomicReference<ScriptureSearchIndex?>()
     private val contentCache = ConcurrentHashMap<String, ScriptureContent>()
 
     override suspend fun product(): ProductManifest = withContext(ioDispatcher) {
@@ -31,9 +37,7 @@ class DefaultBookRepository(
     }
 
     override suspend fun content(locale: String): ScriptureContent = withContext(ioDispatcher) {
-        contentCache[locale] ?: loadContent(locale).let { loaded ->
-            contentCache.putIfAbsent(locale, loaded) ?: loaded
-        }
+        loadCachedContent(locale)
     }
 
     override suspend fun audioCatalog(): AudioCatalog? = withContext(ioDispatcher) {
@@ -41,6 +45,29 @@ class DefaultBookRepository(
         val loaded = LoadedAudioCatalog(loadAudioCatalog())
         audioCache.compareAndSet(null, loaded)
         audioCache.get()!!.catalog
+    }
+
+    override suspend fun searchIndex(): ScriptureSearchIndex = withContext(ioDispatcher) {
+        searchIndexCache.get()?.let { return@withContext it }
+        val loaded = ScriptureSearchIndex(
+            traditional = loadCachedContent(TRADITIONAL_LOCALE),
+            simplified = loadCachedContent(SIMPLIFIED_LOCALE),
+        )
+        searchIndexCache.compareAndSet(null, loaded)
+        searchIndexCache.get()!!
+    }
+
+    override suspend fun resolveLegacyLocation(
+        legacyPath: String,
+        usage: LegacyLocationUsage,
+    ): LegacyLocationResolution = withContext(ioDispatcher) {
+        val resolver = loadLegacyResolver()
+        resolver?.resolve(legacyPath, usage)
+            ?: if (legacyPath.isEmpty() || legacyPath == "/") {
+                LegacyLocationResolution.Invalid
+            } else {
+                LegacyLocationResolution.Unresolved
+            }
     }
 
     private fun loadProduct(): ProductManifest = productCache.get() ?: run {
@@ -79,6 +106,11 @@ class DefaultBookRepository(
         return loaded
     }
 
+    private fun loadCachedContent(locale: String): ScriptureContent =
+        contentCache[locale] ?: loadContent(locale).let { loaded ->
+            contentCache.putIfAbsent(locale, loaded) ?: loaded
+        }
+
     private fun loadAudioCatalog(): AudioCatalog? {
         val product = loadProduct()
         val path = product.audioManifestPath ?: return null
@@ -97,9 +129,27 @@ class DefaultBookRepository(
         return loaded
     }
 
+    private fun loadLegacyResolver(): LegacyLocationResolver? {
+        legacyResolverCache.get()?.let { return it.resolver }
+        val book = loadBook()
+        val loaded = book.legacyMapPath?.let { path ->
+            val map = parser.parseLegacyPathMap(source.readText(safeRelativePath(path)))
+            require(map.productID == book.productID) { "legacy map belongs to a different product" }
+            require(map.bookID == book.bookID) { "legacy map belongs to a different book" }
+            require(map.editionID == book.editionID) { "legacy map belongs to a different edition" }
+            map.resolver()
+        }
+        val cached = LoadedLegacyResolver(loaded)
+        legacyResolverCache.compareAndSet(null, cached)
+        return legacyResolverCache.get()!!.resolver
+    }
+
     private data class LoadedAudioCatalog(val catalog: AudioCatalog?)
+    private data class LoadedLegacyResolver(val resolver: LegacyLocationResolver?)
 
     private companion object {
         const val PRODUCT_MANIFEST_PATH = "product.json"
+        const val TRADITIONAL_LOCALE = "zh-Hant"
+        const val SIMPLIFIED_LOCALE = "zh-Hans"
     }
 }

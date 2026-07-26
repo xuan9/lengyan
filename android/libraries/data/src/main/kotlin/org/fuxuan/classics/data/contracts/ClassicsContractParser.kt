@@ -9,6 +9,7 @@ import org.fuxuan.classics.core.content.AudioCatalog
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
+import org.fuxuan.classics.core.behavior.LegacyPathMap
 
 class ClassicsContractParser {
     private val json = Json {
@@ -37,6 +38,18 @@ class ClassicsContractParser {
 
     fun parseAudioCatalog(text: String): AudioCatalog =
         json.decodeFromString<AudioCatalogDto>(requirePlainUtf8Text(text)).toDomain()
+
+    fun parseLegacyPathMap(text: String): LegacyPathMap {
+        val source = requirePlainUtf8Text(text)
+        val document = json.parseToJsonElement(source).jsonObject
+        val expectedHash = document["mappingHash"]?.jsonPrimitive?.content
+            ?: error("legacy path map is missing mappingHash")
+        val actualHash = CanonicalJson.sha256Omitting(document, "mappingHash")
+        require(expectedHash == actualHash) {
+            "mappingHash does not match canonical payload"
+        }
+        return json.decodeFromJsonElement(LegacyPathMapDto.serializer(), document).toDomain()
+    }
 
     private fun requirePlainUtf8Text(text: String): String {
         require(!text.startsWith('\uFEFF')) { "contract JSON must not contain a byte-order mark" }

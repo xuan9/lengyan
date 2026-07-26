@@ -6,6 +6,8 @@ import org.fuxuan.classics.core.content.AudioCatalog
 import org.fuxuan.classics.core.content.AudioContentMapping
 import org.fuxuan.classics.core.content.AudioRendition
 import org.fuxuan.classics.core.content.AudioRights
+import org.fuxuan.classics.core.behavior.LegacyPathEntry
+import org.fuxuan.classics.core.behavior.LegacyPathMap
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.ProductFeatures
 import org.fuxuan.classics.core.content.ProductManifest
@@ -223,6 +225,50 @@ internal data class SourceReferenceDto(
     val locator: String,
 ) {
     fun toDomain() = SourceReference(sourceID = sourceID, locator = locator)
+}
+
+@Serializable
+internal data class LegacyPathMapDto(
+    val schemaVersion: Int,
+    val productID: String,
+    val bookID: String,
+    val editionID: String,
+    val mappingVersion: String,
+    val stableIDScheme: String,
+    val normalization: String,
+    val mappingHash: String,
+    val paths: List<LegacyPathEntryDto>,
+) {
+    fun toDomain() = LegacyPathMap(
+        schemaVersion = schemaVersion,
+        productID = productID,
+        bookID = bookID,
+        editionID = editionID,
+        mappingVersion = mappingVersion,
+        stableIDScheme = stableIDScheme,
+        normalization = normalization,
+        mappingHash = mappingHash,
+        paths = paths.map(LegacyPathEntryDto::toDomain),
+    )
+}
+
+@Serializable
+internal data class LegacyPathEntryDto(
+    val legacyPath: String,
+    val legacyNodeID: String,
+    val parentLegacyPath: String?,
+    val sectionID: String,
+    val order: Int,
+    val directParagraphIDs: List<String>,
+    val firstDescendantParagraphID: String?,
+    val descendantParagraphCount: Int,
+) {
+    fun toDomain() = LegacyPathEntry(
+        legacyPath = legacyPath,
+        sectionID = sectionID,
+        directParagraphIDs = directParagraphIDs,
+        firstDescendantParagraphID = firstDescendantParagraphID,
+    )
 }
 
 @Serializable

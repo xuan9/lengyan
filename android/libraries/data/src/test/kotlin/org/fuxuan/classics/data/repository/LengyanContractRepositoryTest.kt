@@ -3,6 +3,7 @@ package org.fuxuan.classics.data.repository
 import kotlinx.coroutines.runBlocking
 import org.fuxuan.classics.data.contracts.ClassicsContractParser
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import java.io.File
@@ -66,5 +67,24 @@ class LengyanContractRepositoryTest {
         assertThrows(IllegalArgumentException::class.java) {
             ClassicsContractParser().parseContent(altered)
         }
+    }
+
+    @Test
+    fun searchIndexReusesParsedContentAndItsOwnCachedInstance() = runBlocking {
+        val reads = mutableMapOf<String, Int>()
+        val repository = DefaultBookRepository(
+            ContractSource { relativePath ->
+                reads[relativePath] = reads.getOrDefault(relativePath, 0) + 1
+                source.readText(relativePath)
+            },
+        )
+
+        repository.content("zh-Hant")
+        val firstIndex = repository.searchIndex()
+        val secondIndex = repository.searchIndex()
+
+        assertSame(firstIndex, secondIndex)
+        assertEquals(1, reads["Content/content-zh-Hant.json"])
+        assertEquals(1, reads["Content/content-zh-Hans.json"])
     }
 }

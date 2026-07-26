@@ -5,6 +5,9 @@ import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.BookRepository
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
+import org.fuxuan.classics.core.behavior.LegacyLocationResolution
+import org.fuxuan.classics.core.behavior.LegacyLocationUsage
+import org.fuxuan.classics.core.behavior.ScriptureSearchIndex
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -26,5 +29,12 @@ class LengyanAppContainerTest {
         override suspend fun content(locale: String): ScriptureContent = error("not used by this test")
 
         override suspend fun audioCatalog(): AudioCatalog? = error("not used by this test")
+
+        override suspend fun searchIndex(): ScriptureSearchIndex = error("not used by this test")
+
+        override suspend fun resolveLegacyLocation(
+            legacyPath: String,
+            usage: LegacyLocationUsage,
+        ): LegacyLocationResolution = error("not used by this test")
     }
 }

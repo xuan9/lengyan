@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -21,6 +22,10 @@ class LengyanContractAssetsTest {
         val book = repository.book()
         val content = repository.content("zh-Hant")
         val audio = repository.audioCatalog()
+        val searchResults = repository.searchIndex().search(
+            query = "转物",
+            displayLocale = "zh-Hant",
+        )
 
         assertEquals("lengyan", product.productID)
         assertEquals("legacy-repository-v1", book.editionID)
@@ -31,5 +36,6 @@ class LengyanContractAssetsTest {
         assertEquals("如是我聞，一時佛在室羅筏城，祇桓精舍。", content.paragraphs.first().text)
         assertNotNull(audio)
         assertEquals(11, audio?.artifacts?.size)
+        assertTrue(searchResults.any { result -> "轉物" in result.displayText })
     }
 }
