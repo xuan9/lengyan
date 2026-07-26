@@ -1,6 +1,9 @@
 package org.fuxuan.classics.data.contracts
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -19,6 +22,9 @@ import org.fuxuan.classics.core.behavior.ScriptureSearchIndex
 import org.fuxuan.classics.core.behavior.SearchTextPolicy
 import org.fuxuan.classics.core.behavior.ShareFileKind
 import org.fuxuan.classics.core.behavior.ShareFileNamePolicy
+import org.fuxuan.classics.core.persistence.Favorite
+import org.fuxuan.classics.core.persistence.FavoriteRepository
+import org.fuxuan.classics.data.persistence.LegacyFavoritesImporter
 import org.fuxuan.classics.data.repository.ContractSource
 import org.fuxuan.classics.data.repository.DefaultBookRepository
 import org.junit.Assert.assertEquals
@@ -119,7 +125,7 @@ class BehaviorContractTest {
     }
 
     @Test
-    fun legacyFavoriteFixturesMatchProductionPolicy() {
+    fun legacyFavoriteFixturesMatchProductionPolicy() = runBlocking {
         val fixture = fixture<LegacyFavoritesInput, LegacyFavoritesExpected>(
             "legacy-favorites-migration.json",
             "legacy-favorites-migration",
@@ -134,6 +140,24 @@ class BehaviorContractTest {
                 ),
             )
             assertEquals(case.name, case.expected, actual)
+
+            val favorites = RecordingFavoriteRepository()
+            LegacyFavoritesImporter(
+                productID = "lengyan",
+                bookRepository = repository,
+                favoriteRepository = favorites,
+            ).replaceFromLegacy(
+                editionID = repository.book().editionID,
+                legacyFavorites = case.input.legacyLikes,
+                storedUserFavorites = case.input.storedUserLikes,
+                curatedLegacyPaths = case.input.curatedLegacyPaths.toSet(),
+                importedAtEpochMilliseconds = 1_721_600_000_000,
+            )
+            assertEquals(
+                case.name,
+                case.expected.userLikes,
+                favorites.stored.mapNotNull(Favorite::legacyPath),
+            )
         }
     }
 
@@ -268,6 +292,34 @@ class BehaviorContractTest {
         assertEquals(1, fixture.schemaVersion)
         assertEquals(behavior, fixture.behavior)
         return fixture
+    }
+}
+
+private class RecordingFavoriteRepository : FavoriteRepository {
+    private val state = MutableStateFlow<List<Favorite>>(emptyList())
+    val stored: List<Favorite> get() = state.value
+
+    override fun favorites(editionID: String): Flow<List<Favorite>> =
+        state.map { favorites -> favorites.filter { it.editionID == editionID } }
+
+    override suspend fun add(favorite: Favorite): Boolean {
+        if (state.value.any { it.favoriteID == favorite.favoriteID }) return false
+        state.value = listOf(favorite.copy(position = 0)) +
+            state.value.mapIndexed { index, existing -> existing.copy(position = index + 1) }
+        return true
+    }
+
+    override suspend fun remove(editionID: String, favoriteID: String): Boolean {
+        val retained = state.value.filterNot {
+            it.editionID == editionID && it.favoriteID == favoriteID
+        }
+        if (retained.size == state.value.size) return false
+        state.value = retained.mapIndexed { index, favorite -> favorite.copy(position = index) }
+        return true
+    }
+
+    override suspend fun replace(editionID: String, favorites: List<Favorite>) {
+        state.value = favorites.mapIndexed { index, favorite -> favorite.copy(position = index) }
     }
 }
 

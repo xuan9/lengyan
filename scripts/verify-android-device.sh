@@ -23,10 +23,14 @@ printf '\n==> Android managed-device UI smoke Gate\n'
 "${android_root}/gradlew" \
   --no-daemon \
   --project-dir "${android_root}" \
+  :libraries:data:compactPhoneApi35DebugAndroidTest \
   :apps:lengyan:compactPhoneApi35DebugAndroidTest
 
-report="${android_root}/apps/lengyan/build/reports/androidTests/managedDevice/debug/compactPhoneApi35/index.html"
-[[ -s "${report}" ]] || fail "managed-device report was not produced at ${report}"
+data_report="${android_root}/libraries/data/build/reports/androidTests/managedDevice/debug/compactPhoneApi35/index.html"
+app_report="${android_root}/apps/lengyan/build/reports/androidTests/managedDevice/debug/compactPhoneApi35/index.html"
+[[ -s "${data_report}" ]] || fail "managed-device report was not produced at ${data_report}"
+[[ -s "${app_report}" ]] || fail "managed-device report was not produced at ${app_report}"
 
 printf '\nAndroid managed-device verification passed.\n'
-printf 'Report: %s\n' "${report}"
+printf 'Data report: %s\n' "${data_report}"
+printf 'App report: %s\n' "${app_report}"

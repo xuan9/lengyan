@@ -1,0 +1,91 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "d8f725514355eb7041110090104108d1",
+    "entities": [
+      {
+        "tableName": "favorites",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`product_id` TEXT NOT NULL, `edition_id` TEXT NOT NULL, `favorite_id` TEXT NOT NULL, `target_kind` TEXT NOT NULL, `section_id` TEXT, `paragraph_id` TEXT, `legacy_path` TEXT, `position` INTEGER NOT NULL, `created_at_epoch_ms` INTEGER NOT NULL, PRIMARY KEY(`product_id`, `edition_id`, `favorite_id`))",
+        "fields": [
+          {
+            "fieldPath": "productID",
+            "columnName": "product_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "editionID",
+            "columnName": "edition_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "favoriteID",
+            "columnName": "favorite_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "targetKind",
+            "columnName": "target_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sectionID",
+            "columnName": "section_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paragraphID",
+            "columnName": "paragraph_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "legacyPath",
+            "columnName": "legacy_path",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtEpochMilliseconds",
+            "columnName": "created_at_epoch_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "product_id",
+            "edition_id",
+            "favorite_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_favorites_product_id_edition_id_position",
+            "unique": false,
+            "columnNames": [
+              "product_id",
+              "edition_id",
+              "position"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_favorites_product_id_edition_id_position` ON `${TABLE_NAME}` (`product_id`, `edition_id`, `position`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd8f725514355eb7041110090104108d1')"
+    ]
+  }
+}
