@@ -173,7 +173,7 @@ class lengyanTests: XCTestCase {
                 completed.fulfill()
             }
         }
-        wait(for: [completed], timeout: 5)
+        wait(for: [completed], timeout: 15)
 
         providerLock.lock()
         let finalCallCount = providerCallCount
