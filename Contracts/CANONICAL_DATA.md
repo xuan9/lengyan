@@ -22,3 +22,16 @@ sorting produce the same order.
 The validator recomputes this value. Pretty-printing a file therefore does not
 change its content hash, while text, structure, source references, and ordering
 do.
+
+## Legacy Lengyan Normalization
+
+The locked legacy Lengyan JSON files remain byte-for-byte source artifacts and
+retain their source-manifest SHA-256 values. Their generated migration packages
+apply one text transformation: every CRLF sequence is replaced with LF. No
+other whitespace, punctuation, character, or paragraph transformation is
+allowed. Import tests compare every generated paragraph with its source after
+only this replacement.
+
+This deterministic encoding does not certify the legacy text as an authoritative
+edition. The packages remain `contentStatus: legacy-migration` until source,
+rights, and text review are independently complete.

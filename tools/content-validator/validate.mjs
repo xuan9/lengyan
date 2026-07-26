@@ -7,6 +7,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import Ajv2020 from "ajv/dist/2020.js";
 
+import {
+  contentHashForPackage,
+  mappingHashForLegacyMap
+} from "./canonical-json.mjs";
+
+export { contentHashForPackage } from "./canonical-json.mjs";
+
 const moduleDirectory = dirname(fileURLToPath(import.meta.url));
 const defaultRepositoryRoot = resolve(moduleDirectory, "../..");
 
@@ -17,6 +24,7 @@ const schemaFiles = {
   source: "source-manifest.schema.json",
   audio: "audio-artifact-manifest.schema.json",
   content: "content-package.schema.json",
+  legacyMap: "legacy-map.schema.json",
   behavior: "behavior-fixture.schema.json"
 };
 
@@ -26,6 +34,7 @@ const schemaIDs = {
   source: "urn:fuxuan:classic-apps:contracts:source-manifest:v1",
   audio: "urn:fuxuan:classic-apps:contracts:audio-artifact-manifest:v1",
   content: "urn:fuxuan:classic-apps:contracts:content-package:v1",
+  legacyMap: "urn:fuxuan:classic-apps:contracts:legacy-map:v1",
   behavior: "urn:fuxuan:classic-apps:contracts:behavior-fixture:v1"
 };
 
@@ -205,34 +214,6 @@ async function sha256File(path) {
   };
 }
 
-function stableJSONStringify(value) {
-  if (value === null || typeof value === "boolean" || typeof value === "string") {
-    return JSON.stringify(value);
-  }
-  if (typeof value === "number") {
-    if (!Number.isSafeInteger(value)) {
-      throw new TypeError("canonical JSON numbers must be safe integers");
-    }
-    return String(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(stableJSONStringify).join(",")}]`;
-  }
-  if (value && typeof value === "object") {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableJSONStringify(value[key])}`)
-      .join(",")}}`;
-  }
-  throw new TypeError(`unsupported canonical JSON value: ${typeof value}`);
-}
-
-export function contentHashForPackage(contentPackage) {
-  const payload = structuredClone(contentPackage);
-  delete payload.contentHash;
-  return createHash("sha256").update(stableJSONStringify(payload), "utf8").digest("hex");
-}
-
 function assertUnique(values, issues, label, description) {
   const seen = new Set();
   for (const value of values) {
@@ -368,6 +349,31 @@ function validateContentText(value, issues, label, pointer) {
   requireCondition(!value.includes("\t"), issues, label, `${pointer} contains a tab`);
 }
 
+function validatePackageSourceReferences({
+  references,
+  sourceSet,
+  acceptableSourceSet,
+  issues,
+  label,
+  pointer
+}) {
+  assertUnique(
+    references.map((reference) => `${reference.sourceID}:${reference.locator}`),
+    issues,
+    label,
+    `source reference in ${pointer}`
+  );
+  for (const reference of references) {
+    requireCondition(sourceSet.has(reference.sourceID), issues, label, `unknown source reference: ${reference.sourceID}`);
+  }
+  requireCondition(
+    references.some((reference) => acceptableSourceSet.has(reference.sourceID)),
+    issues,
+    label,
+    `${pointer} has no source reference allowed for this content status`
+  );
+}
+
 function validateContentPackageSemantics({ contentDocument, book, source, locale, issues }) {
   const content = contentDocument.data;
   requireCondition(content.productID === book.productID, issues, contentDocument.label, "productID does not match book");
@@ -375,19 +381,53 @@ function validateContentPackageSemantics({ contentDocument, book, source, locale
   requireCondition(content.editionID === book.editionID, issues, contentDocument.label, "editionID does not match book");
   requireCondition(content.contentVersion === book.contentVersion, issues, contentDocument.label, "contentVersion does not match book");
   requireCondition(content.locale === locale, issues, contentDocument.label, `locale does not match manifest key ${locale}`);
-  requireCondition(content.contentHash === contentHashForPackage(content), issues, contentDocument.label, "contentHash does not match canonical payload");
+  if (content.contentStatus === "legacy-migration") {
+    requireCondition(book.contractState === "legacy-migration", issues, contentDocument.label, "legacy content requires a legacy-migration book");
+    requireCondition(source.releaseEligibility === "blocked", issues, contentDocument.label, "legacy migration content cannot use an eligible source manifest");
+  } else {
+    requireCondition(book.contractState === "canonical-ready", issues, contentDocument.label, "release content requires a canonical-ready book");
+    requireCondition(source.releaseEligibility === "eligible", issues, contentDocument.label, "release content requires an eligible source manifest");
+  }
+  try {
+    requireCondition(content.contentHash === contentHashForPackage(content), issues, contentDocument.label, "contentHash does not match canonical payload");
+  } catch (error) {
+    addIssue(issues, contentDocument.label, `cannot compute contentHash (${error.message})`);
+  }
 
+  const volumeIDs = content.volumes.map((volume) => volume.volumeID);
   const sectionIDs = content.sections.map((section) => section.sectionID);
   const paragraphIDs = content.paragraphs.map((paragraph) => paragraph.paragraphID);
+  assertUnique(volumeIDs, issues, contentDocument.label, "volumeID");
+  assertUnique(content.volumes.map((volume) => volume.number), issues, contentDocument.label, "volume number");
+  assertUnique(content.volumes.map((volume) => volume.order), issues, contentDocument.label, "volume order");
   assertUnique(sectionIDs, issues, contentDocument.label, "sectionID");
   assertUnique(paragraphIDs, issues, contentDocument.label, "paragraphID");
+  const volumeSet = new Set(volumeIDs);
   const sectionSet = new Set(sectionIDs);
   const sourceSet = new Set(source.sources.map((entry) => entry.sourceID));
-  const releaseSourceSet = new Set(
+  const acceptableSourceSet = new Set(
     source.sources
-      .filter((entry) => ["canonical-input", "transcription-base"].includes(entry.role))
+      .filter((entry) =>
+        content.contentStatus === "legacy-migration"
+          ? entry.role === "legacy-runtime-input"
+          : ["canonical-input", "transcription-base"].includes(entry.role)
+      )
       .map((entry) => entry.sourceID)
   );
+  requireCondition(acceptableSourceSet.size > 0, issues, contentDocument.label, "content status has no eligible source role");
+
+  for (const volume of content.volumes) {
+    requireCondition(volume.volumeID.startsWith(`${content.productID}.v`), issues, contentDocument.label, `volumeID outside product namespace: ${volume.volumeID}`);
+    validateContentText(volume.title, issues, contentDocument.label, volume.volumeID);
+    validatePackageSourceReferences({
+      references: volume.sourceReferences,
+      sourceSet,
+      acceptableSourceSet,
+      issues,
+      label: contentDocument.label,
+      pointer: volume.volumeID
+    });
+  }
 
   for (const section of content.sections) {
     requireCondition(section.sectionID.startsWith(`${content.productID}.s`), issues, contentDocument.label, `sectionID outside product namespace: ${section.sectionID}`);
@@ -396,21 +436,17 @@ function validateContentPackageSemantics({ contentDocument, book, source, locale
       requireCondition(section.parentSectionID !== section.sectionID, issues, contentDocument.label, `section cannot parent itself: ${section.sectionID}`);
     }
     validateContentText(section.title, issues, contentDocument.label, section.sectionID);
-    assertUnique(
-      section.sourceReferences.map((reference) => `${reference.sourceID}:${reference.locator}`),
-      issues,
-      contentDocument.label,
-      `source reference in ${section.sectionID}`
-    );
-    for (const reference of section.sourceReferences) {
-      requireCondition(sourceSet.has(reference.sourceID), issues, contentDocument.label, `unknown source reference: ${reference.sourceID}`);
+    if (section.subtitle) {
+      validateContentText(section.subtitle, issues, contentDocument.label, `${section.sectionID} subtitle`);
     }
-    requireCondition(
-      section.sourceReferences.some((reference) => releaseSourceSet.has(reference.sourceID)),
+    validatePackageSourceReferences({
+      references: section.sourceReferences,
+      sourceSet,
+      acceptableSourceSet,
       issues,
-      contentDocument.label,
-      `${section.sectionID} has no approved canonical source reference`
-    );
+      label: contentDocument.label,
+      pointer: section.sectionID
+    });
   }
 
   for (const section of content.sections) {
@@ -426,25 +462,31 @@ function validateContentPackageSemantics({ contentDocument, book, source, locale
     }
   }
 
+  const volumeUsage = new Map(volumeIDs.map((volumeID) => [volumeID, 0]));
   for (const paragraph of content.paragraphs) {
     requireCondition(paragraph.paragraphID.startsWith(`${content.productID}.p`), issues, contentDocument.label, `paragraphID outside product namespace: ${paragraph.paragraphID}`);
     requireCondition(sectionSet.has(paragraph.sectionID), issues, contentDocument.label, `unknown paragraph section: ${paragraph.sectionID}`);
-    validateContentText(paragraph.text, issues, contentDocument.label, paragraph.paragraphID);
-    assertUnique(
-      paragraph.sourceReferences.map((reference) => `${reference.sourceID}:${reference.locator}`),
-      issues,
-      contentDocument.label,
-      `source reference in ${paragraph.paragraphID}`
-    );
-    for (const reference of paragraph.sourceReferences) {
-      requireCondition(sourceSet.has(reference.sourceID), issues, contentDocument.label, `unknown source reference: ${reference.sourceID}`);
+    if (paragraph.volumeID === null) {
+      requireCondition(content.contentStatus === "legacy-migration", issues, contentDocument.label, `${paragraph.paragraphID} has no volume mapping`);
+    } else {
+      requireCondition(volumeSet.has(paragraph.volumeID), issues, contentDocument.label, `unknown paragraph volume: ${paragraph.volumeID}`);
+      volumeUsage.set(paragraph.volumeID, (volumeUsage.get(paragraph.volumeID) ?? 0) + 1);
     }
-    requireCondition(
-      paragraph.sourceReferences.some((reference) => releaseSourceSet.has(reference.sourceID)),
+    if (content.contentStatus === "release-canonical") {
+      requireCondition(paragraph.legacyVolumeHint === undefined, issues, contentDocument.label, `${paragraph.paragraphID} carries legacy-only volume metadata`);
+    }
+    validateContentText(paragraph.text, issues, contentDocument.label, paragraph.paragraphID);
+    validatePackageSourceReferences({
+      references: paragraph.sourceReferences,
+      sourceSet,
+      acceptableSourceSet,
       issues,
-      contentDocument.label,
-      `${paragraph.paragraphID} has no approved canonical source reference`
-    );
+      label: contentDocument.label,
+      pointer: paragraph.paragraphID
+    });
+  }
+  for (const [volumeID, count] of volumeUsage) {
+    requireCondition(count > 0, issues, contentDocument.label, `${volumeID} has no mapped paragraphs`);
   }
 
   const sectionOrders = content.sections.map((section) => `${section.parentSectionID ?? "root"}:${section.order}`);
@@ -453,19 +495,154 @@ function validateContentPackageSemantics({ contentDocument, book, source, locale
   assertUnique(paragraphOrders, issues, contentDocument.label, "paragraph order within section");
 
   return {
-    sectionStructure: content.sections.map(({ sectionID, parentSectionID, order, sourceReferences }) => ({
+    volumeStructure: content.volumes.map(({ volumeID, number, order, sourceReferences }) => ({
+      volumeID,
+      number,
+      order,
+      sourceIDs: sourceReferences.map((reference) => reference.sourceID)
+    })),
+    sectionStructure: content.sections.map(({ sectionID, parentSectionID, order, sourceReferences, legacyIDs }) => ({
       sectionID,
       parentSectionID,
       order,
-      sourceReferences
+      sourceIDs: sourceReferences.map((reference) => reference.sourceID),
+      legacyIDs
     })),
-    paragraphStructure: content.paragraphs.map(({ paragraphID, sectionID, order, sourceReferences }) => ({
+    paragraphStructure: content.paragraphs.map(({ paragraphID, sectionID, volumeID, order, textRole, legacyVolumeHint, sourceReferences }) => ({
       paragraphID,
       sectionID,
+      volumeID,
       order,
-      sourceReferences
+      textRole,
+      legacyVolumeHint,
+      sourceIDs: sourceReferences.map((reference) => reference.sourceID)
     }))
   };
+}
+
+function validateLegacyMapSemantics({ legacyDocument, book, contentDocuments, issues }) {
+  const legacyMap = legacyDocument.data;
+  requireCondition(legacyMap.productID === book.productID, issues, legacyDocument.label, "productID does not match book");
+  requireCondition(legacyMap.bookID === book.bookID, issues, legacyDocument.label, "bookID does not match book");
+  requireCondition(legacyMap.editionID === book.editionID, issues, legacyDocument.label, "editionID does not match book");
+  requireCondition(legacyMap.mappingVersion === book.contentVersion, issues, legacyDocument.label, "mappingVersion does not match book contentVersion");
+  requireCondition(legacyMap.stableIDScheme === book.stableIDScheme, issues, legacyDocument.label, "stable ID scheme does not match book");
+  requireCondition(legacyMap.normalization === book.normalization, issues, legacyDocument.label, "normalization does not match book");
+  try {
+    requireCondition(
+      legacyMap.mappingHash === mappingHashForLegacyMap(legacyMap),
+      issues,
+      legacyDocument.label,
+      "mappingHash does not match canonical payload"
+    );
+  } catch (error) {
+    addIssue(issues, legacyDocument.label, `cannot compute mappingHash (${error.message})`);
+  }
+
+  requireCondition(contentDocuments.length > 0, issues, legacyDocument.label, "legacy map has no content package to map");
+  if (contentDocuments.length === 0) {
+    return 0;
+  }
+  const content = contentDocuments[0].data;
+  requireCondition(content.contentStatus === "legacy-migration", issues, legacyDocument.label, "legacy map requires migration content");
+  const sectionByID = new Map(content.sections.map((section) => [section.sectionID, section]));
+  const paragraphByID = new Map(content.paragraphs.map((paragraph) => [paragraph.paragraphID, paragraph]));
+  const mappingByPath = new Map(legacyMap.paths.map((mapping) => [mapping.legacyPath, mapping]));
+  assertUnique(legacyMap.paths.map((mapping) => mapping.legacyPath), issues, legacyDocument.label, "legacy path");
+  assertUnique(legacyMap.paths.map((mapping) => mapping.sectionID), issues, legacyDocument.label, "mapped sectionID");
+  requireCondition(legacyMap.paths.length === content.sections.length, issues, legacyDocument.label, "legacy path count does not match section count");
+
+  const directParagraphsBySection = new Map(content.sections.map((section) => [section.sectionID, []]));
+  const descendantParagraphsBySection = new Map(content.sections.map((section) => [section.sectionID, []]));
+  for (const paragraph of content.paragraphs) {
+    directParagraphsBySection.get(paragraph.sectionID)?.push(paragraph.paragraphID);
+    let sectionID = paragraph.sectionID;
+    const visited = new Set();
+    while (sectionID !== null && !visited.has(sectionID)) {
+      visited.add(sectionID);
+      descendantParagraphsBySection.get(sectionID)?.push(paragraph.paragraphID);
+      sectionID = sectionByID.get(sectionID)?.parentSectionID ?? null;
+    }
+  }
+
+  for (let index = 0; index < legacyMap.paths.length; index += 1) {
+    const mapping = legacyMap.paths[index];
+    const section = sectionByID.get(mapping.sectionID);
+    requireCondition(Boolean(section), issues, legacyDocument.label, `unknown mapped section: ${mapping.sectionID}`);
+    if (!section) {
+      continue;
+    }
+    requireCondition(
+      content.sections[index]?.sectionID === mapping.sectionID,
+      issues,
+      legacyDocument.label,
+      `mapping order differs at index ${index}`
+    );
+    requireCondition(
+      mapping.legacyNodeID === (mapping.legacyPath ? mapping.legacyPath.split("/").at(-1) : "ROOT"),
+      issues,
+      legacyDocument.label,
+      `legacyNodeID does not match path ${mapping.legacyPath || "<root>"}`
+    );
+    requireCondition(
+      section.legacyIDs?.includes(mapping.legacyPath || "ROOT"),
+      issues,
+      legacyDocument.label,
+      `${mapping.sectionID} does not retain its legacy identity`
+    );
+    requireCondition(section.order === mapping.order, issues, legacyDocument.label, `${mapping.legacyPath || "<root>"} order differs from section`);
+
+    if (mapping.legacyPath === "") {
+      requireCondition(mapping.parentLegacyPath === null, issues, legacyDocument.label, "root legacy path must have null parent");
+      requireCondition(section.parentSectionID === null, issues, legacyDocument.label, "root mapped section must have null parent");
+    } else {
+      const slashIndex = mapping.legacyPath.lastIndexOf("/");
+      const expectedParentPath = slashIndex === 0 ? "" : mapping.legacyPath.slice(0, slashIndex);
+      requireCondition(mapping.parentLegacyPath === expectedParentPath, issues, legacyDocument.label, `${mapping.legacyPath} parent path is inconsistent`);
+      const parentMapping = mappingByPath.get(mapping.parentLegacyPath);
+      requireCondition(Boolean(parentMapping), issues, legacyDocument.label, `${mapping.legacyPath} parent mapping is missing`);
+      requireCondition(
+        parentMapping?.sectionID === section.parentSectionID,
+        issues,
+        legacyDocument.label,
+        `${mapping.legacyPath} parent section differs from content`
+      );
+    }
+
+    const expectedDirect = directParagraphsBySection.get(mapping.sectionID) ?? [];
+    const expectedDescendants = descendantParagraphsBySection.get(mapping.sectionID) ?? [];
+    requireCondition(
+      JSON.stringify(mapping.directParagraphIDs) === JSON.stringify(expectedDirect),
+      issues,
+      legacyDocument.label,
+      `${mapping.legacyPath || "<root>"} direct paragraph mapping differs`
+    );
+    requireCondition(
+      mapping.firstDescendantParagraphID === (expectedDescendants[0] ?? null),
+      issues,
+      legacyDocument.label,
+      `${mapping.legacyPath || "<root>"} first descendant mapping differs`
+    );
+    requireCondition(
+      mapping.descendantParagraphCount === expectedDescendants.length,
+      issues,
+      legacyDocument.label,
+      `${mapping.legacyPath || "<root>"} descendant paragraph count differs`
+    );
+    for (const paragraphID of mapping.directParagraphIDs) {
+      requireCondition(paragraphByID.has(paragraphID), issues, legacyDocument.label, `unknown mapped paragraph: ${paragraphID}`);
+    }
+  }
+
+  const mappedDirectParagraphs = legacyMap.paths.flatMap((mapping) => mapping.directParagraphIDs);
+  assertUnique(mappedDirectParagraphs, issues, legacyDocument.label, "directly mapped paragraphID");
+  requireCondition(
+    JSON.stringify(mappedDirectParagraphs) === JSON.stringify(content.paragraphs.map((paragraph) => paragraph.paragraphID)),
+    issues,
+    legacyDocument.label,
+    "legacy map does not cover every paragraph in canonical order"
+  );
+  return legacyMap.paths.length;
 }
 
 async function validateAudioManifest({ audioDocument, product, book, repositoryRoot, issues, readCache }) {
@@ -688,6 +865,7 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
   const summaries = [];
   let contentPackageCount = 0;
   let audioArtifactCount = 0;
+  let legacyPathMappingCount = 0;
 
   for (const entry of productEntries) {
     const productDirectory = join(productsDirectory, entry.name);
@@ -771,6 +949,8 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
     }
     if (book.contractState === "canonical-ready") {
       requireCondition(source.releaseEligibility === "eligible", issues, sourceDocument.label, "canonical-ready book needs eligible source");
+    }
+    if (book.contentPackages) {
       localesMatch(book.contentPackages, book.supportedLocales, issues, bookDocument.label);
     }
     if (book.legacyCompatibility) {
@@ -782,14 +962,37 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
     }
 
     const contentStructures = [];
+    const contentDocuments = [];
     for (const [locale, contentLink] of Object.entries(book.contentPackages ?? {})) {
       const contentPath = resolveContained(productDirectory, contentLink, issues, bookDocument.label);
       const contentDocument = contentPath ? await readJSON(contentPath, root, issues, readCache) : null;
       if (validateWithSchema(ajv, schemaIDs.content, contentDocument, issues)) {
+        contentDocuments.push(contentDocument);
         contentStructures.push(
           validateContentPackageSemantics({ contentDocument, book, source, locale, issues })
         );
         contentPackageCount += 1;
+      }
+    }
+    let productLegacyPathCount = 0;
+    if (book.legacyCompatibility?.mappingArtifact) {
+      const legacyMapPath = resolveContained(
+        productDirectory,
+        book.legacyCompatibility.mappingArtifact,
+        issues,
+        bookDocument.label
+      );
+      const legacyDocument = legacyMapPath
+        ? await readJSON(legacyMapPath, root, issues, readCache)
+        : null;
+      if (validateWithSchema(ajv, schemaIDs.legacyMap, legacyDocument, issues)) {
+        productLegacyPathCount = validateLegacyMapSemantics({
+          legacyDocument,
+          book,
+          contentDocuments,
+          issues
+        });
+        legacyPathMappingCount += productLegacyPathCount;
       }
     }
     if (contentStructures.length > 1) {
@@ -825,7 +1028,8 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
       lifecycle: product.lifecycle,
       contractState: book.contractState,
       releaseEligibility: source.releaseEligibility,
-      audioArtifacts: productAudioCount
+      audioArtifacts: productAudioCount,
+      legacyPaths: productLegacyPathCount
     });
   }
 
@@ -858,6 +1062,7 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
     productCount: summaries.length,
     contentPackageCount,
     audioArtifactCount,
+    legacyPathMappingCount,
     fixtureCount: fixtureIDs.length,
     warnings
   };
@@ -865,13 +1070,14 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
 
 function printReport(report) {
   console.log(
-    `Validated ${report.productCount} products, ${report.contentPackageCount} canonical content packages, ` +
-      `${report.audioArtifactCount} audio artifacts, and ${report.fixtureCount} behavior fixtures.`
+    `Validated ${report.productCount} products, ${report.contentPackageCount} structured content packages, ` +
+      `${report.audioArtifactCount} audio artifacts, ${report.legacyPathMappingCount} legacy path mappings, ` +
+      `and ${report.fixtureCount} behavior fixtures.`
   );
   for (const product of report.products) {
     console.log(
       `- ${product.productID}: ${product.contractState}, source ${product.releaseEligibility}, ` +
-        `${product.audioArtifacts} audio artifacts`
+        `${product.audioArtifacts} audio artifacts, ${product.legacyPaths} legacy paths`
     );
   }
   for (const warning of report.warnings) {

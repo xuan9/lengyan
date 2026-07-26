@@ -4,7 +4,7 @@
   "catalogID": "lengyan.audio",
   "catalogVersion": "legacy-v1-projection",
   "contractState": "legacy-migration",
-  "contentVersion": "legacy-unversioned",
+  "contentVersion": "legacy-1",
   "supportedLocales": [
     "zh-Hant",
     "zh-Hans"

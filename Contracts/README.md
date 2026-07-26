@@ -13,8 +13,10 @@ do not belong here.
   migration state.
 - `Schemas/source-manifest.schema.json`: immutable source snapshots, rights,
   accuracy review, and release eligibility.
-- `Schemas/content-package.schema.json`: canonical sections and paragraphs once
-  a source has passed review.
+- `Schemas/content-package.schema.json`: versioned sections, volumes, and
+  paragraphs for a legacy migration or an approved release edition.
+- `Schemas/legacy-map.schema.json`: complete mapping from persisted Lengyan
+  outline paths to stable section and paragraph identities.
 - `Schemas/audio-artifact-manifest.schema.json`: product-neutral audio identity,
   content mapping, renditions, checksums, and rights. Delivery is separate.
 - `Schemas/behavior-fixture.schema.json`: cross-platform behavior examples.
@@ -25,6 +27,11 @@ The independent validator is in `tools/content-validator/` and runs through:
 ```bash
 ./verify.sh contracts
 ```
+
+The Lengyan migration packages and path map are deterministic generated files.
+`./verify.sh contracts` regenerates them in memory and rejects any checked-in
+file that differs. See `Products/lengyan/Content/README.md` before changing an
+input or generated artifact.
 
 ## Release Meaning
 

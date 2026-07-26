@@ -10,6 +10,7 @@ import {
   contentHashForPackage,
   validateRepository
 } from "../validate.mjs";
+import { mappingHashForLegacyMap } from "../canonical-json.mjs";
 
 const testDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(testDirectory, "../../..");
@@ -117,9 +118,24 @@ async function configureCanonicalJingang(root) {
       bookID: "jingangjing",
       editionID: "cbeta-t08n0235-2026r1-reference",
       contentVersion: "test-1",
+      contentStatus: "release-canonical",
       locale,
       normalization: "utf8-nfc-lf-v1",
       contentHash: "0".repeat(64),
+      volumes: [
+        {
+          volumeID: "jingang.v000001",
+          number: 1,
+          order: 0,
+          title,
+          sourceReferences: [
+            {
+              sourceID: "jingang.source.public-domain-scan",
+              locator: "page:1"
+            }
+          ]
+        }
+      ],
       sections: [
         {
           sectionID: "jingang.s000001",
@@ -138,7 +154,9 @@ async function configureCanonicalJingang(root) {
         {
           paragraphID: "jingang.p000001",
           sectionID: "jingang.s000001",
+          volumeID: "jingang.v000001",
           order: 0,
+          textRole: "sutra",
           text,
           sourceReferences: [
             {
@@ -168,7 +186,8 @@ test("validates the checked-in product contracts", async () => {
   assert.equal(report.productCount, 4);
   assert.equal(report.audioArtifactCount, 11);
   assert.equal(report.fixtureCount, 3);
-  assert.equal(report.contentPackageCount, 0);
+  assert.equal(report.contentPackageCount, 2);
+  assert.equal(report.legacyPathMappingCount, 1669);
   assert.deepEqual(
     report.products.map((product) => product.productID),
     ["jingang", "lengyan", "tanjing", "yuanjue"]
@@ -229,6 +248,33 @@ test("detects drift from the production audio delivery catalog", async () => {
   }
 });
 
+test("detects a semantically incomplete legacy path map even with a valid hash", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Products/lengyan/Content/legacy-path-map.json", (legacyMap) => {
+      const leaf = legacyMap.paths.find((mapping) => mapping.directParagraphIDs.length > 0);
+      leaf.directParagraphIDs = [];
+      legacyMap.mappingHash = mappingHashForLegacyMap(legacyMap);
+    });
+    await expectValidationIssue(root, "direct paragraph mapping differs");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a legacy map version detached from the content version", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Products/lengyan/Content/legacy-path-map.json", (legacyMap) => {
+      legacyMap.mappingVersion = "legacy-2";
+      legacyMap.mappingHash = mappingHashForLegacyMap(legacyMap);
+    });
+    await expectValidationIssue(root, "mappingVersion does not match book contentVersion");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("detects fixture drift from executable naming behavior", async () => {
   const root = await makeFixtureRepository();
   try {
@@ -270,7 +316,7 @@ test("accepts schema-valid canonical packages only after source and rights appro
   try {
     await configureCanonicalJingang(root);
     const report = await validateRepository({ repositoryRoot: root });
-    assert.equal(report.contentPackageCount, 2);
+    assert.equal(report.contentPackageCount, 4);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -289,7 +335,7 @@ test("rejects canonical content that cites only a restricted collation reference
       ];
       content.contentHash = contentHashForPackage(content);
     });
-    await expectValidationIssue(root, "has no approved canonical source reference");
+    await expectValidationIssue(root, "has no source reference allowed for this content status");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -302,9 +348,19 @@ test("canonical content hash ignores object formatting and key insertion order",
     bookID: "jingangjing",
     editionID: "example-edition",
     contentVersion: "1",
+    contentStatus: "release-canonical",
     locale: "zh-Hant",
     normalization: "utf8-nfc-lf-v1",
     contentHash: "0".repeat(64),
+    volumes: [
+      {
+        volumeID: "jingang.v000001",
+        number: 1,
+        order: 0,
+        title: "金剛經",
+        sourceReferences: [{ sourceID: "jingang.source.example", locator: "p1" }]
+      }
+    ],
     sections: [
       {
         sectionID: "jingang.s000001",
@@ -318,7 +374,9 @@ test("canonical content hash ignores object formatting and key insertion order",
       {
         paragraphID: "jingang.p000001",
         sectionID: "jingang.s000001",
+        volumeID: "jingang.v000001",
         order: 0,
+        textRole: "sutra",
         text: "如是我聞",
         sourceReferences: [{ sourceID: "jingang.source.example", locator: "p1" }]
       }
@@ -329,11 +387,13 @@ test("canonical content hash ignores object formatting and key insertion order",
     sections: first.sections,
     normalization: first.normalization,
     locale: first.locale,
+    contentStatus: first.contentStatus,
     contentVersion: first.contentVersion,
     editionID: first.editionID,
     bookID: first.bookID,
     productID: first.productID,
     schemaVersion: first.schemaVersion,
+    volumes: first.volumes,
     contentHash: "f".repeat(64)
   };
   assert.equal(contentHashForPackage(first), contentHashForPackage(reordered));

@@ -7,15 +7,16 @@ hash.
 ## Version 1 Namespaces
 
 - Product: `lengyan`, `jingang`, `yuanjue`, `tanjing`.
+- Volume: `<productID>.vNNNNNN`, for example `lengyan.v000001`.
 - Section: `<productID>.sNNNNNN`, for example `jingang.s000001`.
 - Paragraph: `<productID>.pNNNNNN`, for example `jingang.p000001`.
 - Audio artifact: `<productID>.audio.<assigned-id>`, for example
   `lengyan.audio.ly01`.
 - Source: `<productID>.source.<assigned-id>`.
 
-The six-digit section and paragraph suffix is an allocated identifier, not an
-ordinal. Gaps are valid. Deleted IDs are retired permanently and cannot be
-reused. Reordering content does not change IDs.
+The six-digit volume, section, and paragraph suffix is an allocated identifier,
+not an ordinal. Gaps are valid. Deleted IDs are retired permanently and cannot
+be reused. Reordering content does not change IDs.
 
 ## Revisions And Resegmentation
 

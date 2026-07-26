@@ -22,8 +22,18 @@ production-behavior snapshot with status `legacy-unverified`, not a newly
 certified canonical edition.
 
 No Foundation 2 work changes the files under `lengyan/data/` or existing iOS
-runtime loading. A future canonical migration must first produce a complete
-legacy-path map and an independently reviewed text diff.
+runtime loading. Foundation 2 now generates two `legacy-migration` content
+packages and a complete 1,669-node legacy-path map from those locked inputs.
+The packages contain 1,262 paragraphs per locale and preserve visible text with
+only 288 deterministic CRLF-to-LF replacements per locale. The production
+chapter map resolves 1,133 of 1,155 leaf paths; 22 remain explicitly unassigned
+rather than inferred from unreliable hints. Full evidence and hashes are in
+`LENGYAN_MIGRATION_REPORT_2026-07-26.md`.
+
+These generated files improve migration safety but do not make the text
+canonical or authoritative. A future release-canonical promotion still needs an
+approved source, rights basis, human text review, and independently reviewed
+diff.
 
 ## CBETA Reference Snapshot
 

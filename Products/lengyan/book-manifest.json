@@ -13,14 +13,19 @@
     "zh-Hant",
     "zh-Hans"
   ],
-  "contentVersion": "legacy-unversioned",
+  "contentVersion": "legacy-1",
   "stableIDScheme": "fuxuan-classics-v1",
   "normalization": "utf8-nfc-lf-v1",
   "sourceManifest": "source-manifest.json",
+  "contentPackages": {
+    "zh-Hant": "Content/content-zh-Hant.json",
+    "zh-Hans": "Content/content-zh-Hans.json"
+  },
   "legacyCompatibility": {
     "identifierKind": "outline-path",
     "identifierPattern": "^/(?:[A-Z][0-9]+)(?:/[A-Z][0-9]+)*$",
-    "migrationStatus": "not-started",
+    "migrationStatus": "in-progress",
+    "mappingArtifact": "Content/legacy-path-map.json",
     "sourceArtifacts": [
       "lengyan/data/lengyanjing-chapter-map.json",
       "lengyan/data/lengyanjing-content.json",

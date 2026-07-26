@@ -160,6 +160,44 @@
           "contentPackages"
         ]
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "legacyCompatibility": {
+            "type": "object",
+            "properties": {
+              "migrationStatus": {
+                "enum": [
+                  "in-progress",
+                  "complete"
+                ]
+              }
+            },
+            "required": [
+              "migrationStatus"
+            ]
+          }
+        },
+        "required": [
+          "legacyCompatibility"
+        ]
+      },
+      "then": {
+        "properties": {
+          "legacyCompatibility": {
+            "type": "object",
+            "properties": {
+              "mappingArtifact": {
+                "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+              }
+            },
+            "required": [
+              "mappingArtifact"
+            ]
+          }
+        }
+      }
     }
   ]
 }

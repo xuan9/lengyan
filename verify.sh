@@ -90,6 +90,7 @@ verify_contracts() {
   log "Install and verify shared product/content contracts"
   npm ci --prefix "${repo_root}/tools/content-validator"
   npm --prefix "${repo_root}/tools/content-validator" audit --audit-level=high
+  node "${repo_root}/scripts/generate-lengyan-content.mjs" --check
   npm --prefix "${repo_root}/tools/content-validator" test
   npm --prefix "${repo_root}/tools/content-validator" run check
 }
