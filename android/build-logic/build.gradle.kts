@@ -19,4 +19,5 @@ dependencies {
     implementation(libs.kotlin.serialization.gradle.plugin)
     implementation(libs.androidx.room.gradle.plugin)
     implementation(libs.ksp.gradle.plugin)
+    implementation(libs.screenshot.gradle.plugin)
 }
