@@ -39,13 +39,17 @@ printf '\n==> Android unit, lint, debug, and release Gate\n'
   test \
   lint \
   assembleDebug \
-  assembleRelease
+  assembleRelease \
+  :apps:lengyan:assembleDebugAndroidTest
 
 debug_apk="${android_root}/apps/lengyan/build/outputs/apk/debug/lengyan-debug.apk"
 release_apk="${android_root}/apps/lengyan/build/outputs/apk/release/lengyan-release-unsigned.apk"
+test_apk="${android_root}/apps/lengyan/build/outputs/apk/androidTest/debug/lengyan-debug-androidTest.apk"
 [[ -s "${debug_apk}" ]] || fail "debug APK was not produced at ${debug_apk}"
 [[ -s "${release_apk}" ]] || fail "release APK was not produced at ${release_apk}"
+[[ -s "${test_apk}" ]] || fail "instrumentation APK was not produced at ${test_apk}"
 
 printf '\nAndroid verification passed.\n'
 printf 'Debug APK: %s\n' "${debug_apk}"
 printf 'Release APK: %s\n' "${release_apk}"
+printf 'Instrumentation APK: %s\n' "${test_apk}"

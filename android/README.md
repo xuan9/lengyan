@@ -22,8 +22,13 @@ the repository root:
 ./verify.sh android
 ```
 
-The command runs every JVM unit test, Android lint, and both debug and unsigned
-release builds. Generated outputs stay under module `build/` directories.
+The command runs every JVM unit test, Android lint, debug and unsigned release
+builds, and compiles the instrumentation APK. Generated outputs stay under
+module `build/` directories.
+
+Run `./verify.sh android-ui-smoke` to install and launch the app on the pinned
+API 35 Gradle-managed compact phone. This requires the Android Emulator; Gradle
+provisions the AOSP automated-test-device image when necessary.
 
 ## Modules
 

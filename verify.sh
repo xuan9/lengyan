@@ -116,6 +116,11 @@ verify_android() {
   "${repo_root}/scripts/verify-android.sh"
 }
 
+verify_android_ui_smoke() {
+  log "Verify Android app on a Gradle-managed device"
+  "${repo_root}/scripts/verify-android-device.sh"
+}
+
 verify_ios_unit() {
   require_xcode
   local destination
@@ -194,6 +199,7 @@ Commands:
   audio-catalog   Canonical audio manifest and generated catalog checks
   server          Feedback Worker install, tests, syntax, and dry-run build
   android         Android unit tests, lint, debug APK, and release APK
+  android-ui-smoke Install and launch Android on a managed API 35 phone
   ios-unit        All iOS unit tests on an available simulator
   ios-build       Release build of the app and embedded extensions
   ios-ui-smoke    Focused iPad favorites and rapid-theme UI tests
@@ -218,6 +224,7 @@ case "${command_name}" in
   audio-catalog) verify_audio_catalog ;;
   server) verify_server ;;
   android) verify_android ;;
+  android-ui-smoke) verify_android_ui_smoke ;;
   ios-unit) verify_ios_unit ;;
   ios-build) verify_ios_build ;;
   ios-ui-smoke) verify_ios_ui_smoke ;;

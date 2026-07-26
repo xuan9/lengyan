@@ -10,7 +10,9 @@ Run `./verify.sh --help` for the command list. CI must call this script instead
 of maintaining a second set of build commands.
 
 The Android gate requires JDK 17, Android SDK platform 37.0, and Build Tools
-37.0.0. Run it independently with `./verify.sh android`.
+37.0.0. Run it independently with `./verify.sh android`. The separate
+`./verify.sh android-ui-smoke` command installs and launches the app on the
+pinned Gradle-managed device.
 
 ## Cloudflare Audio Fallback
 

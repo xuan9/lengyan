@@ -25,8 +25,11 @@ Run the public command from the repository root:
 
 ```bash
 ./verify.sh android
+./verify.sh android-ui-smoke
 ```
 
-Do not replace this with a narrower module task in a completion report. Managed
-device, screenshot, long-text, audio, and OEM Gates are added as their phases
-become implemented; absence of those tasks must not be reported as success.
+Do not replace these with a narrower module task in a completion report. The
+managed-device command currently proves only that the Phase 1 shell installs,
+launches, and exposes its product identity. Screenshot matrices, long-text,
+audio, and OEM Gates are added as their phases become implemented; absence of
+those tasks must not be reported as success.
