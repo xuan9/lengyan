@@ -10,7 +10,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -54,7 +59,9 @@ internal fun ReaderScreen(
     strings: AppStrings,
     initialAnchor: ParagraphTextAnchor?,
     highlightCharacterCount: Int = 0,
+    favoriteParagraphIDs: Set<String> = emptySet(),
     onBack: () -> Unit,
+    onToggleFavorite: (ParagraphTextAnchor) -> Unit = {},
     onSaveProgress: suspend (ParagraphTextAnchor) -> Unit,
 ) {
     val scrollState = rememberScrollState()
@@ -64,6 +71,14 @@ internal fun ReaderScreen(
     var restoreCompleted by remember(document, initialAnchor) { mutableStateOf(false) }
     var reflowAnchor by remember(document) { mutableStateOf<ParagraphTextAnchor?>(null) }
     var lastSavedAnchor by remember(document, initialAnchor) { mutableStateOf(initialAnchor) }
+    var currentAnchor by remember(document, initialAnchor) {
+        mutableStateOf(
+            initialAnchor
+                ?.let(document::utf16OffsetFor)
+                ?.let(document::anchorAtUtf16Offset)
+                ?: document.anchorAtUtf16Offset(0),
+        )
+    }
     val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
     val readerText = remember(
         document,
@@ -83,6 +98,7 @@ internal fun ReaderScreen(
         val layout = textLayout ?: return@LaunchedEffect
         if (restoreCompleted) return@LaunchedEffect
         val utf16Offset = initialAnchor?.let(document::utf16OffsetFor) ?: 0
+        currentAnchor = document.anchorAtUtf16Offset(utf16Offset)
         scrollState.scrollTo(
             layout.scrollOffsetFor(
                 utf16Offset = utf16Offset,
@@ -124,6 +140,7 @@ internal fun ReaderScreen(
                     scrollOffset = scrollOffset,
                     topPaddingPixels = topPaddingPixels,
                 )
+                currentAnchor = anchor
                 if (anchor != lastSavedAnchor) {
                     onSaveProgress(anchor)
                     lastSavedAnchor = anchor
@@ -144,6 +161,37 @@ internal fun ReaderScreen(
                     )
                 },
                 navigationIcon = { BackButton(strings.back, onBack) },
+                actions = {
+                    val isFavorite = currentAnchor.paragraphID in favoriteParagraphIDs
+                    IconButton(
+                        onClick = {
+                            val visibleAnchor = textLayout?.let { layout ->
+                                anchorAtScrollPosition(
+                                    document = document,
+                                    layout = layout,
+                                    scrollOffset = scrollState.value,
+                                    topPaddingPixels = topPaddingPixels,
+                                )
+                            } ?: currentAnchor
+                            currentAnchor = visibleAnchor
+                            onToggleFavorite(visibleAnchor)
+                        },
+                        modifier = Modifier.testTag("reader.favorite"),
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) {
+                                Icons.Default.Favorite
+                            } else {
+                                Icons.Default.FavoriteBorder
+                            },
+                            contentDescription = if (isFavorite) {
+                                strings.removeFavorite
+                            } else {
+                                strings.addFavorite
+                            },
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                 ),

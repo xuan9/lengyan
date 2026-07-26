@@ -6,10 +6,12 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -21,7 +23,9 @@ import kotlinx.coroutines.runBlocking
 import org.fuxuan.classics.core.behavior.ReadingMode
 import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
 import org.fuxuan.classics.core.behavior.SearchDocumentKind
+import org.fuxuan.classics.core.persistence.Favorite
 import org.fuxuan.classics.core.persistence.ReadingProgress
+import org.fuxuan.classics.core.persistence.ThemePreference
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -68,6 +72,131 @@ class LengyanShellTest {
             "如是我聞，一時佛在室羅筏城，祇桓精舍。",
             substring = true,
         ).assertIsDisplayed()
+    }
+
+    @Test
+    fun favoritesCurrentParagraphAndReturnsToItFromTheFavoritesTab() {
+        val container = (composeRule.activity.application as LengyanApplication).container
+        val content = runBlocking { container.bookRepository.content("zh-Hant") }
+        val expectedParagraph = content.paragraphsInReadingOrder().first()
+        runBlocking {
+            container.favoriteRepository.replace(content.editionID, emptyList())
+            container.userPreferencesRepository.saveReadingProgress(null)
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runCatching {
+                composeRule.onNodeWithText("開始閱讀", useUnmergedTree = true)
+                    .assertIsDisplayed()
+            }.isSuccess
+        }
+
+        composeRule.onNodeWithText("開始閱讀", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) { readerIsDisplayed() }
+        composeRule.onNodeWithTag("reader.favorite", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runBlocking {
+                container.favoriteRepository.favorites(content.editionID).first().singleOrNull()
+                    ?.paragraphID == expectedParagraph.paragraphID
+            }
+        }
+
+        composeRule.onNodeWithTag("bottom.favorites", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText(
+            expectedParagraph.text,
+            substring = true,
+            useUnmergedTree = true,
+        ).assertIsDisplayed().performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            currentProgress()?.paragraphID == expectedParagraph.paragraphID
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) { readerIsDisplayed() }
+
+        composeRule.onNodeWithTag("reader.favorite", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runBlocking {
+                container.favoriteRepository.favorites(content.editionID).first().isEmpty()
+            }
+        }
+        composeRule.onNodeWithTag("bottom.favorites", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("favorites.empty", useUnmergedTree = true).assertIsDisplayed()
+
+        runBlocking {
+            container.favoriteRepository.add(
+                Favorite.section(
+                    productID = content.productID,
+                    editionID = content.editionID,
+                    sectionID = expectedParagraph.sectionID,
+                    anchorParagraphID = expectedParagraph.paragraphID,
+                    createdAtEpochMilliseconds = System.currentTimeMillis(),
+                ),
+            )
+        }
+        composeRule.onNodeWithTag("bottom.reading", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runCatching {
+                composeRule.onNodeWithContentDescription(
+                    "取消收藏",
+                    useUnmergedTree = true,
+                ).assertIsDisplayed()
+            }.isSuccess
+        }
+        composeRule.onNodeWithTag("reader.favorite", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runBlocking {
+                container.favoriteRepository.favorites(content.editionID).first().isEmpty()
+            }
+        }
+    }
+
+    @Test
+    fun settingsApplyImmediatelyAndDoNotExposeUnsupportedWidgetStyles() {
+        val container = (composeRule.activity.application as LengyanApplication).container
+        runBlocking {
+            container.userPreferencesRepository.setTheme(ThemePreference.SYSTEM)
+            container.userPreferencesRepository.setLocale("zh-Hant")
+            container.userPreferencesRepository.setFontSizeLevel(2)
+        }
+
+        try {
+            composeRule.onNodeWithTag("bottom.settings", useUnmergedTree = true).performClick()
+            composeRule.onNodeWithTag("settings.screen", useUnmergedTree = true)
+                .assertIsDisplayed()
+            assertTrue(
+                composeRule.onAllNodesWithText("經文卡片", useUnmergedTree = true)
+                    .fetchSemanticsNodes().isEmpty(),
+            )
+
+            composeRule.onNodeWithTag("settings.theme.dark", useUnmergedTree = true).performClick()
+            composeRule.waitUntil(timeoutMillis = 10_000) {
+                runBlocking {
+                    container.userPreferencesRepository.preferences.first().theme ==
+                        ThemePreference.DARK
+                }
+            }
+
+            composeRule.onNodeWithTag("settings.locale.zh-Hans", useUnmergedTree = true)
+                .performClick()
+            composeRule.waitUntil(timeoutMillis = 10_000) {
+                runBlocking {
+                    container.userPreferencesRepository.preferences.first().locale == "zh-Hans"
+                }
+            }
+            composeRule.onNodeWithTag("settings.screen", useUnmergedTree = true)
+                .assertIsDisplayed()
+            assertTrue(
+                composeRule.onAllNodesWithText("经文卡片", useUnmergedTree = true)
+                    .fetchSemanticsNodes().isEmpty(),
+            )
+            composeRule.onNodeWithTag("settings.font-size", useUnmergedTree = true)
+                .performScrollTo()
+                .assertIsDisplayed()
+        } finally {
+            runBlocking {
+                container.userPreferencesRepository.setTheme(ThemePreference.SYSTEM)
+                container.userPreferencesRepository.setLocale("zh-Hant")
+                container.userPreferencesRepository.setFontSizeLevel(2)
+            }
+        }
     }
 
     @Test

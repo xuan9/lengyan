@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -13,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,9 +22,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +49,7 @@ import org.fuxuan.classics.core.behavior.VolumeReadingDocument
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
+import org.fuxuan.classics.core.persistence.Favorite
 import org.fuxuan.classics.core.persistence.ProductPreferences
 import org.fuxuan.classics.core.persistence.ReadingProgress
 import org.fuxuan.classics.core.persistence.ThemePreference
@@ -57,6 +62,9 @@ data object VolumeListRoute : NavKey
 
 @Serializable
 data object SearchRoute : NavKey
+
+@Serializable
+data object FavoritesRoute : NavKey
 
 @Serializable
 data class VolumeReaderRoute(
@@ -123,7 +131,6 @@ private fun ContentNavigation(
         preferences.locale,
         retryKey,
     ) {
-        value = ContentLoadState.Loading
         value = runCatching {
             LoadedContent(
                 product = container.bookRepository.product(),
@@ -156,67 +163,185 @@ private fun LoadedContentNavigation(
     loaded: LoadedContent,
     preferences: ProductPreferences,
 ) {
-    val backStack = rememberNavBackStack(HomeRoute)
+    val readBackStack = rememberNavBackStack(HomeRoute)
+    val favoritesBackStack = rememberNavBackStack(FavoritesRoute)
     val navigationScope = rememberCoroutineScope()
+    var selectedDestination by rememberSaveable {
+        mutableStateOf(TopLevelDestination.READING)
+    }
     val strings = remember(preferences.locale) { AppStrings(preferences.locale) }
     val resumeRoute = remember(loaded, preferences.readingProgress) {
         loaded.resumeRoute(preferences.readingProgress)
     }
+    val favoritesFlow = remember(container.favoriteRepository, loaded.book.editionID) {
+        container.favoriteRepository.favorites(loaded.book.editionID)
+    }
+    val favorites by favoritesFlow.collectAsState(initial = emptyList())
+    val favoriteParagraphIDs = remember(favorites) {
+        favorites.mapNotNullTo(mutableSetOf(), Favorite::paragraphID)
+    }
 
-    NavDisplay(
-        backStack = backStack,
+    fun toggleFavorite(anchor: ParagraphTextAnchor) {
+        navigationScope.launch {
+            val matchingFavorites = favorites.filter { it.paragraphID == anchor.paragraphID }
+            if (matchingFavorites.isNotEmpty()) {
+                matchingFavorites.forEach { favorite ->
+                    container.favoriteRepository.remove(
+                        loaded.book.editionID,
+                        favorite.favoriteID,
+                    )
+                }
+                return@launch
+            }
+            val paragraph = loaded.content.paragraph(anchor.paragraphID) ?: return@launch
+            container.favoriteRepository.add(
+                Favorite.paragraph(
+                    productID = loaded.product.productID,
+                    editionID = loaded.book.editionID,
+                    sectionID = paragraph.sectionID,
+                    paragraphID = paragraph.paragraphID,
+                    legacyPath = paragraph.legacyIDs.firstOrNull { it.startsWith("/") },
+                    createdAtEpochMilliseconds = timestampAfter(
+                        favorites.maxOfOrNull(Favorite::createdAtEpochMilliseconds),
+                    ),
+                ),
+            )
+        }
+    }
+
+    Scaffold(
         modifier = Modifier.fillMaxSize(),
-        onBack = { backStack.removeLastOrNull() },
-        entryProvider = entryProvider {
-            entry<HomeRoute> {
-                HomeScreen(
-                    loaded = loaded,
-                    strings = strings,
-                    resumeRoute = resumeRoute,
-                    onRead = {
-                        backStack.add(
-                            resumeRoute ?: VolumeReaderRoute(
-                                loaded.content.volumesInReadingOrder().first().volumeID,
-                            ),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        bottomBar = {
+            BottomRegion(
+                selected = selectedDestination,
+                strings = strings,
+                onSelect = { destination ->
+                    if (destination == selectedDestination) {
+                        when (destination) {
+                            TopLevelDestination.READING -> readBackStack.popToRoot()
+                            TopLevelDestination.FAVORITES -> favoritesBackStack.popToRoot()
+                            TopLevelDestination.SETTINGS -> Unit
+                        }
+                    }
+                    selectedDestination = destination
+                },
+            )
+        },
+    ) { shellPadding ->
+        val contentModifier = Modifier
+            .fillMaxSize()
+            .padding(shellPadding)
+            .consumeWindowInsets(shellPadding)
+
+        when (selectedDestination) {
+            TopLevelDestination.READING -> NavDisplay(
+                backStack = readBackStack,
+                modifier = contentModifier,
+                onBack = { readBackStack.removeLastOrNull() },
+                entryProvider = entryProvider {
+                    entry<HomeRoute> {
+                        HomeScreen(
+                            loaded = loaded,
+                            strings = strings,
+                            resumeRoute = resumeRoute,
+                            onRead = {
+                                readBackStack.add(
+                                    resumeRoute ?: VolumeReaderRoute(
+                                        loaded.content.volumesInReadingOrder().first().volumeID,
+                                    ),
+                                )
+                            },
+                            onBrowseVolumes = { readBackStack.add(VolumeListRoute) },
+                            onSearch = { readBackStack.add(SearchRoute) },
                         )
-                    },
-                    onBrowseVolumes = { backStack.add(VolumeListRoute) },
-                    onSearch = { backStack.add(SearchRoute) },
-                )
-            }
-            entry<VolumeListRoute> {
-                VolumeListScreen(
-                    content = loaded.content,
-                    strings = strings,
-                    resumeRoute = resumeRoute,
-                    onBack = { backStack.removeLastOrNull() },
-                    onOpenVolume = { volumeID ->
-                        backStack.add(
-                            resumeRoute?.takeIf { it.volumeID == volumeID }
-                                ?: VolumeReaderRoute(volumeID),
+                    }
+                    entry<VolumeListRoute> {
+                        VolumeListScreen(
+                            content = loaded.content,
+                            strings = strings,
+                            resumeRoute = resumeRoute,
+                            onBack = { readBackStack.removeLastOrNull() },
+                            onOpenVolume = { volumeID ->
+                                readBackStack.add(
+                                    resumeRoute?.takeIf { it.volumeID == volumeID }
+                                        ?: VolumeReaderRoute(volumeID),
+                                )
+                            },
                         )
-                    },
-                )
-            }
-            entry<SearchRoute> {
-                SearchScreen(
-                    repository = container.bookRepository,
-                    content = loaded.content,
-                    strings = strings,
-                    onBack = { backStack.removeLastOrNull() },
-                    onOpenResult = { result ->
-                        ScriptureSearchNavigationPolicy.target(loaded.content, result)
-                            ?.let { target ->
+                    }
+                    entry<SearchRoute> {
+                        SearchScreen(
+                            repository = container.bookRepository,
+                            content = loaded.content,
+                            strings = strings,
+                            onBack = { readBackStack.removeLastOrNull() },
+                            onOpenResult = { result ->
+                                ScriptureSearchNavigationPolicy.target(loaded.content, result)
+                                    ?.let { target ->
+                                        val openedAt = timestampAfter(
+                                            resumeRoute?.requestedAtEpochMilliseconds,
+                                        )
+                                        readBackStack.add(
+                                            VolumeReaderRoute(
+                                                volumeID = target.volumeID,
+                                                paragraphID = target.anchor.paragraphID,
+                                                characterOffset = target.anchor.characterOffset,
+                                                requestedAtEpochMilliseconds = openedAt,
+                                                highlightCharacterCount = target.highlightCharacterCount,
+                                            ),
+                                        )
+                                        navigationScope.launch {
+                                            container.userPreferencesRepository.saveReadingProgress(
+                                                ReadingProgress(
+                                                    productID = loaded.product.productID,
+                                                    editionID = loaded.book.editionID,
+                                                    paragraphID = target.anchor.paragraphID,
+                                                    characterOffset = target.anchor.characterOffset,
+                                                    mode = ReadingMode.CHAPTER,
+                                                    updatedAtEpochMilliseconds = openedAt,
+                                                ),
+                                            )
+                                        }
+                                    }
+                            },
+                        )
+                    }
+                    entry<VolumeReaderRoute> { route ->
+                        ReaderDestination(
+                            container = container,
+                            loaded = loaded,
+                            preferences = preferences,
+                            strings = strings,
+                            route = route,
+                            resumeRoute = resumeRoute,
+                            favoriteParagraphIDs = favoriteParagraphIDs,
+                            onBack = { readBackStack.removeLastOrNull() },
+                            onToggleFavorite = ::toggleFavorite,
+                        )
+                    }
+                },
+            )
+            TopLevelDestination.FAVORITES -> NavDisplay(
+                backStack = favoritesBackStack,
+                modifier = contentModifier,
+                onBack = { favoritesBackStack.removeLastOrNull() },
+                entryProvider = entryProvider {
+                    entry<FavoritesRoute> {
+                        FavoritesScreen(
+                            content = loaded.content,
+                            favorites = favorites,
+                            strings = strings,
+                            onOpenFavorite = { target ->
                                 val openedAt = timestampAfter(
                                     resumeRoute?.requestedAtEpochMilliseconds,
                                 )
-                                backStack.add(
+                                favoritesBackStack.add(
                                     VolumeReaderRoute(
                                         volumeID = target.volumeID,
                                         paragraphID = target.anchor.paragraphID,
                                         characterOffset = target.anchor.characterOffset,
                                         requestedAtEpochMilliseconds = openedAt,
-                                        highlightCharacterCount = target.highlightCharacterCount,
                                     ),
                                 )
                                 navigationScope.launch {
@@ -231,45 +356,105 @@ private fun LoadedContentNavigation(
                                         ),
                                     )
                                 }
-                            }
-                    },
-                )
-            }
-            entry<VolumeReaderRoute> { route ->
-                val document = remember(loaded.content, route.volumeID) {
-                    VolumeReadingDocument.from(loaded.content, route.volumeID)
-                }
-                val launchState = remember(route, loaded.content) {
-                    loaded.readerLaunchState(route, resumeRoute)
-                }
-                ReaderScreen(
-                    document = document,
-                    fontSizeLevel = preferences.fontSizeLevel,
-                    strings = strings,
-                    initialAnchor = launchState.anchor,
-                    highlightCharacterCount = launchState.highlightCharacterCount,
-                    onBack = { backStack.removeLastOrNull() },
-                    onSaveProgress = { anchor ->
-                        container.userPreferencesRepository.saveReadingProgress(
-                            ReadingProgress(
-                                productID = loaded.product.productID,
-                                editionID = loaded.book.editionID,
-                                paragraphID = anchor.paragraphID,
-                                characterOffset = anchor.characterOffset,
-                                mode = ReadingMode.CHAPTER,
-                                updatedAtEpochMilliseconds = timestampAfter(
-                                    maxOf(
-                                        route.requestedAtEpochMilliseconds,
-                                        resumeRoute?.requestedAtEpochMilliseconds ?: 0,
-                                    ),
-                                ),
-                            ),
+                            },
+                            onRemoveFavorite = { favorite ->
+                                navigationScope.launch {
+                                    container.favoriteRepository.remove(
+                                        loaded.book.editionID,
+                                        favorite.favoriteID,
+                                    )
+                                }
+                            },
                         )
-                    },
-                )
-            }
+                    }
+                    entry<VolumeReaderRoute> { route ->
+                        ReaderDestination(
+                            container = container,
+                            loaded = loaded,
+                            preferences = preferences,
+                            strings = strings,
+                            route = route,
+                            resumeRoute = resumeRoute,
+                            favoriteParagraphIDs = favoriteParagraphIDs,
+                            onBack = { favoritesBackStack.removeLastOrNull() },
+                            onToggleFavorite = ::toggleFavorite,
+                        )
+                    }
+                },
+            )
+            TopLevelDestination.SETTINGS -> SettingsScreen(
+                preferences = preferences,
+                supportedLocales = loaded.product.supportedLocales,
+                strings = strings,
+                onSelectTheme = { theme ->
+                    navigationScope.launch {
+                        container.userPreferencesRepository.setTheme(theme)
+                    }
+                },
+                onSelectLocale = { locale ->
+                    navigationScope.launch {
+                        container.userPreferencesRepository.setLocale(locale)
+                    }
+                },
+                onSelectFontSize = { level ->
+                    navigationScope.launch {
+                        container.userPreferencesRepository.setFontSizeLevel(level)
+                    }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReaderDestination(
+    container: AppContainer,
+    loaded: LoadedContent,
+    preferences: ProductPreferences,
+    strings: AppStrings,
+    route: VolumeReaderRoute,
+    resumeRoute: VolumeReaderRoute?,
+    favoriteParagraphIDs: Set<String>,
+    onBack: () -> Unit,
+    onToggleFavorite: (ParagraphTextAnchor) -> Unit,
+) {
+    val document = remember(loaded.content, route.volumeID) {
+        VolumeReadingDocument.from(loaded.content, route.volumeID)
+    }
+    val launchState = remember(route, loaded.content) {
+        loaded.readerLaunchState(route, resumeRoute)
+    }
+    ReaderScreen(
+        document = document,
+        fontSizeLevel = preferences.fontSizeLevel,
+        strings = strings,
+        initialAnchor = launchState.anchor,
+        highlightCharacterCount = launchState.highlightCharacterCount,
+        favoriteParagraphIDs = favoriteParagraphIDs,
+        onBack = onBack,
+        onToggleFavorite = onToggleFavorite,
+        onSaveProgress = { anchor ->
+            container.userPreferencesRepository.saveReadingProgress(
+                ReadingProgress(
+                    productID = loaded.product.productID,
+                    editionID = loaded.book.editionID,
+                    paragraphID = anchor.paragraphID,
+                    characterOffset = anchor.characterOffset,
+                    mode = ReadingMode.CHAPTER,
+                    updatedAtEpochMilliseconds = timestampAfter(
+                        maxOf(
+                            route.requestedAtEpochMilliseconds,
+                            resumeRoute?.requestedAtEpochMilliseconds ?: 0,
+                        ),
+                    ),
+                ),
+            )
         },
     )
+}
+
+private fun MutableList<NavKey>.popToRoot() {
+    while (size > 1) removeLastOrNull()
 }
 
 @Composable
@@ -390,42 +575,3 @@ internal data class LoadedContent(
     val book: BookManifest,
     val content: ScriptureContent,
 )
-
-internal class AppStrings(locale: String) {
-    private val simplified = locale == "zh-Hans"
-
-    val startReading = if (simplified) "开始阅读" else "開始閱讀"
-    val continueReading = if (simplified) "继续阅读" else "繼續閱讀"
-    val chooseVolume = if (simplified) "选择卷目" else "選擇卷目"
-    val volumes = "卷目"
-    val search = "搜索"
-    val clearSearch = if (simplified) "清除搜索" else "清除搜索"
-    val commonKeywords = if (simplified) "常用关键词" else "常用關鍵詞"
-    val searchUnavailable = if (simplified) "搜索暂时无法使用" else "搜索暫時無法使用"
-    val outlineResult = "科判"
-    val scriptureResult = if (simplified) "经文" else "經文"
-    val searchResultLimit = if (simplified) "仅显示前 50 项，请输入更完整的关键词" else "僅顯示前 50 項，請輸入更完整的關鍵詞"
-    val searchKeywords = if (simplified) {
-        listOf(
-            "如来藏", "真心", "妙明", "妙真如性", "因缘", "和合", "虚空",
-            "客尘", "生灭", "菩提", "涅槃", "妄想", "圆通", "反闻闻自性", "歇即菩提",
-        )
-    } else {
-        listOf(
-            "如來藏", "真心", "妙明", "妙真如性", "因緣", "和合", "虛空",
-            "客塵", "生滅", "菩提", "涅槃", "妄想", "圓通", "反聞聞自性", "歇即菩提",
-        )
-    }
-    val lastRead = if (simplified) "上次读到" else "上次讀到"
-    val back = "返回"
-    val contentUnavailable = if (simplified) "经文暂时无法打开" else "經文暫時無法打開"
-    val retry = if (simplified) "重试" else "重試"
-
-    fun volumeCount(count: Int): String = "全文 $count 卷"
-
-    fun noSearchResults(query: String): String = if (simplified) {
-        "没有找到“$query”"
-    } else {
-        "沒有找到「$query」"
-    }
-}
