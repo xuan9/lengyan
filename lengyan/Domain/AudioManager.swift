@@ -11,6 +11,26 @@ import AVFoundation
 import Network
 import UIKit
 
+enum AudioPlaybackStartDecision: Equatable {
+    case beginning
+    case resume(at: Double)
+}
+
+enum AudioPlaybackResumePolicy {
+    static func startDecision(
+        savedAssetID: String?,
+        requestedAssetID: String,
+        savedTime: Double
+    ) -> AudioPlaybackStartDecision {
+        guard savedAssetID == requestedAssetID,
+              savedTime.isFinite,
+              savedTime > 0 else {
+            return .beginning
+        }
+        return .resume(at: savedTime)
+    }
+}
+
 private final class AudioAutomaticDownloadNetworkMonitor: @unchecked Sendable {
     static let shared = AudioAutomaticDownloadNetworkMonitor()
 
@@ -374,8 +394,12 @@ final class AudioManager: ObservableObject {
             return
         }
 
-        let priorSavedFile = Prefers.shared.lastPlayFile?.first
-        if priorSavedFile != descriptor.id {
+        let startDecision = AudioPlaybackResumePolicy.startDecision(
+            savedAssetID: Prefers.shared.lastPlayFile?.first,
+            requestedAssetID: descriptor.id,
+            savedTime: Prefers.shared.lastPlayTime
+        )
+        if startDecision == .beginning {
             playCount = 0
             Prefers.shared.lastPlayTime = 0
             Prefers.shared.lastTotalTime = 0
@@ -406,10 +430,11 @@ final class AudioManager: ObservableObject {
         downloadStatus[descriptor.id] = .downloaded
         downloadProgress.removeValue(forKey: descriptor.id)
 
-        if priorSavedFile == descriptor.id, Prefers.shared.lastPlayTime > 0 {
-            audioObserver.seek(to: Prefers.shared.lastPlayTime)
-        } else {
+        switch startDecision {
+        case .beginning:
             audioObserver.clearSeekProtection()
+        case .resume(let savedTime):
+            audioObserver.seek(to: savedTime)
         }
 
         if autoplay {

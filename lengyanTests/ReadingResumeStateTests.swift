@@ -136,6 +136,40 @@ final class ReadingResumeStateTests: XCTestCase {
         )
     }
 
+    func testExpandedOutlinePathsPersistAcrossRestartAndCollapse() {
+        prefers.recordOutlineNodeExpanded(path: "/A1/B1")
+        prefers.recordOutlineNodeExpanded(path: "/A1/B1/C1")
+
+        var reloaded = Prefers(
+            userDefaults: defaults,
+            readingPathValidator: { _ in true }
+        )
+        XCTAssertEqual(
+            reloaded.expandedOutlinePaths,
+            ["/A1/B1", "/A1/B1/C1"]
+        )
+
+        reloaded.recordOutlineNodeCollapsed(path: "/A1/B1")
+        reloaded = Prefers(
+            userDefaults: defaults,
+            readingPathValidator: { _ in true }
+        )
+        XCTAssertEqual(reloaded.expandedOutlinePaths, ["/A1/B1/C1"])
+    }
+
+    func testExpandedOutlinePathsIgnoreRootEmptyAndDuplicateRecords() {
+        prefers.recordOutlineNodeExpanded(path: "")
+        prefers.recordOutlineNodeExpanded(path: "/")
+        prefers.recordOutlineNodeExpanded(path: "/A1/B1")
+        prefers.recordOutlineNodeExpanded(path: "/A1/B1")
+
+        XCTAssertEqual(prefers.expandedOutlinePaths, ["/A1/B1"])
+        XCTAssertEqual(
+            defaults.stringArray(forKey: "expandedOutlinePaths"),
+            ["/A1/B1"]
+        )
+    }
+
     func testLegacyScalarChangesDoNotMergeBackIntoExistingV2State() {
         prefers.recordPagedReading(path: "/v2/path", pageIndex: 7)
 

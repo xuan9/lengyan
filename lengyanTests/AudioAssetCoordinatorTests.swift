@@ -259,6 +259,64 @@ final class AudioAssetCoordinatorTests: XCTestCase {
         )
     }
 
+    func testFallbackCacheExpiresOnlyUnprotectedFilesUnusedForFourWeeks() throws {
+        let root = temporaryCacheDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let defaultsSuite = "lengyan-cdn-expiry-tests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: defaultsSuite))
+        defaults.removePersistentDomain(forName: defaultsSuite)
+        defer { defaults.removePersistentDomain(forName: defaultsSuite) }
+
+        let configuration = makeCDNConfiguration(cacheDirectory: root)
+        let assets = Array(AudioAssetCatalog.descriptors.prefix(3))
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+        for (index, asset) in assets.enumerated() {
+            let url = CDNAudioCache.destinationURL(
+                for: asset,
+                configuration: configuration
+            )
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try Data(repeating: UInt8(index), count: 16).write(to: url)
+            CDNAudioCache.touch(
+                assetID: asset.id,
+                defaults: defaults,
+                now: index < 2
+                    ? now.addingTimeInterval(-29 * 24 * 3600)
+                    : now.addingTimeInterval(-27 * 24 * 3600)
+            )
+        }
+
+        CDNAudioCache.trim(
+            configuration: configuration,
+            protecting: [assets[1].id],
+            defaults: defaults,
+            now: now
+        )
+
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: CDNAudioCache.destinationURL(
+                    for: assets[0],
+                    configuration: configuration
+                ).path
+            )
+        )
+        for asset in assets.dropFirst() {
+            XCTAssertTrue(
+                FileManager.default.fileExists(
+                    atPath: CDNAudioCache.destinationURL(
+                        for: asset,
+                        configuration: configuration
+                    ).path
+                )
+            )
+        }
+    }
+
     func testProductionCDNFallbackIsEnabledAtVerifiedWorkersDevOrigin() throws {
         let configuration = try XCTUnwrap(CDNAudioFallbackConfiguration.production)
         XCTAssertEqual(

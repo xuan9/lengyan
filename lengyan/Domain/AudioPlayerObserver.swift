@@ -9,6 +9,16 @@ import AVFoundation
 import Combine
 import MediaPlayer
 
+enum AudioPeriodicProgressPolicy {
+    static func visibleTime(
+        playerTime: Double,
+        isSeeking: Bool
+    ) -> Double? {
+        guard !isSeeking else { return nil }
+        return playerTime.isFinite && playerTime >= 0 ? playerTime : 0
+    }
+}
+
 class AudioPlayerObserver: NSObject, ObservableObject {
     static let shared = AudioPlayerObserver()
 
@@ -120,18 +130,20 @@ class AudioPlayerObserver: NSObject, ObservableObject {
 
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: DispatchQueue.main) { [weak self] time in
-            guard let self = self, let currentItem = player.currentItem, !self.isSeeking else { return }
+            guard let self = self, let currentItem = player.currentItem else { return }
 
             let currentTimeSeconds = CMTimeGetSeconds(time)
             let durationSeconds = CMTimeGetSeconds(currentItem.duration)
+            guard let visibleTime = AudioPeriodicProgressPolicy.visibleTime(
+                playerTime: currentTimeSeconds,
+                isSeeking: self.isSeeking
+            ) else { return }
 
+            self.currentTime = visibleTime
             if currentTimeSeconds.isFinite && currentTimeSeconds >= 0 {
-                self.currentTime = currentTimeSeconds
-                if abs(currentTimeSeconds - Prefers.shared.lastPlayTime) >= 1.0 {
-                    Prefers.shared.lastPlayTime = currentTimeSeconds
+                if abs(visibleTime - Prefers.shared.lastPlayTime) >= 1.0 {
+                    Prefers.shared.lastPlayTime = visibleTime
                 }
-            } else {
-                self.currentTime = 0
             }
 
             if (self.totalTime.isNaN || self.totalTime == 0) && durationSeconds.isFinite && durationSeconds > 0 {

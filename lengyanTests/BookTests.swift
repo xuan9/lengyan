@@ -1074,6 +1074,49 @@ class lengyanTests: XCTestCase {
         XCTAssertEqual(observer.currentTime, 125.0)
         observer.cleanup()
     }
+
+    func testColdPlaybackResumesOnlyTheSavedAsset() {
+        XCTAssertEqual(
+            AudioPlaybackResumePolicy.startDecision(
+                savedAssetID: "ly03",
+                requestedAssetID: "ly03",
+                savedTime: 125
+            ),
+            .resume(at: 125)
+        )
+        XCTAssertEqual(
+            AudioPlaybackResumePolicy.startDecision(
+                savedAssetID: "ly03",
+                requestedAssetID: "ly04",
+                savedTime: 125
+            ),
+            .beginning
+        )
+        XCTAssertEqual(
+            AudioPlaybackResumePolicy.startDecision(
+                savedAssetID: "ly03",
+                requestedAssetID: "ly03",
+                savedTime: 0
+            ),
+            .beginning
+        )
+    }
+
+    func testColdPlaybackSeekIgnoresInitialZeroProgressCallback() {
+        XCTAssertNil(
+            AudioPeriodicProgressPolicy.visibleTime(
+                playerTime: 0,
+                isSeeking: true
+            )
+        )
+        XCTAssertEqual(
+            AudioPeriodicProgressPolicy.visibleTime(
+                playerTime: 125,
+                isSeeking: false
+            ),
+            125
+        )
+    }
     
     func testAudioInterruption() {
         let observer = AudioPlayerObserver.shared

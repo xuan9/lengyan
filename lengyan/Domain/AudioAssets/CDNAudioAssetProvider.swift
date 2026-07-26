@@ -173,7 +173,8 @@ enum CDNAudioCache {
 
     static func touch(
         assetID: String,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        now: Date = Date()
     ) {
         var accessOrder = defaults.stringArray(
             forKey: accessOrderDefaultsKey
@@ -185,7 +186,7 @@ enum CDNAudioCache {
         var timestamps = defaults.dictionary(
             forKey: accessTimestampsDefaultsKey
         ) as? [String: TimeInterval] ?? [:]
-        timestamps[assetID] = Date().timeIntervalSince1970
+        timestamps[assetID] = now.timeIntervalSince1970
         defaults.set(timestamps, forKey: accessTimestampsDefaultsKey)
     }
 
