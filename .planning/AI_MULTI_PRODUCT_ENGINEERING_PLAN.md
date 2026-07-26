@@ -660,7 +660,7 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 ### Track A：Android 楞严与多产品
 
 - Gate F2 后按 `.planning/ANDROID_MULTI_PRODUCT_PORTING_PLAN.md` 建立 Android 原生工程。
-- 当前 Android 楞严已完成工程/CI、共享 contracts、产品隔离持久化、十卷 1,262 段连续阅读、稳定码点续读、2 万字双字号门禁、简繁精确搜索、收藏闭环、主题/简繁/字号设置、不会重复 bottom inset 的统一底部区域、覆盖 1,669 节点/1,155 叶节点的持久科判目录、从产品专属 Intent 到稳定段落的 legacy deep-link 闭环，以及 720dp 以上收藏列表/正文双栏与取消收藏后保留详情的 Pixel Tablet 门禁；现有 iOS runtime 未被替换。页面 heading、当前科判/卷 selected、字号档位和动态状态播报已落地，API 35 的 Compose Accessibility Test Framework 已覆盖首页、目录、阅读、搜索、收藏和设置。ADR 0014 的 18 场景截图 Gate 已覆盖 320-1,000dp、明暗主题、100%-200% 字号、繁简与五个主页面，并纳入 `./verify.sh android`。按 ADR 0006，设备相关分页在没有产品证据与连续字符区间证明前维持 deferred。Phase 3 仍需完成真实 TalkBack/Switch Access 人工走查和 reference-device 量化长文性能，不能把当前垂直切片描述为可发布 App。
+- 当前 Android 楞严已完成工程/CI、共享 contracts、产品隔离持久化、十卷 1,262 段连续阅读、稳定码点续读、2 万字双字号门禁、简繁精确搜索、收藏闭环、主题/简繁/字号设置、不会重复 bottom inset 的统一底部区域、覆盖 1,669 节点/1,155 叶节点的持久科判目录、从产品专属 Intent 到稳定段落的 legacy deep-link 闭环，以及 720dp 以上收藏列表/正文双栏与取消收藏后保留详情的 Pixel Tablet 门禁；现有 iOS runtime 未被替换。页面 heading、当前科判/卷 selected、字号档位和动态状态播报已落地，API 35 的 Compose Accessibility Test Framework 已覆盖首页、目录、阅读、搜索、收藏和设置。ADR 0014 的 18 场景截图 Gate 已覆盖 320-1,000dp、明暗主题、100%-200% 字号、繁简与五个主页面，并纳入 `./verify.sh android`。ADR 0015 的楞严卷九 Macrobenchmark 已按 release-derived、不可调试目标建立，常规 Gate 只负责编译，独立命令拒绝模拟器并在 API 31+ 实体机采集 FrameTiming 与最大内存；尚未连接命名参考机，因此没有伪造量化结论。按 ADR 0006，设备相关分页在没有产品证据与连续字符区间证明前维持 deferred。Phase 3 仍需完成真实 TalkBack/Switch Access 人工走查和 reference-device 量化长文性能，不能把当前垂直切片描述为可发布 App。
 - 《楞严经》生产级 Android 在有限并行下预计 16-24 周，**不包含 Foundation 0-2**；各阶段完全串行或外部验证受阻时应按最多约 27 周预留。它可与 Track I1/I2 并行，但共享 schema 修改需同一 PR 验证两平台。
 - Android 楞严发布 Gate 通过后才创建《金刚经》Android module；经文/权利/音频已批准后的 Android 增量工程预计 4-6 周。
 - Android 后续顺序同样是《金刚经》→《圆觉经》→《六祖坛经》。

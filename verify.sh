@@ -121,6 +121,11 @@ verify_android_ui_smoke() {
   "${repo_root}/scripts/verify-android-device.sh"
 }
 
+verify_android_benchmark() {
+  log "Measure Android long-reader performance on a physical reference device"
+  "${repo_root}/scripts/verify-android-benchmark.sh"
+}
+
 verify_ios_unit() {
   require_xcode
   local destination
@@ -198,8 +203,9 @@ Commands:
   contracts       Product/content schemas, manifests, fixtures, and hashes
   audio-catalog   Canonical audio manifest and generated catalog checks
   server          Feedback Worker install, tests, syntax, and dry-run build
-  android         Android unit tests, lint, debug APK, and release APK
+  android         Android unit, lint, screenshots, app APKs, and benchmark builds
   android-ui-smoke Android phone and tablet behavior tests on managed API 35
+  android-benchmark Android long-reader frame and memory metrics on physical hardware
   ios-unit        All iOS unit tests on an available simulator
   ios-build       Release build of the app and embedded extensions
   ios-ui-smoke    Focused iPad favorites and rapid-theme UI tests
@@ -225,6 +231,7 @@ case "${command_name}" in
   server) verify_server ;;
   android) verify_android ;;
   android-ui-smoke) verify_android_ui_smoke ;;
+  android-benchmark) verify_android_benchmark ;;
   ios-unit) verify_ios_unit ;;
   ios-build) verify_ios_build ;;
   ios-ui-smoke) verify_ios_ui_smoke ;;

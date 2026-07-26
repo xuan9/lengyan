@@ -32,7 +32,7 @@ printf '\n==> Android toolchain\n'
 java -version
 "${android_root}/gradlew" --version
 
-printf '\n==> Android unit, lint, screenshot, debug, and release Gate\n'
+printf '\n==> Android unit, lint, screenshot, app, and benchmark-build Gate\n'
 "${android_root}/gradlew" \
   --no-daemon \
   --project-dir "${android_root}" \
@@ -41,19 +41,27 @@ printf '\n==> Android unit, lint, screenshot, debug, and release Gate\n'
   :libraries:ui:validateDebugScreenshotTest \
   assembleDebug \
   assembleRelease \
-  :apps:lengyan:assembleDebugAndroidTest
+  :apps:lengyan:assembleDebugAndroidTest \
+  :apps:lengyan:assembleBenchmark \
+  :benchmark:lengyan:assembleBenchmark
 
 debug_apk="${android_root}/apps/lengyan/build/outputs/apk/debug/lengyan-debug.apk"
 release_apk="${android_root}/apps/lengyan/build/outputs/apk/release/lengyan-release-unsigned.apk"
 test_apk="${android_root}/apps/lengyan/build/outputs/apk/androidTest/debug/lengyan-debug-androidTest.apk"
+benchmark_target_apk="${android_root}/apps/lengyan/build/outputs/apk/benchmark/lengyan-benchmark.apk"
+benchmark_test_apk="${android_root}/benchmark/lengyan/build/outputs/apk/benchmark/lengyan-benchmark.apk"
 screenshot_report="${android_root}/libraries/ui/build/test-results/validateDebugScreenshotTest/TEST-preview-screenshot-test-engine.xml"
 [[ -s "${debug_apk}" ]] || fail "debug APK was not produced at ${debug_apk}"
 [[ -s "${release_apk}" ]] || fail "release APK was not produced at ${release_apk}"
 [[ -s "${test_apk}" ]] || fail "instrumentation APK was not produced at ${test_apk}"
+[[ -s "${benchmark_target_apk}" ]] || fail "benchmark target APK was not produced at ${benchmark_target_apk}"
+[[ -s "${benchmark_test_apk}" ]] || fail "macrobenchmark APK was not produced at ${benchmark_test_apk}"
 [[ -s "${screenshot_report}" ]] || fail "screenshot report was not produced at ${screenshot_report}"
 
 printf '\nAndroid verification passed.\n'
 printf 'Debug APK: %s\n' "${debug_apk}"
 printf 'Release APK: %s\n' "${release_apk}"
 printf 'Instrumentation APK: %s\n' "${test_apk}"
+printf 'Benchmark target APK: %s\n' "${benchmark_target_apk}"
+printf 'Macrobenchmark APK: %s\n' "${benchmark_test_apk}"
 printf 'Screenshot report: %s\n' "${screenshot_report}"

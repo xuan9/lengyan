@@ -34,6 +34,7 @@ Run the public command from the repository root:
 ```bash
 ./verify.sh android
 ./verify.sh android-ui-smoke
+./verify.sh android-benchmark
 ```
 
 Do not replace these with a narrower module task in a completion report. The
@@ -44,6 +45,9 @@ reader, stable rotation resume, complete 20,000-character layout at default and
 The Android command also validates 18 host-rendered screenshot references across
 compact phone, phone, foldable, and tablet widths; light/dark themes; 100%, 130%,
 and 200% font scales; Traditional/Simplified Chinese; and all implemented primary
-screens. Measured long-text performance, audio, and OEM Gates are added as their
-phases become implemented; absence of those tasks must not be reported as
+screens. The normal Android Gate also compiles the release-derived Macrobenchmark
+target and harness, but compilation is not a performance result. The benchmark
+command rejects emulators and API levels below 31; record quantitative results only
+from a named physical reference device. Audio and OEM Gates are added as their
+phases become implemented; absence of those results must not be reported as
 success.

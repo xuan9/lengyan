@@ -18,6 +18,7 @@ dependencyResolutionManagement {
 rootProject.name = "ClassicsAndroid"
 
 include(":apps:lengyan")
+include(":benchmark:lengyan")
 include(":libraries:core")
 include(":libraries:data")
 include(":libraries:ui")
