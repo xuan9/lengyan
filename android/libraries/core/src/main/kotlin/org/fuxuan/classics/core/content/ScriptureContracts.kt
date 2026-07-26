@@ -248,6 +248,16 @@ class ScriptureContent(
     fun paragraphsIn(sectionID: String): List<ScriptureParagraph> =
         paragraphsBySectionID[sectionID].orEmpty()
 
+    fun firstParagraphInSubtree(sectionID: String): ScriptureParagraph? {
+        if (sectionID !in sectionsByID) return null
+        paragraphsIn(sectionID).firstOrNull()?.let { return it }
+        for (child in childrenOf(sectionID)) {
+            val paragraph = firstParagraphInSubtree(child.sectionID)
+            if (paragraph != null) return paragraph
+        }
+        return null
+    }
+
     fun paragraphsInReadingOrder(): List<ScriptureParagraph> = buildList {
         fun appendSection(section: ScriptureSection) {
             addAll(paragraphsIn(section.sectionID))

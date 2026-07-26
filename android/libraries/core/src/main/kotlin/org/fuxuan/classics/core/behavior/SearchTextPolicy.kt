@@ -6,6 +6,16 @@ fun interface SearchTextNormalizer {
     fun normalize(text: String): String
 }
 
+data class SearchTextMatch(
+    val characterOffset: Int,
+    val characterCount: Int,
+) {
+    init {
+        require(characterOffset >= 0) { "search match offset must not be negative" }
+        require(characterCount > 0) { "search match length must be positive" }
+    }
+}
+
 class AlignedScriptNormalizer private constructor(
     private val characterMap: Map<Int, Int>,
 ) : SearchTextNormalizer {
@@ -98,9 +108,24 @@ object SearchTextPolicy {
         text: String,
         query: String,
         normalizer: SearchTextNormalizer,
-    ): Boolean {
+    ): Boolean = match(text, query, normalizer) != null
+
+    fun match(
+        text: String,
+        query: String,
+        normalizer: SearchTextNormalizer,
+    ): SearchTextMatch? {
         val normalizedQuery = normalized(query, normalizer)
-        return normalizedQuery.isNotEmpty() && normalized(text, normalizer).contains(normalizedQuery)
+            .codePointList()
+        if (normalizedQuery.isEmpty()) return null
+        val matchStart = normalized(text, normalizer)
+            .codePointList()
+            .indexOfSubsequence(normalizedQuery)
+        if (matchStart < 0) return null
+        return SearchTextMatch(
+            characterOffset = matchStart,
+            characterCount = normalizedQuery.size,
+        )
     }
 
     fun snippet(
@@ -110,24 +135,36 @@ object SearchTextPolicy {
         normalizer: SearchTextNormalizer,
     ): String {
         require(maxLength > 0) { "search snippet length must be positive" }
+        val match = match(text, query, normalizer)
+            ?: return text.codePointList().take(maxLength).toCodePointString()
+        return snippet(text = text, match = match, maxLength = maxLength)
+    }
+
+    fun snippet(
+        text: String,
+        match: SearchTextMatch,
+        maxLength: Int,
+    ): String {
+        require(maxLength > 0) { "search snippet length must be positive" }
         val original = text.codePointList()
-        val normalizedText = normalized(text, normalizer).codePointList()
-        val normalizedQuery = normalized(query, normalizer).codePointList()
-        require(original.size == normalizedText.size) {
-            "search normalization must preserve character count"
+        require(
+            match.characterCount <= original.size &&
+                match.characterOffset <= original.size - match.characterCount,
+        ) {
+            "search match exceeds text length"
         }
-
-        val matchStart = normalizedText.indexOfSubsequence(normalizedQuery)
-        if (matchStart < 0) return original.take(maxLength).toCodePointString()
-
-        val matchEnd = matchStart + normalizedQuery.size
+        val matchStart = match.characterOffset
+        val matchEnd = matchStart + match.characterCount
         val start = (matchStart - maxLength / 3).coerceAtLeast(0)
         val end = (matchEnd + maxLength * 2 / 3).coerceAtMost(original.size)
         var adjusted = original.subList(start, end)
             .toCodePointString()
             .replace('\n', ' ')
         if (start > 0) {
-            adjusted = smartTruncateFront(adjusted, query, normalizer)
+            adjusted = smartTruncateFront(
+                text = adjusted,
+                matchStart = matchStart - start,
+            )
         }
         adjusted = trimLeadingPunctuation(adjusted)
 
@@ -141,17 +178,11 @@ object SearchTextPolicy {
 
     private fun smartTruncateFront(
         text: String,
-        query: String,
-        normalizer: SearchTextNormalizer,
+        matchStart: Int,
     ): String {
         val original = text.codePointList()
-        val normalizedText = normalized(text, normalizer).codePointList()
-        val normalizedQuery = normalized(query, normalizer).codePointList()
-        val matchStart = normalizedText.indexOfSubsequence(normalizedQuery)
-        if (matchStart < 0) return text
-
         val cut = (0 until matchStart)
-            .lastOrNull { index -> normalizedText[index] in BREAK_CHARACTERS }
+            .lastOrNull { index -> original[index] in BREAK_CHARACTERS }
             ?.plus(1)
             ?: return text
         if (cut >= matchStart) return text

@@ -14,7 +14,31 @@ data class ScriptureSearchResult(
     val kind: SearchDocumentKind,
     val displayText: String,
     val snippet: String,
-)
+    val matchCharacterOffset: Int,
+    val matchCharacterCount: Int,
+) {
+    init {
+        require(documentID.isNotBlank()) { "search documentID must not be blank" }
+        require(sectionID.isNotBlank()) { "search sectionID must not be blank" }
+        require(displayText.isNotEmpty()) { "search display text must not be empty" }
+        require(snippet.isNotEmpty()) { "search snippet must not be empty" }
+        require(matchCharacterOffset >= 0) { "search match offset must not be negative" }
+        require(matchCharacterCount > 0) { "search match length must be positive" }
+        val displayCharacterCount = displayText.codePointCount(0, displayText.length)
+        require(
+            matchCharacterCount <= displayCharacterCount &&
+                matchCharacterOffset <= displayCharacterCount - matchCharacterCount,
+        ) { "search match exceeds display text" }
+        when (kind) {
+            SearchDocumentKind.SECTION -> require(paragraphID == null) {
+                "section search result cannot contain paragraphID"
+            }
+            SearchDocumentKind.PARAGRAPH -> require(!paragraphID.isNullOrBlank()) {
+                "paragraph search result requires paragraphID"
+            }
+        }
+    }
+}
 
 class ScriptureSearchIndex(
     traditional: ScriptureContent,
@@ -24,27 +48,43 @@ class ScriptureSearchIndex(
     private val documents: List<SearchDocument>
 
     init {
-        val sectionDocuments = traditional.sections.zip(simplified.sections).map { (hant, hans) ->
-            SearchDocument(
-                documentID = hant.sectionID,
-                sectionID = hant.sectionID,
-                paragraphID = null,
-                kind = SearchDocumentKind.SECTION,
-                traditionalText = hant.title,
-                simplifiedText = hans.title,
-            )
+        val simplifiedSections = simplified.sections.associateBy { it.sectionID }
+        val simplifiedParagraphs = simplified.paragraphs.associateBy { it.paragraphID }
+        documents = buildList {
+            fun appendSection(sectionID: String) {
+                val hant = requireNotNull(traditional.section(sectionID))
+                val hans = requireNotNull(simplifiedSections[sectionID])
+                add(
+                    SearchDocument(
+                        documentID = hant.sectionID,
+                        sectionID = hant.sectionID,
+                        paragraphID = null,
+                        kind = SearchDocumentKind.SECTION,
+                        traditionalText = hant.title,
+                        simplifiedText = hans.title,
+                    ),
+                )
+                traditional.paragraphsIn(sectionID).forEach { traditionalParagraph ->
+                    val simplifiedParagraph = requireNotNull(
+                        simplifiedParagraphs[traditionalParagraph.paragraphID],
+                    )
+                    add(
+                        SearchDocument(
+                            documentID = traditionalParagraph.paragraphID,
+                            sectionID = traditionalParagraph.sectionID,
+                            paragraphID = traditionalParagraph.paragraphID,
+                            kind = SearchDocumentKind.PARAGRAPH,
+                            traditionalText = traditionalParagraph.text,
+                            simplifiedText = simplifiedParagraph.text,
+                        ),
+                    )
+                }
+                traditional.childrenOf(sectionID).forEach { child ->
+                    appendSection(child.sectionID)
+                }
+            }
+            traditional.rootSections().forEach { root -> appendSection(root.sectionID) }
         }
-        val paragraphDocuments = traditional.paragraphs.zip(simplified.paragraphs).map { (hant, hans) ->
-            SearchDocument(
-                documentID = hant.paragraphID,
-                sectionID = hant.sectionID,
-                paragraphID = hant.paragraphID,
-                kind = SearchDocumentKind.PARAGRAPH,
-                traditionalText = hant.text,
-                simplifiedText = hans.text,
-            )
-        }
-        documents = sectionDocuments + paragraphDocuments
     }
 
     fun search(
@@ -55,17 +95,20 @@ class ScriptureSearchIndex(
     ): List<ScriptureSearchResult> {
         if (query.isEmpty() || limit <= 0) return emptyList()
         return documents.asSequence()
-            .filter { document ->
-                SearchTextPolicy.matches(document.traditionalText, query, normalizer) ||
-                    SearchTextPolicy.matches(document.simplifiedText, query, normalizer)
-            }
-            .take(limit)
-            .map { document ->
+            .mapNotNull { document ->
                 val displayText = if (displayLocale == "zh-Hans") {
                     document.simplifiedText
                 } else {
                     document.traditionalText
                 }
+                val alternateText = if (displayLocale == "zh-Hans") {
+                    document.traditionalText
+                } else {
+                    document.simplifiedText
+                }
+                val match = SearchTextPolicy.match(displayText, query, normalizer)
+                    ?: SearchTextPolicy.match(alternateText, query, normalizer)
+                    ?: return@mapNotNull null
                 ScriptureSearchResult(
                     documentID = document.documentID,
                     sectionID = document.sectionID,
@@ -74,12 +117,14 @@ class ScriptureSearchIndex(
                     displayText = displayText,
                     snippet = SearchTextPolicy.snippet(
                         text = displayText,
-                        query = query,
+                        match = match,
                         maxLength = maxSnippetLength,
-                        normalizer = normalizer,
                     ),
+                    matchCharacterOffset = match.characterOffset,
+                    matchCharacterCount = match.characterCount,
                 )
             }
+            .take(limit)
             .toList()
     }
 

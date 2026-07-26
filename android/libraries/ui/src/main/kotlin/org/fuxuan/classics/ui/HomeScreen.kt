@@ -1,8 +1,10 @@
 package org.fuxuan.classics.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,6 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -28,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,9 +46,17 @@ internal fun HomeScreen(
     resumeRoute: VolumeReaderRoute?,
     onRead: () -> Unit,
     onBrowseVolumes: () -> Unit,
+    onSearch: () -> Unit,
 ) {
     val resumeVolume = resumeRoute?.let { loaded.content.volume(it.volumeID) }
         ?: loaded.content.volumesInReadingOrder().first()
+    val usesLargeSystemText = LocalDensity.current.fontScale >= 1.5f
+    val secondaryActionHeight = if (usesLargeSystemText) 104.dp else 56.dp
+    val secondaryActionPadding = if (usesLargeSystemText) {
+        PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+    } else {
+        ButtonDefaults.ContentPadding
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -110,18 +125,52 @@ internal fun HomeScreen(
             }
             item { Spacer(modifier = Modifier.height(14.dp)) }
             item {
-                OutlinedButton(
-                    onClick = onBrowseVolumes,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = ButtonDefaults.ContentPadding,
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        text = strings.chooseVolume,
-                        style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.sp),
-                    )
+                    OutlinedButton(
+                        onClick = onBrowseVolumes,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("home.volumes")
+                            .height(secondaryActionHeight),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = secondaryActionPadding,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.List,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp),
+                        )
+                        Text(
+                            text = strings.chooseVolume,
+                            maxLines = 2,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.sp),
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onSearch,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("home.search")
+                            .height(secondaryActionHeight),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = secondaryActionPadding,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp),
+                        )
+                        Text(
+                            text = strings.search,
+                            maxLines = 2,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.sp),
+                        )
+                    }
                 }
             }
         }

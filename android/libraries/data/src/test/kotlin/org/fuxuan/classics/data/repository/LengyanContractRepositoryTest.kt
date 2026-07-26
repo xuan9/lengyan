@@ -2,9 +2,12 @@ package org.fuxuan.classics.data.repository
 
 import kotlinx.coroutines.runBlocking
 import org.fuxuan.classics.core.behavior.ParagraphTextAnchor
+import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
+import org.fuxuan.classics.core.behavior.SearchDocumentKind
 import org.fuxuan.classics.core.behavior.VolumeReadingDocument
 import org.fuxuan.classics.data.contracts.ClassicsContractParser
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -113,5 +116,48 @@ class LengyanContractRepositoryTest {
         assertSame(firstIndex, secondIndex)
         assertEquals(1, reads["Content/content-zh-Hant.json"])
         assertEquals(1, reads["Content/content-zh-Hans.json"])
+    }
+
+    @Test
+    fun searchResultsResolveToReadableTargetsAndExactCharacterOffsets() = runBlocking {
+        val repository = DefaultBookRepository(source)
+        val content = repository.content("zh-Hant")
+        val results = repository.searchIndex().search(
+            query = "转物",
+            displayLocale = "zh-Hant",
+        )
+        val paragraphResult = results.first { it.kind == SearchDocumentKind.PARAGRAPH }
+        val paragraphTarget = requireNotNull(
+            ScriptureSearchNavigationPolicy.target(content, paragraphResult),
+        )
+        val paragraph = requireNotNull(content.paragraph(paragraphTarget.anchor.paragraphID))
+        val matchStart = paragraph.text.offsetByCodePoints(
+            0,
+            paragraphTarget.anchor.characterOffset,
+        )
+        val matchEnd = paragraph.text.offsetByCodePoints(
+            matchStart,
+            paragraphTarget.highlightCharacterCount,
+        )
+
+        assertEquals("轉物", paragraph.text.substring(matchStart, matchEnd))
+        assertEquals(paragraph.volumeID, paragraphTarget.volumeID)
+        assertEquals(2, paragraphTarget.highlightCharacterCount)
+
+        val sectionResult = results.first { it.kind == SearchDocumentKind.SECTION }
+        val sectionTarget = requireNotNull(
+            ScriptureSearchNavigationPolicy.target(content, sectionResult),
+        )
+        assertEquals(
+            content.firstParagraphInSubtree(sectionResult.sectionID)?.paragraphID,
+            sectionTarget.anchor.paragraphID,
+        )
+        assertEquals(0, sectionTarget.highlightCharacterCount)
+        content.sections.forEach { section ->
+            assertNotNull(
+                "section ${section.sectionID} does not lead to readable text",
+                content.firstParagraphInSubtree(section.sectionID),
+            )
+        }
     }
 }

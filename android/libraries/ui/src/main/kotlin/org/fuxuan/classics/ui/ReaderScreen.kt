@@ -26,8 +26,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +53,7 @@ internal fun ReaderScreen(
     fontSizeLevel: Int,
     strings: AppStrings,
     initialAnchor: ParagraphTextAnchor?,
+    highlightCharacterCount: Int = 0,
     onBack: () -> Unit,
     onSaveProgress: suspend (ParagraphTextAnchor) -> Unit,
 ) {
@@ -58,6 +64,20 @@ internal fun ReaderScreen(
     var restoreCompleted by remember(document, initialAnchor) { mutableStateOf(false) }
     var reflowAnchor by remember(document) { mutableStateOf<ParagraphTextAnchor?>(null) }
     var lastSavedAnchor by remember(document, initialAnchor) { mutableStateOf(initialAnchor) }
+    val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+    val readerText = remember(
+        document,
+        initialAnchor,
+        highlightCharacterCount,
+        highlightColor,
+    ) {
+        highlightedDocumentText(
+            document = document,
+            anchor = initialAnchor,
+            characterCount = highlightCharacterCount,
+            highlightColor = highlightColor,
+        )
+    }
 
     LaunchedEffect(textLayout, document, initialAnchor) {
         val layout = textLayout ?: return@LaunchedEffect
@@ -141,6 +161,7 @@ internal fun ReaderScreen(
                     .widthIn(max = 760.dp)
                     .fillMaxWidth()
                     .fillMaxHeight()
+                    .testTag("reader.scroll")
                     .verticalScroll(scrollState)
                     .padding(
                         start = 24.dp,
@@ -151,7 +172,7 @@ internal fun ReaderScreen(
             ) {
                 SelectionContainer {
                     ReaderText(
-                        text = document.text,
+                        text = readerText,
                         fontSizeLevel = fontSizeLevel,
                         onTextLayout = { nextLayout ->
                             val previousLayout = textLayout
@@ -182,6 +203,19 @@ internal fun ReaderText(
     fontSizeLevel: Int,
     modifier: Modifier = Modifier,
     onTextLayout: (TextLayoutResult) -> Unit = {},
+) = ReaderText(
+    text = AnnotatedString(text),
+    fontSizeLevel = fontSizeLevel,
+    modifier = modifier,
+    onTextLayout = onTextLayout,
+)
+
+@Composable
+private fun ReaderText(
+    text: AnnotatedString,
+    fontSizeLevel: Int,
+    modifier: Modifier = Modifier,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
 ) {
     val typography = readerTypography(fontSizeLevel)
     Text(
@@ -194,6 +228,26 @@ internal fun ReaderText(
         letterSpacing = 0.sp,
         textAlign = TextAlign.Start,
         onTextLayout = onTextLayout,
+    )
+}
+
+private fun highlightedDocumentText(
+    document: VolumeReadingDocument,
+    anchor: ParagraphTextAnchor?,
+    characterCount: Int,
+    highlightColor: Color,
+): AnnotatedString = buildAnnotatedString {
+    append(document.text)
+    if (anchor == null || characterCount <= 0) return@buildAnnotatedString
+    val start = document.utf16OffsetFor(anchor) ?: return@buildAnnotatedString
+    val end = document.utf16OffsetFor(
+        anchor.copy(characterOffset = anchor.characterOffset + characterCount),
+    ) ?: return@buildAnnotatedString
+    if (end <= start) return@buildAnnotatedString
+    addStyle(
+        style = SpanStyle(background = highlightColor),
+        start = start,
+        end = end,
     )
 }
 

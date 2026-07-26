@@ -3,17 +3,26 @@ package org.fuxuan.lengyan
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.fuxuan.classics.core.behavior.ReadingMode
+import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
+import org.fuxuan.classics.core.behavior.SearchDocumentKind
 import org.fuxuan.classics.core.persistence.ReadingProgress
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -113,6 +122,80 @@ class LengyanShellTest {
                     Configuration.ORIENTATION_PORTRAIT
             }
         }
+    }
+
+    @Test
+    fun searchInTheResumeVolumeOpensAndHighlightsTheExactParagraph() {
+        val container = (composeRule.activity.application as LengyanApplication).container
+        val content = runBlocking { container.bookRepository.content("zh-Hant") }
+        val paragraphResult = runBlocking {
+            container.bookRepository.searchIndex()
+                .search(query = "转物", displayLocale = "zh-Hant")
+                .first { it.kind == SearchDocumentKind.PARAGRAPH }
+        }
+        val target = requireNotNull(
+            ScriptureSearchNavigationPolicy.target(content, paragraphResult),
+        )
+        val volumeStart = content.paragraphsInReadingOrder()
+            .first { it.volumeID == target.volumeID }
+        assertNotEquals(volumeStart.paragraphID, target.anchor.paragraphID)
+        runBlocking {
+            container.userPreferencesRepository.saveReadingProgress(
+                ReadingProgress(
+                    productID = content.productID,
+                    editionID = content.editionID,
+                    paragraphID = volumeStart.paragraphID,
+                    characterOffset = 0,
+                    mode = ReadingMode.CHAPTER,
+                    updatedAtEpochMilliseconds = System.currentTimeMillis() - 10_000,
+                ),
+            )
+        }
+
+        composeRule.onNodeWithText("搜索", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runCatching {
+                composeRule.onNode(hasSetTextAction(), useUnmergedTree = true)
+                    .assertIsDisplayed()
+            }.isSuccess
+        }
+        composeRule.onNode(hasSetTextAction(), useUnmergedTree = true)
+            .performTextInput("转物")
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runCatching {
+                composeRule.onNodeWithText(
+                    "若能轉物，則同如來",
+                    substring = true,
+                    useUnmergedTree = true,
+                ).assertIsDisplayed()
+            }.isSuccess
+        }
+        composeRule.onNodeWithText(
+            "若能轉物，則同如來",
+            substring = true,
+            useUnmergedTree = true,
+        ).performClick()
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            currentProgress()?.paragraphID == target.anchor.paragraphID
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runCatching {
+                val scrollRange = composeRule.onNodeWithTag("reader.scroll")
+                    .fetchSemanticsNode()
+                    .config[SemanticsProperties.VerticalScrollAxisRange]
+                scrollRange.value() > 0f
+            }.getOrDefault(false)
+        }
+        val readerText = composeRule.onNodeWithText(
+            "若能轉物，則同如來",
+            substring = true,
+            useUnmergedTree = true,
+        ).fetchSemanticsNode().config[SemanticsProperties.Text].single()
+        assertTrue(
+            "search match was not highlighted in the reader",
+            readerText.spanStyles.any { range -> range.item.background != Color.Unspecified },
+        )
     }
 
     private fun currentProgress(): ReadingProgress? {
