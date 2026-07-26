@@ -26,8 +26,10 @@ runtime loading. Foundation 2 now generates two `legacy-migration` content
 packages and a complete 1,669-node legacy-path map from those locked inputs.
 The packages contain 1,262 paragraphs per locale and preserve visible text with
 only 288 deterministic CRLF-to-LF replacements per locale. The production
-chapter map resolves 1,133 of 1,155 leaf paths; 22 remain explicitly unassigned
-rather than inferred from unreliable hints. Full evidence and hashes are in
+chapter map directly resolves 1,133 of 1,155 leaf paths. Migration hardening
+assigns the other 22 only when the nearest chapter-map-resolved leaf on both
+sides names the same volume. Twenty-one legacy hints disagree with that bounded
+evidence and remain evidence only. Full evidence and hashes are in
 `LENGYAN_MIGRATION_REPORT_2026-07-26.md`.
 
 These generated files improve migration safety but do not make the text

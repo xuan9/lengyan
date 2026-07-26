@@ -44,6 +44,6 @@ font scale, script locale, platform, or process recreation.
 ## Consequences
 
 Continuous volume reading stays simple and handles the current longest Lengyan
-volume (8,740 source characters) without pagination. A future paged mode must
+volume (9,115 source characters) without pagination. A future paged mode must
 reuse the same paragraph/code-point anchor and prove contiguous character
 ranges; it cannot introduce page number as canonical progress.

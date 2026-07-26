@@ -167,6 +167,53 @@ function mappedVolumeForPath(path, chapterRoots) {
   return matches[0]?.number ?? null;
 }
 
+function buildVolumeAssignments(leafRecords, chapterRoots) {
+  const directVolumes = leafRecords.map((leaf) => mappedVolumeForPath(leaf.path, chapterRoots));
+
+  function nearestMappedLeaf(fromIndex, direction) {
+    for (
+      let index = fromIndex + direction;
+      index >= 0 && index < leafRecords.length;
+      index += direction
+    ) {
+      if (directVolumes[index] !== null) {
+        return {
+          legacyPath: leafRecords[index].path,
+          volume: directVolumes[index]
+        };
+      }
+    }
+    return null;
+  }
+
+  return leafRecords.map((leaf, index) => {
+    const directVolume = directVolumes[index];
+    if (directVolume !== null) {
+      return {
+        volume: directVolume,
+        strategy: "chapter-map",
+        previousMappedLeaf: null,
+        nextMappedLeaf: null
+      };
+    }
+
+    const previousMappedLeaf = nearestMappedLeaf(index, -1);
+    const nextMappedLeaf = nearestMappedLeaf(index, 1);
+    const boundedVolume =
+      previousMappedLeaf !== null &&
+      nextMappedLeaf !== null &&
+      previousMappedLeaf.volume === nextMappedLeaf.volume
+        ? previousMappedLeaf.volume
+        : null;
+    return {
+      volume: boundedVolume,
+      strategy: boundedVolume === null ? "unresolved" : "bounded-neighbors",
+      previousMappedLeaf,
+      nextMappedLeaf
+    };
+  });
+}
+
 function sourceReference(relativePath, locator) {
   return {
     sourceID: legacySourceID,
@@ -259,6 +306,7 @@ export async function buildLengyanMigrationArtifacts() {
     inputs.chapterMap,
     new Set(traditionalRecords.map((record) => record.path))
   );
+  const volumeAssignments = buildVolumeAssignments(leafRecords, chapterRoots);
   const traditionalMedia = validateMedia(inputs.traditionalMedia, "traditional media");
   const simplifiedMedia = validateMedia(inputs.simplifiedMedia, "simplified media");
   invariant(
@@ -269,11 +317,13 @@ export async function buildLengyanMigrationArtifacts() {
   const paragraphIDsByPath = new Map();
   const traditionalParagraphs = [];
   const simplifiedParagraphs = [];
+  const boundedVolumeAssignments = [];
   const unresolvedVolumePaths = [];
   let traditionalCRLFReplacements = 0;
   let simplifiedCRLFReplacements = 0;
 
-  for (const leaf of leafRecords) {
+  for (let leafIndex = 0; leafIndex < leafRecords.length; leafIndex += 1) {
+    const leaf = leafRecords[leafIndex];
     const traditionalEntries = inputs.traditionalContent[leaf.path];
     const simplifiedEntries = inputs.simplifiedContent[leaf.path];
     const enhancedEntry = inputs.simplifiedEnhancedContent[leaf.path];
@@ -284,11 +334,22 @@ export async function buildLengyanMigrationArtifacts() {
     invariant(Number.isInteger(enhancedEntry.chapter) && enhancedEntry.chapter >= 1 && enhancedEntry.chapter <= 10, `${leaf.path}: invalid enhanced chapter hint`);
     invariant(traditionalEntries.length === simplifiedEntries.length, `${leaf.path}: locale entry counts differ`);
 
-    const mappedVolume = mappedVolumeForPath(leaf.path, chapterRoots);
-    if (mappedVolume === null) {
+    const volumeAssignment = volumeAssignments[leafIndex];
+    const mappedVolume = volumeAssignment.volume;
+    if (volumeAssignment.strategy === "bounded-neighbors") {
+      boundedVolumeAssignments.push({
+        legacyPath: leaf.path,
+        assignedVolume: mappedVolume,
+        legacyVolumeHint: enhancedEntry.chapter,
+        previousMappedLegacyPath: volumeAssignment.previousMappedLeaf.legacyPath,
+        nextMappedLegacyPath: volumeAssignment.nextMappedLeaf.legacyPath
+      });
+    } else if (mappedVolume === null) {
       unresolvedVolumePaths.push({
         legacyPath: leaf.path,
-        legacyVolumeHint: enhancedEntry.chapter
+        legacyVolumeHint: enhancedEntry.chapter,
+        previousMappedLeaf: volumeAssignment.previousMappedLeaf,
+        nextMappedLeaf: volumeAssignment.nextMappedLeaf
       });
     } else {
       invariant(
@@ -429,6 +490,7 @@ export async function buildLengyanMigrationArtifacts() {
       leafSections: leafRecords.length,
       paragraphs: traditionalParagraphs.length,
       mappedVolumePaths: leafRecords.length - unresolvedVolumePaths.length,
+      boundedVolumeAssignments,
       unresolvedVolumePaths,
       traditionalCRLFReplacements,
       simplifiedCRLFReplacements,
@@ -479,7 +541,8 @@ async function main() {
   }
   console.log(
     `Mapped ${report.sections} sections and ${report.paragraphs} paragraphs; ` +
-      `${report.unresolvedVolumePaths.length} legacy paths retain unresolved volume mapping.`
+      `${report.boundedVolumeAssignments.length} paths use bounded-neighbor volume assignment and ` +
+      `${report.unresolvedVolumePaths.length} remain unresolved.`
   );
   console.log(
     `Normalized CRLF to LF ${report.traditionalCRLFReplacements} times in zh-Hant and ` +

@@ -39,7 +39,7 @@ class LengyanContractRepositoryTest {
         assertEquals(10, traditional.volumes.size)
         assertEquals(1_669, traditional.sections.size)
         assertEquals(1_262, traditional.paragraphs.size)
-        assertEquals(22, traditional.paragraphs.count { it.volumeID == null })
+        assertEquals(0, traditional.paragraphs.count { it.volumeID == null })
         assertEquals(
             traditional.volumes.map { it.volumeID },
             simplified.volumes.map { it.volumeID },
@@ -74,9 +74,11 @@ class LengyanContractRepositoryTest {
     @Test
     fun assemblesEveryRealVolumeInCanonicalReadingOrder() = runBlocking {
         val content = DefaultBookRepository(source).content("zh-Hant")
+        val coveredParagraphIDs = mutableListOf<String>()
         val documents = content.volumesInReadingOrder().map { volume ->
             val expectedParagraphs = content.paragraphsInReadingOrder()
                 .filter { it.volumeID == volume.volumeID }
+            coveredParagraphIDs += expectedParagraphs.map { it.paragraphID }
             val document = VolumeReadingDocument.from(content, volume.volumeID)
 
             assertEquals(expectedParagraphs.joinToString("\n\n") { it.text }, document.text)
@@ -87,7 +89,11 @@ class LengyanContractRepositoryTest {
             document
         }
 
-        assertEquals(9_086, documents.maxOf { it.text.length })
+        assertEquals(
+            content.paragraphsInReadingOrder().map { it.paragraphID },
+            coveredParagraphIDs,
+        )
+        assertEquals(9_479, documents.maxOf { it.text.length })
     }
 
     @Test

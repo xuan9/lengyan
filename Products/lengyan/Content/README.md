@@ -25,9 +25,15 @@ Verify checked-in output and all source/hash/identity constraints with:
 ```
 
 The importer preserves paragraph order and visible text, with only CRLF line
-endings normalized to LF. It deliberately leaves 22 leaf paths with
-`volumeID: null` because the production chapter map does not resolve them.
-Their old paths and untrusted legacy volume hints remain available for review.
+endings normalized to LF. The production chapter map directly resolves 1,133
+leaf paths. For each of the other 22 paths, the generator assigns a volume only
+when the nearest mapped leaf before and after it are in the same volume. It does
+not use the unreliable legacy volume hint; 21 of those hints disagree with the
+bounded assignment. The old paths, hints, and neighbor evidence remain in the
+generated report for review.
+
+This deterministic structural assignment prevents runtime omission, but it
+does not certify the edition or remove the human source/text review Gate.
 
 See `docs/content/LENGYAN_MIGRATION_REPORT_2026-07-26.md` for the evidence and
 known limits.

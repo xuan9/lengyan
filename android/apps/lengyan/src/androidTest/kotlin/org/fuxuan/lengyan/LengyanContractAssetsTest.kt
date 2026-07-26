@@ -29,7 +29,7 @@ class LengyanContractAssetsTest {
 
         assertEquals("lengyan", product.productID)
         assertEquals("legacy-repository-v1", book.editionID)
-        assertEquals("29bbc91813ba88ab6dea6b3b3344bcc85671df2f4c1f90771f395645456a5ad0", content.contentHash)
+        assertEquals("1b2fe086bc8cc0a7a577e59cf2c721d83e3fbf14d55fc0ef0cf9f1d4923c948a", content.contentHash)
         assertEquals(10, content.volumes.size)
         assertEquals(1_669, content.sections.size)
         assertEquals(1_262, content.paragraphs.size)
