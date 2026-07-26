@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "fixtureID": "shared.share-file-name.v1",
+  "behavior": "share-file-name",
+  "cases": [
+    {
+      "name": "traditional image uses the product name and no date",
+      "input": {
+        "locale": "zh-Hant",
+        "defaultBaseName": "楞嚴經",
+        "source": null,
+        "kind": "image",
+        "uniqueSuffix": "ABC123"
+      },
+      "expected": {
+        "fileName": "楞嚴經-分享圖-ABC123.jpg"
+      }
+    },
+    {
+      "name": "simplified text export uses scripture wording instead of text",
+      "input": {
+        "locale": "zh-Hans",
+        "defaultBaseName": "楞严经",
+        "source": null,
+        "kind": "text",
+        "uniqueSuffix": "ABC123"
+      },
+      "expected": {
+        "fileName": "楞严经-经文-ABC123.txt"
+      }
+    },
+    {
+      "name": "source punctuation and whitespace are filename safe",
+      "input": {
+        "locale": "zh-Hant",
+        "defaultBaseName": "楞嚴經",
+        "source": "《楞嚴經 卷一》：序",
+        "kind": "image",
+        "uniqueSuffix": "ABC123"
+      },
+      "expected": {
+        "fileName": "楞嚴經-卷一-序-分享圖-ABC123.jpg"
+      }
+    },
+    {
+      "name": "paged image includes a stable padded page suffix",
+      "input": {
+        "locale": "zh-Hant",
+        "defaultBaseName": "楞嚴經",
+        "source": "卷一",
+        "kind": "image",
+        "uniqueSuffix": "ABC123",
+        "pageNumber": 2,
+        "pageCount": 12
+      },
+      "expected": {
+        "fileName": "卷一-分享圖-02-12-ABC123.jpg"
+      }
+    }
+  ]
+}

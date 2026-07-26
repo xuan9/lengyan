@@ -32,7 +32,9 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: |
+            server/package-lock.json
+            tools/content-validator/package-lock.json
 
       - name: Verify catalogs and feedback Worker
         run: ./verify.sh node

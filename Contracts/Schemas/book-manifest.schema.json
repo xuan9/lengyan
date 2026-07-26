@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fuxuan:classic-apps:contracts:book-manifest:v1",
+  "title": "Classic Apps Book Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "productID",
+    "bookID",
+    "editionID",
+    "contractState",
+    "titles",
+    "canonicalLocale",
+    "supportedLocales",
+    "contentVersion",
+    "stableIDScheme",
+    "normalization",
+    "sourceManifest"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/schemaVersion"
+    },
+    "productID": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/productID"
+    },
+    "bookID": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/bookID"
+    },
+    "editionID": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/editionID"
+    },
+    "contractState": {
+      "enum": [
+        "legacy-migration",
+        "source-review",
+        "canonical-ready"
+      ]
+    },
+    "titles": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/localizedStrings"
+    },
+    "canonicalLocale": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/locale"
+    },
+    "supportedLocales": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/locale"
+      }
+    },
+    "contentVersion": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "stableIDScheme": {
+      "const": "fuxuan-classics-v1"
+    },
+    "normalization": {
+      "const": "utf8-nfc-lf-v1"
+    },
+    "sourceManifest": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+    },
+    "contentPackages": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/locale"
+      },
+      "additionalProperties": {
+        "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+      }
+    },
+    "legacyCompatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identifierKind",
+        "identifierPattern",
+        "migrationStatus",
+        "sourceArtifacts"
+      ],
+      "properties": {
+        "identifierKind": {
+          "enum": [
+            "outline-path"
+          ]
+        },
+        "identifierPattern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "migrationStatus": {
+          "enum": [
+            "not-started",
+            "in-progress",
+            "complete"
+          ]
+        },
+        "mappingArtifact": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "sourceArtifacts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "contractState": {
+            "const": "legacy-migration"
+          }
+        },
+        "required": [
+          "contractState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "legacyCompatibility": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "legacyCompatibility"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "contractState": {
+            "const": "canonical-ready"
+          }
+        },
+        "required": [
+          "contractState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "contentPackages": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "contentPackages"
+        ]
+      }
+    }
+  ]
+}

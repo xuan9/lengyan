@@ -36,7 +36,8 @@ configuration. Update them when implementation makes a claim stale.
 Run commands from the repository root:
 
 ```bash
-./verify.sh node          # Audio catalogs and feedback Worker
+./verify.sh contracts     # Shared product/content contracts and source hashes
+./verify.sh node          # Contracts, audio catalogs, and feedback Worker
 ./verify.sh ios-unit      # All iOS unit tests
 ./verify.sh ios-build     # App, Widget, and downloader extension
 ./verify.sh ios-ui-smoke  # High-risk iPad/theme workflows
@@ -57,6 +58,9 @@ its hosted run has completed successfully.
 Requirements:
 
 - Node is pinned by `.node-version`; local Node may be newer but must be 22+.
+- Product contracts use their own lockfile under `tools/content-validator/`;
+  its test and validation commands must need neither Xcode, Gradle, nor network
+  access after dependencies have been installed.
 - iOS builds require Xcode 26+ because the asset downloader extension targets
   iOS 26 while the host app remains compatible with iOS 15+.
 - Set `IOS_DESTINATION` for unit tests or `IOS_UI_DESTINATION` for UI smoke to

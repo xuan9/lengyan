@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fuxuan:classic-apps:contracts:audio-artifact-manifest:v1",
+  "title": "Classic Apps Audio Artifact Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "productID",
+    "catalogID",
+    "catalogVersion",
+    "contractState",
+    "contentVersion",
+    "supportedLocales",
+    "performers",
+    "rights",
+    "artifacts"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/schemaVersion"
+    },
+    "productID": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/productID"
+    },
+    "catalogID": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]*$"
+    },
+    "catalogVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contractState": {
+      "enum": [
+        "legacy-migration",
+        "release-ready"
+      ]
+    },
+    "contentVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "supportedLocales": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/locale"
+      }
+    },
+    "performers": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/localizedStrings"
+    },
+    "rights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rightsID",
+        "status",
+        "reuseEligibility",
+        "statement"
+      ],
+      "properties": {
+        "rightsID": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*$"
+        },
+        "status": {
+          "enum": [
+            "legacy-unverified",
+            "public-domain",
+            "product-license"
+          ]
+        },
+        "reuseEligibility": {
+          "enum": [
+            "blocked",
+            "eligible"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidenceReference": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reuseEligibility": {
+                "const": "eligible"
+              }
+            },
+            "required": [
+              "reuseEligibility"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidenceReference": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "evidenceReference"
+            ]
+          }
+        }
+      ]
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deliveryManifest"
+      ],
+      "properties": {
+        "deliveryManifest": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/audioArtifact"
+      }
+    }
+  },
+  "$defs": {
+    "audioArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactID",
+        "kind",
+        "titles",
+        "contentMapping",
+        "rightsReference",
+        "renditions"
+      ],
+      "properties": {
+        "artifactID": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*$"
+        },
+        "legacyTrackID": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]+$"
+        },
+        "kind": {
+          "enum": [
+            "recitation",
+            "chant",
+            "commentary"
+          ]
+        },
+        "titles": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/localizedStrings"
+        },
+        "contentMapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "bookID"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "legacy-unmapped",
+                "mapped"
+              ]
+            },
+            "bookID": {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/bookID"
+            },
+            "legacyVolume": {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+            },
+            "paragraphStartID": {
+              "type": "string",
+              "minLength": 1
+            },
+            "paragraphEndID": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "rightsReference": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*$"
+        },
+        "renditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/rendition"
+          }
+        }
+      }
+    },
+    "rendition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "renditionID",
+        "fileName",
+        "mediaType",
+        "fileExtension",
+        "codec",
+        "durationMilliseconds",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "renditionID": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*$"
+        },
+        "fileName": {
+          "type": "string",
+          "pattern": "^[^/\\\\]+$"
+        },
+        "mediaType": {
+          "type": "string",
+          "pattern": "^[a-z0-9.+-]+/[a-z0-9.+-]+$"
+        },
+        "fileExtension": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+$"
+        },
+        "codec": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "durationMilliseconds": {
+          "anyOf": [
+            {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bytes": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+        },
+        "sha256": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/sha256"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "contractState": {
+            "const": "release-ready"
+          }
+        },
+        "required": [
+          "contractState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rights": {
+            "type": "object",
+            "properties": {
+              "reuseEligibility": {
+                "const": "eligible"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

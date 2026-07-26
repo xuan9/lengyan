@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fuxuan:classic-apps:contracts:product-manifest:v1",
+  "title": "Classic Apps Product Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "productID",
+    "lifecycle",
+    "titles",
+    "defaultLocale",
+    "supportedLocales",
+    "navigationMode",
+    "manifests",
+    "features",
+    "platforms"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/schemaVersion"
+    },
+    "productID": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/productID"
+    },
+    "lifecycle": {
+      "enum": [
+        "production",
+        "development",
+        "source-review",
+        "retired"
+      ]
+    },
+    "titles": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/localizedStrings"
+    },
+    "defaultLocale": {
+      "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/locale"
+    },
+    "supportedLocales": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/locale"
+      }
+    },
+    "navigationMode": {
+      "enum": [
+        "hierarchy-and-volumes",
+        "source-hierarchy",
+        "continuous"
+      ]
+    },
+    "manifests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "book",
+        "source"
+      ],
+      "properties": {
+        "book": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "source": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        },
+        "audio": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audio",
+        "dailyVerse",
+        "guidedReading",
+        "personIndex"
+      ],
+      "properties": {
+        "audio": {
+          "type": "boolean"
+        },
+        "dailyVerse": {
+          "type": "boolean"
+        },
+        "guidedReading": {
+          "type": "boolean"
+        },
+        "personIndex": {
+          "type": "boolean"
+        }
+      }
+    },
+    "platforms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ios",
+        "android"
+      ],
+      "properties": {
+        "ios": {
+          "$ref": "#/$defs/platform"
+        },
+        "android": {
+          "$ref": "#/$defs/platform"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "production",
+            "development",
+            "planned",
+            "retired"
+          ]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "lifecycle": {
+            "enum": [
+              "production",
+              "development"
+            ]
+          },
+          "features": {
+            "type": "object",
+            "properties": {
+              "audio": {
+                "const": true
+              }
+            },
+            "required": [
+              "audio"
+            ]
+          }
+        },
+        "required": [
+          "lifecycle",
+          "features"
+        ]
+      },
+      "then": {
+        "properties": {
+          "manifests": {
+            "type": "object",
+            "properties": {
+              "audio": {
+                "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/relativePath"
+              }
+            },
+            "required": [
+              "audio"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

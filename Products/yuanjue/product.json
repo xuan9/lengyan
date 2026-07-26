@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "productID": "yuanjue",
+  "lifecycle": "source-review",
+  "titles": {
+    "zh-Hant": "圓覺經",
+    "zh-Hans": "圆觉经"
+  },
+  "defaultLocale": "zh-Hant",
+  "supportedLocales": [
+    "zh-Hant",
+    "zh-Hans"
+  ],
+  "navigationMode": "continuous",
+  "manifests": {
+    "book": "book-manifest.json",
+    "source": "source-manifest.json"
+  },
+  "features": {
+    "audio": true,
+    "dailyVerse": true,
+    "guidedReading": true,
+    "personIndex": false
+  },
+  "platforms": {
+    "ios": {
+      "state": "planned"
+    },
+    "android": {
+      "state": "planned"
+    }
+  }
+}

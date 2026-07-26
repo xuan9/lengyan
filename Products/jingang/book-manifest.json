@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "productID": "jingang",
+  "bookID": "jingangjing",
+  "editionID": "cbeta-t08n0235-2026r1-reference",
+  "contractState": "source-review",
+  "titles": {
+    "zh-Hant": "金剛般若波羅蜜經",
+    "zh-Hans": "金刚般若波罗蜜经"
+  },
+  "canonicalLocale": "zh-Hant",
+  "supportedLocales": [
+    "zh-Hant",
+    "zh-Hans"
+  ],
+  "contentVersion": "candidate-2026r1",
+  "stableIDScheme": "fuxuan-classics-v1",
+  "normalization": "utf8-nfc-lf-v1",
+  "sourceManifest": "source-manifest.json"
+}

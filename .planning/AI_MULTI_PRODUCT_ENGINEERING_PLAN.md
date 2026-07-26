@@ -611,12 +611,15 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 
 ### Foundation 2：共享内容契约（2-4 周）
 
-- 建立 `ProductManifest`、`BookManifest`、audio artifact manifest、source manifest schema 和稳定 ID 规则。
+- 已建立 `ProductManifest`、`BookManifest`、content package、audio artifact、source manifest、behavior fixture 的 Draft 2020-12 schema，以及稳定 ID 与 canonical UTF-8/NFC/hash 规则。
+- 已登记四个产品：楞严是 `legacy-migration`；金刚、圆觉、坛经只处于 `source-review`。四份 commit-pinned CBETA XML 仅作受限校勘参考，未导入正文，默认商业权利会阻断发布。
+- 独立 Node validator 已校验产品间引用、楞严十个 legacy JSON 哈希、现行 11 条音频逐项兼容、source/rights gate 和首批跨平台 fixtures，并通过负向测试；已接入根 `verify.sh contracts` 和 Node CI。
 - 以已运行的 `AudioAssets/audio-manifest.json`/generator 为迁移输入，补齐跨产品 artifact 字段并拆出 iOS/Android delivery config；生成器参数化产品路径且继续对现有 17 个楞严产物做兼容校验。
-- 冻结 canonical UTF-8/NFC、空白/换行、确定性序列化和内容 hash 规则。
 - 把现有楞严数据导入 canonical source，保留 `/A1/B1/...` legacy mapping。
-- 建立搜索、每日经句、续读、分享文件名、深链和音频按钮的跨平台 fixtures。
+- 继续补搜索、每日经句、续读/收藏迁移 fixtures；现有首批 fixtures 已覆盖分享文件名、legacy 深链和同卷 resume/异卷从头播放。
 - 停止新增大音频到 Git，确定 CDN/object storage 和 artifact/delivery 分层。
+
+**当前未完成项：** 楞严 canonical import 与完整 legacy map、artifact/delivery 生成链拆分、两个原生平台直接消费 fixtures 的 adapter、内容/权利人工 review。以上未关闭前 Gate F2 仍未通过，也不会创建新产品 App 壳。
 
 **Gate F2：** 独立 validator 可在 macOS/Linux 校验楞严；schema v1、fixtures 和迁移报告经过 review。Android 工程和新产品 Target 都以此 Gate 为前置。
 

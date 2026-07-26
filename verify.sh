@@ -85,6 +85,15 @@ verify_audio_catalog() {
   node --test "${repo_root}"/CloudflareAudioFallback/tests/*.test.mjs
 }
 
+verify_contracts() {
+  require_node
+  log "Install and verify shared product/content contracts"
+  npm ci --prefix "${repo_root}/tools/content-validator"
+  npm --prefix "${repo_root}/tools/content-validator" audit --audit-level=high
+  npm --prefix "${repo_root}/tools/content-validator" test
+  npm --prefix "${repo_root}/tools/content-validator" run check
+}
+
 verify_server() {
   require_node
   log "Install and verify feedback Worker"
@@ -96,6 +105,7 @@ verify_server() {
 }
 
 verify_node() {
+  verify_contracts
   verify_audio_catalog
   verify_server
 }
@@ -173,7 +183,8 @@ Usage: ./verify.sh <command>
 
 Commands:
   all             Clean-clone gate: Node checks plus iOS unit/build on macOS
-  node            Audio catalog and feedback Worker checks
+  node            Shared contracts, audio catalog, and feedback Worker checks
+  contracts       Product/content schemas, manifests, fixtures, and hashes
   audio-catalog   Canonical audio manifest and generated catalog checks
   server          Feedback Worker install, tests, syntax, and dry-run build
   ios-unit        All iOS unit tests on an available simulator
@@ -195,6 +206,7 @@ case "${command_name}" in
     fi
     ;;
   node) verify_node ;;
+  contracts) verify_contracts ;;
   audio-catalog) verify_audio_catalog ;;
   server) verify_server ;;
   ios-unit) verify_ios_unit ;;

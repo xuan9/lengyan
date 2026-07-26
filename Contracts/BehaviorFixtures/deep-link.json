@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "fixtureID": "lengyan.legacy-deep-link.v1",
+  "behavior": "deep-link",
+  "cases": [
+    {
+      "name": "existing widget verse link remains accepted",
+      "input": {
+        "url": "lengyan://verse?path=%2FA2%2FB1%2FC1"
+      },
+      "expected": {
+        "accepted": true,
+        "productID": "lengyan",
+        "legacyPath": "/A2/B1/C1"
+      }
+    },
+    {
+      "name": "missing path is rejected",
+      "input": {
+        "url": "lengyan://verse"
+      },
+      "expected": {
+        "accepted": false
+      }
+    },
+    {
+      "name": "another host is rejected",
+      "input": {
+        "url": "lengyan://reader?path=%2FA2%2FB1%2FC1"
+      },
+      "expected": {
+        "accepted": false
+      }
+    },
+    {
+      "name": "another product scheme is not handled by the Lengyan adapter",
+      "input": {
+        "url": "jingang://verse?path=%2FA1"
+      },
+      "expected": {
+        "accepted": false
+      }
+    }
+  ]
+}

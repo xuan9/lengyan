@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "productID": "lengyan",
+  "bookID": "lengyanjing",
+  "editionID": "legacy-repository-v1",
+  "reviewStatus": "legacy-unverified",
+  "releaseEligibility": "blocked",
+  "approvals": {
+    "textAccuracy": {
+      "status": "pending",
+      "notes": "The production JSON has no recorded base edition or completed line-by-line review in this repository."
+    },
+    "rights": {
+      "status": "pending",
+      "notes": "The repository does not record the provenance and distribution basis of the production JSON."
+    }
+  },
+  "sources": [
+    {
+      "sourceID": "lengyan.source.legacy-repository-json",
+      "role": "legacy-runtime-input",
+      "format": "repository-json",
+      "title": "Existing Lengyan app runtime data",
+      "sourceURI": "repo://lengyan-app",
+      "revision": "bf3d7905c254a7c8d7c19d762a8518a29e44906f",
+      "retrievedOn": "2026-07-26",
+      "rights": {
+        "status": "unknown",
+        "commercialUse": "unknown",
+        "redistribution": "unknown",
+        "statement": "This snapshot records current production behavior only; it is not evidence of an authoritative edition or a reusable license."
+      },
+      "artifacts": [
+        {
+          "locator": "lengyan/data/lengyanjing-chapter-map.json",
+          "bytes": 3882,
+          "sha256": "71b38a46e774185048ef0b27d2253f658baa2132c24c3ad9d097817148a75315"
+        },
+        {
+          "locator": "lengyan/data/lengyanjing-content.json",
+          "bytes": 313198,
+          "sha256": "37023c5103fa44ab657f1b36149fc8f48aa8389a5628f63559f49020790602fa"
+        },
+        {
+          "locator": "lengyan/data/lengyanjing-index-tree.json",
+          "bytes": 142086,
+          "sha256": "342079ed13b31fe975b3133bba36747b52be919e0588ffb389ac1b304215ced0"
+        },
+        {
+          "locator": "lengyan/data/lengyanjing-index.json",
+          "bytes": 135406,
+          "sha256": "ac0e7bcb044379afcfa9f4cb4478b40766d5f73ba99045e6ea3761e453677947"
+        },
+        {
+          "locator": "lengyan/data/lengyanjing-media.json",
+          "bytes": 550,
+          "sha256": "26b71c8d45464c126525c791f694db2f39ec313a6d019b1a9ad74248abef0095"
+        },
+        {
+          "locator": "lengyan/data/simplified/enhanced-lengyanjing-content.json",
+          "bytes": 465484,
+          "sha256": "972ef6ce03910697c14291fd182a5be146e3d2875be33d7935bccff454ac68b9"
+        },
+        {
+          "locator": "lengyan/data/simplified/lengyanjing-content.json",
+          "bytes": 313198,
+          "sha256": "8d1b8fdd8634e68f5560b831aa3257fc749b6ce20e1a1e0921a580e0c5dda552"
+        },
+        {
+          "locator": "lengyan/data/simplified/lengyanjing-index-tree.json",
+          "bytes": 142086,
+          "sha256": "5c0ea4faeba3787aa3369c7d66483d5646840b5747ff8d8e29b13694c725b976"
+        },
+        {
+          "locator": "lengyan/data/simplified/lengyanjing-index.json",
+          "bytes": 135406,
+          "sha256": "0f7a638b649c0608f59e42696df59afae2e9078b7ccaad4b5b54be854f1d9dde"
+        },
+        {
+          "locator": "lengyan/data/simplified/lengyanjing-media.json",
+          "bytes": 550,
+          "sha256": "74eab3c75045d6d84143283d65a66dfc75f2e0bf13a4dbf573ca1dc2d3a78a01"
+        }
+      ]
+    },
+    {
+      "sourceID": "lengyan.source.cbeta-t19n0945",
+      "role": "collation-reference",
+      "format": "tei-xml",
+      "title": "大佛頂如來密因修證了義諸菩薩萬行首楞嚴經",
+      "institution": "CBETA 中華電子佛典協會",
+      "canonicalIdentifier": "Taisho T0945",
+      "sourceHeaderAttribution": {
+        "zh-Hant": "唐 般剌蜜帝譯"
+      },
+      "sourceURI": "https://github.com/cbeta-org/xml-p5",
+      "revision": "2b8ab8d5e4fe957a9b94f2cde01cb0d2e2dcd2b9",
+      "retrievedOn": "2026-07-26",
+      "rights": {
+        "status": "restricted-noncommercial",
+        "commercialUse": "requires-permission",
+        "redistribution": "header-required",
+        "statement": "Registered only as an immutable noncommercial collation reference. Commercial use requires prior CBETA permission and distribution must preserve required source/version information.",
+        "statementURI": "https://www.cbeta-org-tw.cbeta.org/copyright.htm"
+      },
+      "artifacts": [
+        {
+          "locator": "https://raw.githubusercontent.com/cbeta-org/xml-p5/2b8ab8d5e4fe957a9b94f2cde01cb0d2e2dcd2b9/T/T19/T19n0945.xml",
+          "pathWithinSource": "T/T19/T19n0945.xml",
+          "bytes": 727586,
+          "sha256": "892d529546811d1be1d6975aaab1a1f8f9045c19e85fa30f92908b2c4bc72967"
+        }
+      ]
+    }
+  ]
+}

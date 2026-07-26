@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "productID": "yuanjue",
+  "bookID": "yuanjuejing",
+  "editionID": "cbeta-t17n0842-2026r1-reference",
+  "reviewStatus": "candidate",
+  "releaseEligibility": "blocked",
+  "approvals": {
+    "textAccuracy": {
+      "status": "pending",
+      "notes": "No canonical transcription or independent collation review has been approved."
+    },
+    "rights": {
+      "status": "pending",
+      "notes": "CBETA is a collation reference only until a commercial permission or an independently transcribed public-domain base is approved."
+    }
+  },
+  "sources": [
+    {
+      "sourceID": "yuanjue.source.cbeta-t17n0842",
+      "role": "collation-reference",
+      "format": "tei-xml",
+      "title": "大方廣圓覺修多羅了義經",
+      "institution": "CBETA 中華電子佛典協會",
+      "canonicalIdentifier": "Taisho T0842",
+      "sourceHeaderAttribution": {
+        "zh-Hant": "唐 佛陀多羅譯"
+      },
+      "sourceURI": "https://github.com/cbeta-org/xml-p5",
+      "revision": "2b8ab8d5e4fe957a9b94f2cde01cb0d2e2dcd2b9",
+      "retrievedOn": "2026-07-26",
+      "rights": {
+        "status": "restricted-noncommercial",
+        "commercialUse": "requires-permission",
+        "redistribution": "header-required",
+        "statement": "Registered only as an immutable noncommercial collation reference. Commercial use requires prior CBETA permission and distribution must preserve required source/version information.",
+        "statementURI": "https://www.cbeta-org-tw.cbeta.org/copyright.htm"
+      },
+      "artifacts": [
+        {
+          "locator": "https://raw.githubusercontent.com/cbeta-org/xml-p5/2b8ab8d5e4fe957a9b94f2cde01cb0d2e2dcd2b9/T/T17/T17n0842.xml",
+          "pathWithinSource": "T/T17/T17n0842.xml",
+          "bytes": 108117,
+          "sha256": "fbf31ed1ac3656d0ecf61f26bc6e4bacc7bd8319be677e7a897ecc20896cbb53"
+        }
+      ]
+    }
+  ]
+}

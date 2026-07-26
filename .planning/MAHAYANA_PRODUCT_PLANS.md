@@ -195,12 +195,14 @@
 
 至少配置以下项目：
 
-- 产品名、短名、经名、作者/译者显示规则和主题资产。
-- 底本名称、藏经编号、版本说明、版权状态和修订版本。
-- 目录树、稳定段落 ID、正文资源、简繁资源和搜索索引。
-- 音频资源、分段时间码、下载策略和朗读者授权信息。
-- Widget、分享模板、URL Scheme/Universal Link 和商店元数据。
+- 产品名、短名、经名、作者/译者的来源标注规则和稳定功能能力。
+- 底本/edition、藏经编号、修订版本及 source manifest 引用。
+- 稳定段落 ID、canonical content package、简繁资源和搜索索引。
+- 音频 artifact、正文映射、分段时间码、checksum 和权利引用；下载 host/缓存/Apple 或 Android 交付字段不进入跨平台 artifact。
+- Widget、分享和深链的跨平台行为契约。
 - 是否启用拼音、引导阅读、人物索引或版本对读等产品能力。
+
+iOS Bundle ID/App Group、Android application ID、URL Scheme 注册、签名、渠道 host 和商店元数据放在各产品的 `Platform/<platform>/` 与发布配置，不写进共享运行时 manifest；永久身份仍须在创建产品 Target/module 前单独批准。
 
 ### 7.2 稳定内容模型
 
@@ -248,6 +250,8 @@ contentRevision
 10. 随 App 发布来源页和可追踪的修订日志。
 
 CBETA 是重要研究和校对工具，但其网站版权声明中的默认授权包含非商业限制，不能推断为任何 App 均可直接商用。正式产品应取得适用的书面许可，或从权利明确的公版扫描件独立录入并保留校勘记录；现代标点、注释、译文和音频还要分别确认权利。
+
+**2026-07-26 工程状态：** 四款产品已进入共享 schema/source gate；楞严只登记为待迁移的 production snapshot，金刚 `T0235`、圆觉 `T0842`、楞严 `T0945`、坛经 `T2008` 的 commit-pinned CBETA XML 只登记为 `collation-reference`。其默认非商业限制使四份 source manifest 均保持 release blocked，仓库未导入候选正文。可审计证据见 `docs/content/SOURCE_BASELINE_2026-07-26.md`。
 
 ## 9. 发布顺序与资源
 

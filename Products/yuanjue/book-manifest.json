@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "productID": "yuanjue",
+  "bookID": "yuanjuejing",
+  "editionID": "cbeta-t17n0842-2026r1-reference",
+  "contractState": "source-review",
+  "titles": {
+    "zh-Hant": "大方廣圓覺修多羅了義經",
+    "zh-Hans": "大方广圆觉修多罗了义经"
+  },
+  "canonicalLocale": "zh-Hant",
+  "supportedLocales": [
+    "zh-Hant",
+    "zh-Hans"
+  ],
+  "contentVersion": "candidate-2026r1",
+  "stableIDScheme": "fuxuan-classics-v1",
+  "normalization": "utf8-nfc-lf-v1",
+  "sourceManifest": "source-manifest.json"
+}

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "fixtureID": "shared.audio-start-decision.v1",
+  "behavior": "audio-start-decision",
+  "cases": [
+    {
+      "name": "resume the same artifact at a positive saved time",
+      "input": {
+        "savedArtifactID": "lengyan.audio.ly03",
+        "requestedArtifactID": "lengyan.audio.ly03",
+        "savedTimeSeconds": 125
+      },
+      "expected": {
+        "startMode": "resume",
+        "seekTimeSeconds": 125
+      }
+    },
+    {
+      "name": "start a different artifact from the beginning",
+      "input": {
+        "savedArtifactID": "lengyan.audio.ly03",
+        "requestedArtifactID": "lengyan.audio.ly04",
+        "savedTimeSeconds": 125
+      },
+      "expected": {
+        "startMode": "beginning"
+      }
+    },
+    {
+      "name": "zero is not a resumable position",
+      "input": {
+        "savedArtifactID": "lengyan.audio.ly03",
+        "requestedArtifactID": "lengyan.audio.ly03",
+        "savedTimeSeconds": 0
+      },
+      "expected": {
+        "startMode": "beginning"
+      }
+    },
+    {
+      "name": "negative saved time is rejected",
+      "input": {
+        "savedArtifactID": "lengyan.audio.ly03",
+        "requestedArtifactID": "lengyan.audio.ly03",
+        "savedTimeSeconds": -1
+      },
+      "expected": {
+        "startMode": "beginning"
+      }
+    },
+    {
+      "name": "missing saved artifact starts at the beginning",
+      "input": {
+        "savedArtifactID": null,
+        "requestedArtifactID": "lengyan.audio.ly03",
+        "savedTimeSeconds": 125
+      },
+      "expected": {
+        "startMode": "beginning"
+      }
+    }
+  ]
+}

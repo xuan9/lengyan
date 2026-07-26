@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "productID": "tanjing",
+  "lifecycle": "source-review",
+  "titles": {
+    "zh-Hant": "六祖壇經",
+    "zh-Hans": "六祖坛经"
+  },
+  "defaultLocale": "zh-Hant",
+  "supportedLocales": [
+    "zh-Hant",
+    "zh-Hans"
+  ],
+  "navigationMode": "continuous",
+  "manifests": {
+    "book": "book-manifest.json",
+    "source": "source-manifest.json"
+  },
+  "features": {
+    "audio": true,
+    "dailyVerse": true,
+    "guidedReading": false,
+    "personIndex": true
+  },
+  "platforms": {
+    "ios": {
+      "state": "planned"
+    },
+    "android": {
+      "state": "planned"
+    }
+  }
+}

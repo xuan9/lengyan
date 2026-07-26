@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "productID": "jingang",
+  "lifecycle": "source-review",
+  "titles": {
+    "zh-Hant": "金剛經",
+    "zh-Hans": "金刚经"
+  },
+  "defaultLocale": "zh-Hant",
+  "supportedLocales": [
+    "zh-Hant",
+    "zh-Hans"
+  ],
+  "navigationMode": "continuous",
+  "manifests": {
+    "book": "book-manifest.json",
+    "source": "source-manifest.json"
+  },
+  "features": {
+    "audio": true,
+    "dailyVerse": true,
+    "guidedReading": false,
+    "personIndex": false
+  },
+  "platforms": {
+    "ios": {
+      "state": "planned"
+    },
+    "android": {
+      "state": "planned"
+    }
+  }
+}

@@ -21,6 +21,7 @@ node:
     key:
       files:
         - server/package-lock.json
+        - tools/content-validator/package-lock.json
     paths:
       - .npm/
   script:

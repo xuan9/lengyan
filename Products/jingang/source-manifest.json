@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "productID": "jingang",
+  "bookID": "jingangjing",
+  "editionID": "cbeta-t08n0235-2026r1-reference",
+  "reviewStatus": "candidate",
+  "releaseEligibility": "blocked",
+  "approvals": {
+    "textAccuracy": {
+      "status": "pending",
+      "notes": "No canonical transcription, segmentation decision, or independent collation review has been approved."
+    },
+    "rights": {
+      "status": "pending",
+      "notes": "CBETA is a collation reference only until a commercial permission or an independently transcribed public-domain base is approved."
+    }
+  },
+  "sources": [
+    {
+      "sourceID": "jingang.source.cbeta-t08n0235",
+      "role": "collation-reference",
+      "format": "tei-xml",
+      "title": "金剛般若波羅蜜經",
+      "institution": "CBETA 中華電子佛典協會",
+      "canonicalIdentifier": "Taisho T0235",
+      "sourceHeaderAttribution": {
+        "zh-Hant": "後秦 鳩摩羅什譯"
+      },
+      "sourceURI": "https://github.com/cbeta-org/xml-p5",
+      "revision": "2b8ab8d5e4fe957a9b94f2cde01cb0d2e2dcd2b9",
+      "retrievedOn": "2026-07-26",
+      "rights": {
+        "status": "restricted-noncommercial",
+        "commercialUse": "requires-permission",
+        "redistribution": "header-required",
+        "statement": "Registered only as an immutable noncommercial collation reference. Commercial use requires prior CBETA permission and distribution must preserve required source/version information.",
+        "statementURI": "https://www.cbeta-org-tw.cbeta.org/copyright.htm"
+      },
+      "artifacts": [
+        {
+          "locator": "https://raw.githubusercontent.com/cbeta-org/xml-p5/2b8ab8d5e4fe957a9b94f2cde01cb0d2e2dcd2b9/T/T08/T08n0235.xml",
+          "pathWithinSource": "T/T08/T08n0235.xml",
+          "bytes": 60229,
+          "sha256": "6852f861a314809c935de6e676994226d5a9021f63b88a7e18a6af60768285e9"
+        }
+      ]
+    }
+  ]
+}

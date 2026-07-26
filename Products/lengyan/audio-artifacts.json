@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "productID": "lengyan",
+  "catalogID": "lengyan.audio",
+  "catalogVersion": "legacy-v1-projection",
+  "contractState": "legacy-migration",
+  "contentVersion": "legacy-unversioned",
+  "supportedLocales": [
+    "zh-Hant",
+    "zh-Hans"
+  ],
+  "performers": {
+    "zh-Hant": "屏東能淨協會讀誦",
+    "zh-Hans": "屏东能净协会读诵"
+  },
+  "rights": {
+    "rightsID": "lengyan.audio-rights.legacy",
+    "status": "legacy-unverified",
+    "reuseEligibility": "blocked",
+    "statement": "The current app names the performer, but this repository does not contain written authorization proving reuse in new products or delivery channels."
+  },
+  "compatibility": {
+    "deliveryManifest": "AudioAssets/audio-manifest.json"
+  },
+  "artifacts": [
+    {
+      "artifactID": "lengyan.audio.ly01",
+      "legacyTrackID": "ly01",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷一",
+        "zh-Hans": "楞严经 卷一"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 1
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly01.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 11408933,
+          "sha256": "981ed4e96be6bf23694d3ad4dda4958fc987295fa895d229df1138f87674ae5a"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly02",
+      "legacyTrackID": "ly02",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷二",
+        "zh-Hans": "楞严经 卷二"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 2
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly02.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 14772155,
+          "sha256": "86e26f96f26f51c7d94bb9763ae8da5cdc2d7c29f4e3f963ffbc19629725f472"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly03",
+      "legacyTrackID": "ly03",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷三",
+        "zh-Hans": "楞严经 卷三"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 3
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly03.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 15582450,
+          "sha256": "b2170f364da0d44dd7b1242c73b784eb0f8243e19946591cbdeee90a7b670d55"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly04",
+      "legacyTrackID": "ly04",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷四",
+        "zh-Hans": "楞严经 卷四"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 4
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly04.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 16602673,
+          "sha256": "34dbd536f603b32ac4fc0316201cd65fe8fbbee504196470fce2b4ac4fa7c840"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly05",
+      "legacyTrackID": "ly05",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷五",
+        "zh-Hans": "楞严经 卷五"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 5
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly05.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 13012100,
+          "sha256": "f8669fe34c8bd95093679c7d25e16dfdb72cc8d15601987dbaf49bb3dde6151c"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly06",
+      "legacyTrackID": "ly06",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷六",
+        "zh-Hans": "楞严经 卷六"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 6
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly06.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 14330690,
+          "sha256": "53ce455f3a20cc09e49f05ae2632fafd8c1c686529d5bf9ecdd32f3465a39828"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly07",
+      "legacyTrackID": "ly07",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷七",
+        "zh-Hans": "楞严经 卷七"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 7
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly07.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 16483037,
+          "sha256": "c4b879afc23d06fbcf4af2ed81d5b9680797fa0860a0f9804531da95668813a7"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly08",
+      "legacyTrackID": "ly08",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷八",
+        "zh-Hans": "楞严经 卷八"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 8
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly08.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 15602303,
+          "sha256": "7a31de382ed9bfc523ec4a49792055249d378a32c8d5cde8b8b3bea928b01e96"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly09",
+      "legacyTrackID": "ly09",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷九",
+        "zh-Hans": "楞严经 卷九"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 9
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly09.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 21116150,
+          "sha256": "a0f8ad5c1cdde15243d150e510368f43d327fe42f5ef1e362e704971cedde801"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.ly10",
+      "legacyTrackID": "ly10",
+      "kind": "recitation",
+      "titles": {
+        "zh-Hant": "楞嚴經 卷十",
+        "zh-Hans": "楞严经 卷十"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing",
+        "legacyVolume": 10
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "ly10.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 16590672,
+          "sha256": "e531560f540e74fd3088201de8e164007dfb71434ec55f43d751c92b11feff2c"
+        }
+      ]
+    },
+    {
+      "artifactID": "lengyan.audio.lyz1",
+      "legacyTrackID": "lyz1",
+      "kind": "chant",
+      "titles": {
+        "zh-Hant": "楞嚴咒",
+        "zh-Hans": "楞严咒"
+      },
+      "contentMapping": {
+        "status": "legacy-unmapped",
+        "bookID": "lengyanjing"
+      },
+      "rightsReference": "lengyan.audio-rights.legacy",
+      "renditions": [
+        {
+          "renditionID": "m4a-legacy",
+          "fileName": "lyz1.m4a",
+          "mediaType": "audio/mp4",
+          "fileExtension": "m4a",
+          "codec": null,
+          "durationMilliseconds": null,
+          "bytes": 5919555,
+          "sha256": "33734314186b1229a08b85169c6b481ed9401cf94ae636f4b36340f11d1db2e0"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "productID": "lengyan",
+  "lifecycle": "production",
+  "titles": {
+    "zh-Hant": "楞嚴經",
+    "zh-Hans": "楞严经"
+  },
+  "defaultLocale": "zh-Hant",
+  "supportedLocales": [
+    "zh-Hant",
+    "zh-Hans"
+  ],
+  "navigationMode": "hierarchy-and-volumes",
+  "manifests": {
+    "book": "book-manifest.json",
+    "source": "source-manifest.json",
+    "audio": "audio-artifacts.json"
+  },
+  "features": {
+    "audio": true,
+    "dailyVerse": true,
+    "guidedReading": true,
+    "personIndex": true
+  },
+  "platforms": {
+    "ios": {
+      "state": "production"
+    },
+    "android": {
+      "state": "planned"
+    }
+  }
+}

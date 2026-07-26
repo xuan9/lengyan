@@ -67,6 +67,7 @@ Android 版本可以实施，也应从第一天按多经典产品建设。推荐
 - Apple primary 明确失败或 15 秒无进展时，只有用户主动播放才进入 Cloudflare fallback；取消、本机空间不足和静默预取失败不得触发公网回退。
 - 当前 Cloudflare Static Assets 会忽略 Range 并返回完整文件，且没有中国大陆 SLA。其 content-addressed key 与 bytes/SHA-256 校验可以复用，host 和下载实现不能作为 Android 主链路。
 - 当前 `AudioAssets/audio-manifest.json` 已单源生成 17 个楞严 Swift/Node/Apple 产物并接入 CI 检查；Android 不再参与“消除四份手工 catalog”这一步，但也不能直接消费仍含 Apple/CDN/source path 的现行交付 catalog。Gate F2 仍需把它演进为跨产品 artifact schema 与 Android delivery config。
+- Gate F2 的首层 contract 已落地：`Contracts/Schemas/`、四个 `Products/<id>/` 清单、楞严跨平台 audio artifact 投影、source/rights gate 和首批 behavior fixtures 可由 `./verify.sh contracts` 在 macOS/Linux 独立校验。Android 仍须等待楞严 canonical import、完整 legacy map 和 delivery 拆分完成，不能因已有 schema 就提前创建产品 module。
 - iOS 已取消技术性的音频存储设置页，改为按需准备和自动缓存/清理；其 fallback 当前无容量上限、按 28 天未访问淘汰，11 条全部缓存约 154MiB。这是现状而非 Android requirement，Phase 0 必须明确 Data Saver/Wi-Fi、单产品与全局 cache budget、清理和可选 pin。
 - 冷启动续播现在会即时持久化并保护异步 seek；Android 必须把“同一卷在进程重建后恢复且不会被初始 0 覆盖”加入 Media3 fixture 和杀进程测试。
 - 目录 disclosure state 现在还会跨重启持久化；Android 使用稳定 node ID 和产品命名空间保存，内容升级时过滤失效节点。

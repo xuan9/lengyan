@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fuxuan:classic-apps:contracts:behavior-fixture:v1",
+  "title": "Classic Apps Cross-platform Behavior Fixture",
+  "type": "object",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/audioStartDecision"
+    },
+    {
+      "$ref": "#/$defs/shareFileName"
+    },
+    {
+      "$ref": "#/$defs/deepLink"
+    }
+  ],
+  "$defs": {
+    "fixtureHeader": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "fixtureID",
+        "behavior",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/schemaVersion"
+        },
+        "fixtureID": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*$"
+        },
+        "behavior": {
+          "type": "string"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1
+        }
+      }
+    },
+    "audioStartDecision": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/fixtureHeader"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "behavior": {
+              "const": "audio-start-decision"
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/audioStartCase"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "audioStartCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "savedArtifactID",
+            "requestedArtifactID",
+            "savedTimeSeconds"
+          ],
+          "properties": {
+            "savedArtifactID": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "requestedArtifactID": {
+              "type": "string",
+              "minLength": 1
+            },
+            "savedTimeSeconds": {
+              "type": "number"
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "startMode"
+          ],
+          "properties": {
+            "startMode": {
+              "enum": [
+                "beginning",
+                "resume"
+              ]
+            },
+            "seekTimeSeconds": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      }
+    },
+    "shareFileName": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/fixtureHeader"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "behavior": {
+              "const": "share-file-name"
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/shareFileNameCase"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "shareFileNameCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "locale",
+            "defaultBaseName",
+            "source",
+            "kind",
+            "uniqueSuffix"
+          ],
+          "properties": {
+            "locale": {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/locale"
+            },
+            "defaultBaseName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "image",
+                "text"
+              ]
+            },
+            "uniqueSuffix": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pageNumber": {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+            },
+            "pageCount": {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/positiveSafeInteger"
+            }
+          },
+          "dependentRequired": {
+            "pageNumber": [
+              "pageCount"
+            ],
+            "pageCount": [
+              "pageNumber"
+            ]
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fileName"
+          ],
+          "properties": {
+            "fileName": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "deepLink": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/fixtureHeader"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "behavior": {
+              "const": "deep-link"
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/deepLinkCase"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "deepLinkCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "url": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "accepted"
+          ],
+          "properties": {
+            "accepted": {
+              "type": "boolean"
+            },
+            "productID": {
+              "$ref": "urn:fuxuan:classic-apps:contracts:common:v1#/$defs/productID"
+            },
+            "legacyPath": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}
