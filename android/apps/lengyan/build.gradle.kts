@@ -1,6 +1,12 @@
 plugins {
     id("classics.android.application")
     id("classics.android.compose")
+    id("classics.android.product-assets")
+}
+
+classicsProductAssets {
+    productID.set("lengyan")
+    productDirectory.set(rootProject.layout.projectDirectory.dir("../Products/lengyan"))
 }
 
 android {
@@ -41,6 +47,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.kotlinx.coroutines.core)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     testImplementation(libs.junit)
 }

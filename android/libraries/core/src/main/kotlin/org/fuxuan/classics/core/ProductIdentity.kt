@@ -1,6 +1,6 @@
 package org.fuxuan.classics.core
 
-private val productIDPattern = Regex("^[a-z][a-z0-9-]{1,63}$")
+private val productIDPattern = Regex("^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 
 data class ProductIdentity(
     val productID: String,
