@@ -111,6 +111,11 @@ verify_node() {
   verify_server
 }
 
+verify_android() {
+  log "Verify native Android workspace"
+  "${repo_root}/scripts/verify-android.sh"
+}
+
 verify_ios_unit() {
   require_xcode
   local destination
@@ -183,11 +188,12 @@ usage() {
 Usage: ./verify.sh <command>
 
 Commands:
-  all             Clean-clone gate: Node checks plus iOS unit/build on macOS
+  all             Clean-clone gate: Node and Android plus iOS on macOS
   node            Shared contracts, audio catalog, and feedback Worker checks
   contracts       Product/content schemas, manifests, fixtures, and hashes
   audio-catalog   Canonical audio manifest and generated catalog checks
   server          Feedback Worker install, tests, syntax, and dry-run build
+  android         Android unit tests, lint, debug APK, and release APK
   ios-unit        All iOS unit tests on an available simulator
   ios-build       Release build of the app and embedded extensions
   ios-ui-smoke    Focused iPad favorites and rapid-theme UI tests
@@ -201,6 +207,7 @@ command_name="${1:-all}"
 case "${command_name}" in
   all)
     verify_node
+    verify_android
     if [[ "$(uname -s)" == "Darwin" ]]; then
       verify_ios_unit
       verify_ios_build
@@ -210,6 +217,7 @@ case "${command_name}" in
   contracts) verify_contracts ;;
   audio-catalog) verify_audio_catalog ;;
   server) verify_server ;;
+  android) verify_android ;;
   ios-unit) verify_ios_unit ;;
   ios-build) verify_ios_build ;;
   ios-ui-smoke) verify_ios_ui_smoke ;;

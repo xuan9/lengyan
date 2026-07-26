@@ -27,6 +27,17 @@ BackgroundAssets/Artifacts/
 .build/
 Package.resolved
 
+# Android/Gradle local state and generated outputs
+**/.gradle/
+**/local.properties
+**/.idea/
+**/.kotlin/
+**/captures/
+**/.externalNativeBuild/
+**/.cxx/
+*.apk
+*.aab
+
 # Cloudflare Wrangler local account/cache state
 **/.wrangler/
 **/node_modules/

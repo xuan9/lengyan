@@ -4,9 +4,13 @@
 
 Use the root `./verify.sh` command for local and CI verification. It is the
 public entry point for audio catalogs, the feedback Worker, iOS unit tests, all
-embedded iOS targets, focused UI smoke tests, and production archive checks.
+embedded iOS targets, Android unit/lint/APK builds, focused UI smoke tests, and
+production archive checks.
 Run `./verify.sh --help` for the command list. CI must call this script instead
 of maintaining a second set of build commands.
+
+The Android gate requires JDK 17, Android SDK platform 37.0, and Build Tools
+37.0.0. Run it independently with `./verify.sh android`.
 
 ## Cloudflare Audio Fallback
 
