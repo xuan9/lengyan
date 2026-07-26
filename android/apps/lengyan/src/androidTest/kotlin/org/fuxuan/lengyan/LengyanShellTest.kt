@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -21,7 +22,10 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -303,6 +307,14 @@ class LengyanShellTest {
             composeRule.onNodeWithTag("bottom.settings", useUnmergedTree = true).performClick()
             composeRule.onNodeWithTag("settings.screen", useUnmergedTree = true)
                 .assertIsDisplayed()
+            composeRule.onNode(
+                hasText("設定") and
+                    SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading),
+                useUnmergedTree = true,
+            ).assertIsDisplayed()
+            composeRule.onNodeWithText("外觀", useUnmergedTree = true).assert(
+                SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading),
+            )
             assertTrue(
                 composeRule.onAllNodesWithText("經文卡片", useUnmergedTree = true)
                     .fetchSemanticsNodes().isEmpty(),
@@ -332,6 +344,13 @@ class LengyanShellTest {
             composeRule.onNodeWithTag("settings.font-size", useUnmergedTree = true)
                 .performScrollTo()
                 .assertIsDisplayed()
+            composeRule.onNodeWithTag("settings.font-size.slider", useUnmergedTree = true)
+                .assert(
+                    SemanticsMatcher.expectValue(
+                        SemanticsProperties.StateDescription,
+                        "第 3 级，共 5 级",
+                    ),
+                )
         } finally {
             runBlocking {
                 container.userPreferencesRepository.setTheme(ThemePreference.SYSTEM)
@@ -441,6 +460,12 @@ class LengyanShellTest {
                 ).assertIsDisplayed()
             }.isSuccess
         }
+        composeRule.onNodeWithTag("search.result-count", useUnmergedTree = true).assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.LiveRegion,
+                LiveRegionMode.Polite,
+            ),
+        )
         composeRule.onNodeWithText(
             "若能轉物，則同如來",
             substring = true,

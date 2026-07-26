@@ -10,7 +10,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -55,7 +58,10 @@ class ContentBrowserLargeTextTest {
                         ContentBrowserScreen(
                             content = fixtureContent(),
                             strings = AppStrings("zh-Hant"),
-                            resumeRoute = null,
+                            resumeRoute = VolumeReaderRoute(
+                                volumeID = "test.v000001",
+                                paragraphID = "test.p000001",
+                            ),
                             expandedSectionIDs = expandedSectionIDs,
                             onExpandedSectionIDsChanged = { expandedSectionIDs = it },
                             onBack = {},
@@ -83,8 +89,22 @@ class ContentBrowserLargeTextTest {
         root.performClick()
         val leaf = composeRule.onNodeWithTag("outline.row.test.s000002")
             .assertIsDisplayed()
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.Selected, true),
+            )
         leaf.performClick()
         composeRule.runOnIdle { assertEquals("test.p000001", openedParagraphID) }
+
+        composeRule.onNodeWithTag("directory.tab.volumes", useUnmergedTree = true)
+            .performClick()
+        composeRule.onNodeWithTag("volume.row.test.v000001", useUnmergedTree = true)
+            .assertIsDisplayed()
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.Selected, true),
+            )
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button),
+            )
     }
 
     private fun fixtureContent(): ScriptureContent {

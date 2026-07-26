@@ -34,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -71,6 +73,7 @@ internal fun HomeScreen(
             item {
                 Text(
                     text = loaded.product.title(loaded.content.locale),
+                    modifier = Modifier.semantics { heading() },
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.displaySmall.copy(letterSpacing = 0.sp),
                 )

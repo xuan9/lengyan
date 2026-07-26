@@ -42,6 +42,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -165,6 +168,7 @@ private fun FavoritesListPane(
                 title = {
                     Text(
                         text = strings.favorites,
+                        modifier = Modifier.semantics { heading() },
                         style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 0.sp),
                     )
                 },
@@ -234,7 +238,9 @@ private fun FavoritesEmptyState(
         )
         Text(
             text = strings.noFavorites,
-            modifier = Modifier.padding(top = 14.dp),
+            modifier = Modifier
+                .padding(top = 14.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f),
             style = MaterialTheme.typography.bodyLarge.copy(letterSpacing = 0.sp),
         )

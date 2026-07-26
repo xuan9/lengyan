@@ -62,6 +62,18 @@ internal class AppStrings(locale: String) {
         "沒有找到「$query」"
     }
 
+    fun searchResultCount(count: Int, hasMore: Boolean): String = if (simplified) {
+        if (hasMore) "显示前 $count 项结果" else "找到 $count 项结果"
+    } else {
+        if (hasMore) "顯示前 $count 項結果" else "找到 $count 項結果"
+    }
+
+    fun fontSizeState(level: Int): String = if (simplified) {
+        "第 ${level + 1} 级，共 5 级"
+    } else {
+        "第 ${level + 1} 級，共 5 級"
+    }
+
     fun themeName(theme: ThemePreference): String = when (theme) {
         ThemePreference.SYSTEM -> if (simplified) "跟随系统" else "跟隨系統"
         ThemePreference.LIGHT -> if (simplified) "浅色" else "淺色"

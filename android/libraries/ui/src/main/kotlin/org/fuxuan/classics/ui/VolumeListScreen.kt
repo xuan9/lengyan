@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -80,6 +81,7 @@ internal fun ContentBrowserScreen(
                 title = {
                     Text(
                         text = strings.scriptureDirectory,
+                        modifier = Modifier.semantics { heading() },
                         style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 0.sp),
                     )
                 },
@@ -207,6 +209,7 @@ private fun OutlineRow(
             .testTag("outline.row.${row.section.sectionID}")
             .semantics {
                 if (row.depth == 0) heading()
+                if (isCurrent) selected = true
                 if (row.hasChildren) {
                     stateDescription = if (row.isExpanded) strings.expanded else strings.collapsed
                 }
@@ -322,7 +325,11 @@ private fun VolumeRow(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 72.dp)
-            .clickable(onClick = onClick)
+            .testTag("volume.row.${volume.volumeID}")
+            .semantics {
+                if (isResumeVolume) selected = true
+            }
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 4.dp, vertical = 12.dp),
     ) {
         Text(

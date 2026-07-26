@@ -30,6 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.fuxuan.classics.core.persistence.ProductPreferences
@@ -54,6 +58,7 @@ internal fun SettingsScreen(
                 title = {
                     Text(
                         text = strings.settings,
+                        modifier = Modifier.semantics { heading() },
                         style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 0.sp),
                     )
                 },
@@ -121,7 +126,9 @@ private fun SettingsHeading(
 ) {
     Text(
         text = text,
-        modifier = modifier.padding(bottom = 6.dp),
+        modifier = modifier
+            .semantics { heading() }
+            .padding(bottom = 6.dp),
         color = MaterialTheme.colorScheme.primary,
         style = MaterialTheme.typography.titleMedium.copy(letterSpacing = 0.sp),
     )
@@ -183,6 +190,12 @@ private fun FontSizeSetting(
             value = sliderValue,
             onValueChange = { sliderValue = it },
             onValueChangeFinished = { onSelectFontSize(sliderValue.roundToInt()) },
+            modifier = Modifier
+                .testTag("settings.font-size.slider")
+                .semantics {
+                    contentDescription = strings.fontSize
+                    stateDescription = strings.fontSizeState(sliderValue.roundToInt())
+                },
             valueRange = 0f..4f,
             steps = 3,
         )

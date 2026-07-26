@@ -52,6 +52,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -131,7 +137,8 @@ internal fun SearchScreen(
                             .widthIn(max = 720.dp)
                             .fillMaxWidth()
                             .padding(end = 8.dp)
-                            .focusRequester(focusRequester),
+                            .focusRequester(focusRequester)
+                            .semantics { contentDescription = strings.search },
                         placeholder = { Text(strings.search) },
                         leadingIcon = {
                             Icon(
@@ -236,7 +243,9 @@ private fun SearchBody(
             item {
                 Text(
                     text = strings.commonKeywords,
-                    modifier = Modifier.padding(bottom = 2.dp),
+                    modifier = Modifier
+                        .semantics { heading() }
+                        .padding(bottom = 2.dp),
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.62f),
                     style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.sp),
                 )
@@ -249,6 +258,7 @@ private fun SearchBody(
                     strings.searchKeywords.forEach { keyword ->
                         OutlinedButton(
                             onClick = { onChooseKeyword(keyword) },
+                            modifier = Modifier.heightIn(min = 48.dp),
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                         ) {
@@ -277,12 +287,26 @@ private fun SearchBody(
                     text = strings.noSearchResults(query.trim()),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 36.dp),
+                        .padding(top = 36.dp)
+                        .semantics { liveRegion = LiveRegionMode.Polite },
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f),
                     style = MaterialTheme.typography.bodyLarge.copy(letterSpacing = 0.sp),
                 )
             }
         } else if (complete != null) {
+            item(key = "search-result-count") {
+                Text(
+                    text = strings.searchResultCount(
+                        count = complete.results.size,
+                        hasMore = complete.hasMore,
+                    ),
+                    modifier = Modifier
+                        .testTag("search.result-count")
+                        .semantics { liveRegion = LiveRegionMode.Polite },
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.62f),
+                    style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.sp),
+                )
+            }
             if (complete.hasMore) {
                 item {
                     Text(
