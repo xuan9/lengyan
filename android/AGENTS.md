@@ -21,6 +21,9 @@ This file extends the repository root `AGENTS.md` for work under `android/`.
   delete its JSON; add and device-test a migration with populated old data.
 - Use stable serializable Navigation 3 keys. Never persist page numbers as a
   cross-device scripture location.
+- Persist paragraph character offsets as Unicode code-point counts. Convert
+  Compose UTF-16 offsets only at the rendering boundary, and preserve the
+  anchor across width, font, locale, rotation, and process reflow.
 - Dependency upgrades must update the version catalog, lockfiles, verification
   metadata, ADR evidence when relevant, and pass `./verify.sh android`.
 
@@ -35,6 +38,7 @@ Run the public command from the repository root:
 
 Do not replace these with a narrower module task in a completion report. The
 managed-device command currently verifies the shell, packaged Lengyan contracts,
-cross-script search, DataStore, Room, and the Room v1 schema origin. Screenshot
-matrices, long-text, audio, and OEM Gates are added as their phases become
-implemented; absence of those tasks must not be reported as success.
+cross-script search, DataStore, Room, the Room v1 schema origin, the real volume
+reader, and stable rotation resume. Automated screenshot matrices, long-text
+performance, audio, and OEM Gates are added as their phases become implemented;
+absence of those tasks must not be reported as success.

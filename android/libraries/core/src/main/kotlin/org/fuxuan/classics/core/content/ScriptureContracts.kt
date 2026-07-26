@@ -183,6 +183,7 @@ class ScriptureContent(
     val paragraphs: List<ScriptureParagraph>,
 ) {
     private val volumesByID = volumes.associateBy(ScriptureVolume::volumeID)
+    private val orderedVolumes = volumes.sortedBy(ScriptureVolume::order)
     private val sectionsByID = sections.associateBy(ScriptureSection::sectionID)
     private val paragraphsByID = paragraphs.associateBy(ScriptureParagraph::paragraphID)
     private val childrenByParentID = sections
@@ -233,6 +234,8 @@ class ScriptureContent(
 
     fun volume(volumeID: String): ScriptureVolume? = volumesByID[volumeID]
 
+    fun volumesInReadingOrder(): List<ScriptureVolume> = orderedVolumes
+
     fun section(sectionID: String): ScriptureSection? = sectionsByID[sectionID]
 
     fun paragraph(paragraphID: String): ScriptureParagraph? = paragraphsByID[paragraphID]
@@ -244,6 +247,14 @@ class ScriptureContent(
 
     fun paragraphsIn(sectionID: String): List<ScriptureParagraph> =
         paragraphsBySectionID[sectionID].orEmpty()
+
+    fun paragraphsInReadingOrder(): List<ScriptureParagraph> = buildList {
+        fun appendSection(section: ScriptureSection) {
+            addAll(paragraphsIn(section.sectionID))
+            childrenOf(section.sectionID).forEach(::appendSection)
+        }
+        rootSections().forEach(::appendSection)
+    }
 
     fun leafSections(): List<ScriptureSection> = sections.filter { childrenOf(it.sectionID).isEmpty() }
 

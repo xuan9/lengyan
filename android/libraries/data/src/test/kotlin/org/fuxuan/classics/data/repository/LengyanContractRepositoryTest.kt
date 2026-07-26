@@ -1,6 +1,8 @@
 package org.fuxuan.classics.data.repository
 
 import kotlinx.coroutines.runBlocking
+import org.fuxuan.classics.core.behavior.ParagraphTextAnchor
+import org.fuxuan.classics.core.behavior.VolumeReadingDocument
 import org.fuxuan.classics.data.contracts.ClassicsContractParser
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -67,6 +69,25 @@ class LengyanContractRepositoryTest {
         assertThrows(IllegalArgumentException::class.java) {
             ClassicsContractParser().parseContent(altered)
         }
+    }
+
+    @Test
+    fun assemblesEveryRealVolumeInCanonicalReadingOrder() = runBlocking {
+        val content = DefaultBookRepository(source).content("zh-Hant")
+        val documents = content.volumesInReadingOrder().map { volume ->
+            val expectedParagraphs = content.paragraphsInReadingOrder()
+                .filter { it.volumeID == volume.volumeID }
+            val document = VolumeReadingDocument.from(content, volume.volumeID)
+
+            assertEquals(expectedParagraphs.joinToString("\n\n") { it.text }, document.text)
+            assertEquals(
+                ParagraphTextAnchor(expectedParagraphs.first().paragraphID, 0),
+                document.anchorAtUtf16Offset(0),
+            )
+            document
+        }
+
+        assertEquals(9_086, documents.maxOf { it.text.length })
     }
 
     @Test
