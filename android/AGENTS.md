@@ -55,6 +55,7 @@ levels below 31; record quantitative results only from a named physical referenc
 device. Audio and OEM Gates are added as their phases become implemented; absence
 of those results must not be reported as success. The API 35 Media3 harness
 proves service/controller lifecycle, contract-only URI resolution, loopback HTTP
-Range recovery, and cache-only length/SHA-256 rejection. It is not evidence for
-production hosting, process-death recovery, codec support, or physical-device
-playback.
+Range recovery, cache-only length/SHA-256 rejection, bounded corrupt-download
+repair, cache-metadata restoration around real spans, and complete expiry
+removal. It is not evidence for production hosting, process-death recovery,
+codec support, or physical-device playback.

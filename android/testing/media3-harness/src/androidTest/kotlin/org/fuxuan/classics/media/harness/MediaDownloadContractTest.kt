@@ -9,9 +9,12 @@ import android.os.Looper
 import android.os.ParcelFileDescriptor
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.ResolvingDataSource
+import androidx.media3.datasource.cache.NoOpCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadManager
 import androidx.media3.exoplayer.offline.DownloadService
@@ -22,18 +25,28 @@ import org.fuxuan.classics.media.AudioDownloadIntegrityEvent
 import org.fuxuan.classics.media.AudioDownloadIntegrityIssue
 import org.fuxuan.classics.media.AudioDownloadIntegrityListener
 import org.fuxuan.classics.media.AudioDownloadRepairEnqueuer
+import org.fuxuan.classics.media.AudioCacheAdmissionResult
+import org.fuxuan.classics.media.AudioCacheMaintenanceResult
+import org.fuxuan.classics.media.AudioCachePolicy
+import org.fuxuan.classics.media.AudioCachePolicyExecutor
+import org.fuxuan.classics.media.AudioCacheRecord
+import org.fuxuan.classics.media.AudioCacheRecordState
 import org.fuxuan.classics.media.CachedAudioVerification
+import org.fuxuan.classics.media.Media3AudioCacheMetadataStore
+import org.fuxuan.classics.media.Media3AudioCacheResourceEvictor
 import org.fuxuan.classics.media.Media3AudioDownloadIntegrityCoordinator
 import org.fuxuan.classics.media.Media3AudioDownloadRuntime
 import org.fuxuan.classics.media.Media3AudioDownloadSpec
 import org.fuxuan.classics.media.Media3CachedAudioVerifier
 import org.fuxuan.classics.media.ResolvedAndroidAudioAsset
+import org.fuxuan.classics.media.toCacheReservation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.FileOutputStream
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
@@ -313,6 +326,170 @@ class MediaDownloadContractTest {
         assertEquals(1, result.events.size)
         val verified = result.events.single() as AudioDownloadIntegrityEvent.Verified
         assertEquals(0, verified.repairAttempts)
+    }
+
+    @Test
+    fun cachePolicyMetadataSurvivesCacheRuntimeRecreation() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val cacheDirectory = context.cacheDir.resolve("media3-policy-metadata-test")
+        cacheDirectory.deleteRecursively()
+        val databaseProvider = StandaloneDatabaseProvider(context)
+        val reservation = downloadSpec(
+            expectedBytes = 128 * 1024L,
+            expectedSha256 = "a".repeat(64),
+            artifactID = "lengyan.audio.policy-persistence-test",
+            renditionID = "android.test.policy-persistence",
+            fileName = "policy-persistence-test.m4a",
+        ).toCacheReservation()
+        val expectedRecord = AudioCacheRecord(
+            reservation = reservation,
+            state = AudioCacheRecordState.VERIFIED,
+            lastAccessEpochMilliseconds = 123_456_789L,
+        )
+        var cache: SimpleCache? = null
+
+        try {
+            cache = SimpleCache(cacheDirectory, NoOpCacheEvictor(), databaseProvider)
+            val holeSpan = cache.startReadWrite(
+                reservation.requestID,
+                0,
+                reservation.expectedBytes,
+            )
+            try {
+                val cacheFile = cache.startFile(
+                    reservation.requestID,
+                    0,
+                    reservation.expectedBytes,
+                )
+                FileOutputStream(cacheFile).use { output ->
+                    output.write(ByteArray(reservation.expectedBytes.toInt()) { 7 })
+                }
+                cache.commitFile(cacheFile, reservation.expectedBytes)
+            } finally {
+                cache.releaseHoleSpan(holeSpan)
+            }
+            Media3AudioCacheMetadataStore(cache).write(expectedRecord)
+            cache.release()
+            cache = null
+
+            cache = SimpleCache(cacheDirectory, NoOpCacheEvictor(), databaseProvider)
+            val restoredStore = Media3AudioCacheMetadataStore(cache)
+            assertEquals(listOf(expectedRecord), restoredStore.records())
+            restoredStore.remove(reservation.requestID)
+            assertEquals(emptyList<AudioCacheRecord>(), restoredStore.records())
+        } finally {
+            cache?.release()
+            cacheDirectory.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun expiredPersistentRecordRemovesDownloadIndexCacheAndMetadata() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val payload = ByteArray(128 * 1024) { index ->
+            ((index * 19 + 5) and 0xff).toByte()
+        }
+        val spec = downloadSpec(
+            expectedBytes = payload.size.toLong(),
+            expectedSha256 = payload.sha256(),
+            artifactID = "lengyan.audio.policy-eviction-test",
+            renditionID = "android.test.policy-eviction",
+            fileName = "policy-eviction-test.m4a",
+        )
+        val server = SequencedPayloadServer(listOf(payload))
+        val terminalLatch = CountDownLatch(1)
+        val terminalDownload = AtomicReference<Download>()
+        var runtime: Media3AudioDownloadRuntime? = null
+
+        val listener = object : DownloadManager.Listener {
+            override fun onDownloadChanged(
+                downloadManager: DownloadManager,
+                download: Download,
+                finalException: Exception?,
+            ) {
+                if (
+                    download.request.id == spec.requestID &&
+                    download.state in setOf(Download.STATE_COMPLETED, Download.STATE_FAILED)
+                ) {
+                    terminalDownload.set(download)
+                    terminalLatch.countDown()
+                }
+            }
+        }
+
+        try {
+            val upstreamFactory = ResolvingDataSource.Factory(
+                DefaultHttpDataSource.Factory()
+                    .setConnectTimeoutMs(5_000)
+                    .setReadTimeoutMs(5_000),
+            ) { dataSpec -> dataSpec.redirectTo(server.uri) }
+            runtime = onMainThread {
+                HarnessAudioDownloadEnvironment.installForTest(
+                    context,
+                    upstreamFactory,
+                ).also { installed ->
+                    installed.downloadManager.addListener(listener)
+                    installed.downloadManager.resumeDownloads()
+                }
+            }
+            val activeRuntime = checkNotNull(runtime)
+            val metadataStore = Media3AudioCacheMetadataStore(activeRuntime.cache)
+            val policyExecutor = AudioCachePolicyExecutor(
+                metadataStore = metadataStore,
+                resourceEvictor = Media3AudioCacheResourceEvictor(activeRuntime),
+            )
+            val reservation = spec.toCacheReservation()
+            val admission = policyExecutor.admit(
+                reservation = reservation,
+                protectedKeys = emptySet(),
+                nowEpochMilliseconds = 0,
+            ) as AudioCacheAdmissionResult.Accepted
+            assertFalse(admission.alreadyVerified)
+
+            onMainThread {
+                activeRuntime.downloadManager.addDownload(spec.toDownloadRequest())
+            }
+            assertTrue(
+                "cache policy test download did not complete",
+                terminalLatch.await(30, TimeUnit.SECONDS),
+            )
+            assertEquals(Download.STATE_COMPLETED, terminalDownload.get()?.state)
+            val verification = Media3CachedAudioVerifier.verify(activeRuntime.cache, spec)
+            assertEquals(
+                CachedAudioVerification.Verified(
+                    bytes = payload.size.toLong(),
+                    sha256 = payload.sha256(),
+                ),
+                verification,
+            )
+            policyExecutor.markVerified(
+                reservation = reservation,
+                verification = verification as CachedAudioVerification.Verified,
+                nowEpochMilliseconds = 0,
+            )
+            assertEquals(AudioCacheRecordState.VERIFIED, metadataStore.records().single().state)
+
+            val maintenance = policyExecutor.removeExpired(
+                protectedKeys = emptySet(),
+                nowEpochMilliseconds = AudioCachePolicy.MAX_INACTIVE_MILLISECONDS,
+            ) as AudioCacheMaintenanceResult.Completed
+
+            assertEquals(listOf(spec.requestID), maintenance.evictedRequestIDs)
+            assertNull(activeRuntime.downloadManager.downloadIndex.getDownload(spec.requestID))
+            assertEquals(0L, activeRuntime.cache.getCachedSpans(spec.requestID).sumOf { it.length })
+            assertEquals(emptyList<AudioCacheRecord>(), metadataStore.records())
+            server.assertHealthy()
+            assertEquals(1, server.bodyRequestCount())
+        } finally {
+            server.close()
+            runtime?.let { activeRuntime ->
+                onMainThread {
+                    activeRuntime.downloadManager.removeListener(listener)
+                    HarnessAudioDownloadEnvironment.releaseForTest()
+                }
+                HarnessAudioDownloadEnvironment.cacheDirectory(context).deleteRecursively()
+            }
+        }
     }
 
     private fun runIntegrityScenario(

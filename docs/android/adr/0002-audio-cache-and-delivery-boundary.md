@@ -9,9 +9,10 @@
   system feedback. Automatic next-volume prefetch runs only on unmetered
   networks by default.
 - Cache the current and next volumes first. Enforce a 192 MiB per-product and
-  512 MiB all-products soft budget, remove unprotected assets after 28 days of
-  inactivity, and evict least recently used unprotected assets before refusing
-  a user request.
+  512 MiB per-application-runtime soft budget, remove unprotected assets after
+  28 days of inactivity, and evict least recently used unprotected assets before
+  refusing a user request. Independently installed scripture apps remain in
+  separate Android sandboxes; this is not a device-wide cross-app quota.
 - Do not add a technical storage-management page or a download-all control in
   the first release. Add manual pinning only after user evidence shows the
   automatic model is insufficient.
@@ -98,8 +99,25 @@ looper. The service-based Range test remains separate because a
 Media3 `DownloadService` and its application-scoped `DownloadManager` are
 singletons in production rather than replaceable per test.
 
-Persistent cache-policy metadata and execution, metered-network prefetch
-enforcement, cached playback wiring, playback-position persistence,
+The fifth foundation slice stores a versioned reservation/verified state,
+product/artifact/rendition contract, expected bytes/SHA-256, and last-access time
+in Media3 content metadata. The blocking policy executor is worker-thread-only
+and serialized: it reserves full expected bytes, removes stale entries before
+LRU pressure, rejects an immutable-contract conflict, and refuses to replace or
+deduplicate a currently protected artifact. The Media3 evictor registers on the
+DownloadManager application looper, performs index/cache work off that looper,
+waits for `onDownloadRemoved`, and returns only after cached bytes are gone.
+
+API 35 recreates `SimpleCache` around a real cache span and restores the exact
+verified record. A second device case admits a resource, downloads and verifies
+it, advances to the 28-day boundary, and proves one maintenance operation clears
+the DownloadIndex entry, cache spans, and policy metadata. Media3 intentionally
+drops metadata-only entries that have no cache span during reconstruction; a
+zero-byte queued download must therefore be rebuilt from the catalog and
+DownloadIndex by the still-open process-recovery coordinator.
+
+Startup reconciliation/product orchestration, metered-network prefetch
+enforcement, cached playback wiring, playback-position persistence, complete
 process-death recovery evidence, a measured production host, format selection,
 and Android redistribution approval remain open Phase 4 work. No audio entry is
 shown while Lengyan delivery remains `planned`.
