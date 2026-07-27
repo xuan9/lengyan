@@ -56,6 +56,34 @@
       "expected": {
         "fileName": "卷一-分享圖-02-12-ABC123.jpg"
       }
+    },
+    {
+      "name": "semantic text export can omit an opaque collision suffix",
+      "input": {
+        "locale": "zh-Hant",
+        "defaultBaseName": "楞嚴經",
+        "source": "《楞嚴經 卷一》",
+        "kind": "text",
+        "uniqueSuffix": null
+      },
+      "expected": {
+        "fileName": "楞嚴經-卷一-經文.txt"
+      }
+    },
+    {
+      "name": "semantic paged image can omit an opaque collision suffix",
+      "input": {
+        "locale": "zh-Hans",
+        "defaultBaseName": "楞严经",
+        "source": "《楞严经 卷二》",
+        "kind": "image",
+        "uniqueSuffix": null,
+        "pageNumber": 2,
+        "pageCount": 12
+      },
+      "expected": {
+        "fileName": "楞严经-卷二-分享图-02-12.jpg"
+      }
     }
   ]
 }

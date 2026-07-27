@@ -657,26 +657,27 @@ extension SutraCardRenderer {
         }
     }
 
-    static func shareJPEGFileName(source: String? = nil, uniqueSuffix: String = String(UUID().uuidString.prefix(6))) -> String {
+    static func shareJPEGFileName(source: String? = nil, uniqueSuffix: String? = String(UUID().uuidString.prefix(6))) -> String {
         shareFileName(source: source, descriptor: Book.shared.isSimplifiedChinese ? "分享图" : "分享圖", fileExtension: "jpg", uniqueSuffix: uniqueSuffix)
     }
 
-    static func shareJPEGFileName(source: String? = nil, uniqueSuffix: String, pageNumber: Int, pageCount: Int) -> String {
+    static func shareJPEGFileName(source: String? = nil, uniqueSuffix: String?, pageNumber: Int, pageCount: Int) -> String {
         let width = max(2, String(pageCount).count)
         let page = String(format: "%0*d-%0*d", width, pageNumber, width, pageCount)
         let descriptor = Book.shared.isSimplifiedChinese ? "分享图-\(page)" : "分享圖-\(page)"
         return shareFileName(source: source, descriptor: descriptor, fileExtension: "jpg", uniqueSuffix: uniqueSuffix)
     }
 
-    static func shareTextFileName(source: String? = nil, uniqueSuffix: String = String(UUID().uuidString.prefix(6))) -> String {
+    static func shareTextFileName(source: String? = nil, uniqueSuffix: String? = String(UUID().uuidString.prefix(6))) -> String {
         shareFileName(source: source, descriptor: Book.shared.isSimplifiedChinese ? "经文" : "經文", fileExtension: "txt", uniqueSuffix: uniqueSuffix)
     }
 
-    private static func shareFileName(source: String?, descriptor: String, fileExtension: String, uniqueSuffix: String) -> String {
+    private static func shareFileName(source: String?, descriptor: String, fileExtension: String, uniqueSuffix: String?) -> String {
         let sourceName = sanitizedFileNameComponent(source ?? "")
         let baseName = sourceName.isEmpty ? defaultShareImageBaseName : sourceName
+        let suffix = uniqueSuffix.map { "-\($0)" } ?? ""
 
-        return "\(baseName)-\(descriptor)-\(uniqueSuffix).\(fileExtension)"
+        return "\(baseName)-\(descriptor)\(suffix).\(fileExtension)"
     }
 
     private static var defaultShareImageBaseName: String {

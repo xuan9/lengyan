@@ -11,12 +11,15 @@ object ShareFileNamePolicy {
         defaultBaseName: String,
         source: String?,
         kind: ShareFileKind,
-        uniqueSuffix: String,
+        uniqueSuffix: String? = null,
         pageNumber: Int? = null,
         pageCount: Int? = null,
     ): String {
         require(defaultBaseName.isNotBlank()) { "default share file name must not be blank" }
-        require(uniqueSuffix.matches(SAFE_SUFFIX)) { "share file suffix must be file-name safe" }
+        require(
+            uniqueSuffix == null ||
+                uniqueSuffix.isNotBlank() && uniqueSuffix.matches(SAFE_SUFFIX),
+        ) { "share file suffix must be file-name safe" }
         require((pageNumber == null) == (pageCount == null)) {
             "share page number and count must be supplied together"
         }
@@ -41,7 +44,8 @@ object ShareFileNamePolicy {
             descriptor
         }
         val extension = if (kind == ShareFileKind.IMAGE) "jpg" else "txt"
-        return "$baseName-$pagedDescriptor-$uniqueSuffix.$extension"
+        val suffix = uniqueSuffix?.let { "-$it" }.orEmpty()
+        return "$baseName-$pagedDescriptor$suffix.$extension"
     }
 
     fun sanitizedComponent(rawValue: String): String = rawValue

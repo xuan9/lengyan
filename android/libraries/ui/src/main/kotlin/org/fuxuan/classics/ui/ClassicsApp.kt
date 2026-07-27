@@ -71,6 +71,13 @@ data object SearchRoute : NavKey
 data object FavoritesRoute : NavKey
 
 @Serializable
+data class ShareRoute(val volumeID: String) : NavKey {
+    init {
+        require(volumeID.isNotBlank()) { "share route volumeID must not be blank" }
+    }
+}
+
+@Serializable
 data class VolumeReaderRoute(
     val volumeID: String,
     val paragraphID: String? = null,
@@ -423,7 +430,17 @@ private fun LoadedContentNavigation(
                             resumeRoute = resumeRoute,
                             favoriteParagraphIDs = favoriteParagraphIDs,
                             onBack = { readBackStack.removeLastOrNull() },
+                            onShare = { readBackStack.add(ShareRoute(route.volumeID)) },
                             onToggleFavorite = ::toggleFavorite,
+                        )
+                    }
+                    entry<ShareRoute> { route ->
+                        ShareDestination(
+                            loaded = loaded,
+                            preferences = preferences,
+                            strings = strings,
+                            route = route,
+                            onBack = { readBackStack.removeLastOrNull() },
                         )
                     }
                 },
@@ -492,6 +509,9 @@ private fun LoadedContentNavigation(
                                     favoriteParagraphIDs = favoriteParagraphIDs,
                                     showBackButton = false,
                                     onBack = {},
+                                    onShare = {
+                                        favoritesBackStack.add(ShareRoute(detailRoute.volumeID))
+                                    },
                                     onToggleFavorite = ::toggleFavorite,
                                 )
                             },
@@ -507,7 +527,17 @@ private fun LoadedContentNavigation(
                             resumeRoute = resumeRoute,
                             favoriteParagraphIDs = favoriteParagraphIDs,
                             onBack = { favoritesBackStack.removeLastOrNull() },
+                            onShare = { favoritesBackStack.add(ShareRoute(route.volumeID)) },
                             onToggleFavorite = ::toggleFavorite,
+                        )
+                    }
+                    entry<ShareRoute> { route ->
+                        ShareDestination(
+                            loaded = loaded,
+                            preferences = preferences,
+                            strings = strings,
+                            route = route,
+                            onBack = { favoritesBackStack.removeLastOrNull() },
                         )
                     }
                 },
@@ -547,6 +577,7 @@ private fun ReaderDestination(
     favoriteParagraphIDs: Set<String>,
     showBackButton: Boolean = true,
     onBack: () -> Unit,
+    onShare: () -> Unit,
     onToggleFavorite: (ParagraphTextAnchor) -> Unit,
 ) {
     val document = remember(loaded.content, route.volumeID) {
@@ -564,6 +595,7 @@ private fun ReaderDestination(
         favoriteParagraphIDs = favoriteParagraphIDs,
         showBackButton = showBackButton,
         onBack = onBack,
+        onShare = onShare,
         onToggleFavorite = onToggleFavorite,
         onSaveProgress = { anchor ->
             container.userPreferencesRepository.saveReadingProgress(
@@ -582,6 +614,38 @@ private fun ReaderDestination(
                 ),
             )
         },
+    )
+}
+
+@Composable
+private fun ShareDestination(
+    loaded: LoadedContent,
+    preferences: ProductPreferences,
+    strings: AppStrings,
+    route: ShareRoute,
+    onBack: () -> Unit,
+) {
+    val document = remember(loaded.content, route.volumeID) {
+        VolumeReadingDocument.from(loaded.content, route.volumeID)
+    }
+    val shareDocument = remember(
+        document,
+        loaded.product,
+        preferences.locale,
+        preferences.fontSizeLevel,
+    ) {
+        ShareDocument(
+            locale = preferences.locale,
+            productTitle = loaded.product.title(preferences.locale),
+            volumeTitle = document.volume.title,
+            text = document.text,
+            fontSizeLevel = preferences.fontSizeLevel,
+        )
+    }
+    ShareScreen(
+        document = shareDocument,
+        strings = strings,
+        onBack = onBack,
     )
 }
 

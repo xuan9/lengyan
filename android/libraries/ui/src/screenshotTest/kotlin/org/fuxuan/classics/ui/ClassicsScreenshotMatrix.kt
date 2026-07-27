@@ -98,7 +98,40 @@ fun readerTraditionalScreenshot() {
             strings = AppStrings("zh-Hant"),
             initialAnchor = null,
             onBack = {},
+            onShare = {},
             onSaveProgress = {},
+        )
+    }
+}
+
+@PreviewTest
+@Preview(name = "phone-light-100", widthDp = 393, heightDp = 852, fontScale = 1f, uiMode = DAY)
+@Preview(name = "compact-dark-200", widthDp = 320, heightDp = 700, fontScale = 2f, uiMode = NIGHT)
+@Composable
+fun shareTraditionalScreenshot() {
+    val loaded = screenshotContent("zh-Hant")
+    val document = VolumeReadingDocument.from(loaded.content, "screenshot.v000001")
+    ScreenshotShell(
+        selected = TopLevelDestination.READING,
+        strings = AppStrings("zh-Hant"),
+    ) {
+        ShareScreenContent(
+            document = ShareDocument(
+                locale = "zh-Hant",
+                productTitle = loaded.product.title("zh-Hant"),
+                volumeTitle = document.volume.title,
+                text = document.text,
+                fontSizeLevel = 2,
+            ),
+            strings = AppStrings("zh-Hant"),
+            generationState = ShareImageGenerationState.Idle,
+            statusMessage = null,
+            onBack = {},
+            onShareImage = {},
+            onShareText = {},
+            onSaveText = {},
+            onCopyText = {},
+            onCancelImageExport = {},
         )
     }
 }
@@ -181,6 +214,7 @@ fun favoritesTabletScreenshot() {
                     initialAnchor = target.anchor,
                     showBackButton = false,
                     onBack = {},
+                    onShare = {},
                     onSaveProgress = {},
                 )
             },

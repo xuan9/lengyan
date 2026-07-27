@@ -459,7 +459,7 @@ private data class ShareFileNameInput(
     val defaultBaseName: String,
     val source: String?,
     val kind: String,
-    val uniqueSuffix: String,
+    val uniqueSuffix: String?,
     val pageNumber: Int? = null,
     val pageCount: Int? = null,
 )

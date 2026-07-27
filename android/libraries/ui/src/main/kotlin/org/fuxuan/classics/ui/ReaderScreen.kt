@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,7 +44,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -64,6 +64,7 @@ internal fun ReaderScreen(
     favoriteParagraphIDs: Set<String> = emptySet(),
     showBackButton: Boolean = true,
     onBack: () -> Unit,
+    onShare: (() -> Unit)? = null,
     onToggleFavorite: (ParagraphTextAnchor) -> Unit = {},
     onSaveProgress: suspend (ParagraphTextAnchor) -> Unit,
 ) {
@@ -168,6 +169,17 @@ internal fun ReaderScreen(
                     if (showBackButton) BackButton(strings.back, onBack)
                 },
                 actions = {
+                    if (onShare != null) {
+                        IconButton(
+                            onClick = onShare,
+                            modifier = Modifier.testTag("reader.share"),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = strings.share,
+                            )
+                        }
+                    }
                     val isFavorite = currentAnchor.paragraphID in favoriteParagraphIDs
                     IconButton(
                         onClick = {
@@ -327,18 +339,4 @@ private fun anchorAtScrollPosition(
     val textY = (scrollOffset - topPaddingPixels).coerceAtLeast(0f)
     val line = layout.getLineForVerticalPosition(textY)
     return document.anchorAtUtf16Offset(layout.getLineStart(line))
-}
-
-private data class ReaderTypography(
-    val fontSize: TextUnit,
-    val lineHeight: TextUnit,
-)
-
-private fun readerTypography(level: Int): ReaderTypography = when (level) {
-    0 -> ReaderTypography(fontSize = 20.sp, lineHeight = 35.sp)
-    1 -> ReaderTypography(fontSize = 22.sp, lineHeight = 39.sp)
-    2 -> ReaderTypography(fontSize = 24.sp, lineHeight = 42.sp)
-    3 -> ReaderTypography(fontSize = 27.sp, lineHeight = 47.sp)
-    4 -> ReaderTypography(fontSize = 30.sp, lineHeight = 53.sp)
-    else -> error("unsupported font size level: $level")
 }

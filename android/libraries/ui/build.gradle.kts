@@ -12,6 +12,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    sourceSets {
+        getByName("androidTest").assets.directories.add(
+            rootProject.layout.projectDirectory
+                .dir("../Products/lengyan/Content")
+                .asFile
+                .absolutePath,
+        )
+    }
+
     testOptions {
         managedDevices {
             localDevices {
@@ -28,6 +37,8 @@ android {
 dependencies {
     api(project(":libraries:core"))
 
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.ktx)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material3)

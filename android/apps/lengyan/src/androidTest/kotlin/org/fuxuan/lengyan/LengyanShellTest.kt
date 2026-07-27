@@ -44,6 +44,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class LengyanShellTest {
@@ -292,6 +293,31 @@ class LengyanShellTest {
                 container.favoriteRepository.favorites(content.editionID).first().isEmpty()
             }
         }
+    }
+
+    @Test
+    fun sharePageOpensBeforeAnyImageFileIsGenerated() {
+        val shareCache = File(
+            composeRule.activity.cacheDir,
+            "classics-shares",
+        )
+        shareCache.deleteRecursively()
+        val readingAction = hasText("開始閱讀") or hasText("繼續閱讀")
+
+        composeRule.onNode(readingAction, useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) { readerIsDisplayed() }
+        composeRule.onNodeWithTag("reader.share", useUnmergedTree = true)
+            .assertIsDisplayed()
+            .performClick()
+
+        composeRule.onNodeWithTag("share.screen", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("share.preview", useUnmergedTree = true)
+            .assertIsDisplayed()
+        assertTrue(shareCache.listFiles().isNullOrEmpty())
+
+        composeRule.onNodeWithContentDescription("返回", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) { readerIsDisplayed() }
     }
 
     @Test

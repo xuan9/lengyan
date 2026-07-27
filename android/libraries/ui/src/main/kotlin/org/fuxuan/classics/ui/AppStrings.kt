@@ -53,6 +53,19 @@ internal class AppStrings(locale: String) {
     val back = "返回"
     val contentUnavailable = if (simplified) "经文暂时无法打开" else "經文暫時無法打開"
     val retry = if (simplified) "重试" else "重試"
+    val share = "分享"
+    val sharePreview = if (simplified) "分享预览" else "分享預覽"
+    val shareImage = if (simplified) "分享图片" else "分享圖片"
+    val shareText = "分享文字"
+    val saveTextFile = "存文字"
+    val copyText = if (simplified) "复制" else "複製"
+    val cancel = "取消"
+    val imageExportFailed = if (simplified) "图片生成失败，请重试" else "圖片產生失敗，請重試"
+    val shareFailed = if (simplified) "无法打开分享，请重试" else "無法開啟分享，請重試"
+    val textSaveFailed = if (simplified) "文件保存失败，请重试" else "檔案儲存失敗，請重試"
+    val textSaved = if (simplified) "文件已保存" else "檔案已儲存"
+    val textCopied = if (simplified) "全文已复制" else "全文已複製"
+    val textCopyFailed = if (simplified) "复制失败，请重试" else "複製失敗，請重試"
 
     fun volumeCount(count: Int): String = "全文 $count 卷"
 
@@ -72,6 +85,20 @@ internal class AppStrings(locale: String) {
         "第 ${level + 1} 级，共 5 级"
     } else {
         "第 ${level + 1} 級，共 5 級"
+    }
+
+    fun shareCharacterCount(count: Int): String = if (simplified) {
+        "全文 $count 字"
+    } else {
+        "全文 $count 字"
+    }
+
+    fun imageExportProgress(completed: Int, total: Int?): String = if (total == null) {
+        if (simplified) "正在生成图片" else "正在產生圖片"
+    } else if (simplified) {
+        "正在生成图片 $completed / $total"
+    } else {
+        "正在產生圖片 $completed / $total"
     }
 
     fun themeName(theme: ThemePreference): String = when (theme) {

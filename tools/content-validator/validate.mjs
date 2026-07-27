@@ -1011,7 +1011,8 @@ function expectedShareFileName(input) {
       descriptor += `-${String(input.pageNumber).padStart(width, "0")}-${String(input.pageCount).padStart(width, "0")}`;
     }
   }
-  return `${baseName}-${descriptor}-${input.uniqueSuffix}.${extension}`;
+  const suffix = input.uniqueSuffix == null ? "" : `-${input.uniqueSuffix}`;
+  return `${baseName}-${descriptor}${suffix}.${extension}`;
 }
 
 function expectedDeepLink(input) {

@@ -368,7 +368,7 @@ private struct ShareFileNameCase: Decodable {
         let defaultBaseName: String
         let source: String?
         let kind: String
-        let uniqueSuffix: String
+        let uniqueSuffix: String?
         let pageNumber: Int?
         let pageCount: Int?
     }
