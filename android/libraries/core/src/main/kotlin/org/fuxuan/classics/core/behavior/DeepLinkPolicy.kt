@@ -7,6 +7,7 @@ data class ScriptureDeepLink(
     val productID: String,
     val legacyPath: String? = null,
     val paragraphID: String? = null,
+    val characterOffset: Int = 0,
 ) {
     init {
         require(productID.isNotBlank()) { "deep-link productID must not be blank" }
@@ -18,6 +19,10 @@ data class ScriptureDeepLink(
         }
         require(paragraphID == null || paragraphID.isNotBlank()) {
             "deep-link paragraph ID must not be blank"
+        }
+        require(characterOffset >= 0) { "deep-link character offset must not be negative" }
+        require(characterOffset == 0 || paragraphID != null) {
+            "only a stable paragraph deep link may contain a character offset"
         }
     }
 }

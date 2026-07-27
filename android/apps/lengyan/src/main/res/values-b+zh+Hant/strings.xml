@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="daily_reminder_channel_name">每日讀經提醒</string>
+    <string name="daily_reminder_channel_description">在選擇的時間提醒繼續讀經</string>
+    <string name="daily_reminder_notification_title">今日讀經</string>
+    <string name="daily_reminder_notification_body">靜下片刻，繼續讀一段《楞嚴經》。</string>
+</resources>

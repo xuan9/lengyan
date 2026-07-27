@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":libraries:data"))
     implementation(project(":libraries:ui"))
     implementation(project(":libraries:media"))
+    implementation(project(":libraries:reminder"))
     implementation(project(":libraries:widget"))
 
     implementation(platform(libs.androidx.compose.bom))

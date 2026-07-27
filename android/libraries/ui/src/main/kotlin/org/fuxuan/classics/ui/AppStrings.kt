@@ -27,6 +27,16 @@ internal class AppStrings(locale: String) {
     val language = if (simplified) "语言" else "語言"
     val fontSize = if (simplified) "正文字号" else "正文字號"
     val fontPreview = if (simplified) "如是我闻" else "如是我聞"
+    val dailyPractice = if (simplified) "每日修习" else "每日修習"
+    val dailyReminder = if (simplified) "每日读经提醒" else "每日讀經提醒"
+    val reminderTime = if (simplified) "提醒时间" else "提醒時間"
+    val enabledState = if (simplified) "已开启" else "已開啟"
+    val disabledState = if (simplified) "已关闭" else "已關閉"
+    val notificationPermissionDenied = if (simplified) {
+        "未开启通知权限，提醒保持关闭"
+    } else {
+        "未開啟通知權限，提醒保持關閉"
+    }
     val search = "搜索"
     val clearSearch = "清除搜索"
     val commonKeywords = if (simplified) "常用关键词" else "常用關鍵詞"
@@ -85,6 +95,12 @@ internal class AppStrings(locale: String) {
         "第 ${level + 1} 级，共 5 级"
     } else {
         "第 ${level + 1} 級，共 5 級"
+    }
+
+    fun reminderSchedule(time: String): String = if (simplified) {
+        "约在 $time 提醒"
+    } else {
+        "約在 $time 提醒"
     }
 
     fun shareCharacterCount(count: Int): String = if (simplified) {

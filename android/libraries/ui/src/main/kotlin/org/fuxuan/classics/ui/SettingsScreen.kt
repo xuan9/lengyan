@@ -1,5 +1,12 @@
 package org.fuxuan.classics.ui
 
+import android.Manifest
+import android.app.TimePickerDialog
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,11 +19,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -25,9 +36,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -36,8 +49,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
 import org.fuxuan.classics.core.persistence.ProductPreferences
+import org.fuxuan.classics.core.persistence.ReminderPreferences
 import org.fuxuan.classics.core.persistence.ThemePreference
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,10 +66,44 @@ internal fun SettingsScreen(
     onSelectTheme: (ThemePreference) -> Unit,
     onSelectLocale: (String) -> Unit,
     onSelectFontSize: (Int) -> Unit,
+    onSetReminder: (ReminderPreferences) -> Unit,
 ) {
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            onSetReminder(preferences.reminder.copy(enabled = true))
+        } else {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(strings.notificationPermissionDenied)
+            }
+        }
+    }
+
+    fun setReminderEnabled(enabled: Boolean) {
+        if (!enabled) {
+            onSetReminder(preferences.reminder.copy(enabled = false))
+            return
+        }
+        val permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+        if (permissionGranted) {
+            onSetReminder(preferences.reminder.copy(enabled = true))
+        } else {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     Scaffold(
         modifier = Modifier.testTag("settings.screen"),
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -113,8 +164,112 @@ internal fun SettingsScreen(
                         strings = strings,
                         onSelectFontSize = onSelectFontSize,
                     )
+
+                    SettingsHeading(
+                        text = strings.dailyPractice,
+                        modifier = Modifier.padding(top = 28.dp),
+                    )
+                    DailyReminderSetting(
+                        reminder = preferences.reminder,
+                        strings = strings,
+                        onSetReminder = onSetReminder,
+                        onSetEnabled = ::setReminderEnabled,
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DailyReminderSetting(
+    reminder: ReminderPreferences,
+    strings: AppStrings,
+    onSetReminder: (ReminderPreferences) -> Unit,
+    onSetEnabled: (Boolean) -> Unit,
+) {
+    val context = LocalContext.current
+    val time = remember(reminder.hour, reminder.minute) {
+        String.format(Locale.ROOT, "%02d:%02d", reminder.hour, reminder.minute)
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .testTag("settings.reminder.enabled")
+                .toggleable(
+                    value = reminder.enabled,
+                    role = Role.Switch,
+                    onValueChange = onSetEnabled,
+                )
+                .semantics {
+                    stateDescription = if (reminder.enabled) {
+                        strings.enabledState
+                    } else {
+                        strings.disabledState
+                    }
+                }
+                .padding(horizontal = 4.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = strings.dailyReminder,
+                    style = MaterialTheme.typography.bodyLarge.copy(letterSpacing = 0.sp),
+                )
+                Text(
+                    text = strings.reminderSchedule(time),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium.copy(letterSpacing = 0.sp),
+                )
+            }
+            Switch(
+                checked = reminder.enabled,
+                onCheckedChange = null,
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .testTag("settings.reminder.time")
+                .clickable(
+                    role = Role.Button,
+                    onClick = {
+                        TimePickerDialog(
+                            context,
+                            { _, hour, minute ->
+                                onSetReminder(
+                                    reminder.copy(hour = hour, minute = minute),
+                                )
+                            },
+                            reminder.hour,
+                            reminder.minute,
+                            true,
+                        ).show()
+                    },
+                )
+                .padding(horizontal = 4.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = strings.reminderTime,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyLarge.copy(letterSpacing = 0.sp),
+            )
+            Text(
+                text = time,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyLarge.copy(letterSpacing = 0.sp),
+            )
         }
     }
 }

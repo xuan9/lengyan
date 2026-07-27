@@ -248,6 +248,7 @@ fun settingsTraditionalScreenshot() {
             onSelectTheme = {},
             onSelectLocale = {},
             onSelectFontSize = {},
+            onSetReminder = {},
         )
     }
 }

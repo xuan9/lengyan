@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
@@ -102,7 +103,14 @@ class LengyanAccessibilityTest {
         composeRule.onNodeWithTag("settings.screen", useUnmergedTree = true).assertIsDisplayed()
         checkCurrentScreen()
 
-        composeRule.onNodeWithTag("settings.theme.dark", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("settings.reminder.enabled", useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+        checkCurrentScreen()
+
+        composeRule.onNodeWithTag("settings.theme.dark", useUnmergedTree = true)
+            .performScrollTo()
+            .performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             runBlocking {
                 container.userPreferencesRepository.preferences.first().theme ==

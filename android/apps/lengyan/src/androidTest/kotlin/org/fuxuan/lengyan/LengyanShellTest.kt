@@ -36,6 +36,7 @@ import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
 import org.fuxuan.classics.core.behavior.SearchDocumentKind
 import org.fuxuan.classics.core.persistence.Favorite
 import org.fuxuan.classics.core.persistence.ReadingProgress
+import org.fuxuan.classics.core.persistence.ReminderPreferences
 import org.fuxuan.classics.core.persistence.ThemePreference
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertEquals
@@ -323,10 +324,14 @@ class LengyanShellTest {
     @Test
     fun settingsApplyImmediatelyAndDoNotExposeUnsupportedWidgetStyles() {
         val container = (composeRule.activity.application as LengyanApplication).container
+        val originalPreferences = runBlocking {
+            container.userPreferencesRepository.preferences.first()
+        }
         runBlocking {
             container.userPreferencesRepository.setTheme(ThemePreference.SYSTEM)
             container.userPreferencesRepository.setLocale("zh-Hant")
             container.userPreferencesRepository.setFontSizeLevel(2)
+            container.userPreferencesRepository.setReminder(ReminderPreferences())
         }
 
         try {
@@ -377,11 +382,20 @@ class LengyanShellTest {
                         "第 3 级，共 5 级",
                     ),
                 )
+            composeRule.onNodeWithTag("settings.reminder.enabled", useUnmergedTree = true)
+                .performScrollTo()
+                .assertIsDisplayed()
+            composeRule.onNodeWithTag("settings.reminder.time", useUnmergedTree = true)
+                .performScrollTo()
+                .assertIsDisplayed()
         } finally {
             runBlocking {
-                container.userPreferencesRepository.setTheme(ThemePreference.SYSTEM)
-                container.userPreferencesRepository.setLocale("zh-Hant")
-                container.userPreferencesRepository.setFontSizeLevel(2)
+                container.userPreferencesRepository.setTheme(originalPreferences.theme)
+                container.userPreferencesRepository.setLocale(originalPreferences.locale)
+                container.userPreferencesRepository.setFontSizeLevel(
+                    originalPreferences.fontSizeLevel,
+                )
+                container.userPreferencesRepository.setReminder(originalPreferences.reminder)
             }
         }
     }

@@ -25,6 +25,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,7 +33,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
@@ -75,6 +80,23 @@ internal fun ReaderScreen(
     var restoreCompleted by remember(document, initialAnchor) { mutableStateOf(false) }
     var reflowAnchor by remember(document) { mutableStateOf<ParagraphTextAnchor?>(null) }
     var lastSavedAnchor by remember(document, initialAnchor) { mutableStateOf(initialAnchor) }
+    var userScrollGeneration by remember(document, initialAnchor) { mutableIntStateOf(0) }
+    var lastSavedUserScrollGeneration by remember(document, initialAnchor) {
+        mutableIntStateOf(0)
+    }
+    val userScrollConnection = remember(document, initialAnchor) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                if (source == NestedScrollSource.UserInput && available.y != 0f) {
+                    userScrollGeneration += 1
+                }
+                return Offset.Zero
+            }
+        }
+    }
     var currentAnchor by remember(document, initialAnchor) {
         mutableStateOf(
             initialAnchor
@@ -133,10 +155,19 @@ internal fun ReaderScreen(
     LaunchedEffect(scrollState, textLayout, restoreCompleted, document) {
         val layout = textLayout ?: return@LaunchedEffect
         if (!restoreCompleted) return@LaunchedEffect
-        snapshotFlow { scrollState.isScrollInProgress to scrollState.value }
+        snapshotFlow {
+            Triple(
+                scrollState.isScrollInProgress,
+                scrollState.value,
+                userScrollGeneration,
+            )
+        }
             .distinctUntilChanged()
-            .collectLatest { (isScrolling, scrollOffset) ->
+            .collectLatest { (isScrolling, scrollOffset, scrollGeneration) ->
                 if (isScrolling) return@collectLatest
+                if (scrollGeneration == lastSavedUserScrollGeneration) {
+                    return@collectLatest
+                }
                 delay(250)
                 val anchor = anchorAtScrollPosition(
                     document = document,
@@ -149,6 +180,7 @@ internal fun ReaderScreen(
                     onSaveProgress(anchor)
                     lastSavedAnchor = anchor
                 }
+                lastSavedUserScrollGeneration = scrollGeneration
             }
     }
 
@@ -228,6 +260,7 @@ internal fun ReaderScreen(
                     .fillMaxWidth()
                     .fillMaxHeight()
                     .testTag("reader.scroll")
+                    .nestedScroll(userScrollConnection)
                     .verticalScroll(scrollState)
                     .padding(
                         start = 24.dp,

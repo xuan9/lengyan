@@ -28,9 +28,10 @@ module `build/` directories.
 
 Run `./verify.sh android-ui-smoke` to install and exercise the app on pinned API
 35 Gradle-managed compact-phone and Pixel Tablet profiles. The compact profile
-runs the full persistence, content, reader, Widget, and shell suite; the tablet profile
-runs the adaptive favorites split-detail lifecycle. This requires the Android
-Emulator; Gradle provisions the AOSP automated-test-device image when necessary.
+runs the full persistence, content, reader, Widget, daily-reminder, and shell
+suite; the tablet profile runs the adaptive favorites split-detail lifecycle.
+This requires the Android Emulator; Gradle provisions the AOSP
+automated-test-device image when necessary.
 
 ## Modules
 
@@ -39,16 +40,24 @@ Emulator; Gradle provisions the AOSP automated-test-device image when necessary.
 - `:libraries:data`: Android content and persistence adapters.
 - `:libraries:ui`: shared Compose theme, typed routes, and screens.
 - `:libraries:media`: Media3 playback and delivery adapters.
+- `:libraries:reminder`: inexact daily scheduling and notification delivery.
 - `:libraries:widget`: Glance Widget implementation.
 
-The app, `core`, `data`, `ui`, and `widget` modules now contain production
-implementation. `media` remains the declared Phase 4 boundary until the native
-Media3 service and delivery stack are implemented. Shared libraries remain
-product-neutral; each app module owns its permanent package identity, generated
-product assets, system component registration, and composition root.
+The app, `core`, `data`, `ui`, `reminder`, and `widget` modules now contain
+production implementation. `media` remains the declared Phase 4 boundary until
+the native Media3 service and delivery stack are implemented. Shared libraries
+remain product-neutral; each app module owns its permanent package identity,
+generated product assets, system component registration, and composition root.
 
 The daily-verse Widget uses stable paragraph IDs from the product contract,
 locks one selection per local day and content version, and keeps a versioned
 DataStore snapshot for offline/error fallback. Its Glance layout is responsive
 to launcher-provided dimensions and always opens the product's explicit
 activity, targeting the selected paragraph when one is available.
+
+Daily reminders use one-shot inexact `AlarmManager` scheduling. Android 13+
+notification permission is requested only when the user enables the setting;
+the app never requests exact-alarm permission. Protected system broadcasts
+reconcile the next local trigger after reboot, time/time-zone changes, locale
+changes, or package replacement. Notification clicks use the saved stable
+paragraph ID and Unicode code-point offset.

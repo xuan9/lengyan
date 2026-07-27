@@ -19,6 +19,7 @@ import org.fuxuan.classics.widget.DAILY_VERSE_PARAGRAPH_ID_EXTRA
 class MainActivity : ComponentActivity() {
     private lateinit var deepLinkParser: LegacyVerseDeepLinkParser
     private var pendingDeepLink by mutableStateOf<ScriptureDeepLink?>(null)
+    private var acceptedDeepLinkRequestKey: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,10 +31,16 @@ class MainActivity : ComponentActivity() {
         )
         val restoredPath = savedInstanceState?.getString(PENDING_DEEP_LINK_PATH_KEY)
         val restoredParagraphID = savedInstanceState?.getString(PENDING_PARAGRAPH_ID_KEY)
+        acceptedDeepLinkRequestKey = savedInstanceState
+            ?.getString(ACCEPTED_DEEP_LINK_REQUEST_KEY)
+        val restoredCharacterOffset = savedInstanceState
+            ?.getInt(PENDING_CHARACTER_OFFSET_KEY, 0)
+            ?: 0
         pendingDeepLink = when {
             restoredParagraphID != null -> ScriptureDeepLink(
                 productID = container.product.productID,
                 paragraphID = restoredParagraphID,
+                characterOffset = restoredCharacterOffset,
             )
             restoredPath != null -> ScriptureDeepLink(
                 productID = container.product.productID,
@@ -41,7 +48,7 @@ class MainActivity : ComponentActivity() {
             )
             else -> null
         }
-        if (savedInstanceState == null) acceptDeepLink(intent)
+        acceptDeepLink(intent, ignorePreviouslyAccepted = savedInstanceState != null)
 
         setContent {
             ClassicsApp(
@@ -57,7 +64,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        acceptDeepLink(intent)
+        acceptDeepLink(intent, ignorePreviouslyAccepted = false)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -67,27 +74,50 @@ class MainActivity : ComponentActivity() {
             }
             deepLink.paragraphID?.let { paragraphID ->
                 outState.putString(PENDING_PARAGRAPH_ID_KEY, paragraphID)
+                outState.putInt(PENDING_CHARACTER_OFFSET_KEY, deepLink.characterOffset)
             }
+        }
+        acceptedDeepLinkRequestKey?.let { requestKey ->
+            outState.putString(ACCEPTED_DEEP_LINK_REQUEST_KEY, requestKey)
         }
         super.onSaveInstanceState(outState)
     }
 
-    private fun acceptDeepLink(intent: Intent?) {
+    private fun acceptDeepLink(
+        intent: Intent?,
+        ignorePreviouslyAccepted: Boolean,
+    ) {
+        val requestKey = intent?.deepLinkRequestKey() ?: return
+        if (ignorePreviouslyAccepted && requestKey == acceptedDeepLinkRequestKey) return
         val productID = (application as LengyanApplication).container.product.productID
-        intent?.dataString
+        intent.dataString
             ?.let(deepLinkParser::parse)
             ?.let {
                 pendingDeepLink = it
+                acceptedDeepLinkRequestKey = requestKey
                 return
             }
-        intent?.getStringExtra(EXTRA_PARAGRAPH_ID)
+        intent.getStringExtra(EXTRA_PARAGRAPH_ID)
             ?.takeIf(String::isNotBlank)
             ?.let { paragraphID ->
                 pendingDeepLink = ScriptureDeepLink(
                     productID = productID,
                     paragraphID = paragraphID,
+                    characterOffset = intent.getIntExtra(EXTRA_CHARACTER_OFFSET, 0)
+                        .coerceAtLeast(0),
                 )
+                acceptedDeepLinkRequestKey = requestKey
             }
+    }
+
+    private fun Intent.deepLinkRequestKey(): String? {
+        dataString?.let { return "uri:$it" }
+        val paragraphID = getStringExtra(EXTRA_PARAGRAPH_ID)
+            ?.takeIf(String::isNotBlank)
+            ?: return null
+        val offset = getIntExtra(EXTRA_CHARACTER_OFFSET, 0).coerceAtLeast(0)
+        val requestID = getLongExtra(EXTRA_DEEP_LINK_REQUEST_ID, 0).coerceAtLeast(0)
+        return "paragraph:$paragraphID:$offset:$requestID"
     }
 
     private fun applyEdgeToEdge(darkTheme: Boolean) {
@@ -105,7 +135,13 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         internal const val EXTRA_PARAGRAPH_ID = DAILY_VERSE_PARAGRAPH_ID_EXTRA
+        internal const val EXTRA_CHARACTER_OFFSET =
+            "org.fuxuan.classics.extra.SCRIPTURE_CHARACTER_OFFSET"
+        internal const val EXTRA_DEEP_LINK_REQUEST_ID =
+            "org.fuxuan.classics.extra.DEEP_LINK_REQUEST_ID"
         const val PENDING_DEEP_LINK_PATH_KEY = "pendingDeepLinkPath"
         const val PENDING_PARAGRAPH_ID_KEY = "pendingParagraphID"
+        const val PENDING_CHARACTER_OFFSET_KEY = "pendingCharacterOffset"
+        const val ACCEPTED_DEEP_LINK_REQUEST_KEY = "acceptedDeepLinkRequestKey"
     }
 }

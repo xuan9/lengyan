@@ -220,7 +220,8 @@ private fun LoadedContentNavigation(
         val deepLink = pendingDeepLink ?: return@LaunchedEffect
         try {
             if (deepLink.productID != loaded.product.productID) return@LaunchedEffect
-            val paragraph = deepLink.paragraphID?.let(loaded.content::paragraph)
+            val directParagraph = deepLink.paragraphID?.let(loaded.content::paragraph)
+            val paragraph = directParagraph
                 ?: deepLink.legacyPath?.let { legacyPath ->
                     val resolution = container.bookRepository.resolveLegacyLocation(
                         legacyPath = legacyPath,
@@ -232,6 +233,13 @@ private fun LoadedContentNavigation(
                 }
                 ?: return@LaunchedEffect
             val volumeID = paragraph.volumeID ?: return@LaunchedEffect
+            val characterOffset = if (directParagraph != null) {
+                deepLink.characterOffset.coerceAtMost(
+                    paragraph.text.codePointCount(0, paragraph.text.length),
+                )
+            } else {
+                0
+            }
             val openedAt = timestampAfter(
                 preferences.readingProgress?.updatedAtEpochMilliseconds,
             )
@@ -241,6 +249,7 @@ private fun LoadedContentNavigation(
                 VolumeReaderRoute(
                     volumeID = volumeID,
                     paragraphID = paragraph.paragraphID,
+                    characterOffset = characterOffset,
                     requestedAtEpochMilliseconds = openedAt,
                 ),
             )
@@ -249,7 +258,7 @@ private fun LoadedContentNavigation(
                     productID = loaded.product.productID,
                     editionID = loaded.book.editionID,
                     paragraphID = paragraph.paragraphID,
-                    characterOffset = 0,
+                    characterOffset = characterOffset,
                     mode = ReadingMode.CHAPTER,
                     updatedAtEpochMilliseconds = openedAt,
                 ),
@@ -562,6 +571,11 @@ private fun LoadedContentNavigation(
                 onSelectFontSize = { level ->
                     navigationScope.launch {
                         container.userPreferencesRepository.setFontSizeLevel(level)
+                    }
+                },
+                onSetReminder = { reminder ->
+                    navigationScope.launch {
+                        container.userPreferencesRepository.setReminder(reminder)
                     }
                 },
             )
