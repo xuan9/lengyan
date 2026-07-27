@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "androidRuntimeLockfile": "android/apps/lengyan/gradle.lockfile",
+  "androidRuntimeConfiguration": "releaseRuntimeClasspath",
+  "licenses": [
+    {
+      "licenseID": "Apache-2.0",
+      "name": "Apache License 2.0",
+      "textPath": "ThirdParty/LicenseTexts/Apache-2.0.txt",
+      "canonicalURL": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+    },
+    {
+      "licenseID": "MIT",
+      "name": "MIT License",
+      "textPath": "ThirdParty/LicenseTexts/MIT.txt",
+      "canonicalURL": "https://opensource.org/license/mit"
+    }
+  ],
+  "components": [
+    {
+      "componentID": "androidx",
+      "displayName": "AndroidX and Jetpack Compose",
+      "platforms": ["android"],
+      "licenseID": "Apache-2.0",
+      "homepage": "https://github.com/androidx/androidx",
+      "notice": "",
+      "androidCoordinatePrefixes": ["androidx."],
+      "iosVendoredSourceDirectory": null,
+      "version": null,
+      "upstreamRevision": null
+    },
+    {
+      "componentID": "kotlin",
+      "displayName": "Kotlin Standard Library",
+      "platforms": ["android"],
+      "licenseID": "Apache-2.0",
+      "homepage": "https://github.com/JetBrains/kotlin",
+      "notice": "",
+      "androidCoordinatePrefixes": ["org.jetbrains.kotlin:"],
+      "iosVendoredSourceDirectory": null,
+      "version": null,
+      "upstreamRevision": null
+    },
+    {
+      "componentID": "kotlinx-coroutines",
+      "displayName": "kotlinx.coroutines",
+      "platforms": ["android"],
+      "licenseID": "Apache-2.0",
+      "homepage": "https://github.com/Kotlin/kotlinx.coroutines",
+      "notice": "",
+      "androidCoordinatePrefixes": ["org.jetbrains.kotlinx:kotlinx-coroutines-"],
+      "iosVendoredSourceDirectory": null,
+      "version": null,
+      "upstreamRevision": null
+    },
+    {
+      "componentID": "kotlinx-serialization",
+      "displayName": "kotlinx.serialization",
+      "platforms": ["android"],
+      "licenseID": "Apache-2.0",
+      "homepage": "https://github.com/Kotlin/kotlinx.serialization",
+      "notice": "",
+      "androidCoordinatePrefixes": ["org.jetbrains.kotlinx:kotlinx-serialization-"],
+      "iosVendoredSourceDirectory": null,
+      "version": null,
+      "upstreamRevision": null
+    },
+    {
+      "componentID": "okio",
+      "displayName": "Okio",
+      "platforms": ["android"],
+      "licenseID": "Apache-2.0",
+      "homepage": "https://github.com/square/okio",
+      "notice": "Copyright 2013 Square, Inc.",
+      "androidCoordinatePrefixes": ["com.squareup.okio:"],
+      "iosVendoredSourceDirectory": null,
+      "version": null,
+      "upstreamRevision": null
+    },
+    {
+      "componentID": "guava-listenablefuture",
+      "displayName": "Guava ListenableFuture",
+      "platforms": ["android"],
+      "licenseID": "Apache-2.0",
+      "homepage": "https://github.com/google/guava",
+      "notice": "",
+      "androidCoordinatePrefixes": ["com.google.guava:listenablefuture:"],
+      "iosVendoredSourceDirectory": null,
+      "version": null,
+      "upstreamRevision": null
+    },
+    {
+      "componentID": "jetbrains-annotations",
+      "displayName": "JetBrains Annotations",
+      "platforms": ["android"],
+      "licenseID": "Apache-2.0",
+      "homepage": "https://github.com/JetBrains/java-annotations",
+      "notice": "",
+      "androidCoordinatePrefixes": ["org.jetbrains:annotations:"],
+      "iosVendoredSourceDirectory": null,
+      "version": null,
+      "upstreamRevision": null
+    },
+    {
+      "componentID": "jspecify",
+      "displayName": "JSpecify",
+      "platforms": ["android"],
+      "licenseID": "Apache-2.0",
+      "homepage": "https://github.com/jspecify/jspecify",
+      "notice": "",
+      "androidCoordinatePrefixes": ["org.jspecify:jspecify:"],
+      "iosVendoredSourceDirectory": null,
+      "version": null,
+      "upstreamRevision": null
+    },
+    {
+      "componentID": "ratreeview",
+      "displayName": "RATreeView",
+      "platforms": ["ios"],
+      "licenseID": "MIT",
+      "homepage": "https://github.com/Augustyniak/RATreeView",
+      "notice": "Copyright (c) 2013 Rafał Augustyniak\nCopyright (c) 2014 Rafał Augustyniak\nCopyright © 2015 Rafal Augustyniak. All rights reserved.",
+      "androidCoordinatePrefixes": [],
+      "iosVendoredSourceDirectory": "lengyan/Util/RATreeView",
+      "version": "2.1.2+local",
+      "upstreamRevision": "f5370e2df6725e82c5c8de52ffa166bc7810382a"
+    }
+  ]
+}

@@ -45,6 +45,36 @@ class lengyanTests: XCTestCase {
         wait(for: [expectation], timeout: 5)
     }
 
+    func testBundledThirdPartyNoticesIdentifyTheVendoredRuntimeCode() throws {
+        let catalog = try ThirdPartyNoticeCatalog.load()
+
+        XCTAssertEqual(catalog.schemaVersion, 1)
+        XCTAssertEqual(catalog.platform, "ios")
+        XCTAssertEqual(catalog.inventorySHA256.count, 64)
+        XCTAssertEqual(catalog.components.count, 1)
+        XCTAssertEqual(catalog.licenses.count, 1)
+
+        let component = try XCTUnwrap(catalog.components.first)
+        XCTAssertEqual(component.componentID, "ratreeview")
+        XCTAssertEqual(component.displayName, "RATreeView")
+        XCTAssertEqual(component.versions, ["2.1.2+local"])
+        XCTAssertEqual(component.moduleCount, 1)
+        XCTAssertEqual(component.licenseID, "MIT")
+        XCTAssertEqual(
+            component.notice,
+            """
+            Copyright (c) 2013 Rafał Augustyniak
+            Copyright (c) 2014 Rafał Augustyniak
+            Copyright © 2015 Rafal Augustyniak. All rights reserved.
+            """
+        )
+
+        let license = try XCTUnwrap(catalog.licenses.first)
+        XCTAssertEqual(license.licenseID, "MIT")
+        XCTAssertTrue(license.text.contains("Permission is hereby granted"))
+        XCTAssertTrue(license.text.contains("THE SOFTWARE IS PROVIDED \"AS IS\""))
+    }
+
     func testSynchronousBookLoadingInvokesCompletionAndMarksCompleteCorpusLoaded() {
         var didComplete = false
 

@@ -268,6 +268,7 @@ fun settingsTraditionalScreenshot() {
             sourceReleaseEligibility = SourceReleaseEligibility.BLOCKED,
             appVersion = "0.1.0",
             onOpenSourceInformation = {},
+            onOpenSourceLicenses = {},
             onOpenPrivacy = {},
             onSelectTheme = {},
             onSelectLocale = {},

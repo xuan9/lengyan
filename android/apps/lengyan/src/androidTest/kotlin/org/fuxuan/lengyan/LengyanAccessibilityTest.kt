@@ -131,6 +131,16 @@ class LengyanAccessibilityTest {
         checkCurrentScreen()
         composeRule.onNodeWithContentDescription("返回", useUnmergedTree = true).performClick()
 
+        composeRule.onNodeWithTag("settings.licenses", useUnmergedTree = true)
+            .performScrollTo()
+            .performClick()
+        composeRule.onNodeWithTag("licenses.screen", useUnmergedTree = true).assertIsDisplayed()
+        checkCurrentScreen()
+        composeRule.onNodeWithTag("licenses.list", useUnmergedTree = true)
+            .performScrollToNode(hasTestTag("licenses.component.okio"))
+        checkCurrentScreen()
+        composeRule.onNodeWithContentDescription("返回", useUnmergedTree = true).performClick()
+
         composeRule.onNodeWithTag("settings.privacy", useUnmergedTree = true)
             .performScrollTo()
             .performClick()

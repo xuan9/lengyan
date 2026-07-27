@@ -55,6 +55,8 @@ handling and any infrastructure plan change require a fresh privacy review.
   migration, an allowlisted Worker and the Lengyan iOS payload. Production
   migration/deployment remains pending human approval. Missing IDs map only to
   the historical Lengyan endpoint; a new product must never rely on that path.
-- Open-source license notices are a separate dependency inventory. Do not show
-  a partial or copied acknowledgment page as if it were complete.
+- Open-source runtime notices are generated from a separate dependency
+  inventory and displayed independently from content/media acknowledgments.
+  This engineering inventory does not grant content or media rights and does
+  not replace human legal review.
 - Human approval remains mandatory for privacy and regional compliance.

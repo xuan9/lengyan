@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "inventorySHA256": "e400993eecdde486d8fedf8031a73be4faef9d89ecf114ef1f4a9a80d7822e49",
+  "components": [
+    {
+      "componentID": "ratreeview",
+      "displayName": "RATreeView",
+      "versions": [
+        "2.1.2+local"
+      ],
+      "moduleCount": 1,
+      "licenseID": "MIT",
+      "homepage": "https://github.com/Augustyniak/RATreeView",
+      "notice": "Copyright (c) 2013 Rafał Augustyniak\nCopyright (c) 2014 Rafał Augustyniak\nCopyright © 2015 Rafal Augustyniak. All rights reserved."
+    }
+  ],
+  "licenses": [
+    {
+      "licenseID": "MIT",
+      "name": "MIT License",
+      "canonicalURL": "https://opensource.org/license/mit",
+      "text": "Permission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+    }
+  ],
+  "platform": "ios"
+}

@@ -52,9 +52,10 @@ Android implementation from iOS feedback and audio delivery.
   no ads/analytics/tracking, system-mediated sharing and browser access, no
   cloud backup, and uninstall removal. Maintain the cross-platform technical
   inventory in `docs/privacy/LENGYAN_DATA_FLOW_2026-07-27.md`.
-- Defer feedback and open-source license rows. Feedback first needs a
-  multi-product `productID` client/Worker/schema migration; license notices need
-  a complete dependency inventory. Do not add placeholder or partial claims.
+- Defer feedback and open-source license rows until their complete contracts
+  exist. This was the boundary when this ADR was accepted; follow-up ADR 0021
+  now implements generated runtime notices without changing the source/rights
+  meaning of this page.
 
 ## Consequences
 
@@ -89,6 +90,6 @@ matrix to 26 references.
 ## Reconsider When
 
 Revisit this ADR when source schema v2 changes approval semantics, Android gains
-audio or feedback, a product needs a product-specific source presentation, or
-the complete dependency-license inventory is ready. Any new URL scheme or
-in-app browser requires a separate security and privacy review.
+audio or feedback, or a product needs a product-specific source presentation.
+Any new URL scheme or in-app browser requires a separate security and privacy
+review. Runtime software notices remain governed by ADR 0021.

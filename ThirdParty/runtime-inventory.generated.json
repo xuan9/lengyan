@@ -1,0 +1,436 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": "ThirdParty/runtime-notices.json",
+  "licenses": [
+    {
+      "licenseID": "Apache-2.0",
+      "name": "Apache License 2.0",
+      "canonicalURL": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "textPath": "ThirdParty/LicenseTexts/Apache-2.0.txt",
+      "textSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "licenseID": "MIT",
+      "name": "MIT License",
+      "canonicalURL": "https://opensource.org/license/mit",
+      "textPath": "ThirdParty/LicenseTexts/MIT.txt",
+      "textSHA256": "638da3722c9e102ccd8011d82f61ae3b611174e4a0f8da185c582df137b60a8c"
+    }
+  ],
+  "android": {
+    "lockfile": "android/apps/lengyan/gradle.lockfile",
+    "configuration": "releaseRuntimeClasspath",
+    "coordinateCount": 147,
+    "components": [
+      {
+        "componentID": "androidx",
+        "displayName": "AndroidX and Jetpack Compose",
+        "licenseID": "Apache-2.0",
+        "homepage": "https://github.com/androidx/androidx",
+        "notice": "",
+        "versions": [
+          "1.0.0",
+          "1.0.1",
+          "1.1.0",
+          "1.1.1",
+          "1.1.2",
+          "1.1.4",
+          "1.2.0",
+          "1.2.1",
+          "1.4.0",
+          "1.4.1",
+          "1.5.0",
+          "1.6.0",
+          "1.7.8",
+          "1.9.1",
+          "1.11.4",
+          "1.13.0",
+          "1.18.0",
+          "2.2.0",
+          "2.6.2",
+          "2.7.1",
+          "2.8.4",
+          "2.10.0",
+          "2026.06.01"
+        ],
+        "coordinates": [
+          "androidx.activity:activity-compose:1.13.0",
+          "androidx.activity:activity-ktx:1.13.0",
+          "androidx.activity:activity:1.13.0",
+          "androidx.annotation:annotation-experimental:1.5.0",
+          "androidx.annotation:annotation-jvm:1.9.1",
+          "androidx.annotation:annotation:1.9.1",
+          "androidx.arch.core:core-common:2.2.0",
+          "androidx.arch.core:core-runtime:2.2.0",
+          "androidx.autofill:autofill:1.0.0",
+          "androidx.collection:collection-jvm:1.5.0",
+          "androidx.collection:collection-ktx:1.5.0",
+          "androidx.collection:collection:1.5.0",
+          "androidx.compose.animation:animation-android:1.11.4",
+          "androidx.compose.animation:animation-core-android:1.11.4",
+          "androidx.compose.animation:animation-core:1.11.4",
+          "androidx.compose.animation:animation:1.11.4",
+          "androidx.compose.foundation:foundation-android:1.11.4",
+          "androidx.compose.foundation:foundation-layout-android:1.11.4",
+          "androidx.compose.foundation:foundation-layout:1.11.4",
+          "androidx.compose.foundation:foundation:1.11.4",
+          "androidx.compose.material3:material3-android:1.4.0",
+          "androidx.compose.material3:material3:1.4.0",
+          "androidx.compose.material:material-icons-core-android:1.7.8",
+          "androidx.compose.material:material-icons-core:1.7.8",
+          "androidx.compose.material:material-ripple-android:1.11.4",
+          "androidx.compose.material:material-ripple:1.11.4",
+          "androidx.compose.runtime:runtime-android:1.11.4",
+          "androidx.compose.runtime:runtime-annotation-android:1.11.4",
+          "androidx.compose.runtime:runtime-annotation:1.11.4",
+          "androidx.compose.runtime:runtime-retain-android:1.11.4",
+          "androidx.compose.runtime:runtime-retain:1.11.4",
+          "androidx.compose.runtime:runtime-saveable-android:1.11.4",
+          "androidx.compose.runtime:runtime-saveable:1.11.4",
+          "androidx.compose.runtime:runtime:1.11.4",
+          "androidx.compose.ui:ui-android:1.11.4",
+          "androidx.compose.ui:ui-geometry-android:1.11.4",
+          "androidx.compose.ui:ui-geometry:1.11.4",
+          "androidx.compose.ui:ui-graphics-android:1.11.4",
+          "androidx.compose.ui:ui-graphics:1.11.4",
+          "androidx.compose.ui:ui-text-android:1.11.4",
+          "androidx.compose.ui:ui-text:1.11.4",
+          "androidx.compose.ui:ui-tooling-preview-android:1.11.4",
+          "androidx.compose.ui:ui-tooling-preview:1.11.4",
+          "androidx.compose.ui:ui-unit-android:1.11.4",
+          "androidx.compose.ui:ui-unit:1.11.4",
+          "androidx.compose.ui:ui-util-android:1.11.4",
+          "androidx.compose.ui:ui-util:1.11.4",
+          "androidx.compose.ui:ui:1.11.4",
+          "androidx.compose:compose-bom:2026.06.01",
+          "androidx.concurrent:concurrent-futures-ktx:1.1.0",
+          "androidx.concurrent:concurrent-futures:1.1.0",
+          "androidx.core:core-ktx:1.18.0",
+          "androidx.core:core-remoteviews:1.1.0",
+          "androidx.core:core-viewtree:1.0.0",
+          "androidx.core:core:1.18.0",
+          "androidx.customview:customview-poolingcontainer:1.0.0",
+          "androidx.datastore:datastore-android:1.2.1",
+          "androidx.datastore:datastore-core-android:1.2.1",
+          "androidx.datastore:datastore-core-okio-jvm:1.2.1",
+          "androidx.datastore:datastore-core-okio:1.2.1",
+          "androidx.datastore:datastore-core:1.2.1",
+          "androidx.datastore:datastore-preferences-android:1.2.1",
+          "androidx.datastore:datastore-preferences-core-android:1.2.1",
+          "androidx.datastore:datastore-preferences-core:1.2.1",
+          "androidx.datastore:datastore-preferences-external-protobuf:1.2.1",
+          "androidx.datastore:datastore-preferences-proto:1.2.1",
+          "androidx.datastore:datastore-preferences:1.2.1",
+          "androidx.datastore:datastore:1.2.1",
+          "androidx.documentfile:documentfile:1.0.0",
+          "androidx.dynamicanimation:dynamicanimation:1.0.0",
+          "androidx.emoji2:emoji2:1.4.0",
+          "androidx.glance:glance-appwidget-external-protobuf:1.1.1",
+          "androidx.glance:glance-appwidget-proto:1.1.1",
+          "androidx.glance:glance-appwidget:1.1.1",
+          "androidx.glance:glance:1.1.1",
+          "androidx.graphics:graphics-path:1.0.1",
+          "androidx.interpolator:interpolator:1.0.0",
+          "androidx.legacy:legacy-support-core-utils:1.0.0",
+          "androidx.lifecycle:lifecycle-common-java8:2.10.0",
+          "androidx.lifecycle:lifecycle-common-jvm:2.10.0",
+          "androidx.lifecycle:lifecycle-common:2.10.0",
+          "androidx.lifecycle:lifecycle-livedata-core-ktx:2.10.0",
+          "androidx.lifecycle:lifecycle-livedata-core:2.10.0",
+          "androidx.lifecycle:lifecycle-livedata:2.10.0",
+          "androidx.lifecycle:lifecycle-process:2.10.0",
+          "androidx.lifecycle:lifecycle-runtime-android:2.10.0",
+          "androidx.lifecycle:lifecycle-runtime-compose-android:2.10.0",
+          "androidx.lifecycle:lifecycle-runtime-compose:2.10.0",
+          "androidx.lifecycle:lifecycle-runtime-ktx-android:2.10.0",
+          "androidx.lifecycle:lifecycle-runtime-ktx:2.10.0",
+          "androidx.lifecycle:lifecycle-runtime:2.10.0",
+          "androidx.lifecycle:lifecycle-service:2.10.0",
+          "androidx.lifecycle:lifecycle-viewmodel-android:2.10.0",
+          "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0",
+          "androidx.lifecycle:lifecycle-viewmodel-savedstate-android:2.10.0",
+          "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.10.0",
+          "androidx.lifecycle:lifecycle-viewmodel:2.10.0",
+          "androidx.loader:loader:1.0.0",
+          "androidx.localbroadcastmanager:localbroadcastmanager:1.0.0",
+          "androidx.navigation3:navigation3-runtime-android:1.1.4",
+          "androidx.navigation3:navigation3-runtime:1.1.4",
+          "androidx.navigation3:navigation3-ui-android:1.1.4",
+          "androidx.navigation3:navigation3-ui:1.1.4",
+          "androidx.navigationevent:navigationevent-android:1.1.2",
+          "androidx.navigationevent:navigationevent-compose-android:1.1.2",
+          "androidx.navigationevent:navigationevent-compose:1.1.2",
+          "androidx.navigationevent:navigationevent:1.1.2",
+          "androidx.print:print:1.0.0",
+          "androidx.profileinstaller:profileinstaller:1.4.1",
+          "androidx.room:room-common-jvm:2.8.4",
+          "androidx.room:room-common:2.8.4",
+          "androidx.room:room-runtime-android:2.8.4",
+          "androidx.room:room-runtime:2.8.4",
+          "androidx.savedstate:savedstate-android:1.4.0",
+          "androidx.savedstate:savedstate-compose-android:1.4.0",
+          "androidx.savedstate:savedstate-compose:1.4.0",
+          "androidx.savedstate:savedstate-ktx:1.4.0",
+          "androidx.savedstate:savedstate:1.4.0",
+          "androidx.sqlite:sqlite-android:2.6.2",
+          "androidx.sqlite:sqlite-framework-android:2.6.2",
+          "androidx.sqlite:sqlite-framework:2.6.2",
+          "androidx.sqlite:sqlite:2.6.2",
+          "androidx.startup:startup-runtime:1.1.1",
+          "androidx.tracing:tracing:1.2.0",
+          "androidx.transition:transition:1.6.0",
+          "androidx.versionedparcelable:versionedparcelable:1.1.1",
+          "androidx.window:window-core-android:1.5.0",
+          "androidx.window:window-core:1.5.0",
+          "androidx.window:window:1.5.0",
+          "androidx.work:work-runtime-ktx:2.7.1",
+          "androidx.work:work-runtime:2.7.1"
+        ]
+      },
+      {
+        "componentID": "kotlin",
+        "displayName": "Kotlin Standard Library",
+        "licenseID": "Apache-2.0",
+        "homepage": "https://github.com/JetBrains/kotlin",
+        "notice": "",
+        "versions": [
+          "2.3.21"
+        ],
+        "coordinates": [
+          "org.jetbrains.kotlin:kotlin-stdlib-common:2.3.21",
+          "org.jetbrains.kotlin:kotlin-stdlib:2.3.21"
+        ]
+      },
+      {
+        "componentID": "kotlinx-coroutines",
+        "displayName": "kotlinx.coroutines",
+        "licenseID": "Apache-2.0",
+        "homepage": "https://github.com/Kotlin/kotlinx.coroutines",
+        "notice": "",
+        "versions": [
+          "1.9.0"
+        ],
+        "coordinates": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.9.0",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
+        ]
+      },
+      {
+        "componentID": "kotlinx-serialization",
+        "displayName": "kotlinx.serialization",
+        "licenseID": "Apache-2.0",
+        "homepage": "https://github.com/Kotlin/kotlinx.serialization",
+        "notice": "",
+        "versions": [
+          "1.11.0"
+        ],
+        "coordinates": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-bom:1.11.0",
+          "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0",
+          "org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.11.0",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
+        ]
+      },
+      {
+        "componentID": "okio",
+        "displayName": "Okio",
+        "licenseID": "Apache-2.0",
+        "homepage": "https://github.com/square/okio",
+        "notice": "Copyright 2013 Square, Inc.",
+        "versions": [
+          "3.9.1"
+        ],
+        "coordinates": [
+          "com.squareup.okio:okio-jvm:3.9.1",
+          "com.squareup.okio:okio:3.9.1"
+        ]
+      },
+      {
+        "componentID": "guava-listenablefuture",
+        "displayName": "Guava ListenableFuture",
+        "licenseID": "Apache-2.0",
+        "homepage": "https://github.com/google/guava",
+        "notice": "",
+        "versions": [
+          "1.0"
+        ],
+        "coordinates": [
+          "com.google.guava:listenablefuture:1.0"
+        ]
+      },
+      {
+        "componentID": "jetbrains-annotations",
+        "displayName": "JetBrains Annotations",
+        "licenseID": "Apache-2.0",
+        "homepage": "https://github.com/JetBrains/java-annotations",
+        "notice": "",
+        "versions": [
+          "23.0.0"
+        ],
+        "coordinates": [
+          "org.jetbrains:annotations:23.0.0"
+        ]
+      },
+      {
+        "componentID": "jspecify",
+        "displayName": "JSpecify",
+        "licenseID": "Apache-2.0",
+        "homepage": "https://github.com/jspecify/jspecify",
+        "notice": "",
+        "versions": [
+          "1.0.0"
+        ],
+        "coordinates": [
+          "org.jspecify:jspecify:1.0.0"
+        ]
+      }
+    ]
+  },
+  "ios": {
+    "components": [
+      {
+        "componentID": "ratreeview",
+        "displayName": "RATreeView",
+        "licenseID": "MIT",
+        "homepage": "https://github.com/Augustyniak/RATreeView",
+        "notice": "Copyright (c) 2013 Rafał Augustyniak\nCopyright (c) 2014 Rafał Augustyniak\nCopyright © 2015 Rafal Augustyniak. All rights reserved.",
+        "version": "2.1.2+local",
+        "upstreamRevision": "f5370e2df6725e82c5c8de52ffa166bc7810382a",
+        "source": {
+          "directory": "lengyan/Util/RATreeView",
+          "sourceSHA256": "07d2b687a74861d88b8b51e8c00d116fd753a45d114cb660dcf687b6935098b8",
+          "files": [
+            {
+              "path": "Private/RABatchChangeEntity.h",
+              "sha256": "524be921708c8eae331697cbad45201ed6f6fcbe37af6f94b92a0f4daf1e1894"
+            },
+            {
+              "path": "Private/RABatchChangeEntity.m",
+              "sha256": "eb5950c5713515907ae6c8d7c81264775fde98831a973b827544acfde98edb8c"
+            },
+            {
+              "path": "Private/RABatchChanges.h",
+              "sha256": "765cdd870a2c4244a8c145b5ceff174e185389d4dab43c65e1af615e998a659b"
+            },
+            {
+              "path": "Private/RABatchChanges.m",
+              "sha256": "1e3733bb465644d11c9aa41eccbc0e6e82f2504c3dc36f65f8f36ee200da0360"
+            },
+            {
+              "path": "Private/RATableView.h",
+              "sha256": "fb8bddee371f31dd6c9f23a12687737ad65112e80d384206e8a5cabba7c67188"
+            },
+            {
+              "path": "Private/RATableView.m",
+              "sha256": "50afda8641229b2c0eb544cd984c54c21d146576ed7cd18a6ee418afff54cdf0"
+            },
+            {
+              "path": "Private/RATreeNode.h",
+              "sha256": "e9f0f38bdc6180ebddd356f7add813de7903490946bada401a151b2424609b50"
+            },
+            {
+              "path": "Private/RATreeNode.m",
+              "sha256": "ce5805e925ab35ad8185a6e316347c1f759a0da9fa4288cae3fc0cabe21ebb9b"
+            },
+            {
+              "path": "Private/RATreeNodeCollectionController.h",
+              "sha256": "a0997cf84903f60726d94169ce0668781a415a8f63548cd65b5151b302552c5b"
+            },
+            {
+              "path": "Private/RATreeNodeCollectionController.m",
+              "sha256": "ed8c43d697d735915457434eafcc66b8d9bb13028884018c18c12a7a9d11a568"
+            },
+            {
+              "path": "Private/RATreeNodeController.h",
+              "sha256": "7eaefc78b4e9ce9dec3c15fba67497472e989c0a57192b8b4c551d410c1377c6"
+            },
+            {
+              "path": "Private/RATreeNodeController.m",
+              "sha256": "9437164a0b85f2cc79619eb35a8c8a8a7a37e4ee07982234025d43f3d1ddc78a"
+            },
+            {
+              "path": "Private/RATreeNodeItem+ClassExtension.h",
+              "sha256": "18a9a265fc381212307aadf54b2a62dee5a93601aab5e0bd4ec98f2e51f67130"
+            },
+            {
+              "path": "Private/RATreeNodeItem+Private.h",
+              "sha256": "bc904e19b7723a0c10a6e84e23ac93f29637edd62f81039fe643620dc44c8198"
+            },
+            {
+              "path": "Private/RATreeNodeItem+Private.m",
+              "sha256": "0ae8e3a610b8cdc062f9c038f30bca2d384810a39d335f532641d167285123af"
+            },
+            {
+              "path": "Private/RATreeNodeItem.h",
+              "sha256": "9d454162d7ec7310d05b1def3376178a4fbc52d606bdc54f418abe2655fc48fb"
+            },
+            {
+              "path": "Private/RATreeNodeItem.m",
+              "sha256": "7d2025d5febc39872234433163e057d9ab7b98676514a7fb48474ff2dcf82603"
+            },
+            {
+              "path": "Private/RATreeNode_ClassExtension.h",
+              "sha256": "3ef1d36b92a1a1bf1448686105c65ecd935eb0c23292459ca72a9be34c31c89d"
+            },
+            {
+              "path": "Private/RATreeView+Enums.h",
+              "sha256": "017fa2632aac6a6d8cdcc56cf31a406c0d3bc2b6f0f5c46e5fb8e343bee356d4"
+            },
+            {
+              "path": "Private/RATreeView+Enums.m",
+              "sha256": "70f0e7003383bd8badf13a273e6488423236156cb5cc438764f1b140bbac03d8"
+            },
+            {
+              "path": "Private/RATreeView+Private.h",
+              "sha256": "2be8ad53ff24910553cd8f0fa67ad67f28683174a115da514e9d8a164f264135"
+            },
+            {
+              "path": "Private/RATreeView+Private.m",
+              "sha256": "5a32e5f9f6396754c2e0c91c527e5789d04ab0c94fe4df1f93f0c86b36728b5c"
+            },
+            {
+              "path": "Private/RATreeView+RATreeNodeCollectionControllerDataSource.h",
+              "sha256": "ecbc708de58f0ecd8289767ebbb05f0fafe0660fd5e60826445a020e7e7118bf"
+            },
+            {
+              "path": "Private/RATreeView+RATreeNodeCollectionControllerDataSource.m",
+              "sha256": "b317e40154f4d17d332e845a8a3c6e71f716cd9a0ca8ce7cd2a6e29011500887"
+            },
+            {
+              "path": "Private/RATreeView+TableViewDataSource.h",
+              "sha256": "235e14d33aef52785fbcef2143055889cea05b2579da4fd5a5fa8326288fae6f"
+            },
+            {
+              "path": "Private/RATreeView+TableViewDataSource.m",
+              "sha256": "96f148d1021d783db650f490d4586cd9b92c0de5883e6b5a6eacc28290361d65"
+            },
+            {
+              "path": "Private/RATreeView+TableViewDelegate.h",
+              "sha256": "1d1fe369313daacb013acd3d2d3b992fc3a982913e8388c350d137fea307d7c4"
+            },
+            {
+              "path": "Private/RATreeView+TableViewDelegate.m",
+              "sha256": "e03f047ecfb108febe7c182415331de2735f14d7824fdff391a55cd352126010"
+            },
+            {
+              "path": "Private/RATreeView_ClassExtension.h",
+              "sha256": "7c4af2116a11a3fc1d36617068bf5a7a519a8428c6d6cb7c886f8272a5be7a63"
+            },
+            {
+              "path": "RATreeView.h",
+              "sha256": "42576caa657219fb7b24f84b9fe499b7bc3ab6572f66647b7fc882af1db1c0bb"
+            },
+            {
+              "path": "RATreeView.m",
+              "sha256": "0384d6468bea3cb829731926296ff93115d1db6145f88a5fc6deb3e8b70afa97"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "inventorySHA256": "e400993eecdde486d8fedf8031a73be4faef9d89ecf114ef1f4a9a80d7822e49"
+}

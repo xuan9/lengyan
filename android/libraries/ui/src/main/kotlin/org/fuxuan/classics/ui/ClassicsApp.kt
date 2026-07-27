@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +80,9 @@ data object SourceInfoRoute : NavKey
 
 @Serializable
 data object PrivacyInfoRoute : NavKey
+
+@Serializable
+data object OpenSourceLicensesRoute : NavKey
 
 @Serializable
 data class ShareRoute(val volumeID: String) : NavKey {
@@ -236,6 +240,10 @@ private fun LoadedContentNavigation(
         mutableStateOf(TopLevelDestination.READING)
     }
     val strings = remember(preferences.locale) { AppStrings(preferences.locale) }
+    val assetManager = LocalContext.current.assets
+    val thirdPartyNotices = remember(assetManager) {
+        runCatching { ThirdPartyNoticeCatalog.load(assetManager) }.getOrNull()
+    }
     val resumeRoute = remember(loaded, preferences.readingProgress) {
         loaded.resumeRoute(preferences.readingProgress)
     }
@@ -616,6 +624,9 @@ private fun LoadedContentNavigation(
                             onOpenSourceInformation = {
                                 settingsBackStack.add(SourceInfoRoute)
                             },
+                            onOpenSourceLicenses = {
+                                settingsBackStack.add(OpenSourceLicensesRoute)
+                            },
                             onOpenPrivacy = { settingsBackStack.add(PrivacyInfoRoute) },
                             onSelectTheme = { theme ->
                                 navigationScope.launch {
@@ -654,6 +665,14 @@ private fun LoadedContentNavigation(
                             strings = strings,
                             privacyPolicyUri = privacyPolicyUris[preferences.locale]
                                 ?: privacyPolicyUris[loaded.product.defaultLocale],
+                            onBack = { settingsBackStack.removeLastOrNull() },
+                            onOpenExternalUri = onOpenExternalUri,
+                        )
+                    }
+                    entry<OpenSourceLicensesRoute> {
+                        OpenSourceLicensesScreen(
+                            document = thirdPartyNotices,
+                            strings = strings,
                             onBack = { settingsBackStack.removeLastOrNull() },
                             onOpenExternalUri = onOpenExternalUri,
                         )

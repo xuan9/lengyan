@@ -16,6 +16,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.fuxuan.classics.core.content.DocumentedSource
 import org.fuxuan.classics.core.content.DocumentedSourceArtifact
 import org.fuxuan.classics.core.content.DocumentedSourceFormat
@@ -30,6 +31,7 @@ import org.fuxuan.classics.core.content.SourceRedistribution
 import org.fuxuan.classics.core.content.SourceReleaseEligibility
 import org.fuxuan.classics.core.content.SourceReviewStatus
 import org.fuxuan.classics.core.content.SourceRightsStatus
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -103,6 +105,54 @@ class InformationScreensLargeTextTest {
             .assertIsDisplayed()
         composeRule.onNodeWithTag("privacy.open-policy", useUnmergedTree = true)
             .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun bundledOpenSourceCatalogCoversEveryLockedRuntimeModule() {
+        val document = ThirdPartyNoticeCatalog.load(
+            InstrumentationRegistry.getInstrumentation().targetContext.assets,
+        )
+
+        assertEquals("android", document.platform)
+        assertEquals(147, document.moduleCount)
+        assertEquals(8, document.components.size)
+        assertEquals(setOf("Apache-2.0"), document.licenses.map { it.licenseID }.toSet())
+        assertTrue(document.components.any { it.componentID == "androidx" && it.moduleCount == 131 })
+    }
+
+    @Test
+    fun openSourceLicensesRemainNavigableAtDoubleFontScale() {
+        val document = ThirdPartyNoticeCatalog.load(
+            InstrumentationRegistry.getInstrumentation().targetContext.assets,
+        )
+        composeRule.setContent {
+            val deviceDensity = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(deviceDensity.density, fontScale = 2f),
+            ) {
+                ClassicsTheme(darkTheme = false) {
+                    Box(
+                        modifier = Modifier
+                            .width(320.dp)
+                            .height(700.dp),
+                    ) {
+                        OpenSourceLicensesScreen(
+                            document = document,
+                            strings = AppStrings("zh-Hant"),
+                            onBack = {},
+                            onOpenExternalUri = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("licenses.screen", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("licenses.list", useUnmergedTree = true)
+            .performScrollToNode(hasTestTag("licenses.component.jspecify"))
+        composeRule.onNodeWithText("JSpecify", useUnmergedTree = true)
             .assertIsDisplayed()
     }
 

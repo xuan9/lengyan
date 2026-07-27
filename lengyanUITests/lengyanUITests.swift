@@ -1222,6 +1222,48 @@ class lengyanUITests: XCTestCase {
         }
     }
 
+    func testAcknowledgmentsExposeGeneratedOpenSourceNotices() {
+        let app = launchHomeApp(readingState: .start)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3))
+        tabBar.buttons.element(boundBy: 3).tap()
+
+        let settingsRoot = app.scrollViews["settings.root"]
+        let acknowledgments = app.buttons["致谢"]
+        XCTAssertTrue(settingsRoot.waitForExistence(timeout: 3))
+        for _ in 0..<6 where !acknowledgments.isHittable {
+            settingsRoot.swipeUp()
+        }
+        XCTAssertTrue(acknowledgments.isHittable)
+        acknowledgments.tap()
+
+        let acknowledgmentsScroll = app.scrollViews.firstMatch
+        let softwareTitle = app.staticTexts["开源软件"]
+        XCTAssertTrue(acknowledgmentsScroll.waitForExistence(timeout: 3))
+        for _ in 0..<8 where !softwareTitle.isHittable {
+            acknowledgmentsScroll.swipeUp()
+        }
+        XCTAssertTrue(softwareTitle.isHittable)
+        XCTAssertTrue(app.staticTexts["RATreeView"].exists)
+
+        let licenseTitle = app.staticTexts["MIT License"]
+        for _ in 0..<5 where !licenseTitle.isHittable {
+            acknowledgmentsScroll.swipeUp()
+        }
+        XCTAssertTrue(licenseTitle.isHittable)
+        let copyrightNotice = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "Copyright (c) 2013 Rafał Augustyniak")
+        ).firstMatch
+        XCTAssertTrue(copyrightNotice.exists)
+        XCTAssertTrue(copyrightNotice.label.contains("Copyright (c) 2014 Rafał Augustyniak"))
+        XCTAssertTrue(copyrightNotice.label.contains("Copyright © 2015 Rafal Augustyniak"))
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Acknowledgments - open-source notices"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
     func testNightReadingThemeIsNotExposed() {
         let app = launchHomeApp(readingState: .start)
         let tabBar = app.tabBars.firstMatch

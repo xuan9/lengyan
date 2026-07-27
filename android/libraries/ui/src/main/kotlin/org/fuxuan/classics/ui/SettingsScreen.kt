@@ -79,6 +79,7 @@ internal fun SettingsScreen(
     sourceReleaseEligibility: SourceReleaseEligibility = SourceReleaseEligibility.BLOCKED,
     appVersion: String? = null,
     onOpenSourceInformation: (() -> Unit)? = null,
+    onOpenSourceLicenses: (() -> Unit)? = null,
     onOpenPrivacy: (() -> Unit)? = null,
     onSelectTheme: (ThemePreference) -> Unit,
     onSelectLocale: (String) -> Unit,
@@ -215,6 +216,7 @@ internal fun SettingsScreen(
 
                     if (
                         onOpenSourceInformation != null ||
+                        onOpenSourceLicenses != null ||
                         onOpenPrivacy != null ||
                         appVersion != null
                     ) {
@@ -230,6 +232,14 @@ internal fun SettingsScreen(
                                     sourceReleaseEligibility,
                                 ),
                                 testTag = "settings.source",
+                                onClick = onOpen,
+                            )
+                        }
+                        onOpenSourceLicenses?.let { onOpen ->
+                            SettingsNavigationRow(
+                                title = strings.openSourceSoftware,
+                                subtitle = strings.openSourceSoftwareSettingsSubtitle,
+                                testTag = "settings.licenses",
                                 onClick = onOpen,
                             )
                         }

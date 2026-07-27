@@ -466,6 +466,34 @@ class LengyanShellTest {
     }
 
     @Test
+    fun settingsOpenSourcePageShowsTheGeneratedRuntimeInventory() {
+        composeRule.onNodeWithTag("bottom.settings", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("settings.licenses", useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+
+        composeRule.onNodeWithTag("licenses.screen", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "8 組開源軟體，共 147 個執行階段模組",
+            useUnmergedTree = true,
+        ).assertIsDisplayed()
+        composeRule.onNodeWithTag("licenses.list", useUnmergedTree = true)
+            .performScrollToNode(hasTestTag("licenses.component.okio"))
+        composeRule.onNodeWithText("Copyright 2013 Square, Inc.", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("licenses.list", useUnmergedTree = true)
+            .performScrollToNode(hasTestTag("licenses.license.Apache-2.0"))
+        composeRule.onNodeWithText("Apache License 2.0", useUnmergedTree = true)
+            .assertIsDisplayed()
+
+        composeRule.onNodeWithContentDescription("返回", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("settings.screen", useUnmergedTree = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun readerRestoresAStableTextAnchorAcrossRotation() {
         val container = (composeRule.activity.application as LengyanApplication).container
         runBlocking { container.userPreferencesRepository.saveReadingProgress(null) }

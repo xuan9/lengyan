@@ -127,3 +127,14 @@
 "start_qi" = "起";
 "done" = "完成";
 "continue_listening_format" = "•  續聽·%@（%@） →";
+
+"acknowledgments_software_title" = "開源軟體";
+"acknowledgments_software_intro" = "本區列出 App 使用的開源軟體及其授權條款。本清單僅適用於軟體程式碼，不代表經文、音頻或圖像的來源與權利已經審核。";
+"acknowledgments_software_summary_format" = "%d 組開源軟體，共 %d 個執行階段模組";
+"acknowledgments_software_versions_format" = "版本：%@";
+"acknowledgments_software_modules_format" = "執行階段模組：%d";
+"acknowledgments_software_license_format" = "授權條款：%@";
+"acknowledgments_software_homepage" = "查看專案主頁";
+"acknowledgments_software_terms_title" = "授權條款全文";
+"acknowledgments_software_license_page" = "查看授權條款網頁";
+"acknowledgments_software_unavailable" = "開源軟體清單暫時無法讀取。";

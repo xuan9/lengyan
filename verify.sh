@@ -91,6 +91,7 @@ verify_contracts() {
   npm ci --prefix "${repo_root}/tools/content-validator"
   npm --prefix "${repo_root}/tools/content-validator" audit --audit-level=high
   node "${repo_root}/scripts/generate-lengyan-content.mjs" --check
+  node "${repo_root}/scripts/generate-third-party-notices.mjs" --check
   npm --prefix "${repo_root}/tools/content-validator" test
   npm --prefix "${repo_root}/tools/content-validator" run check
 }
@@ -168,7 +169,8 @@ verify_ios_ui_smoke() {
     -derivedDataPath "${derived_data}" \
     -only-testing:lengyanUITests/lengyanUITests/testIPadFavoriteToggleKeepsSplitDetailReaderStable \
     -only-testing:lengyanUITests/lengyanUITests/testIPadFavoritesTreeReaderDoesNotDuplicateBottomSafeArea \
-    -only-testing:lengyanUITests/lengyanUITests/testRapidThemeSwitchingKeepsSettingsContentVisible
+    -only-testing:lengyanUITests/lengyanUITests/testRapidThemeSwitchingKeepsSettingsContentVisible \
+    -only-testing:lengyanUITests/lengyanUITests/testAcknowledgmentsExposeGeneratedOpenSourceNotices
 }
 
 verify_ios_archive() {

@@ -54,6 +54,25 @@ internal class AppStrings(locale: String) {
     val sourceInformation = if (simplified) "来源说明" else "來源說明"
     val privacy = if (simplified) "隐私" else "隱私"
     val privacySettingsSubtitle = if (simplified) "本机数据与网络说明" else "本機資料與網路說明"
+    val openSourceSoftware = if (simplified) "开源软件" else "開源軟體"
+    val openSourceSoftwareSettingsSubtitle = if (simplified) {
+        "软件组件与许可证"
+    } else {
+        "軟體組件與授權條款"
+    }
+    val openSourceSoftwareIntro = if (simplified) {
+        "本页列出 App 使用的开源软件及其许可证。本清单仅适用于软件代码，不代表经文、音频或图像的来源与权利已经审核。"
+    } else {
+        "本頁列出 App 使用的開源軟體及其授權條款。本清單僅適用於軟體程式碼，不代表經文、音頻或圖像的來源與權利已經審核。"
+    }
+    val openSourceSoftwareUnavailable = if (simplified) {
+        "开源软件清单暂时无法读取。"
+    } else {
+        "開源軟體清單暫時無法讀取。"
+    }
+    val licenseTerms = if (simplified) "许可证全文" else "授權條款全文"
+    val openProjectHomepage = if (simplified) "查看项目主页" else "查看專案主頁"
+    val openLicensePage = if (simplified) "查看许可证网页" else "查看授權條款網頁"
     val sourceRecords = if (simplified) "资料记录" else "資料記錄"
     val textAccuracy = if (simplified) "文字准确性" else "文字準確性"
     val distributionRights = if (simplified) "使用与发行权利" else "使用與發行權利"
@@ -288,6 +307,30 @@ internal class AppStrings(locale: String) {
     }
 
     fun versionLabel(version: String): String = "版本 $version"
+
+    fun openSourceSoftwareSummary(componentCount: Int, moduleCount: Int): String = if (simplified) {
+        "$componentCount 组开源软件，共 $moduleCount 个运行时模块"
+    } else {
+        "$componentCount 組開源軟體，共 $moduleCount 個執行階段模組"
+    }
+
+    fun openSourceVersions(versions: List<String>): String = if (simplified) {
+        "版本：${versions.joinToString("、")}"
+    } else {
+        "版本：${versions.joinToString("、")}"
+    }
+
+    fun openSourceModuleCount(count: Int): String = if (simplified) {
+        "运行时模块：$count"
+    } else {
+        "執行階段模組：$count"
+    }
+
+    fun openSourceLicense(licenseID: String): String = if (simplified) {
+        "许可证：$licenseID"
+    } else {
+        "授權條款：$licenseID"
+    }
 
     fun shareCharacterCount(count: Int): String = if (simplified) {
         "全文 $count 字"

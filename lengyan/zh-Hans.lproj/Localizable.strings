@@ -201,6 +201,16 @@
 "acknowledgments_image_title" = "图像";
 "acknowledgments_image_body" = "图标和启动画面取自明代画家吴彬佛画。吴彬，字文中，莆田人，以奇崛画法著称，其佛画庄严古逸，为晚明独步。";
 "acknowledgments_footer" = "随喜功德";
+"acknowledgments_software_title" = "开源软件";
+"acknowledgments_software_intro" = "本区列出 App 使用的开源软件及其许可证。本清单仅适用于软件代码，不代表经文、音频或图像的来源与权利已经审核。";
+"acknowledgments_software_summary_format" = "%d 组开源软件，共 %d 个运行时模块";
+"acknowledgments_software_versions_format" = "版本：%@";
+"acknowledgments_software_modules_format" = "运行时模块：%d";
+"acknowledgments_software_license_format" = "许可证：%@";
+"acknowledgments_software_homepage" = "查看项目主页";
+"acknowledgments_software_terms_title" = "许可证全文";
+"acknowledgments_software_license_page" = "查看许可证网页";
+"acknowledgments_software_unavailable" = "开源软件清单暂时无法读取。";
 
 "wisdom_enter_reading" = "进入经文深读";
 "wisdom_lesson_complete_title" = "今日功课已毕";
