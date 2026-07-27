@@ -859,6 +859,8 @@ Gate E：至少三类真机完成 2 小时后台播放、断网/Range 下载恢�
 
 **Phase 4 会话实施检查点（2026-07-27）：** Media3 已固定为 1.10.1，并在 product-neutral media 模块建立由产品继承注入的 `MediaSessionService`；服务独占 Player/Session，只接受同包或可信 controller，且按已通过 delivery gate 的 artifact ID 重建 URI、标题和 MIME，未知 ID 或混合队列整体拒绝。独立 `:testing:media3-harness` 在 API 35 受管模拟器验证 controller/service 连接、恶意 URI 覆盖和未知队列拒绝，也因此发现并修复 Android ICU 对 delivery template brace regex 的设备初始化崩溃。楞严 App 在 `planned` 期间不依赖 media 模块；release APK gate 明确禁止 `INTERNET`、`FOREGROUND_SERVICE_MEDIA_PLAYBACK` 和 MediaSessionService，用户 notices 也不会提前列出未交付的 Media3。下一切片收敛到 `DownloadManager`/`DownloadService`、本地 Range 中断恢复、cache-only bytes/SHA-256 验证和播放位置持久化；host、codec 物理机基准、权利批准及生产权限/UI 仍是发布 Gate。
 
+**Phase 4 下载实施检查点（2026-07-27）：** product-neutral media 模块现以 `productID:artifactID:renditionID` 同时生成 Media3 `DownloadRequest` ID 与 custom cache key，应用级 runtime 统一持有 `StandaloneDatabaseProvider`、`SimpleCache` 和单并发 `DownloadManager`，具体产品通过前台 `DownloadService` 薄子类注入 runtime、通知和 scheduler。API 35 harness 将保持 HTTPS 的合同资源仅在测试 `ResolvingDataSource` 中映射到回环 HTTP server：首个 512 KiB 响应故意截断，只有观察到非零 `Range` 重试并完整下载才通过。服务器关闭后，校验器以无 upstream 的 `CacheDataSource` 核对全部 span、Media3 content length 和 SHA-256；少一字节、多余尾部、等长错误 hash 及主线程 hash 均被拒绝。楞严 release gate 继续禁止 `INTERNET`、两类音频前台权限、MediaSessionService、DownloadService action 和全部 Media3 bytecode。尚未完成坏缓存自动删除/重下、cache policy 持久元数据与执行器、计费网络预取控制、cache-backed Player、播放位置、进程死亡恢复、真实 host/codec/权利及生产 UI，因此仍不能启用产品音频。
+
 ### Phase 5：系统集成（3-5 周）
 
 交付：

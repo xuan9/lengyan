@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Media3 contract harness</string>
+    <string name="download_channel_name">Audio downloads</string>
+    <string name="download_channel_description">Media3 contract test downloads</string>
 </resources>

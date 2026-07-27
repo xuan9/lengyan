@@ -66,6 +66,7 @@ screenshot_report="${android_root}/libraries/ui/build/test-results/validateDebug
 release_permissions="$("${apkanalyzer}" manifest permissions "${release_apk}")"
 for forbidden_permission in \
   android.permission.INTERNET \
+  android.permission.FOREGROUND_SERVICE_DATA_SYNC \
   android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK; do
   if printf '%s\n' "${release_permissions}" | grep -Fqx "${forbidden_permission}"; then
     fail "inactive Android audio leaked ${forbidden_permission} into the Lengyan release APK"
@@ -75,6 +76,10 @@ done
 release_manifest="$("${apkanalyzer}" manifest print "${release_apk}")"
 if printf '%s\n' "${release_manifest}" | grep -Fq "androidx.media3.session.MediaSessionService"; then
   fail "inactive Android audio leaked a MediaSessionService into the Lengyan release APK"
+fi
+if printf '%s\n' "${release_manifest}" | grep -Fq \
+  "androidx.media3.exoplayer.downloadService.action.RESTART"; then
+  fail "inactive Android audio leaked a DownloadService into the Lengyan release APK"
 fi
 
 release_packages="$("${apkanalyzer}" dex packages "${release_apk}")"

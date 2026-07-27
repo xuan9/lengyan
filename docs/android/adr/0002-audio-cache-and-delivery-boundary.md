@@ -62,7 +62,25 @@ accepted them. The patterns now use portable brace character classes, and the
 Media3 harness constructs the delivery provider on-device as regression
 coverage.
 
-Resumable `DownloadManager` integration, cached-byte SHA-256 verification,
-playback persistence, a measured production host, format selection, and Android
-redistribution approval remain open Phase 4 work. No audio entry is shown while
-Lengyan delivery remains `planned`.
+The third foundation slice adds stable product/artifact/rendition
+`DownloadRequest` and custom-cache keys, an application-scoped
+`SimpleCache`/`DownloadManager`
+runtime, and an injectable foreground `DownloadService` base. The runtime uses
+a no-op cache evictor and one parallel download; eviction decisions remain in
+the explicit cache policy rather than being delegated to Media3.
+
+The API 35 harness maps a contract-valid HTTPS URI to a loopback HTTP server
+only inside its test data source. The server truncates the first 512 KiB
+response, and the subsequent request must carry a non-zero byte range before
+the service download can complete. After the server is closed, verification
+reads through a `CacheDataSource` with no upstream and accepts only exact cache
+spans, Media3 content length, and SHA-256. Missing bytes, an unexpected tail,
+and a same-length wrong hash are rejected; hashing on the main thread is also
+rejected.
+
+Automatic removal and redownload of rejected entries, persistent cache-policy
+metadata, metered-network prefetch enforcement, cached playback wiring,
+playback-position persistence, process-death recovery evidence, a measured
+production host, format selection, and Android redistribution approval remain
+open Phase 4 work. No audio entry is shown while Lengyan delivery remains
+`planned`.
