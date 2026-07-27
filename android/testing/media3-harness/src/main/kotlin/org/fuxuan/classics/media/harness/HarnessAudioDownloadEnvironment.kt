@@ -24,6 +24,15 @@ object HarnessAudioDownloadEnvironment {
     }
 
     @Synchronized
+    fun restoreForTest(
+        context: Context,
+        upstreamFactory: DataSource.Factory,
+    ): Media3AudioDownloadRuntime {
+        check(runtime == null) { "audio download test runtime was already installed" }
+        return createRuntime(context, upstreamFactory).also { runtime = it }
+    }
+
+    @Synchronized
     fun requireRuntime(context: Context): Media3AudioDownloadRuntime =
         runtime ?: createRuntime(
             context,

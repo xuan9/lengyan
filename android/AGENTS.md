@@ -59,5 +59,8 @@ Range recovery, cache-only length/SHA-256 rejection, bounded corrupt-download
 repair, cache-metadata restoration around real spans, complete expiry removal,
 per-request metered-prefetch stop/runtime restoration/user promotion, and
 catalog/DownloadIndex reconstruction of a zero-byte reservation before resume.
-It is not evidence for production hosting, OS process-death recovery, codec
-support, or physical-device playback.
+It also proves that a persisted completed download is registered and begins
+cache-only verification before resume, that verification completes without a
+second request, and that cancellation before reconciliation cannot resume the
+manager. It is not evidence for production hosting, OS process-death recovery,
+codec support, or physical-device playback.

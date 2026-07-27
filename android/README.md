@@ -58,24 +58,30 @@ global user-download requirement, and promotes the same task for user playback.
 A worker-only startup reconciler now validates every persisted DownloadIndex
 request against the current product catalog and rebuilds missing zero-byte cache
 reservations without refreshing existing last-access time or resuming network
-work. The planned Lengyan product does not
-depend on that module or register media components. The separate harness owns
-the network and foreground-service
+work. A single-use startup coordinator runs that reconciliation off the
+application looper, atomically registers every restored transfer for integrity,
+starts cache-only verification for already-completed downloads, and resumes the
+manager only after registration succeeds. Releasing it suppresses the late
+result and leaves downloads paused. The planned Lengyan product does not depend
+on that module or register media components. The separate harness owns the
+network and foreground-service
 permissions used by device tests; its loopback server proves non-zero HTTP Range
 recovery after an interrupted response, bounded integrity repair, metadata
 restoration around real cache spans, complete 28-day expiry removal, and zero-byte
 metered prefetch followed by runtime restoration, reservation reconstruction,
-and user promotion. Product composition must still wire this startup result to
-integrity tracking and live network/preference observation; cached playback,
-playback position, a measured host, and media rights approval remain Phase 4 work.
+completed-download startup verification, cancellation before activation, and
+user promotion. Product composition still needs live network/preference
+observation; cached playback, playback position, a measured host, and media
+rights approval remain Phase 4 work.
 Shared libraries remain product-neutral; each app module owns its permanent
 package identity, generated product assets, system component registration, and
 composition root.
 
 Production startup order is strict: create the paused runtime and transfer-policy
 coordinator, wait for DownloadManager initialization and idle state, create the startup
-reconciler on its application looper, run reconciliation on a worker, require
-`readyToResume`, register integrity tracking, and only then resume downloads.
+and integrity coordinators on its application looper, then start the single-use
+startup coordinator. It runs reconciliation on a worker, requires
+`readyToResume`, registers integrity tracking, and only then resumes downloads.
 
 The daily-verse Widget uses stable paragraph IDs from the product contract,
 locks one selection per local day and content version, and keeps a versioned

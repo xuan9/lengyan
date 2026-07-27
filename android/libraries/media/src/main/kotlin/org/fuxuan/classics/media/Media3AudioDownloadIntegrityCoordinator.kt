@@ -113,10 +113,41 @@ class Media3AudioDownloadIntegrityCoordinator(
         requireApplicationThread()
         check(!released) { "audio download integrity coordinator is released" }
 
+        requireCompatibleTrackedContract(spec)
+        trackValidated(spec, transferPurpose)
+    }
+
+    fun trackStartupTransfers(
+        catalog: List<Media3AudioDownloadSpec>,
+        transfers: List<ReconciledAudioStartupTransfer>,
+    ): List<String> {
+        requireApplicationThread()
+        check(!released) { "audio download integrity coordinator is released" }
+        val plan = AudioStartupIntegrityRegistrationPlanner.plan(catalog, transfers)
+        plan.registrations.forEach { registration ->
+            requireCompatibleTrackedContract(registration.spec)
+        }
+
+        plan.registrations.forEach { registration ->
+            trackValidated(registration.spec, registration.transfer.purpose)
+        }
+        plan.completedRequestIDs.forEach(::beginVerification)
+        return plan.completedRequestIDs
+    }
+
+    private fun requireCompatibleTrackedContract(spec: Media3AudioDownloadSpec) {
         tracked[spec.requestID]?.let { existing ->
             require(existing.spec.hasSameContract(spec)) {
                 "audio download request ID maps to conflicting integrity contracts"
             }
+        }
+    }
+
+    private fun trackValidated(
+        spec: Media3AudioDownloadSpec,
+        transferPurpose: AudioTransferPurpose?,
+    ) {
+        tracked[spec.requestID]?.let { existing ->
             existing.transferPurpose = existing.transferPurpose.promotedWith(transferPurpose)
             return
         }

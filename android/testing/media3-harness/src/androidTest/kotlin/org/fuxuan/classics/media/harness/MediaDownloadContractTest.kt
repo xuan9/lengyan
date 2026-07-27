@@ -35,6 +35,7 @@ import org.fuxuan.classics.media.AudioCacheRecord
 import org.fuxuan.classics.media.AudioCacheRecordState
 import org.fuxuan.classics.media.AudioNetworkState
 import org.fuxuan.classics.media.AudioPrefetchPolicyContext
+import org.fuxuan.classics.media.AudioStartupActivationResult
 import org.fuxuan.classics.media.AudioStartupReconciliationResult
 import org.fuxuan.classics.media.AudioStartupTransferState
 import org.fuxuan.classics.media.AudioTransferPurpose
@@ -45,7 +46,7 @@ import org.fuxuan.classics.media.Media3AudioCacheResourceEvictor
 import org.fuxuan.classics.media.Media3AudioDownloadIntegrityCoordinator
 import org.fuxuan.classics.media.Media3AudioDownloadRuntime
 import org.fuxuan.classics.media.Media3AudioDownloadSpec
-import org.fuxuan.classics.media.Media3AudioStartupReconciler
+import org.fuxuan.classics.media.Media3AudioStartupCoordinator
 import org.fuxuan.classics.media.Media3AudioTransferCoordinator
 import org.fuxuan.classics.media.Media3CachedAudioVerifier
 import org.fuxuan.classics.media.ResolvedAndroidAudioAsset
@@ -67,6 +68,7 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
@@ -712,8 +714,15 @@ class MediaDownloadContractTest {
         )
         val server = SequencedPayloadServer(listOf(payload))
         val stoppedLatch = CountDownLatch(1)
+        val activationLatch = CountDownLatch(1)
+        val callbacksRanOnMainThread = AtomicBoolean(true)
+        val activationResult = AtomicReference<AudioStartupActivationResult>()
+        val startupExecutor = Executors.newSingleThreadExecutor()
+        val verificationExecutor = Executors.newSingleThreadExecutor()
         var runtime: Media3AudioDownloadRuntime? = null
         var transferCoordinator: Media3AudioTransferCoordinator? = null
+        var integrityCoordinator: Media3AudioDownloadIntegrityCoordinator? = null
+        var startupCoordinator: Media3AudioStartupCoordinator? = null
 
         val listener = object : DownloadManager.Listener {
             override fun onDownloadChanged(
@@ -806,17 +815,50 @@ class MediaDownloadContractTest {
                 metadataStore = restoredStore,
                 resourceEvictor = Media3AudioCacheResourceEvictor(activeRuntime),
             )
-            val startupReconciler = onMainThread {
-                Media3AudioStartupReconciler(activeRuntime, cachePolicyExecutor)
+            onMainThread {
+                integrityCoordinator = Media3AudioDownloadIntegrityCoordinator(
+                    runtime = activeRuntime,
+                    verificationExecutor = verificationExecutor,
+                    repairEnqueuer = AudioDownloadRepairEnqueuer { repairSpec, purpose ->
+                        checkNotNull(transferCoordinator).request(
+                            spec = repairSpec,
+                            purpose = purpose ?: AudioTransferPurpose.USER_PLAYBACK,
+                            policyContext = meteredPolicy,
+                        )
+                    },
+                    listener = AudioDownloadIntegrityListener { },
+                )
+                startupCoordinator = Media3AudioStartupCoordinator(
+                    runtime = activeRuntime,
+                    cachePolicyExecutor = cachePolicyExecutor,
+                    integrityCoordinator = checkNotNull(integrityCoordinator),
+                    reconciliationExecutor = startupExecutor,
+                    listener = { result ->
+                        if (Looper.myLooper() != Looper.getMainLooper()) {
+                            callbacksRanOnMainThread.set(false)
+                        }
+                        activationResult.set(result)
+                        activationLatch.countDown()
+                    },
+                ).also { coordinator ->
+                    coordinator.start(
+                        catalog = listOf(spec),
+                        protectedKeys = setOf(spec.key),
+                        nowEpochMilliseconds = 200,
+                    )
+                }
             }
-            val reconciliation = startupReconciler.reconcile(
-                catalog = listOf(spec),
-                protectedKeys = setOf(spec.key),
-                nowEpochMilliseconds = 200,
-            ) as AudioStartupReconciliationResult.Completed
+            assertTrue(
+                "startup activation did not complete",
+                activationLatch.await(10, TimeUnit.SECONDS),
+            )
+            val activated = activationResult.get() as AudioStartupActivationResult.Activated
+            val reconciliation = activated.reconciliation
 
             assertTrue(reconciliation.readyToResume)
             assertTrue(reconciliation.issues.isEmpty())
+            assertTrue(activated.completedIntegrityRequestIDs.isEmpty())
+            assertTrue(callbacksRanOnMainThread.get())
             val restoredTransfer = reconciliation.transfers.single()
             assertEquals(spec.requestID, restoredTransfer.requestID)
             assertEquals(
@@ -837,16 +879,13 @@ class MediaDownloadContractTest {
                 ),
                 restoredStore.records().single(),
             )
-            assertTrue(onMainThread { activeRuntime.downloadManager.downloadsPaused })
+            assertFalse(onMainThread { activeRuntime.downloadManager.downloadsPaused })
             assertEquals(0, server.bodyRequestCount())
             assertEquals(
                 0L,
                 activeRuntime.cache.getCachedSpans(spec.requestID).sumOf { it.length },
             )
 
-            onMainThread {
-                activeRuntime.downloadManager.resumeDownloads()
-            }
             val restoredDownload = activeRuntime.downloadManager.downloadIndex
                 .getDownload(spec.requestID)
             assertEquals(Download.STATE_STOPPED, restoredDownload?.state)
@@ -861,9 +900,291 @@ class MediaDownloadContractTest {
             runtime?.let { activeRuntime ->
                 removeDownloadAndAwait(activeRuntime, spec.requestID)
                 onMainThread {
+                    startupCoordinator?.release()
+                    integrityCoordinator?.release()
                     transferCoordinator?.release()
                     HarnessAudioDownloadEnvironment.releaseForTest()
                 }
+                HarnessAudioDownloadEnvironment.cacheDirectory(context).deleteRecursively()
+            }
+            startupExecutor.shutdownNow()
+            verificationExecutor.shutdownNow()
+            startupExecutor.awaitTermination(5, TimeUnit.SECONDS)
+            verificationExecutor.awaitTermination(5, TimeUnit.SECONDS)
+        }
+    }
+
+    @Test
+    fun startupActivationRegistersPersistedCompletedDownloadBeforeResume() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val payload = ByteArray(128 * 1024) { index ->
+            ((index * 17 + 23) and 0xff).toByte()
+        }
+        val spec = downloadSpec(
+            expectedBytes = payload.size.toLong(),
+            expectedSha256 = payload.sha256(),
+            artifactID = "lengyan.audio.startup-completed-test",
+            renditionID = "android.test.startup-completed",
+            fileName = "startup-completed-test.m4a",
+        )
+        val server = SequencedPayloadServer(listOf(payload))
+        val initialCompletionLatch = CountDownLatch(1)
+        val activationLatch = CountDownLatch(1)
+        val verificationLatch = CountDownLatch(1)
+        val callbacksRanOnMainThread = AtomicBoolean(true)
+        val activationResult = AtomicReference<AudioStartupActivationResult>()
+        val integrityEvents = Collections.synchronizedList(
+            mutableListOf<AudioDownloadIntegrityEvent>(),
+        )
+        val startupExecutor = Executors.newSingleThreadExecutor()
+        val verificationExecutor = Executors.newSingleThreadExecutor()
+        var runtime: Media3AudioDownloadRuntime? = null
+        var transferCoordinator: Media3AudioTransferCoordinator? = null
+        var integrityCoordinator: Media3AudioDownloadIntegrityCoordinator? = null
+        var startupCoordinator: Media3AudioStartupCoordinator? = null
+
+        val completionListener = object : DownloadManager.Listener {
+            override fun onDownloadChanged(
+                downloadManager: DownloadManager,
+                download: Download,
+                finalException: Exception?,
+            ) {
+                if (
+                    download.request.id == spec.requestID &&
+                    download.state == Download.STATE_COMPLETED
+                ) {
+                    initialCompletionLatch.countDown()
+                }
+            }
+        }
+        val policyContext = AudioPrefetchPolicyContext(
+            network = AudioNetworkState(isConnected = true, isMetered = false),
+            providerAllowsPrefetch = true,
+            preferences = AudioPreferences(),
+        )
+
+        try {
+            val upstreamFactory = ResolvingDataSource.Factory(
+                DefaultHttpDataSource.Factory()
+                    .setConnectTimeoutMs(5_000)
+                    .setReadTimeoutMs(5_000),
+            ) { dataSpec -> dataSpec.redirectTo(server.uri) }
+            runtime = onMainThread {
+                HarnessAudioDownloadEnvironment.installForTest(context, upstreamFactory)
+            }
+            var activeRuntime = checkNotNull(runtime)
+            awaitDownloadManagerInitialized(activeRuntime)
+            clearAllDownloads(activeRuntime)
+            val initialStore = Media3AudioCacheMetadataStore(activeRuntime.cache)
+            val initialAdmission = AudioCachePolicyExecutor(
+                metadataStore = initialStore,
+                resourceEvictor = Media3AudioCacheResourceEvictor(activeRuntime),
+            ).admit(
+                reservation = spec.toCacheReservation(),
+                protectedKeys = setOf(spec.key),
+                nowEpochMilliseconds = 100,
+            )
+            assertTrue(initialAdmission is AudioCacheAdmissionResult.Accepted)
+
+            onMainThread {
+                activeRuntime.downloadManager.addListener(completionListener)
+                activeRuntime.downloadManager.resumeDownloads()
+                activeRuntime.downloadManager.addDownload(
+                    spec.toDownloadRequest(AudioTransferPurpose.USER_PLAYBACK),
+                )
+            }
+            assertTrue(
+                "startup completed fixture did not download",
+                initialCompletionLatch.await(30, TimeUnit.SECONDS),
+            )
+            assertEquals(1, server.bodyRequestCount())
+            assertEquals(
+                payload.size.toLong(),
+                activeRuntime.cache.getCachedSpans(spec.requestID).sumOf { span -> span.length },
+            )
+
+            onMainThread {
+                activeRuntime.downloadManager.removeListener(completionListener)
+                HarnessAudioDownloadEnvironment.releaseForTest()
+                runtime = null
+                HarnessAudioDownloadEnvironment.restoreForTest(
+                    context,
+                    upstreamFactory,
+                ).also { restored ->
+                    runtime = restored
+                    transferCoordinator = Media3AudioTransferCoordinator(
+                        restored,
+                        policyContext,
+                    )
+                }
+            }
+            activeRuntime = checkNotNull(runtime)
+            awaitDownloadManagerInitialized(activeRuntime)
+            awaitDownloadManagerIdle(activeRuntime)
+            assertEquals(
+                Download.STATE_COMPLETED,
+                activeRuntime.downloadManager.downloadIndex.getDownload(spec.requestID)?.state,
+            )
+            val restoredStore = Media3AudioCacheMetadataStore(activeRuntime.cache)
+            assertEquals(100, restoredStore.records().single().lastAccessEpochMilliseconds)
+            val cachePolicyExecutor = AudioCachePolicyExecutor(
+                metadataStore = restoredStore,
+                resourceEvictor = Media3AudioCacheResourceEvictor(activeRuntime),
+            )
+
+            onMainThread {
+                integrityCoordinator = Media3AudioDownloadIntegrityCoordinator(
+                    runtime = activeRuntime,
+                    verificationExecutor = verificationExecutor,
+                    repairEnqueuer = AudioDownloadRepairEnqueuer { repairSpec, purpose ->
+                        checkNotNull(transferCoordinator).request(
+                            spec = repairSpec,
+                            purpose = purpose ?: AudioTransferPurpose.USER_PLAYBACK,
+                            policyContext = policyContext,
+                        )
+                    },
+                    listener = AudioDownloadIntegrityListener { event ->
+                        if (Looper.myLooper() != Looper.getMainLooper()) {
+                            callbacksRanOnMainThread.set(false)
+                        }
+                        integrityEvents += event
+                        if (event is AudioDownloadIntegrityEvent.Verified) {
+                            verificationLatch.countDown()
+                        }
+                    },
+                )
+                startupCoordinator = Media3AudioStartupCoordinator(
+                    runtime = activeRuntime,
+                    cachePolicyExecutor = cachePolicyExecutor,
+                    integrityCoordinator = checkNotNull(integrityCoordinator),
+                    reconciliationExecutor = startupExecutor,
+                    listener = { result ->
+                        if (Looper.myLooper() != Looper.getMainLooper()) {
+                            callbacksRanOnMainThread.set(false)
+                        }
+                        activationResult.set(result)
+                        activationLatch.countDown()
+                    },
+                ).also { coordinator ->
+                    coordinator.start(
+                        catalog = listOf(spec),
+                        protectedKeys = setOf(spec.key),
+                        nowEpochMilliseconds = 200,
+                    )
+                }
+            }
+
+            assertTrue(
+                "completed startup activation did not finish",
+                activationLatch.await(10, TimeUnit.SECONDS),
+            )
+            assertTrue(
+                "persisted completed download was not verified",
+                verificationLatch.await(10, TimeUnit.SECONDS),
+            )
+            val activated = activationResult.get() as AudioStartupActivationResult.Activated
+            assertEquals(listOf(spec.requestID), activated.completedIntegrityRequestIDs)
+            assertTrue(activated.reconciliation.readyToResume)
+            assertTrue(callbacksRanOnMainThread.get())
+            assertFalse(onMainThread { activeRuntime.downloadManager.downloadsPaused })
+            assertTrue(onMainThread {
+                checkNotNull(integrityCoordinator).isVerified(spec.requestID)
+            })
+            assertTrue(integrityEvents.single() is AudioDownloadIntegrityEvent.Verified)
+            assertEquals(1, server.bodyRequestCount())
+            assertEquals(100, restoredStore.records().single().lastAccessEpochMilliseconds)
+            server.assertHealthy()
+        } finally {
+            server.close()
+            runtime?.let { activeRuntime ->
+                removeDownloadAndAwait(activeRuntime, spec.requestID)
+                onMainThread {
+                    startupCoordinator?.release()
+                    integrityCoordinator?.release()
+                    transferCoordinator?.release()
+                    HarnessAudioDownloadEnvironment.releaseForTest()
+                }
+                HarnessAudioDownloadEnvironment.cacheDirectory(context).deleteRecursively()
+            }
+            startupExecutor.shutdownNow()
+            verificationExecutor.shutdownNow()
+            startupExecutor.awaitTermination(5, TimeUnit.SECONDS)
+            verificationExecutor.awaitTermination(5, TimeUnit.SECONDS)
+        }
+    }
+
+    @Test
+    fun releasingStartupActivationBeforeReconciliationNeverResumesDownloads() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val spec = downloadSpec(
+            expectedBytes = 128 * 1024,
+            expectedSha256 = "a".repeat(64),
+            artifactID = "lengyan.audio.startup-cancel-test",
+            renditionID = "android.test.startup-cancel",
+            fileName = "startup-cancel-test.m4a",
+        )
+        val pendingReconciliation = AtomicReference<Runnable>()
+        val activationCallbacks = AtomicInteger(0)
+        val worker = Executors.newSingleThreadExecutor()
+        var runtime: Media3AudioDownloadRuntime? = null
+        var integrityCoordinator: Media3AudioDownloadIntegrityCoordinator? = null
+        var startupCoordinator: Media3AudioStartupCoordinator? = null
+
+        try {
+            runtime = onMainThread {
+                HarnessAudioDownloadEnvironment.installForTest(
+                    context,
+                    DefaultHttpDataSource.Factory(),
+                )
+            }
+            val activeRuntime = checkNotNull(runtime)
+            awaitDownloadManagerInitialized(activeRuntime)
+            clearAllDownloads(activeRuntime)
+            awaitDownloadManagerIdle(activeRuntime)
+            val cachePolicyExecutor = AudioCachePolicyExecutor(
+                metadataStore = Media3AudioCacheMetadataStore(activeRuntime.cache),
+                resourceEvictor = Media3AudioCacheResourceEvictor(activeRuntime),
+            )
+
+            onMainThread {
+                integrityCoordinator = Media3AudioDownloadIntegrityCoordinator(
+                    runtime = activeRuntime,
+                    verificationExecutor = Executor(Runnable::run),
+                    repairEnqueuer = AudioDownloadRepairEnqueuer { _, _ -> },
+                    listener = AudioDownloadIntegrityListener { },
+                )
+                startupCoordinator = Media3AudioStartupCoordinator(
+                    runtime = activeRuntime,
+                    cachePolicyExecutor = cachePolicyExecutor,
+                    integrityCoordinator = checkNotNull(integrityCoordinator),
+                    reconciliationExecutor = Executor { runnable ->
+                        check(pendingReconciliation.compareAndSet(null, runnable))
+                    },
+                    listener = { activationCallbacks.incrementAndGet() },
+                ).also { coordinator ->
+                    coordinator.start(
+                        catalog = listOf(spec),
+                        protectedKeys = emptySet(),
+                        nowEpochMilliseconds = 0,
+                    )
+                    coordinator.release()
+                }
+            }
+            worker.submit(checkNotNull(pendingReconciliation.get())).get(10, TimeUnit.SECONDS)
+            onMainThread { Unit }
+
+            assertEquals(0, activationCallbacks.get())
+            assertTrue(onMainThread { activeRuntime.downloadManager.downloadsPaused })
+            assertEquals(0, indexedDownloadCount(activeRuntime))
+        } finally {
+            onMainThread {
+                startupCoordinator?.release()
+                integrityCoordinator?.release()
+                if (runtime != null) HarnessAudioDownloadEnvironment.releaseForTest()
+            }
+            worker.shutdownNow()
+            worker.awaitTermination(5, TimeUnit.SECONDS)
+            if (runtime != null) {
                 HarnessAudioDownloadEnvironment.cacheDirectory(context).deleteRecursively()
             }
         }

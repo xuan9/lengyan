@@ -154,9 +154,32 @@ the exact reservation from the catalog while paused, after which resuming the
 manager still produced zero HTTP requests and zero cached bytes. This remains
 runtime-recreation evidence, not an OS process-kill claim.
 
-Product composition wiring around this startup boundary, completed-download
-integrity registration before resume, live connectivity/preference observation,
+The eighth foundation slice closes the reusable startup composition boundary.
+A single-use application-looper coordinator schedules reconciliation on a worker,
+revalidates that DownloadManager remains initialized and paused, then atomically
+registers every restored task with the integrity coordinator before calling
+`resumeDownloads`. The initial reconciler construction still requires an idle
+manager; activation does not require a second idle edge because reconciliation
+may itself complete a cache eviction. Registration preflights the complete batch before changing
+integrity state; persisted completed downloads explicitly begin cache-only
+bytes/SHA-256 verification because their historical completion callback will not
+be replayed. Reconciliation, registration, scheduling, and resume failures are
+typed and fail closed. Releasing the coordinator while worker reconciliation is
+pending suppresses its late result and cannot resume downloads.
+
+On API 35, the stopped metered-prefetch fixture now activates through this full
+coordinator and remains at zero HTTP requests and zero bytes. A second fixture
+downloads valid content once, recreates Media3 without deleting its cache or
+DownloadIndex, and proves startup activation registers and starts verification
+of the already completed file before resume; verification then completes without
+another request or last-access refresh. A
+third fixture releases activation before its queued reconciliation runs and
+proves no callback and no resume. JVM tests cover atomic catalog/transfer batch
+validation. This is still runtime recreation, not OS process-death evidence.
+
+The reusable composition sequence and completed-download startup integrity
+registration are now complete. Formal product instantiation remains disabled
+while Lengyan delivery is `planned`; live connectivity/preference observation,
 cache-backed playback, playback-position persistence, complete process-death
 recovery evidence, a measured production host, format selection, and Android
-redistribution approval remain open Phase 4 work. No audio entry is shown while
-Lengyan delivery remains `planned`.
+redistribution approval remain open Phase 4 work.
