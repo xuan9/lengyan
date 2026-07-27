@@ -867,6 +867,8 @@ Gate E：至少三类真机完成 2 小时后台播放、断网/Range 下载恢�
 
 **Phase 4 预取网络执行检查点（2026-07-27）：** 全局 Media3 `Requirements` 固定只要求联网，不使用会同时拦截用户播放的 `NETWORK_UNMETERED`。共享 application-looper 协调器以 schema-v1 `DownloadRequest.data` 持久区分用户播放与自动下一卷预取，并用专属非零 stop reason 逐请求执行策略：计费或离线时保留 stopped 任务与部分缓存，provider/用户关闭时不新建预取；策略恢复时只清除自己的 reason，其他子系统 reason 原样保留。用户点同卷会在同 request/cache key 上提升为 user playback，且 user ownership 单调优先，迟到的 prefetch callback 不能重新降级或暂停；坏缓存修复的产品注入入口也保留当前传输意图。API 35 已证明计费预取在提升前 0 个 body request、0 cache bytes，Media3 runtime 释放重建后 request marker 与 stop reason 仍在，用户提升后只发 1 个 body request 并完成；这是 runtime 重建，不冒充 OS 杀进程。正式楞严仍不依赖 media 模块；产品启动时从 catalog/DownloadIndex 重建零字节 reservation、实时监听网络与偏好、cache-backed Player、播放位置、完整进程死亡、真实 host/codec/权利和生产 UI 继续未完成。
 
+**Phase 4 启动恢复检查点（2026-07-27）：** worker-only reconciler 在 DownloadManager 已初始化、idle 且仍暂停时读取全部 DownloadIndex，要求每个持久任务严格匹配当前产品 catalog 的 request ID、URI、MIME、custom cache key 和完整 progressive 合同，并只接受 schema-v1 user/prefetch marker 或明确的 legacy user。删除/重启中、重复、未知、合同漂移或 admission 失败都会阻止 `readyToResume`；catalog/index 校验存在问题时不写部分 metadata、不触发 LRU，所有有效持久任务在恢复批次中临时受保护。零字节 reservation 仍通过既有 192/512 MiB 预算执行器重建，已存在记录不刷新 last-access，因此冷启动不会推迟 28 天 expiry；reconciler 不调用 resume。API 35 已证明 metered stopped prefetch 的 `RESERVED` metadata 在 cache runtime 重建后消失但 DownloadIndex marker/reason 保持，恢复后即使 resume 仍为 0 HTTP request、0 cache bytes；这不是 OS 杀进程。正式楞严仍不依赖 media；产品 composition 还需按“runtime/策略协调器→初始化并 idle→worker reconcile→完整性登记→resume”接线，并补实时网络/偏好、cache-backed Player、播放位置、完整进程死亡、真实 host/codec/权利和生产 UI。
+
 ### Phase 5：系统集成（3-5 周）
 
 交付：

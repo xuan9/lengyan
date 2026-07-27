@@ -168,17 +168,21 @@ private class Media3AudioTransferQueue(
 private fun Download.toQueuedAudioTransfer(): QueuedAudioTransfer {
     val request = request
     return QueuedAudioTransfer(
-        contract = AudioTransferRequestContract(
-            requestID = request.id,
-            uri = request.uri.toString(),
-            mediaType = request.mimeType,
-            customCacheKey = request.customCacheKey,
-            isFullProgressiveAsset = request.streamKeys.isEmpty() &&
-                request.keySetId == null &&
-                request.byteRange == null &&
-                request.timeRange == null,
-        ),
+        contract = request.toAudioTransferRequestContract(),
         ownership = AudioTransferRequestMetadata.ownership(request.data),
         stopReason = stopReason,
     )
 }
+
+@OptIn(UnstableApi::class)
+internal fun DownloadRequest.toAudioTransferRequestContract() =
+    AudioTransferRequestContract(
+        requestID = id,
+        uri = uri.toString(),
+        mediaType = mimeType,
+        customCacheKey = customCacheKey,
+        isFullProgressiveAsset = streamKeys.isEmpty() &&
+            keySetId == null &&
+            byteRange == null &&
+            timeRange == null,
+    )

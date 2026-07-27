@@ -403,15 +403,6 @@ internal class AudioTransferQueueCoordinator(
         preferences = preferences,
     )
 
-    private fun Media3AudioDownloadSpec.toTransferRequestContract() =
-        AudioTransferRequestContract(
-            requestID = requestID,
-            uri = uri.toString(),
-            mediaType = mediaType,
-            customCacheKey = requestID,
-            isFullProgressiveAsset = true,
-        )
-
     private companion object {
         const val MEDIA3_STOP_REASON_NONE = 0
     }

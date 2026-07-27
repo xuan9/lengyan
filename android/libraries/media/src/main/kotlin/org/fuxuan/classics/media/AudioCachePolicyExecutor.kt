@@ -135,6 +135,31 @@ class AudioCachePolicyExecutor(
         reservation: AudioCacheReservation,
         protectedKeys: Set<AudioCacheKey>,
         nowEpochMilliseconds: Long,
+    ): AudioCacheAdmissionResult = admitInternal(
+        reservation = reservation,
+        protectedKeys = protectedKeys,
+        nowEpochMilliseconds = nowEpochMilliseconds,
+        refreshExistingAccess = true,
+    )
+
+    @WorkerThread
+    @Synchronized
+    fun restoreReservation(
+        reservation: AudioCacheReservation,
+        protectedKeys: Set<AudioCacheKey>,
+        nowEpochMilliseconds: Long,
+    ): AudioCacheAdmissionResult = admitInternal(
+        reservation = reservation,
+        protectedKeys = protectedKeys,
+        nowEpochMilliseconds = nowEpochMilliseconds,
+        refreshExistingAccess = false,
+    )
+
+    private fun admitInternal(
+        reservation: AudioCacheReservation,
+        protectedKeys: Set<AudioCacheKey>,
+        nowEpochMilliseconds: Long,
+        refreshExistingAccess: Boolean,
     ): AudioCacheAdmissionResult {
         require(nowEpochMilliseconds >= 0) { "cache policy time must not be negative" }
 
@@ -230,23 +255,27 @@ class AudioCachePolicyExecutor(
                 state = AudioCacheRecordState.RESERVED,
                 lastAccessEpochMilliseconds = nowEpochMilliseconds,
             )
-        } else {
+        } else if (refreshExistingAccess) {
             existing.copy(
                 lastAccessEpochMilliseconds = maxOf(
                     existing.lastAccessEpochMilliseconds,
                     nowEpochMilliseconds,
                 ),
             )
+        } else {
+            existing
         }
-        try {
-            metadataStore.write(record)
-        } catch (exception: Exception) {
-            return admissionFailure(
-                reservation.requestID,
-                AudioCachePolicyOperation.WRITE_METADATA,
-                exception,
-                evictedRequestIDs,
-            )
+        if (existing == null || refreshExistingAccess) {
+            try {
+                metadataStore.write(record)
+            } catch (exception: Exception) {
+                return admissionFailure(
+                    reservation.requestID,
+                    AudioCachePolicyOperation.WRITE_METADATA,
+                    exception,
+                    evictedRequestIDs,
+                )
+            }
         }
 
         return AudioCacheAdmissionResult.Accepted(

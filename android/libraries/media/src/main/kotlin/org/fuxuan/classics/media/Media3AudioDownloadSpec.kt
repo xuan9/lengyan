@@ -79,3 +79,12 @@ class Media3AudioDownloadSpec private constructor(
         }
     }
 }
+
+internal fun Media3AudioDownloadSpec.toTransferRequestContract() =
+    AudioTransferRequestContract(
+        requestID = requestID,
+        uri = uri.toString(),
+        mediaType = mediaType,
+        customCacheKey = requestID,
+        isFullProgressiveAsset = true,
+    )

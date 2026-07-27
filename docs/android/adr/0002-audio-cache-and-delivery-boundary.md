@@ -136,8 +136,27 @@ purpose and stop reason after the Media3 runtime was released and recreated, the
 completed with one body request after user promotion. This is runtime-recreation
 evidence, not an OS process-kill claim.
 
-Product startup reconciliation, live connectivity/preference observation,
-cache-backed playback wiring, playback-position persistence, complete
-process-death recovery evidence, a measured production host, format selection,
-and Android redistribution approval remain open Phase 4 work. No audio entry is
-shown while Lengyan delivery remains `planned`.
+The seventh foundation slice adds worker-only startup reconciliation while
+DownloadManager is initialized, idle, and still paused. It reads every persisted
+DownloadIndex request, requires an exact current catalog contract and known
+schema-v1 or legacy-user purpose, and treats removing/restarting or duplicate
+entries as unresolved. Valid active tasks are temporarily protected as a set
+while their missing reservations are readmitted through the cache budget
+executor. Existing records keep their last-access time so app launch cannot
+postpone the 28-day expiry boundary. Any index, contract, metadata, or admission issue makes
+`readyToResume=false`; catalog validation issues cause no partial metadata write
+or LRU eviction. Reconciliation never calls `resumeDownloads`.
+
+On API 35, a metered stopped prefetch first had a zero-byte `RESERVED` record.
+Deleting the cache directory during runtime recreation removed that metadata but
+left the DownloadIndex marker and stop reason. Startup reconciliation restored
+the exact reservation from the catalog while paused, after which resuming the
+manager still produced zero HTTP requests and zero cached bytes. This remains
+runtime-recreation evidence, not an OS process-kill claim.
+
+Product composition wiring around this startup boundary, completed-download
+integrity registration before resume, live connectivity/preference observation,
+cache-backed playback, playback-position persistence, complete process-death
+recovery evidence, a measured production host, format selection, and Android
+redistribution approval remain open Phase 4 work. No audio entry is shown while
+Lengyan delivery remains `planned`.

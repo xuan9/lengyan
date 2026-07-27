@@ -35,6 +35,8 @@ import org.fuxuan.classics.media.AudioCacheRecord
 import org.fuxuan.classics.media.AudioCacheRecordState
 import org.fuxuan.classics.media.AudioNetworkState
 import org.fuxuan.classics.media.AudioPrefetchPolicyContext
+import org.fuxuan.classics.media.AudioStartupReconciliationResult
+import org.fuxuan.classics.media.AudioStartupTransferState
 import org.fuxuan.classics.media.AudioTransferPurpose
 import org.fuxuan.classics.media.AudioTransferRequestResult
 import org.fuxuan.classics.media.CachedAudioVerification
@@ -43,6 +45,7 @@ import org.fuxuan.classics.media.Media3AudioCacheResourceEvictor
 import org.fuxuan.classics.media.Media3AudioDownloadIntegrityCoordinator
 import org.fuxuan.classics.media.Media3AudioDownloadRuntime
 import org.fuxuan.classics.media.Media3AudioDownloadSpec
+import org.fuxuan.classics.media.Media3AudioStartupReconciler
 import org.fuxuan.classics.media.Media3AudioTransferCoordinator
 import org.fuxuan.classics.media.Media3CachedAudioVerifier
 import org.fuxuan.classics.media.ResolvedAndroidAudioAsset
@@ -694,6 +697,178 @@ class MediaDownloadContractTest {
         }
     }
 
+    @Test
+    fun startupReconciliationRestoresAZeroByteReservationBeforeResume() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val payload = ByteArray(128 * 1024) { index ->
+            ((index * 13 + 19) and 0xff).toByte()
+        }
+        val spec = downloadSpec(
+            expectedBytes = payload.size.toLong(),
+            expectedSha256 = payload.sha256(),
+            artifactID = "lengyan.audio.startup-reconciliation-test",
+            renditionID = "android.test.startup-reconciliation",
+            fileName = "startup-reconciliation-test.m4a",
+        )
+        val server = SequencedPayloadServer(listOf(payload))
+        val stoppedLatch = CountDownLatch(1)
+        var runtime: Media3AudioDownloadRuntime? = null
+        var transferCoordinator: Media3AudioTransferCoordinator? = null
+
+        val listener = object : DownloadManager.Listener {
+            override fun onDownloadChanged(
+                downloadManager: DownloadManager,
+                download: Download,
+                finalException: Exception?,
+            ) {
+                if (
+                    download.request.id == spec.requestID &&
+                    download.state == Download.STATE_STOPPED
+                ) {
+                    stoppedLatch.countDown()
+                }
+            }
+        }
+        val meteredPolicy = AudioPrefetchPolicyContext(
+            network = AudioNetworkState(isConnected = true, isMetered = true),
+            providerAllowsPrefetch = true,
+            preferences = AudioPreferences(),
+        )
+
+        try {
+            val upstreamFactory = ResolvingDataSource.Factory(
+                DefaultHttpDataSource.Factory()
+                    .setConnectTimeoutMs(5_000)
+                    .setReadTimeoutMs(5_000),
+            ) { dataSpec -> dataSpec.redirectTo(server.uri) }
+            runtime = onMainThread {
+                HarnessAudioDownloadEnvironment.installForTest(context, upstreamFactory)
+            }
+            var activeRuntime = checkNotNull(runtime)
+            awaitDownloadManagerInitialized(activeRuntime)
+            clearAllDownloads(activeRuntime)
+
+            val initialStore = Media3AudioCacheMetadataStore(activeRuntime.cache)
+            val initialAdmission = AudioCachePolicyExecutor(
+                metadataStore = initialStore,
+                resourceEvictor = Media3AudioCacheResourceEvictor(activeRuntime),
+            ).admit(
+                reservation = spec.toCacheReservation(),
+                protectedKeys = setOf(spec.key),
+                nowEpochMilliseconds = 100,
+            )
+            assertTrue(initialAdmission is AudioCacheAdmissionResult.Accepted)
+            assertEquals(AudioCacheRecordState.RESERVED, initialStore.records().single().state)
+
+            onMainThread {
+                activeRuntime.downloadManager.addListener(listener)
+                transferCoordinator = Media3AudioTransferCoordinator(
+                    activeRuntime,
+                    meteredPolicy,
+                )
+                checkNotNull(transferCoordinator).request(
+                    spec = spec,
+                    purpose = AudioTransferPurpose.AUTOMATIC_NEXT_PREFETCH,
+                    policyContext = meteredPolicy,
+                )
+            }
+            assertTrue(
+                "startup test prefetch did not enter a stopped state",
+                stoppedLatch.await(10, TimeUnit.SECONDS),
+            )
+            assertEquals(0, server.bodyRequestCount())
+
+            onMainThread {
+                transferCoordinator?.release()
+                activeRuntime.downloadManager.removeListener(listener)
+                HarnessAudioDownloadEnvironment.releaseForTest()
+                runtime = null
+                transferCoordinator = null
+
+                HarnessAudioDownloadEnvironment.installForTest(
+                    context,
+                    upstreamFactory,
+                ).also { restored ->
+                    runtime = restored
+                    transferCoordinator = Media3AudioTransferCoordinator(
+                        restored,
+                        meteredPolicy,
+                    )
+                }
+            }
+            activeRuntime = checkNotNull(runtime)
+            awaitDownloadManagerInitialized(activeRuntime)
+            awaitDownloadManagerIdle(activeRuntime)
+
+            val restoredStore = Media3AudioCacheMetadataStore(activeRuntime.cache)
+            assertEquals(emptyList<AudioCacheRecord>(), restoredStore.records())
+            val cachePolicyExecutor = AudioCachePolicyExecutor(
+                metadataStore = restoredStore,
+                resourceEvictor = Media3AudioCacheResourceEvictor(activeRuntime),
+            )
+            val startupReconciler = onMainThread {
+                Media3AudioStartupReconciler(activeRuntime, cachePolicyExecutor)
+            }
+            val reconciliation = startupReconciler.reconcile(
+                catalog = listOf(spec),
+                protectedKeys = setOf(spec.key),
+                nowEpochMilliseconds = 200,
+            ) as AudioStartupReconciliationResult.Completed
+
+            assertTrue(reconciliation.readyToResume)
+            assertTrue(reconciliation.issues.isEmpty())
+            val restoredTransfer = reconciliation.transfers.single()
+            assertEquals(spec.requestID, restoredTransfer.requestID)
+            assertEquals(
+                AudioTransferPurpose.AUTOMATIC_NEXT_PREFETCH,
+                restoredTransfer.purpose,
+            )
+            assertEquals(AudioStartupTransferState.STOPPED, restoredTransfer.state)
+            assertEquals(
+                AUTOMATIC_PREFETCH_POLICY_STOP_REASON,
+                restoredTransfer.stopReason,
+            )
+            assertFalse(restoredTransfer.metadataWasVerified)
+            assertEquals(
+                AudioCacheRecord(
+                    reservation = spec.toCacheReservation(),
+                    state = AudioCacheRecordState.RESERVED,
+                    lastAccessEpochMilliseconds = 200,
+                ),
+                restoredStore.records().single(),
+            )
+            assertTrue(onMainThread { activeRuntime.downloadManager.downloadsPaused })
+            assertEquals(0, server.bodyRequestCount())
+            assertEquals(
+                0L,
+                activeRuntime.cache.getCachedSpans(spec.requestID).sumOf { it.length },
+            )
+
+            onMainThread {
+                activeRuntime.downloadManager.resumeDownloads()
+            }
+            val restoredDownload = activeRuntime.downloadManager.downloadIndex
+                .getDownload(spec.requestID)
+            assertEquals(Download.STATE_STOPPED, restoredDownload?.state)
+            assertEquals(
+                AUTOMATIC_PREFETCH_POLICY_STOP_REASON,
+                restoredDownload?.stopReason,
+            )
+            assertEquals(0, server.bodyRequestCount())
+            server.assertHealthy()
+        } finally {
+            server.close()
+            runtime?.let { activeRuntime ->
+                removeDownloadAndAwait(activeRuntime, spec.requestID)
+                onMainThread {
+                    transferCoordinator?.release()
+                    HarnessAudioDownloadEnvironment.releaseForTest()
+                }
+                HarnessAudioDownloadEnvironment.cacheDirectory(context).deleteRecursively()
+            }
+        }
+    }
+
     private fun runIntegrityScenario(
         server: SequencedPayloadServer,
         spec: Media3AudioDownloadSpec,
@@ -886,6 +1061,96 @@ class MediaDownloadContractTest {
             reader.readText()
         }
     }
+
+    private fun awaitDownloadManagerInitialized(runtime: Media3AudioDownloadRuntime) {
+        val initializedLatch = CountDownLatch(1)
+        val listener = object : DownloadManager.Listener {
+            override fun onInitialized(downloadManager: DownloadManager) {
+                initializedLatch.countDown()
+            }
+        }
+        onMainThread {
+            runtime.downloadManager.addListener(listener)
+            if (runtime.downloadManager.isInitialized) initializedLatch.countDown()
+        }
+        try {
+            assertTrue(
+                "Media3 DownloadManager did not initialize",
+                initializedLatch.await(10, TimeUnit.SECONDS),
+            )
+        } finally {
+            onMainThread {
+                runtime.downloadManager.removeListener(listener)
+            }
+        }
+    }
+
+    private fun awaitDownloadManagerIdle(runtime: Media3AudioDownloadRuntime) {
+        val idleLatch = CountDownLatch(1)
+        val listener = object : DownloadManager.Listener {
+            override fun onIdle(downloadManager: DownloadManager) {
+                idleLatch.countDown()
+            }
+        }
+        onMainThread {
+            runtime.downloadManager.addListener(listener)
+            if (runtime.downloadManager.isIdle) idleLatch.countDown()
+        }
+        try {
+            assertTrue(
+                "Media3 DownloadManager did not become idle",
+                idleLatch.await(10, TimeUnit.SECONDS),
+            )
+        } finally {
+            onMainThread {
+                runtime.downloadManager.removeListener(listener)
+            }
+        }
+    }
+
+    private fun clearAllDownloads(runtime: Media3AudioDownloadRuntime) {
+        onMainThread {
+            runtime.downloadManager.removeAllDownloads()
+        }
+        val deadlineNanos = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+        while (indexedDownloadCount(runtime) != 0 && System.nanoTime() < deadlineNanos) {
+            Thread.sleep(25)
+        }
+        assertEquals("Media3 DownloadIndex was not cleared", 0, indexedDownloadCount(runtime))
+    }
+
+    private fun removeDownloadAndAwait(
+        runtime: Media3AudioDownloadRuntime,
+        requestID: String,
+    ) {
+        if (runtime.downloadManager.downloadIndex.getDownload(requestID) == null) return
+        val removedLatch = CountDownLatch(1)
+        val listener = object : DownloadManager.Listener {
+            override fun onDownloadRemoved(
+                downloadManager: DownloadManager,
+                download: Download,
+            ) {
+                if (download.request.id == requestID) removedLatch.countDown()
+            }
+        }
+        onMainThread {
+            runtime.downloadManager.addListener(listener)
+            runtime.downloadManager.removeDownload(requestID)
+        }
+        try {
+            assertTrue(
+                "Media3 startup test download was not removed",
+                removedLatch.await(10, TimeUnit.SECONDS),
+            )
+        } finally {
+            onMainThread {
+                runtime.downloadManager.removeListener(listener)
+            }
+        }
+    }
+
+    private fun indexedDownloadCount(runtime: Media3AudioDownloadRuntime): Int =
+        runtime.downloadManager.downloadIndex.getDownloads().use { cursor -> cursor.count }
 
     private fun <T> onMainThread(block: () -> T): T {
         val task = FutureTask(block)
