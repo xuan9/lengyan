@@ -7,6 +7,7 @@ import org.fuxuan.classics.core.behavior.LegacyLocationUsage
 import org.fuxuan.classics.core.behavior.ReadingMode
 import org.fuxuan.classics.core.behavior.ScriptureSearchIndex
 import org.fuxuan.classics.core.content.AudioCatalog
+import org.fuxuan.classics.core.content.AudioDelivery
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.BookRepository
 import org.fuxuan.classics.core.content.ProductManifest
@@ -48,6 +49,8 @@ class LengyanAppContainerTest {
         override suspend fun content(locale: String): ScriptureContent = error("not used by this test")
 
         override suspend fun audioCatalog(): AudioCatalog? = error("not used by this test")
+
+        override suspend fun audioDelivery(): AudioDelivery? = error("not used by this test")
 
         override suspend fun searchIndex(): ScriptureSearchIndex = error("not used by this test")
 

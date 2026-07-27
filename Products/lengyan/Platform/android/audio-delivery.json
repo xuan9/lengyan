@@ -10,6 +10,6 @@
   "releaseBlockers": [
     "Select and verify a primary HTTPS host with byte-range resume in target regions.",
     "Benchmark AAC and Opus renditions on the Android device matrix before selecting a rendition.",
-    "Define metered-network, prefetch, cache-budget, and eviction policy in the Android delivery ADR."
+    "Confirm Android redistribution rights for the legacy recordings and record the approval evidence."
   ]
 }

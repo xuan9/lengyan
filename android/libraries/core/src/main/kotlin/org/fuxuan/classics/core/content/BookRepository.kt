@@ -15,6 +15,8 @@ interface BookRepository {
 
     suspend fun audioCatalog(): AudioCatalog?
 
+    suspend fun audioDelivery(): AudioDelivery?
+
     suspend fun searchIndex(): ScriptureSearchIndex
 
     suspend fun resolveLegacyLocation(

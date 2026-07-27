@@ -855,6 +855,8 @@ Gate D：用户无需网络完成“打开 -> 找到内容 -> 阅读 -> 收藏 -
 
 Gate E：至少三类真机完成 2 小时后台播放、断网/Range 下载恢复、坏文件拒绝、缓存压力、耳机/蓝牙和杀进程测试；所有 iOS 音频行为 fixtures 在 Android 通过。
 
+**Phase 4 实施检查点（2026-07-27）：** 第一条非 UI 音频基础切片已完成。Android 现直接解析产品的 typed delivery contract，并与 product/platform state、artifact manifest、全局 selected rendition 和 artifact key 做交叉校验；运行时 resolver 只在 delivery active、catalog/rights release-ready、唯一兼容 HTTPS primary、配置 URL 合法且 Range 已验证时产出可播放资源。ADR 0002 的用户主动播放可用计费网络、自动下一卷默认仅非计费网络、192 MiB 单产品/512 MiB 全局 soft budget、当前/下一卷保护、28 天 expiry 和 unprotected LRU 已转成 media 模块纯函数及 JVM 测试。楞严配置仍保持 `planned`，且 blocker 已从完成的缓存决策改为真实的 Android 录音再分发权确认；因此本切片没有声明网络/前台服务权限、没有显示假音频入口，也没有把现有 iOS Cloudflare emergency endpoint 标成 Android 主站。下一切片才引入固定版本 Media3 `MediaSessionService`/`DownloadService`、本地 Range 测试服务器和 bytes/SHA 验证；生产 host、格式实机基准、权利批准和 Gate E 真机证据继续阻止发布。
+
 ### Phase 5：系统集成（3-5 周）
 
 交付：

@@ -6,7 +6,12 @@ import org.fuxuan.classics.core.behavior.ParagraphTextAnchor
 import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
 import org.fuxuan.classics.core.behavior.SearchDocumentKind
 import org.fuxuan.classics.core.behavior.VolumeReadingDocument
+import org.fuxuan.classics.core.content.AppleManagedAudioProvider
+import org.fuxuan.classics.core.content.AppleOnDemandAudioProvider
+import org.fuxuan.classics.core.content.AudioDeliveryPlatform
 import org.fuxuan.classics.core.content.DocumentedSourceRole
+import org.fuxuan.classics.core.content.HttpsAudioProvider
+import org.fuxuan.classics.core.content.ProductPlatformState
 import org.fuxuan.classics.core.content.SourceReleaseEligibility
 import org.fuxuan.classics.core.content.SourceReviewStatus
 import org.fuxuan.classics.data.contracts.ClassicsContractParser
@@ -40,8 +45,10 @@ class LengyanContractRepositoryTest {
         val traditional = repository.content("zh-Hant")
         val simplified = repository.content("zh-Hans")
         val audio = requireNotNull(repository.audioCatalog())
+        val audioDelivery = requireNotNull(repository.audioDelivery())
 
         assertEquals("lengyan", product.productID)
+        assertEquals(ProductPlatformState.PLANNED, product.androidPlatformState)
         assertEquals("lengyanjing", book.bookID)
         assertEquals("legacy-1", book.contentVersion)
         assertEquals(SourceReviewStatus.LEGACY_UNVERIFIED, sourceManifest.reviewStatus)
@@ -78,18 +85,49 @@ class LengyanContractRepositoryTest {
         val mappedVolumeIDs = audio.artifacts.mapNotNull { it.contentMapping.volumeID }.toSet()
         assertEquals(traditional.volumes.map { it.volumeID }.toSet(), mappedVolumeIDs)
         assertEquals(1, audio.artifacts.count { it.contentMapping.status == "legacy-unmapped" })
+        assertEquals(AudioDeliveryPlatform.ANDROID, audioDelivery.platform)
+        assertEquals(ProductPlatformState.PLANNED, audioDelivery.state)
+        assertEquals("audio-artifacts.json", audioDelivery.artifactManifestPath)
+        assertEquals(null, audioDelivery.selectedRenditionID)
+        assertEquals(emptyList<Any>(), audioDelivery.providers)
+        assertEquals(3, audioDelivery.releaseBlockers.size)
     }
 
     @Test
-    fun parsesEveryRegisteredProductSourceManifest() {
+    fun parsesEverySupportedAudioDeliveryProviderKind() {
+        val parser = ClassicsContractParser()
+        val iosDelivery = parser.parseAudioDelivery(
+            source.readText("Platform/ios/audio-delivery.json"),
+        )
+
+        assertEquals(AudioDeliveryPlatform.IOS, iosDelivery.platform)
+        assertEquals(ProductPlatformState.PRODUCTION, iosDelivery.state)
+        assertEquals(
+            listOf(
+                AppleOnDemandAudioProvider::class,
+                AppleManagedAudioProvider::class,
+                HttpsAudioProvider::class,
+            ),
+            iosDelivery.providers.map { it::class },
+        )
+    }
+
+    @Test
+    fun parsesEveryRegisteredProductAndSourceManifest() {
         val parser = ClassicsContractParser()
 
         listOf("lengyan", "jingang", "yuanjue", "tanjing").forEach { productID ->
+            val product = parser.parseProduct(
+                repositoryRoot.resolve("Products/$productID/product.json")
+                    .readText(Charsets.UTF_8),
+            )
             val manifest = parser.parseSourceManifest(
                 repositoryRoot.resolve("Products/$productID/source-manifest.json")
                     .readText(Charsets.UTF_8),
             )
 
+            assertEquals(productID, product.productID)
+            assertEquals(ProductPlatformState.PLANNED, product.androidPlatformState)
             assertEquals(productID, manifest.productID)
             assertEquals(SourceReleaseEligibility.BLOCKED, manifest.releaseEligibility)
         }
@@ -122,6 +160,66 @@ class LengyanContractRepositoryTest {
 
         assertSame(first, second)
         assertEquals(1, reads["source-manifest.json"])
+    }
+
+    @Test
+    fun audioDeliveryIsReadOnceAndCached() = runBlocking {
+        val reads = mutableMapOf<String, Int>()
+        val repository = DefaultBookRepository(
+            ContractSource { relativePath ->
+                reads[relativePath] = reads.getOrDefault(relativePath, 0) + 1
+                source.readText(relativePath)
+            },
+        )
+
+        val first = repository.audioDelivery()
+        val second = repository.audioDelivery()
+
+        assertSame(first, second)
+        assertEquals(1, reads["Platform/android/audio-delivery.json"])
+        assertEquals(1, reads["audio-artifacts.json"])
+    }
+
+    @Test
+    fun rejectsAndroidDeliveryThatSelectsAnUnknownRendition() {
+        val alteredDelivery = source.readText("Platform/android/audio-delivery.json").replace(
+            oldValue = "\"selectedRenditionID\": null",
+            newValue = "\"selectedRenditionID\": \"unknown-rendition\"",
+        )
+        val repository = DefaultBookRepository(
+            ContractSource { relativePath ->
+                if (relativePath == "Platform/android/audio-delivery.json") {
+                    alteredDelivery
+                } else {
+                    source.readText(relativePath)
+                }
+            },
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { repository.audioDelivery() }
+        }
+    }
+
+    @Test
+    fun rejectsAndroidDeliveryWhoseStateDisagreesWithTheProduct() {
+        val alteredDelivery = source.readText("Platform/android/audio-delivery.json").replace(
+            oldValue = "\"state\": \"planned\"",
+            newValue = "\"state\": \"retired\"",
+        )
+        val repository = DefaultBookRepository(
+            ContractSource { relativePath ->
+                if (relativePath == "Platform/android/audio-delivery.json") {
+                    alteredDelivery
+                } else {
+                    source.readText(relativePath)
+                }
+            },
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { repository.audioDelivery() }
+        }
     }
 
     @Test

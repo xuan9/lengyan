@@ -30,3 +30,18 @@ downloads, immutable content-addressed keys, target-region measurements, and
 operational ownership. The code may implement the provider interface and test
 server before a production hostname exists, but plans must not label a host as
 selected until those measurements are recorded.
+
+## Implementation Status
+
+As of 2026-07-27, Android parses the typed platform delivery contract and
+cross-checks its product, platform state, artifact manifest, selected
+rendition, and provider identity against the shared audio catalog. The media
+module has deterministic gates for active delivery state, release-ready catalog
+and rights, HTTPS base URLs, compatible primary providers, and verified
+byte-range support. It also implements the network and 192 MiB/512 MiB/28-day
+cache decisions above with JVM tests.
+
+This foundation deliberately does not declare playback/download services or
+show an audio entry while Lengyan delivery remains `planned`. Media3 playback,
+resumable download integration, a measured production host, format selection,
+and Android redistribution approval remain open Phase 4 work.

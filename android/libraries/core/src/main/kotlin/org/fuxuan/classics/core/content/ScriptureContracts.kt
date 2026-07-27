@@ -11,6 +11,7 @@ data class ProductManifest(
     val bookManifestPath: String,
     val sourceManifestPath: String,
     val audioManifestPath: String?,
+    val androidPlatformState: ProductPlatformState,
     val androidAudioDeliveryPath: String?,
     val features: ProductFeatures,
     val featuredParagraphIDs: List<String> = emptyList(),
@@ -32,6 +33,14 @@ data class ProductManifest(
         requireSafeRelativePath(sourceManifestPath, "source manifest")
         audioManifestPath?.let { requireSafeRelativePath(it, "audio manifest") }
         androidAudioDeliveryPath?.let { requireSafeRelativePath(it, "Android audio delivery") }
+        if (androidAudioDeliveryPath != null) {
+            require(features.audio) { "product without audio cannot provide Android delivery" }
+        }
+        if (androidPlatformState.isActive && features.audio) {
+            require(androidAudioDeliveryPath != null) {
+                "active Android audio product must provide a delivery manifest"
+            }
+        }
         if (lifecycle in setOf("production", "development") && features.audio) {
             require(audioManifestPath != null) { "audio product must provide an audio manifest" }
         }

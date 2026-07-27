@@ -7,6 +7,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.fuxuan.classics.core.behavior.LegacyPathMap
 import org.fuxuan.classics.core.content.AudioCatalog
+import org.fuxuan.classics.core.content.AudioDelivery
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
@@ -42,6 +43,9 @@ class ClassicsContractParser {
 
     fun parseAudioCatalog(text: String): AudioCatalog =
         json.decodeFromString<AudioCatalogDto>(requirePlainUtf8Text(text)).toDomain()
+
+    fun parseAudioDelivery(text: String): AudioDelivery =
+        json.decodeFromString<AudioDeliveryDto>(requirePlainUtf8Text(text)).toDomain()
 
     fun parseLegacyPathMap(text: String): LegacyPathMap {
         val source = requirePlainUtf8Text(text)

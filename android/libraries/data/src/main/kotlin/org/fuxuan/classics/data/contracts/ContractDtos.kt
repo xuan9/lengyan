@@ -1,16 +1,26 @@
 package org.fuxuan.classics.data.contracts
 
 import kotlinx.serialization.Serializable
+import org.fuxuan.classics.core.content.AppleManagedAudioProvider
+import org.fuxuan.classics.core.content.AppleOnDemandAudioProvider
 import org.fuxuan.classics.core.content.AudioArtifact
+import org.fuxuan.classics.core.content.AudioByteRangeSupport
 import org.fuxuan.classics.core.content.AudioCatalog
 import org.fuxuan.classics.core.content.AudioContentMapping
+import org.fuxuan.classics.core.content.AudioDelivery
+import org.fuxuan.classics.core.content.AudioDeliveryPlatform
+import org.fuxuan.classics.core.content.AudioDeliveryProvider
+import org.fuxuan.classics.core.content.AudioProviderRole
 import org.fuxuan.classics.core.content.AudioRendition
 import org.fuxuan.classics.core.content.AudioRights
+import org.fuxuan.classics.core.content.HttpsAudioActivation
+import org.fuxuan.classics.core.content.HttpsAudioProvider
 import org.fuxuan.classics.core.behavior.LegacyPathEntry
 import org.fuxuan.classics.core.behavior.LegacyPathMap
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.ProductFeatures
 import org.fuxuan.classics.core.content.ProductManifest
+import org.fuxuan.classics.core.content.ProductPlatformState
 import org.fuxuan.classics.core.content.ScriptureContent
 import org.fuxuan.classics.core.content.ScriptureParagraph
 import org.fuxuan.classics.core.content.ScriptureSection
@@ -42,6 +52,7 @@ internal data class ProductManifestDto(
         bookManifestPath = manifests.book,
         sourceManifestPath = manifests.source,
         audioManifestPath = manifests.audio,
+        androidPlatformState = ProductPlatformState.fromContract(platforms.android.state),
         androidAudioDeliveryPath = platforms.android.audioDelivery,
         features = features.toDomain(),
         featuredParagraphIDs = featuredParagraphIDs,
@@ -384,4 +395,120 @@ internal data class AudioRenditionDto(
         bytes = bytes,
         sha256 = sha256,
     )
+}
+
+@Serializable
+internal data class AudioDeliveryDto(
+    val schemaVersion: Int,
+    val productID: String,
+    val platform: String,
+    val deliveryVersion: String,
+    val state: String,
+    val artifactManifest: String,
+    val selectedRenditionID: String?,
+    val providers: List<AudioDeliveryProviderDto>,
+    val releaseBlockers: List<String> = emptyList(),
+) {
+    fun toDomain() = AudioDelivery(
+        schemaVersion = schemaVersion,
+        productID = productID,
+        platform = AudioDeliveryPlatform.fromContract(platform),
+        deliveryVersion = deliveryVersion,
+        state = ProductPlatformState.fromContract(state),
+        artifactManifestPath = artifactManifest,
+        selectedRenditionID = selectedRenditionID,
+        providers = providers.map(AudioDeliveryProviderDto::toDomain),
+        releaseBlockers = releaseBlockers,
+    )
+}
+
+@Serializable
+internal data class AudioDeliveryProviderDto(
+    val providerID: String,
+    val kind: String,
+    val role: String,
+    val minimumOSMajor: Int,
+    val maximumOSMajor: Int? = null,
+    val tagTemplate: String? = null,
+    val bundleFileTemplate: String? = null,
+    val assetPackIDTemplate: String? = null,
+    val relativePathTemplate: String? = null,
+    val downloadPolicy: String? = null,
+    val platforms: List<String>? = null,
+    val baseURLConfigurationKey: String? = null,
+    val enabledConfigurationKey: String? = null,
+    val artifactKeySource: String? = null,
+    val activation: String? = null,
+    val stallTimeoutConfigurationKey: String? = null,
+    val byteRangeSupport: String? = null,
+    val prefetchAllowed: Boolean? = null,
+) {
+    fun toDomain(): AudioDeliveryProvider {
+        val providerRole = AudioProviderRole.fromContract(role)
+        return when (kind) {
+            "apple-on-demand-resources" -> AppleOnDemandAudioProvider(
+                providerID = providerID,
+                role = providerRole,
+                minimumOSMajor = minimumOSMajor,
+                maximumOSMajor = requireNotNull(maximumOSMajor) {
+                    "Apple ODR provider is missing maximumOSMajor"
+                },
+                tagTemplate = requireNotNull(tagTemplate) {
+                    "Apple ODR provider is missing tagTemplate"
+                },
+                bundleFileTemplate = requireNotNull(bundleFileTemplate) {
+                    "Apple ODR provider is missing bundleFileTemplate"
+                },
+            )
+
+            "apple-managed-background-assets" -> AppleManagedAudioProvider(
+                providerID = providerID,
+                role = providerRole,
+                minimumOSMajor = minimumOSMajor,
+                assetPackIDTemplate = requireNotNull(assetPackIDTemplate) {
+                    "Apple managed provider is missing assetPackIDTemplate"
+                },
+                relativePathTemplate = requireNotNull(relativePathTemplate) {
+                    "Apple managed provider is missing relativePathTemplate"
+                },
+                downloadPolicy = requireNotNull(downloadPolicy) {
+                    "Apple managed provider is missing downloadPolicy"
+                },
+                platforms = requireNotNull(platforms) {
+                    "Apple managed provider is missing platforms"
+                },
+            )
+
+            "https" -> {
+                require(artifactKeySource == "rendition") {
+                    "HTTPS audio provider must use rendition artifact keys"
+                }
+                HttpsAudioProvider(
+                    providerID = providerID,
+                    role = providerRole,
+                    minimumOSMajor = minimumOSMajor,
+                    baseURLConfigurationKey = requireNotNull(baseURLConfigurationKey) {
+                        "HTTPS audio provider is missing baseURLConfigurationKey"
+                    },
+                    enabledConfigurationKey = enabledConfigurationKey,
+                    activation = HttpsAudioActivation.fromContract(
+                        requireNotNull(activation) {
+                            "HTTPS audio provider is missing activation"
+                        },
+                    ),
+                    stallTimeoutConfigurationKey = stallTimeoutConfigurationKey,
+                    byteRangeSupport = AudioByteRangeSupport.fromContract(
+                        requireNotNull(byteRangeSupport) {
+                            "HTTPS audio provider is missing byteRangeSupport"
+                        },
+                    ),
+                    prefetchAllowed = requireNotNull(prefetchAllowed) {
+                        "HTTPS audio provider is missing prefetchAllowed"
+                    },
+                )
+            }
+
+            else -> error("unsupported audio delivery provider kind: $kind")
+        }
+    }
 }

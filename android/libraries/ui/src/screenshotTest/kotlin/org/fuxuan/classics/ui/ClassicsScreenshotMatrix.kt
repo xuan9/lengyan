@@ -24,6 +24,7 @@ import org.fuxuan.classics.core.content.DocumentedSourceRights
 import org.fuxuan.classics.core.content.DocumentedSourceRole
 import org.fuxuan.classics.core.content.ProductFeatures
 import org.fuxuan.classics.core.content.ProductManifest
+import org.fuxuan.classics.core.content.ProductPlatformState
 import org.fuxuan.classics.core.content.ScriptureContent
 import org.fuxuan.classics.core.content.ScriptureParagraph
 import org.fuxuan.classics.core.content.ScriptureSection
@@ -451,6 +452,7 @@ private fun screenshotContent(locale: String): LoadedContent {
             bookManifestPath = "Book/book.json",
             sourceManifestPath = "Sources/source.json",
             audioManifestPath = null,
+            androidPlatformState = ProductPlatformState.DEVELOPMENT,
             androidAudioDeliveryPath = null,
             features = ProductFeatures(
                 audio = false,

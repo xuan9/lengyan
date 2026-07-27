@@ -8,8 +8,13 @@ import org.fuxuan.classics.core.behavior.LegacyLocationResolver
 import org.fuxuan.classics.core.behavior.LegacyLocationUsage
 import org.fuxuan.classics.core.behavior.ScriptureSearchIndex
 import org.fuxuan.classics.core.content.AudioCatalog
+import org.fuxuan.classics.core.content.AudioDelivery
+import org.fuxuan.classics.core.content.AudioDeliveryPlatform
+import org.fuxuan.classics.core.content.AudioProviderRole
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.BookRepository
+import org.fuxuan.classics.core.content.HttpsAudioActivation
+import org.fuxuan.classics.core.content.HttpsAudioProvider
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
 import org.fuxuan.classics.core.content.SourceManifest
@@ -26,6 +31,7 @@ class DefaultBookRepository(
     private val bookCache = AtomicReference<BookManifest?>()
     private val sourceManifestCache = AtomicReference<SourceManifest?>()
     private val audioCache = AtomicReference<LoadedAudioCatalog?>()
+    private val audioDeliveryCache = AtomicReference<LoadedAudioDelivery?>()
     private val legacyResolverCache = AtomicReference<LoadedLegacyResolver?>()
     private val searchIndexCache = AtomicReference<ScriptureSearchIndex?>()
     private val contentCache = ConcurrentHashMap<String, ScriptureContent>()
@@ -47,10 +53,14 @@ class DefaultBookRepository(
     }
 
     override suspend fun audioCatalog(): AudioCatalog? = withContext(ioDispatcher) {
-        audioCache.get()?.let { return@withContext it.catalog }
-        val loaded = LoadedAudioCatalog(loadAudioCatalog())
-        audioCache.compareAndSet(null, loaded)
-        audioCache.get()!!.catalog
+        loadCachedAudioCatalog()
+    }
+
+    override suspend fun audioDelivery(): AudioDelivery? = withContext(ioDispatcher) {
+        audioDeliveryCache.get()?.let { return@withContext it.delivery }
+        val loaded = LoadedAudioDelivery(loadAudioDelivery())
+        audioDeliveryCache.compareAndSet(null, loaded)
+        audioDeliveryCache.get()!!.delivery
     }
 
     override suspend fun searchIndex(): ScriptureSearchIndex = withContext(ioDispatcher) {
@@ -176,6 +186,73 @@ class DefaultBookRepository(
         return loaded
     }
 
+    private fun loadCachedAudioCatalog(): AudioCatalog? {
+        audioCache.get()?.let { return it.catalog }
+        val loaded = LoadedAudioCatalog(loadAudioCatalog())
+        audioCache.compareAndSet(null, loaded)
+        return audioCache.get()!!.catalog
+    }
+
+    private fun loadAudioDelivery(): AudioDelivery? {
+        val product = loadProduct()
+        val path = product.androidAudioDeliveryPath ?: return null
+        require(product.features.audio) {
+            "product without audio cannot provide Android audio delivery"
+        }
+        val audioManifestPath = requireNotNull(product.audioManifestPath) {
+            "Android audio delivery requires an audio artifact manifest"
+        }
+        val delivery = parser.parseAudioDelivery(source.readText(safeRelativePath(path)))
+        require(delivery.productID == product.productID) {
+            "audio delivery belongs to a different product"
+        }
+        require(delivery.platform == AudioDeliveryPlatform.ANDROID) {
+            "Android product must reference Android audio delivery"
+        }
+        require(delivery.state == product.androidPlatformState) {
+            "Android audio delivery state disagrees with the product"
+        }
+        require(delivery.artifactManifestPath == audioManifestPath) {
+            "audio delivery references a different artifact manifest"
+        }
+        require(delivery.providers.all { it is HttpsAudioProvider }) {
+            "Android audio delivery only supports HTTPS providers"
+        }
+
+        val catalog = requireNotNull(loadCachedAudioCatalog()) {
+            "Android audio delivery requires an audio catalog"
+        }
+        delivery.selectedRenditionID?.let { renditionID ->
+            require(catalog.artifacts.all { artifact ->
+                artifact.renditions.any { it.renditionID == renditionID }
+            }) {
+                "selected Android audio rendition is missing from an artifact"
+            }
+            require(
+                catalog.artifacts.map { artifact ->
+                    artifact.renditions.single { it.renditionID == renditionID }.artifactKey
+                }.toSet().size == catalog.artifacts.size,
+            ) {
+                "selected Android audio artifact keys must be unique"
+            }
+        }
+        if (delivery.state.isActive) {
+            val primaryProviders = delivery.providers.filter {
+                it.role == AudioProviderRole.PRIMARY
+            }
+            require(primaryProviders.size == 1) {
+                "active Android audio delivery requires exactly one primary provider"
+            }
+            require(
+                (primaryProviders.single() as HttpsAudioProvider).activation ==
+                    HttpsAudioActivation.ALWAYS,
+            ) {
+                "primary Android audio provider must always be active"
+            }
+        }
+        return delivery
+    }
+
     private fun loadLegacyResolver(): LegacyLocationResolver? {
         legacyResolverCache.get()?.let { return it.resolver }
         val book = loadBook()
@@ -192,6 +269,7 @@ class DefaultBookRepository(
     }
 
     private data class LoadedAudioCatalog(val catalog: AudioCatalog?)
+    private data class LoadedAudioDelivery(val delivery: AudioDelivery?)
     private data class LoadedLegacyResolver(val resolver: LegacyLocationResolver?)
 
     private companion object {
