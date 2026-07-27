@@ -857,6 +857,8 @@ Gate E：至少三类真机完成 2 小时后台播放、断网/Range 下载恢�
 
 **Phase 4 实施检查点（2026-07-27）：** 第一条非 UI 音频基础切片已完成。Android 现直接解析产品的 typed delivery contract，并与 product/platform state、artifact manifest、全局 selected rendition 和 artifact key 做交叉校验；运行时 resolver 只在 delivery active、catalog/rights release-ready、唯一兼容 HTTPS primary、配置 URL 合法且 Range 已验证时产出可播放资源。ADR 0002 的用户主动播放可用计费网络、自动下一卷默认仅非计费网络、192 MiB 单产品/512 MiB 全局 soft budget、当前/下一卷保护、28 天 expiry 和 unprotected LRU 已转成 media 模块纯函数及 JVM 测试。楞严配置仍保持 `planned`，且 blocker 已从完成的缓存决策改为真实的 Android 录音再分发权确认；因此本切片没有声明网络/前台服务权限、没有显示假音频入口，也没有把现有 iOS Cloudflare emergency endpoint 标成 Android 主站。下一切片才引入固定版本 Media3 `MediaSessionService`/`DownloadService`、本地 Range 测试服务器和 bytes/SHA 验证；生产 host、格式实机基准、权利批准和 Gate E 真机证据继续阻止发布。
 
+**Phase 4 会话实施检查点（2026-07-27）：** Media3 已固定为 1.10.1，并在 product-neutral media 模块建立由产品继承注入的 `MediaSessionService`；服务独占 Player/Session，只接受同包或可信 controller，且按已通过 delivery gate 的 artifact ID 重建 URI、标题和 MIME，未知 ID 或混合队列整体拒绝。独立 `:testing:media3-harness` 在 API 35 受管模拟器验证 controller/service 连接、恶意 URI 覆盖和未知队列拒绝，也因此发现并修复 Android ICU 对 delivery template brace regex 的设备初始化崩溃。楞严 App 在 `planned` 期间不依赖 media 模块；release APK gate 明确禁止 `INTERNET`、`FOREGROUND_SERVICE_MEDIA_PLAYBACK` 和 MediaSessionService，用户 notices 也不会提前列出未交付的 Media3。下一切片收敛到 `DownloadManager`/`DownloadService`、本地 Range 中断恢复、cache-only bytes/SHA-256 验证和播放位置持久化；host、codec 物理机基准、权利批准及生产权限/UI 仍是发布 Gate。
+
 ### Phase 5：系统集成（3-5 周）
 
 交付：

@@ -53,4 +53,7 @@ compiles the release-derived Macrobenchmark target and harness, but compilation
 is not a performance result. The benchmark command rejects emulators and API
 levels below 31; record quantitative results only from a named physical reference
 device. Audio and OEM Gates are added as their phases become implemented; absence
-of those results must not be reported as success.
+of those results must not be reported as success. The API 35 Media3 harness
+proves service/controller lifecycle and contract-only URI resolution, but is not
+evidence for production hosting, download recovery, codec support, or physical
+device playback.

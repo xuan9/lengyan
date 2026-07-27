@@ -215,9 +215,9 @@ data class AudioDelivery(
 private val AUDIO_DELIVERY_PRODUCT_ID_PATTERN = Regex("^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 private val AUDIO_DELIVERY_IDENTIFIER_PATTERN = Regex("^[a-z][a-z0-9.-]*$")
 private val AUDIO_DELIVERY_VERSION_PATTERN = Regex("^[A-Za-z0-9][A-Za-z0-9._-]*$")
-private val APPLE_ASSET_PACK_TEMPLATE_PATTERN = Regex("^[A-Za-z0-9.-]+\\{legacyTrackID}$")
+private val APPLE_ASSET_PACK_TEMPLATE_PATTERN = Regex("^[A-Za-z0-9.-]+[{]legacyTrackID[}]$")
 private val APPLE_RELATIVE_PATH_TEMPLATE_PATTERN =
-    Regex("^[A-Za-z0-9_-]+/\\{fileName}$")
+    Regex("^[A-Za-z0-9_-]+/[{]fileName[}]$")
 
 private fun requireValidProviderIdentity(providerID: String, minimumOSMajor: Int) {
     require(AUDIO_DELIVERY_IDENTIFIER_PATTERN.matches(providerID)) {

@@ -8,5 +8,7 @@ android {
 
 dependencies {
     api(project(":libraries:core"))
+    api(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.exoplayer)
     testImplementation(libs.junit)
 }

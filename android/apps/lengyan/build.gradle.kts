@@ -52,7 +52,6 @@ dependencies {
     implementation(project(":libraries:core"))
     implementation(project(":libraries:data"))
     implementation(project(":libraries:ui"))
-    implementation(project(":libraries:media"))
     implementation(project(":libraries:reminder"))
     implementation(project(":libraries:widget"))
 

@@ -41,7 +41,28 @@ and rights, HTTPS base URLs, compatible primary providers, and verified
 byte-range support. It also implements the network and 192 MiB/512 MiB/28-day
 cache decisions above with JVM tests.
 
-This foundation deliberately does not declare playback/download services or
-show an audio entry while Lengyan delivery remains `planned`. Media3 playback,
-resumable download integration, a measured production host, format selection,
-and Android redistribution approval remain open Phase 4 work.
+The second foundation slice pins Media3 1.10.1 and adds a product-neutral
+`MediaSessionService` base. The service owns its `Player` and `MediaSession`,
+accepts same-package or trusted controllers, and replaces every controller
+supplied URI, title, and MIME type with values reconstructed from the resolved
+artifact catalog. A queue containing any unknown artifact ID is rejected as a
+unit instead of partially accepting untrusted input.
+
+The service is exercised through a separate API 35 harness app that owns the
+test-only foreground-service permissions. Lengyan's planned Android app no
+longer depends on the media module, declares neither `INTERNET` nor
+`FOREGROUND_SERVICE_MEDIA_PLAYBACK`, and registers no media service. The public
+Android Gate inspects the release APK to preserve that boundary. Media3 is
+therefore also absent from Lengyan's generated runtime notices until the app
+actually ships it.
+
+The first device run exposed Android ICU rejecting escaped literal braces in
+two Apple delivery-template regular expressions even though desktop JVM tests
+accepted them. The patterns now use portable brace character classes, and the
+Media3 harness constructs the delivery provider on-device as regression
+coverage.
+
+Resumable `DownloadManager` integration, cached-byte SHA-256 verification,
+playback persistence, a measured production host, format selection, and Android
+redistribution approval remain open Phase 4 work. No audio entry is shown while
+Lengyan delivery remains `planned`.
