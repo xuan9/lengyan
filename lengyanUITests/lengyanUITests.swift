@@ -1009,7 +1009,9 @@ class lengyanUITests: XCTestCase {
             readingState: .start,
             userLikes: [rootPath]
         )
-        let favoritesTab = app.tabBars.firstMatch.buttons.element(boundBy: 2)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8))
+        let favoritesTab = tabBar.buttons.element(boundBy: 2)
         XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3))
         favoritesTab.tap()
 
@@ -1039,7 +1041,9 @@ class lengyanUITests: XCTestCase {
             readingState: .start,
             userLikes: [rootPath]
         )
-        let favoritesTab = app.tabBars.firstMatch.buttons.element(boundBy: 2)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8))
+        let favoritesTab = tabBar.buttons.element(boundBy: 2)
         XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3))
         favoritesTab.tap()
 
@@ -1078,6 +1082,7 @@ class lengyanUITests: XCTestCase {
         )
 
         let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8))
         let favoritesTab = tabBar.buttons.element(boundBy: 2)
         XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3))
         favoritesTab.tap()
@@ -1122,7 +1127,9 @@ class lengyanUITests: XCTestCase {
         )
         defer { XCUIDevice.shared.orientation = .portrait }
 
-        let favoritesTab = app.tabBars.firstMatch.buttons.element(boundBy: 2)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8))
+        let favoritesTab = tabBar.buttons.element(boundBy: 2)
         XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3))
         favoritesTab.tap()
 
@@ -1130,7 +1137,6 @@ class lengyanUITests: XCTestCase {
         let readerTable = app.tables["reader.paged.table"]
         let bodyCell = app.cells["reader.paged.cell.0"]
         let body = app.textViews["reader.paged.body.0"]
-        let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(reader.waitForExistence(timeout: 5))
         XCTAssertTrue(readerTable.waitForExistence(timeout: 5))
         XCTAssertTrue(bodyCell.waitForExistence(timeout: 5))
