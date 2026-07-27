@@ -156,21 +156,101 @@ verify_ios_build() {
     COMPILER_INDEX_STORE_ENABLE=NO
 }
 
+run_ios_ui_tests() {
+  local destination="$1"
+  local log_file="$2"
+  shift 2
+  local test_arguments=()
+  local test_name
+  for test_name in "$@"; do
+    test_arguments+=("-only-testing:lengyanUITests/lengyanUITests/${test_name}")
+  done
+
+  set +e
+  xcodebuild test \
+    -project "${repo_root}/lengyan.xcodeproj" \
+    -scheme lengyan \
+    -destination "${destination}" \
+    -derivedDataPath "${derived_data}" \
+    "${test_arguments[@]}" 2>&1 | tee "${log_file}"
+  local command_statuses=("${PIPESTATUS[@]}")
+  set -e
+  if [[ "${command_statuses[0]}" -ne 0 ]]; then
+    return "${command_statuses[0]}"
+  fi
+  return "${command_statuses[1]}"
+}
+
+ios_ui_infrastructure_failures() {
+  local log_file="$1"
+  awk '
+    / error: -\[lengyanUITests\.lengyanUITests test[^]]+\] :/ &&
+      (/Failed to launch <XCUIApplicationImpl: .*Timed out while launching application via Xcode\./ ||
+       /Failed to get background assertion for target app/) {
+      line = $0
+      sub(/^.* error: -\[lengyanUITests\.lengyanUITests /, "", line)
+      sub(/\] : .*$/, "", line)
+      if (!seen[line]++) print line
+    }
+  ' "${log_file}"
+}
+
+reboot_ios_simulator() {
+  local destination="$1"
+  if [[ ! "${destination}" =~ id=([^,]+) ]]; then
+    log "Retry without reboot because the configured iOS destination has no device ID"
+    return
+  fi
+
+  local device_id="${BASH_REMATCH[1]}"
+  log "Reboot iOS simulator ${device_id} after an Xcode launch failure"
+  xcrun simctl shutdown "${device_id}" >/dev/null 2>&1 || true
+  xcrun simctl boot "${device_id}"
+  xcrun simctl bootstatus "${device_id}" -b
+}
+
 verify_ios_ui_smoke() {
   require_xcode
   local destination
   destination="$(ios_destination iPad "${IOS_UI_DESTINATION:-}")"
   log "Run high-risk iPad/theme UI smoke tests on ${destination}"
   mkdir -p "${build_root}"
-  xcodebuild test \
-    -project "${repo_root}/lengyan.xcodeproj" \
-    -scheme lengyan \
-    -destination "${destination}" \
-    -derivedDataPath "${derived_data}" \
-    -only-testing:lengyanUITests/lengyanUITests/testIPadFavoriteToggleKeepsSplitDetailReaderStable \
-    -only-testing:lengyanUITests/lengyanUITests/testIPadFavoritesTreeReaderDoesNotDuplicateBottomSafeArea \
-    -only-testing:lengyanUITests/lengyanUITests/testRapidThemeSwitchingKeepsSettingsContentVisible \
-    -only-testing:lengyanUITests/lengyanUITests/testAcknowledgmentsExposeGeneratedOpenSourceNotices
+  local pending_tests=(
+    testIPadFavoriteToggleKeepsSplitDetailReaderStable
+    testIPadFavoritesTreeReaderDoesNotDuplicateBottomSafeArea
+    testRapidThemeSwitchingKeepsSettingsContentVisible
+    testAcknowledgmentsExposeGeneratedOpenSourceNotices
+  )
+  local attempt=1
+  local maximum_attempts=3
+
+  while true; do
+    local log_file="${build_root}/ios-ui-smoke-attempt-${attempt}.log"
+    if run_ios_ui_tests "${destination}" "${log_file}" "${pending_tests[@]}"; then
+      return
+    fi
+
+    local total_ui_failures
+    total_ui_failures="$(awk '
+      / error: -\[lengyanUITests\.lengyanUITests test[^]]+\] :/ { count++ }
+      END { print count + 0 }
+    ' "${log_file}")"
+    local infrastructure_failures=()
+    while IFS= read -r test_name; do
+      [[ -n "${test_name}" ]] && infrastructure_failures+=("${test_name}")
+    done < <(ios_ui_infrastructure_failures "${log_file}")
+
+    if [[ "${total_ui_failures}" -eq 0 ||
+          "${total_ui_failures}" -ne "${#infrastructure_failures[@]}" ||
+          "${attempt}" -ge "${maximum_attempts}" ]]; then
+      return 1
+    fi
+
+    pending_tests=("${infrastructure_failures[@]}")
+    log "Retry Xcode infrastructure failures only: ${pending_tests[*]}"
+    reboot_ios_simulator "${destination}"
+    attempt=$((attempt + 1))
+  done
 }
 
 verify_ios_archive() {
