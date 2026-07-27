@@ -78,9 +78,28 @@ spans, Media3 content length, and SHA-256. Missing bytes, an unexpected tail,
 and a same-length wrong hash are rejected; hashing on the main thread is also
 rejected.
 
-Automatic removal and redownload of rejected entries, persistent cache-policy
-metadata, metered-network prefetch enforcement, cached playback wiring,
-playback-position persistence, process-death recovery evidence, a measured
-production host, format selection, and Android redistribution approval remain
-open Phase 4 work. No audio entry is shown while Lengyan delivery remains
-`planned`.
+The fourth foundation slice adds a product-neutral integrity coordinator on the
+`DownloadManager` application looper. Completed tracked downloads are hashed on
+a background executor and become usable only after exact cache verification. A
+first invalid result emits a repair event, removes the indexed download and its
+cache, waits for `onDownloadRemoved`, and then uses a product-injected enqueuer
+to request one replacement. A second invalid result removes the replacement and
+ends in a rejected state, preventing an unbounded repair loop. Late verifier
+callbacks are generation-checked and ignored after release or untracking.
+
+The API 35 harness serves a same-length corrupt payload before the correct
+payload and proves exactly one network repair reaches verified state. A second
+case serves corrupt bytes every time and proves the coordinator makes exactly
+two body requests, rejects after one repair, removes the DownloadIndex entry,
+and leaves zero cached bytes. A verified download removed by the user or a
+future cache-policy executor immediately loses its in-memory verified state and
+repair budget. All integrity events are asserted on the main application
+looper. The service-based Range test remains separate because a
+Media3 `DownloadService` and its application-scoped `DownloadManager` are
+singletons in production rather than replaceable per test.
+
+Persistent cache-policy metadata and execution, metered-network prefetch
+enforcement, cached playback wiring, playback-position persistence,
+process-death recovery evidence, a measured production host, format selection,
+and Android redistribution approval remain open Phase 4 work. No audio entry is
+shown while Lengyan delivery remains `planned`.
