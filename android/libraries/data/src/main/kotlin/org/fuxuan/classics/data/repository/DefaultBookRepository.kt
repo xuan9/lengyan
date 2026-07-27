@@ -103,6 +103,12 @@ class DefaultBookRepository(
         require(loaded.contentVersion == book.contentVersion) { "content version does not match book" }
         require(loaded.locale == locale) { "content locale does not match requested locale" }
         require(loaded.normalization == book.normalization) { "content normalization does not match book" }
+        val unknownFeaturedParagraphs = loadProduct().featuredParagraphIDs.filter {
+            loaded.paragraph(it) == null
+        }
+        require(unknownFeaturedParagraphs.isEmpty()) {
+            "featured paragraphs are missing from $locale content: ${unknownFeaturedParagraphs.joinToString()}"
+        }
         return loaded
     }
 

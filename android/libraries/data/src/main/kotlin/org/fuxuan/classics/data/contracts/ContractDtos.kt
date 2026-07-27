@@ -28,6 +28,7 @@ internal data class ProductManifestDto(
     val navigationMode: String,
     val manifests: ProductManifestPathsDto,
     val features: ProductFeaturesDto,
+    val featuredParagraphIDs: List<String> = emptyList(),
     val platforms: ProductPlatformsDto,
 ) {
     fun toDomain() = ProductManifest(
@@ -43,6 +44,7 @@ internal data class ProductManifestDto(
         audioManifestPath = manifests.audio,
         androidAudioDeliveryPath = platforms.android.audioDelivery,
         features = features.toDomain(),
+        featuredParagraphIDs = featuredParagraphIDs,
     )
 }
 

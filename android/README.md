@@ -28,7 +28,7 @@ module `build/` directories.
 
 Run `./verify.sh android-ui-smoke` to install and exercise the app on pinned API
 35 Gradle-managed compact-phone and Pixel Tablet profiles. The compact profile
-runs the full persistence, content, reader, and shell suite; the tablet profile
+runs the full persistence, content, reader, Widget, and shell suite; the tablet profile
 runs the adaptive favorites split-detail lifecycle. This requires the Android
 Emulator; Gradle provisions the AOSP automated-test-device image when necessary.
 
@@ -41,6 +41,14 @@ Emulator; Gradle provisions the AOSP automated-test-device image when necessary.
 - `:libraries:media`: Media3 playback and delivery adapters.
 - `:libraries:widget`: Glance Widget implementation.
 
-Only `core` and the app composition root contain implementation in the first
-scaffold milestone. Empty Android libraries deliberately establish dependency
-boundaries before their Phase 2-5 implementations arrive.
+The app, `core`, `data`, `ui`, and `widget` modules now contain production
+implementation. `media` remains the declared Phase 4 boundary until the native
+Media3 service and delivery stack are implemented. Shared libraries remain
+product-neutral; each app module owns its permanent package identity, generated
+product assets, system component registration, and composition root.
+
+The daily-verse Widget uses stable paragraph IDs from the product contract,
+locks one selection per local day and content version, and keeps a versioned
+DataStore snapshot for offline/error fallback. Its Glance layout is responsive
+to launcher-provided dimensions and always opens the product's explicit
+activity, targeting the selected paragraph when one is available.

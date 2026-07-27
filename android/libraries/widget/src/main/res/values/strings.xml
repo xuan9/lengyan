@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="daily_verse_widget_name">今日讀經</string>
+    <string name="daily_verse_widget_product_name">經典閱讀</string>
+    <string name="daily_verse_widget_description">每天一段經文，點按直接閱讀原文。</string>
+    <string name="daily_verse_widget_preview_text">開啟 App 後即可顯示今日經文。</string>
+    <string name="daily_verse_widget_preview_source">經典閱讀</string>
+    <string name="daily_verse_widget_error">暫時無法顯示今日經文</string>
+</resources>

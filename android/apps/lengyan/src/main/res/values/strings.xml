@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">楞严经</string>
+    <string name="daily_verse_widget_name">今日读经</string>
+    <string name="daily_verse_widget_product_name">楞严经</string>
+    <string name="daily_verse_widget_description">每天一段楞严经文，点击直接阅读原文。</string>
+    <string name="daily_verse_widget_preview_text">若能转物，则同如来。身心圆明，不动道场。</string>
+    <string name="daily_verse_widget_preview_source">楞严经 卷二 · 十番显见</string>
 </resources>

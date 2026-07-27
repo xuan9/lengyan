@@ -5,8 +5,22 @@ import java.net.URLDecoder
 
 data class ScriptureDeepLink(
     val productID: String,
-    val legacyPath: String,
-)
+    val legacyPath: String? = null,
+    val paragraphID: String? = null,
+) {
+    init {
+        require(productID.isNotBlank()) { "deep-link productID must not be blank" }
+        require((legacyPath == null) != (paragraphID == null)) {
+            "deep link must contain exactly one scripture target"
+        }
+        require(legacyPath == null || legacyPath.isNotBlank()) {
+            "deep-link legacy path must not be blank"
+        }
+        require(paragraphID == null || paragraphID.isNotBlank()) {
+            "deep-link paragraph ID must not be blank"
+        }
+    }
+}
 
 class LegacyVerseDeepLinkParser(
     private val productID: String,

@@ -70,6 +70,7 @@ async function configureCanonicalJingang(root) {
   await mutateJSON(root, "Products/jingang/product.json", (product) => {
     product.lifecycle = "development";
     product.features.audio = false;
+    product.features.dailyVerse = false;
   });
   await mutateJSON(root, "Products/jingang/book-manifest.json", (book) => {
     book.contractState = "canonical-ready";
@@ -413,6 +414,18 @@ test("detects drift from deterministic daily verse selection", async () => {
       fixture.cases[0].expected.selectedID = "p4";
     });
     await expectValidationIssue(root, "but contract produces");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a featured daily verse paragraph outside the packaged content", async () => {
+  const root = await makeFixtureRepository();
+  try {
+    await mutateJSON(root, "Products/lengyan/product.json", (product) => {
+      product.featuredParagraphIDs.push("lengyan.p999999");
+    });
+    await expectValidationIssue(root, "featured paragraph lengyan.p999999 is missing");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

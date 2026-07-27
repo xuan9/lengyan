@@ -220,13 +220,16 @@ private fun LoadedContentNavigation(
         val deepLink = pendingDeepLink ?: return@LaunchedEffect
         try {
             if (deepLink.productID != loaded.product.productID) return@LaunchedEffect
-            val resolution = container.bookRepository.resolveLegacyLocation(
-                legacyPath = deepLink.legacyPath,
-                usage = LegacyLocationUsage.RESUME,
-            )
-            val mapped = resolution as? LegacyLocationResolution.Mapped
-                ?: return@LaunchedEffect
-            val paragraph = mapped.paragraphID?.let(loaded.content::paragraph)
+            val paragraph = deepLink.paragraphID?.let(loaded.content::paragraph)
+                ?: deepLink.legacyPath?.let { legacyPath ->
+                    val resolution = container.bookRepository.resolveLegacyLocation(
+                        legacyPath = legacyPath,
+                        usage = LegacyLocationUsage.RESUME,
+                    )
+                    (resolution as? LegacyLocationResolution.Mapped)
+                        ?.paragraphID
+                        ?.let(loaded.content::paragraph)
+                }
                 ?: return@LaunchedEffect
             val volumeID = paragraph.volumeID ?: return@LaunchedEffect
             val openedAt = timestampAfter(

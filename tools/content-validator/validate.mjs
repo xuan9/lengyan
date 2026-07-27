@@ -1354,6 +1354,14 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
           "active audio product has no reproducible build input"
         );
       }
+      if (product.features.dailyVerse) {
+        requireCondition(
+          (product.featuredParagraphIDs ?? []).length > 0,
+          issues,
+          productDocument.label,
+          "active daily verse product has no featured paragraphs"
+        );
+      }
     }
 
     const bookPath = resolveContained(productDirectory, product.manifests.book, issues, productDocument.label);
@@ -1434,6 +1442,19 @@ export async function validateRepository({ repositoryRoot = defaultRepositoryRoo
           validateContentPackageSemantics({ contentDocument, book, source, locale, issues })
         );
         contentPackageCount += 1;
+      }
+    }
+    for (const contentDocument of contentDocuments) {
+      const paragraphIDs = new Set(
+        contentDocument.data.paragraphs.map((paragraph) => paragraph.paragraphID)
+      );
+      for (const paragraphID of product.featuredParagraphIDs ?? []) {
+        requireCondition(
+          paragraphIDs.has(paragraphID),
+          issues,
+          productDocument.label,
+          `featured paragraph ${paragraphID} is missing from ${contentDocument.data.locale}`
+        );
       }
     }
     let productLegacyPathCount = 0;

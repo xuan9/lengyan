@@ -13,6 +13,7 @@ data class ProductManifest(
     val audioManifestPath: String?,
     val androidAudioDeliveryPath: String?,
     val features: ProductFeatures,
+    val featuredParagraphIDs: List<String> = emptyList(),
 ) {
     init {
         require(schemaVersion == 1) { "unsupported product schemaVersion: $schemaVersion" }
@@ -33,6 +34,17 @@ data class ProductManifest(
         androidAudioDeliveryPath?.let { requireSafeRelativePath(it, "Android audio delivery") }
         if (lifecycle in setOf("production", "development") && features.audio) {
             require(audioManifestPath != null) { "audio product must provide an audio manifest" }
+        }
+        require(featuredParagraphIDs.toSet().size == featuredParagraphIDs.size) {
+            "featured paragraph IDs must be unique"
+        }
+        require(featuredParagraphIDs.all(PARAGRAPH_ID_PATTERN::matches)) {
+            "featured paragraph IDs must use the stable paragraph ID scheme"
+        }
+        if (lifecycle in setOf("production", "development") && features.dailyVerse) {
+            require(featuredParagraphIDs.isNotEmpty()) {
+                "active daily verse product must provide featured paragraphs"
+            }
         }
     }
 

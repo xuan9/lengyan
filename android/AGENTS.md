@@ -41,7 +41,8 @@ Do not replace these with a narrower module task in a completion report. The
 managed-device command currently verifies the shell, packaged Lengyan contracts,
 cross-script search, DataStore, Room, the Room v1 schema origin, the real volume
 reader, stable rotation resume, complete 20,000-character layout at default and
-200% system font scale, and the Pixel Tablet favorites split-detail lifecycle.
+200% system font scale, the daily-verse Widget provider/schedule/snapshot/route,
+and the Pixel Tablet favorites split-detail lifecycle.
 The Android command also validates 20 host-rendered screenshot references across
 compact phone, phone, foldable, and tablet widths; light/dark themes; 100%, 130%,
 and 200% font scales; Traditional/Simplified Chinese; and all implemented primary

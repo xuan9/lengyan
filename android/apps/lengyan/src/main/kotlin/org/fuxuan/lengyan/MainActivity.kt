@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import org.fuxuan.classics.core.behavior.LegacyVerseDeepLinkParser
 import org.fuxuan.classics.core.behavior.ScriptureDeepLink
 import org.fuxuan.classics.ui.ClassicsApp
+import org.fuxuan.classics.widget.DAILY_VERSE_PARAGRAPH_ID_EXTRA
 
 class MainActivity : ComponentActivity() {
     private lateinit var deepLinkParser: LegacyVerseDeepLinkParser
@@ -28,11 +29,17 @@ class MainActivity : ComponentActivity() {
             scheme = container.product.productID,
         )
         val restoredPath = savedInstanceState?.getString(PENDING_DEEP_LINK_PATH_KEY)
-        pendingDeepLink = restoredPath?.let { path ->
-            ScriptureDeepLink(
+        val restoredParagraphID = savedInstanceState?.getString(PENDING_PARAGRAPH_ID_KEY)
+        pendingDeepLink = when {
+            restoredParagraphID != null -> ScriptureDeepLink(
                 productID = container.product.productID,
-                legacyPath = path,
+                paragraphID = restoredParagraphID,
             )
+            restoredPath != null -> ScriptureDeepLink(
+                productID = container.product.productID,
+                legacyPath = restoredPath,
+            )
+            else -> null
         }
         if (savedInstanceState == null) acceptDeepLink(intent)
 
@@ -55,15 +62,32 @@ class MainActivity : ComponentActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         pendingDeepLink?.let { deepLink ->
-            outState.putString(PENDING_DEEP_LINK_PATH_KEY, deepLink.legacyPath)
+            deepLink.legacyPath?.let { path ->
+                outState.putString(PENDING_DEEP_LINK_PATH_KEY, path)
+            }
+            deepLink.paragraphID?.let { paragraphID ->
+                outState.putString(PENDING_PARAGRAPH_ID_KEY, paragraphID)
+            }
         }
         super.onSaveInstanceState(outState)
     }
 
     private fun acceptDeepLink(intent: Intent?) {
+        val productID = (application as LengyanApplication).container.product.productID
         intent?.dataString
             ?.let(deepLinkParser::parse)
-            ?.let { pendingDeepLink = it }
+            ?.let {
+                pendingDeepLink = it
+                return
+            }
+        intent?.getStringExtra(EXTRA_PARAGRAPH_ID)
+            ?.takeIf(String::isNotBlank)
+            ?.let { paragraphID ->
+                pendingDeepLink = ScriptureDeepLink(
+                    productID = productID,
+                    paragraphID = paragraphID,
+                )
+            }
     }
 
     private fun applyEdgeToEdge(darkTheme: Boolean) {
@@ -79,7 +103,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private companion object {
+    companion object {
+        internal const val EXTRA_PARAGRAPH_ID = DAILY_VERSE_PARAGRAPH_ID_EXTRA
         const val PENDING_DEEP_LINK_PATH_KEY = "pendingDeepLinkPath"
+        const val PENDING_PARAGRAPH_ID_KEY = "pendingParagraphID"
     }
 }
