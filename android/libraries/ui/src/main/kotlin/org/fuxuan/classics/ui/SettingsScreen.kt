@@ -57,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.launch
+import org.fuxuan.classics.core.content.SourceReleaseEligibility
+import org.fuxuan.classics.core.content.SourceReviewStatus
 import org.fuxuan.classics.core.persistence.ProductPreferences
 import org.fuxuan.classics.core.persistence.ReminderPreferences
 import org.fuxuan.classics.core.persistence.ThemePreference
@@ -73,6 +75,11 @@ internal fun SettingsScreen(
     dailyVerseWidgetInstalled: Boolean = false,
     dailyVerseWidgetPinSupported: Boolean = false,
     onRequestDailyVerseWidgetPin: (() -> Boolean)? = null,
+    sourceReviewStatus: SourceReviewStatus = SourceReviewStatus.LEGACY_UNVERIFIED,
+    sourceReleaseEligibility: SourceReleaseEligibility = SourceReleaseEligibility.BLOCKED,
+    appVersion: String? = null,
+    onOpenSourceInformation: (() -> Unit)? = null,
+    onOpenPrivacy: (() -> Unit)? = null,
     onSelectTheme: (ThemePreference) -> Unit,
     onSelectLocale: (String) -> Unit,
     onSelectFontSize: (Int) -> Unit,
@@ -205,6 +212,39 @@ internal fun SettingsScreen(
                         onSetReminder = onSetReminder,
                         onSetEnabled = ::setReminderEnabled,
                     )
+
+                    if (
+                        onOpenSourceInformation != null ||
+                        onOpenPrivacy != null ||
+                        appVersion != null
+                    ) {
+                        SettingsHeading(
+                            text = strings.about,
+                            modifier = Modifier.padding(top = 28.dp),
+                        )
+                        onOpenSourceInformation?.let { onOpen ->
+                            SettingsNavigationRow(
+                                title = strings.sourceInformation,
+                                subtitle = strings.sourceSettingsSubtitle(
+                                    sourceReviewStatus,
+                                    sourceReleaseEligibility,
+                                ),
+                                testTag = "settings.source",
+                                onClick = onOpen,
+                            )
+                        }
+                        onOpenPrivacy?.let { onOpen ->
+                            SettingsNavigationRow(
+                                title = strings.privacy,
+                                subtitle = strings.privacySettingsSubtitle,
+                                testTag = "settings.privacy",
+                                onClick = onOpen,
+                            )
+                        }
+                        appVersion?.let { version ->
+                            SettingsVersionRow(strings.versionLabel(version))
+                        }
+                    }
                 }
             }
         }
@@ -245,18 +285,30 @@ internal fun DailyVerseWidgetSetting(
         pinRequestSupported -> strings.widgetAdd
         else -> strings.widgetOpenGuide
     }
+    SettingsNavigationRow(
+        title = strings.todayReadingWidget,
+        subtitle = status,
+        testTag = "settings.widget",
+        onClick = {
+            val requested = pinRequestSupported && onRequestPin()
+            if (!requested) onShowGuide()
+        },
+    )
+}
+
+@Composable
+private fun SettingsNavigationRow(
+    title: String,
+    subtitle: String,
+    testTag: String,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
-            .testTag("settings.widget")
-            .clickable(
-                role = Role.Button,
-                onClick = {
-                    val requested = pinRequestSupported && onRequestPin()
-                    if (!requested) onShowGuide()
-                },
-            )
+            .testTag(testTag)
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 4.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -267,11 +319,11 @@ internal fun DailyVerseWidgetSetting(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
-                text = strings.todayReadingWidget,
+                text = title,
                 style = MaterialTheme.typography.bodyLarge.copy(letterSpacing = 0.sp),
             )
             Text(
-                text = status,
+                text = subtitle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium.copy(letterSpacing = 0.sp),
             )
@@ -282,6 +334,18 @@ internal fun DailyVerseWidgetSetting(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+}
+
+@Composable
+private fun SettingsVersionRow(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 14.dp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodyMedium.copy(letterSpacing = 0.sp),
+    )
 }
 
 @Composable

@@ -5,11 +5,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.fuxuan.classics.core.behavior.LegacyPathMap
 import org.fuxuan.classics.core.content.AudioCatalog
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
-import org.fuxuan.classics.core.behavior.LegacyPathMap
+import org.fuxuan.classics.core.content.SourceManifest
 
 class ClassicsContractParser {
     private val json = Json {
@@ -23,6 +24,9 @@ class ClassicsContractParser {
 
     fun parseBook(text: String): BookManifest =
         json.decodeFromString<BookManifestDto>(requirePlainUtf8Text(text)).toDomain()
+
+    fun parseSourceManifest(text: String): SourceManifest =
+        json.decodeFromString<SourceManifestDto>(requirePlainUtf8Text(text)).toDomain()
 
     fun parseContent(text: String): ScriptureContent {
         val source = requirePlainUtf8Text(text)

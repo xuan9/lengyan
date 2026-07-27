@@ -11,6 +11,7 @@ import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.BookRepository
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
+import org.fuxuan.classics.core.content.SourceManifest
 import org.fuxuan.classics.core.persistence.AudioPreferences
 import org.fuxuan.classics.core.persistence.AudioProgress
 import org.fuxuan.classics.core.persistence.Favorite
@@ -41,6 +42,8 @@ class LengyanAppContainerTest {
         override suspend fun product(): ProductManifest = error("not used by this test")
 
         override suspend fun book(): BookManifest = error("not used by this test")
+
+        override suspend fun sourceManifest(): SourceManifest = error("not used by this test")
 
         override suspend fun content(locale: String): ScriptureContent = error("not used by this test")
 

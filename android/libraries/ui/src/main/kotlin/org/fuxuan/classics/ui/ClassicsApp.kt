@@ -53,6 +53,7 @@ import org.fuxuan.classics.core.behavior.VolumeReadingDocument
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
+import org.fuxuan.classics.core.content.SourceManifest
 import org.fuxuan.classics.core.persistence.Favorite
 import org.fuxuan.classics.core.persistence.ProductPreferences
 import org.fuxuan.classics.core.persistence.ReadingProgress
@@ -69,6 +70,15 @@ data object SearchRoute : NavKey
 
 @Serializable
 data object FavoritesRoute : NavKey
+
+@Serializable
+data object SettingsHomeRoute : NavKey
+
+@Serializable
+data object SourceInfoRoute : NavKey
+
+@Serializable
+data object PrivacyInfoRoute : NavKey
 
 @Serializable
 data class ShareRoute(val volumeID: String) : NavKey {
@@ -110,6 +120,9 @@ fun ClassicsApp(
     dailyVerseWidgetInstalled: Boolean = false,
     dailyVerseWidgetPinSupported: Boolean = false,
     onRequestDailyVerseWidgetPin: (() -> Boolean)? = null,
+    privacyPolicyUris: Map<String, String> = emptyMap(),
+    appVersion: String? = null,
+    onOpenExternalUri: ((String) -> Unit)? = null,
 ) {
     val preferences by container.userPreferencesRepository.preferences.collectAsState(initial = null)
     val systemDarkTheme = isSystemInDarkTheme()
@@ -137,6 +150,9 @@ fun ClassicsApp(
                     dailyVerseWidgetInstalled = dailyVerseWidgetInstalled,
                     dailyVerseWidgetPinSupported = dailyVerseWidgetPinSupported,
                     onRequestDailyVerseWidgetPin = onRequestDailyVerseWidgetPin,
+                    privacyPolicyUris = privacyPolicyUris,
+                    appVersion = appVersion,
+                    onOpenExternalUri = onOpenExternalUri,
                 )
             }
         }
@@ -152,6 +168,9 @@ private fun ContentNavigation(
     dailyVerseWidgetInstalled: Boolean,
     dailyVerseWidgetPinSupported: Boolean,
     onRequestDailyVerseWidgetPin: (() -> Boolean)?,
+    privacyPolicyUris: Map<String, String>,
+    appVersion: String?,
+    onOpenExternalUri: ((String) -> Unit)?,
 ) {
     var retryKey by remember { mutableIntStateOf(0) }
     val loadState by produceState<ContentLoadState>(
@@ -165,6 +184,7 @@ private fun ContentNavigation(
                 product = container.bookRepository.product(),
                 book = container.bookRepository.book(),
                 content = container.bookRepository.content(preferences.locale),
+                sourceManifest = container.bookRepository.sourceManifest(),
             )
         }.fold(
             onSuccess = ContentLoadState::Ready,
@@ -187,6 +207,9 @@ private fun ContentNavigation(
             dailyVerseWidgetInstalled = dailyVerseWidgetInstalled,
             dailyVerseWidgetPinSupported = dailyVerseWidgetPinSupported,
             onRequestDailyVerseWidgetPin = onRequestDailyVerseWidgetPin,
+            privacyPolicyUris = privacyPolicyUris,
+            appVersion = appVersion,
+            onOpenExternalUri = onOpenExternalUri,
         )
     }
 }
@@ -201,9 +224,13 @@ private fun LoadedContentNavigation(
     dailyVerseWidgetInstalled: Boolean,
     dailyVerseWidgetPinSupported: Boolean,
     onRequestDailyVerseWidgetPin: (() -> Boolean)?,
+    privacyPolicyUris: Map<String, String>,
+    appVersion: String?,
+    onOpenExternalUri: ((String) -> Unit)?,
 ) {
     val readBackStack = rememberNavBackStack(HomeRoute)
     val favoritesBackStack = rememberNavBackStack(FavoritesRoute)
+    val settingsBackStack = rememberNavBackStack(SettingsHomeRoute)
     val navigationScope = rememberCoroutineScope()
     var selectedDestination by rememberSaveable {
         mutableStateOf(TopLevelDestination.READING)
@@ -323,7 +350,7 @@ private fun LoadedContentNavigation(
                         when (destination) {
                             TopLevelDestination.READING -> readBackStack.popToRoot()
                             TopLevelDestination.FAVORITES -> favoritesBackStack.popToRoot()
-                            TopLevelDestination.SETTINGS -> Unit
+                            TopLevelDestination.SETTINGS -> settingsBackStack.popToRoot()
                         }
                     }
                     selectedDestination = destination
@@ -569,32 +596,67 @@ private fun LoadedContentNavigation(
                     }
                 },
             )
-            TopLevelDestination.SETTINGS -> SettingsScreen(
-                preferences = preferences,
-                supportedLocales = loaded.product.supportedLocales,
-                productTitle = loaded.product.title(preferences.locale),
-                strings = strings,
-                dailyVerseWidgetInstalled = dailyVerseWidgetInstalled,
-                dailyVerseWidgetPinSupported = dailyVerseWidgetPinSupported,
-                onRequestDailyVerseWidgetPin = onRequestDailyVerseWidgetPin,
-                onSelectTheme = { theme ->
-                    navigationScope.launch {
-                        container.userPreferencesRepository.setTheme(theme)
+            TopLevelDestination.SETTINGS -> NavDisplay(
+                backStack = settingsBackStack,
+                modifier = contentModifier,
+                onBack = { settingsBackStack.removeLastOrNull() },
+                entryProvider = entryProvider {
+                    entry<SettingsHomeRoute> {
+                        SettingsScreen(
+                            preferences = preferences,
+                            supportedLocales = loaded.product.supportedLocales,
+                            productTitle = loaded.product.title(preferences.locale),
+                            strings = strings,
+                            dailyVerseWidgetInstalled = dailyVerseWidgetInstalled,
+                            dailyVerseWidgetPinSupported = dailyVerseWidgetPinSupported,
+                            onRequestDailyVerseWidgetPin = onRequestDailyVerseWidgetPin,
+                            sourceReviewStatus = loaded.sourceManifest.reviewStatus,
+                            sourceReleaseEligibility = loaded.sourceManifest.releaseEligibility,
+                            appVersion = appVersion,
+                            onOpenSourceInformation = {
+                                settingsBackStack.add(SourceInfoRoute)
+                            },
+                            onOpenPrivacy = { settingsBackStack.add(PrivacyInfoRoute) },
+                            onSelectTheme = { theme ->
+                                navigationScope.launch {
+                                    container.userPreferencesRepository.setTheme(theme)
+                                }
+                            },
+                            onSelectLocale = { locale ->
+                                navigationScope.launch {
+                                    container.userPreferencesRepository.setLocale(locale)
+                                }
+                            },
+                            onSelectFontSize = { level ->
+                                navigationScope.launch {
+                                    container.userPreferencesRepository.setFontSizeLevel(level)
+                                }
+                            },
+                            onSetReminder = { reminder ->
+                                navigationScope.launch {
+                                    container.userPreferencesRepository.setReminder(reminder)
+                                }
+                            },
+                        )
                     }
-                },
-                onSelectLocale = { locale ->
-                    navigationScope.launch {
-                        container.userPreferencesRepository.setLocale(locale)
+                    entry<SourceInfoRoute> {
+                        SourceInfoScreen(
+                            manifest = loaded.sourceManifest,
+                            productTitle = loaded.product.title(preferences.locale),
+                            locale = preferences.locale,
+                            strings = strings,
+                            onBack = { settingsBackStack.removeLastOrNull() },
+                            onOpenExternalUri = onOpenExternalUri,
+                        )
                     }
-                },
-                onSelectFontSize = { level ->
-                    navigationScope.launch {
-                        container.userPreferencesRepository.setFontSizeLevel(level)
-                    }
-                },
-                onSetReminder = { reminder ->
-                    navigationScope.launch {
-                        container.userPreferencesRepository.setReminder(reminder)
+                    entry<PrivacyInfoRoute> {
+                        PrivacyInfoScreen(
+                            strings = strings,
+                            privacyPolicyUri = privacyPolicyUris[preferences.locale]
+                                ?: privacyPolicyUris[loaded.product.defaultLocale],
+                            onBack = { settingsBackStack.removeLastOrNull() },
+                            onOpenExternalUri = onOpenExternalUri,
+                        )
                     }
                 },
             )
@@ -806,4 +868,5 @@ internal data class LoadedContent(
     val product: ProductManifest,
     val book: BookManifest,
     val content: ScriptureContent,
+    val sourceManifest: SourceManifest,
 )

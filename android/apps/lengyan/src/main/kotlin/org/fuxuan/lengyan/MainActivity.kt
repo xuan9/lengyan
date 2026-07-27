@@ -1,7 +1,9 @@
 package org.fuxuan.lengyan
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import org.fuxuan.classics.core.behavior.ExternalUriPolicy
 import org.fuxuan.classics.core.behavior.LegacyVerseDeepLinkParser
 import org.fuxuan.classics.core.behavior.ScriptureDeepLink
 import org.fuxuan.classics.ui.ClassicsApp
@@ -62,6 +65,7 @@ class MainActivity : ComponentActivity() {
             else -> null
         }
         acceptDeepLink(intent, ignorePreviouslyAccepted = savedInstanceState != null)
+        val appVersion = installedVersionName()
 
         setContent {
             ClassicsApp(
@@ -79,6 +83,8 @@ class MainActivity : ComponentActivity() {
                     refreshDailyVerseWidgetInstallation()
                     requested
                 },
+                appVersion = appVersion,
+                onOpenExternalUri = ::openExternalUri,
             )
         }
     }
@@ -157,6 +163,25 @@ class MainActivity : ComponentActivity() {
 
     private fun refreshDailyVerseWidgetInstallation() {
         dailyVerseWidgetInstallation = dailyVerseWidgetInstaller.installationState()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun installedVersionName(): String? = runCatching {
+        packageManager.getPackageInfo(packageName, 0).versionName
+    }.getOrNull()
+
+    private fun openExternalUri(uri: String) {
+        val normalizedUri = ExternalUriPolicy.normalizedHttps(uri) ?: return
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(normalizedUri)).apply {
+            addCategory(Intent.CATEGORY_BROWSABLE)
+        }
+        try {
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            // A browser is optional; the in-app summary remains available.
+        } catch (_: SecurityException) {
+            // Ignore platform or device policy restrictions on external browsing.
+        }
     }
 
     private fun applyEdgeToEdge(darkTheme: Boolean) {

@@ -1,8 +1,8 @@
 # Android 多经典产品移植与长期开发计划
 
-**日期：** 2026-07-26\
-**版本：** v4（结合 iOS 音频清单、播放恢复、Widget 和 UI 稳定性基线复核后）\
-**状态：** Android 实施中；《楞严经》共享平台验证进行中\
+**日期：** 2026-07-27\
+**版本：** v5（同步楞严 Android 阅读、分享、Widget、提醒、来源与隐私垂直切片）\
+**状态：** Android 实施中；楞严基准版已进入 Phase 5，音频、反馈/许可与完整设备发行 Gate 待完成\
 **适用产品：** 《楞严经》《金刚经》《圆觉经》《六祖坛经》及后续单经产品\
 **开发模式：** Codex 主导代码、测试、文档和自动化；人工负责经文、权利、密钥与正式发布批准
 
@@ -45,7 +45,7 @@ Android 版本可以实施，也应从第一天按多经典产品建设。推荐
 - 让 Codex 能在新会话和干净工作区中，仅依赖仓库文档与脚本可靠继续开发。
 - 同一经文修订和行为规则能同时被 iOS、Android 校验，避免平台内容漂移。
 
-当前仓库没有 Android/Gradle/Kotlin 工程，因此这里是原生 Android 从零建设与行为移植计划，不是继续维护一个现存 Android prototype。旧 iOS 代码用于提取行为基线，不作为可复制的 Android 架构。
+当前仓库已经建立原生 Android/Gradle/Kotlin 工程，并完成楞严基准版的共享内容、阅读、搜索、收藏、设置、分享、Widget、提醒、来源与隐私垂直切片。它仍是按现有 iOS 用户结果进行的原生移植，不重做或替换生产 iOS App；后续工作在现有 Android 模块上继续，而不是另建 prototype。
 
 ### 2.2 明确不做
 
@@ -67,7 +67,7 @@ Android 版本可以实施，也应从第一天按多经典产品建设。推荐
 - Apple primary 明确失败或 15 秒无进展时，只有用户主动播放才进入 Cloudflare fallback；取消、本机空间不足和静默预取失败不得触发公网回退。
 - 当前 Cloudflare Static Assets 会忽略 Range 并返回完整文件，且没有中国大陆 SLA。其 content-addressed key 与 bytes/SHA-256 校验可以复用，host 和下载实现不能作为 Android 主链路。
 - 楞严音频已拆为 product-neutral artifact、iOS/Android delivery 与 tooling input；`AudioAssets/audio-manifest.json` 及原 17 个 Swift/Node/Apple 下游文件均为逐字节兼容的生成输出。Android 只读取 artifact contract；其 delivery 当前明确为 `planned`，没有伪用 iOS Cloudflare 应急源。
-- Gate F2 的迁移层与本地工程 Gate 已完成：`Contracts/Schemas/`、四个 `Products/<id>/` 清单、楞严两套 `legacy-migration` 包、覆盖 1,669 个旧节点的完整 path map、分层 audio contracts、source/rights gate 和 8 类 behavior fixtures 可由 `./verify.sh contracts` 在 macOS/Linux 独立校验；iOS XCTest 已直接读取同一 JSON 执行生产 policy。它精确复现现有产品但不冒充 authoritative edition，Android 可进入 Phase 1，不能跳过自己的 fixture adapter 和 Gate C。
+- Gate F2 的迁移层与本地工程 Gate 已完成：`Contracts/Schemas/`、四个 `Products/<id>/` 清单、楞严两套 `legacy-migration` 包、覆盖 1,669 个旧节点的完整 path map、分层 audio contracts、source/rights gate 和 8 类 behavior fixtures 可由 `./verify.sh contracts` 在 macOS/Linux 独立校验；iOS XCTest 与 Android JVM/设备测试均直接消费共享 JSON。它精确复现现有产品但不冒充 authoritative edition；Android 自身 adapter 与 Gate C 已完成，权威正文、权利和人工校勘仍是发行 Gate。
 - iOS 已取消技术性的音频存储设置页，改为按需准备和自动缓存/清理；其 fallback 当前无容量上限、按 28 天未访问淘汰，11 条全部缓存约 154MiB。这是现状而非 Android requirement，Phase 0 必须明确 Data Saver/Wi-Fi、单产品与全局 cache budget、清理和可选 pin。
 - 冷启动续播现在会即时持久化并保护异步 seek；Android 必须把“同一卷在进程重建后恢复且不会被初始 0 覆盖”加入 Media3 fixture 和杀进程测试。
 - 目录 disclosure state 现在还会跨重启持久化；Android 使用稳定 node ID 和产品命名空间保存，内容升级时过滤失效节点。
@@ -840,7 +840,7 @@ Gate C：Android 与 iOS 对相同 fixtures 产生相同目录、全部 leaf pat
 
 Gate D：用户无需网络完成“打开 -> 找到内容 -> 阅读 -> 收藏 -> 搜索 -> 续读”；截图和长文矩阵通过。
 
-**Phase 3 实施检查点（2026-07-26）：** 十卷连续阅读、稳定段落/码点锚点、旋转恢复、2 万字 100%/200% 字号门禁已完成。离线简繁搜索已实现自然阅读顺序、50 项显示上限、章节到首个可读段落、正文精确码点定位与高亮；同卷显式搜索优先旧续读，后续更新的滚动进度在进程重建时重新取得优先权。收藏已接通 Room 稳定 ID、旧章节锚点解析、阅读器切换、列表返回和删除空态；720dp 以上采用 340dp 收藏列表与实时阅读详情，取消当前收藏后详情保持，compact 仍沿用单栏导航，并已通过 API 35 Pixel Tablet 端到端门禁及 API 36、100%/200% 系统字号视觉检查。设置已接通主题、简繁和现有五级字号，简繁重载不再清空当前导航。单一 bottom region 已以 200% 字号测试锁定 Mini-player 与 footer 零间隙结构，未用假音频 tab 或不存在的 Widget 第三样式占位。科判目录已覆盖真实 1,669 节点/1,155 叶节点，稳定展开 ID 可跨 tab 与 Activity 重建保留，内容升级时清理失效节点，深层叶节点精确进入首段并返回原分支；十卷入口保留为同页标签。真实楞严 1,262 段已证明全部属于十卷且可达。既有 `lengyan://verse?path=...` 已接入产品专属 intent-filter、共享 typed parser、生成的旧路径映射和稳定段落导航；API 35 设备已覆盖运行中 Activity 的隐式 Intent、精确落点和进度持久化。页面 heading、当前科判/卷 selected、字号档位、动态搜索/空态语义已按 ADR 0013 接入；Compose Accessibility Test Framework 已在 API 35 对首页、目录、阅读、搜索、收藏和设置形成 2 条设备门禁并零失败。ADR 0014 的 22 个 host-rendered 基准已覆盖 320/393/673/1,000dp、明暗主题、100%/130%/200% 字号、繁简与首页/阅读/目录/收藏/设置/Widget 入口/分享预览，并由 `./verify.sh android` 默认验证。ADR 0015 已加入 release-derived、不可调试且可 profile 的楞严卷九 Macrobenchmark，常规 Gate 构建测试 APK，`./verify.sh android-benchmark` 仅允许 API 31+ 实体机采集 FrameTiming 与最大内存；在命名参考机完成重复运行并冻结阈值前，不把测试工具存在描述为性能已通过。按 ADR 0006，当前以完整连续滚动而非设备相关分页作为已接受阅读模式；没有新的产品证据与字符区间连续性证明前，分页不是 Gate D 阻塞项。Gate D 尚未完成，剩余真实 TalkBack/Switch Access 人工走查和 reference-device 量化长文性能继续按本阶段交付。
+**Phase 3 实施检查点（2026-07-27）：** 十卷连续阅读、稳定段落/码点锚点、旋转恢复、2 万字 100%/200% 字号门禁已完成。离线简繁搜索已实现自然阅读顺序、50 项显示上限、章节到首个可读段落、正文精确码点定位与高亮；同卷显式搜索优先旧续读，后续更新的滚动进度在进程重建时重新取得优先权。收藏已接通 Room 稳定 ID、旧章节锚点解析、阅读器切换、列表返回和删除空态；720dp 以上采用 340dp 收藏列表与实时阅读详情，取消当前收藏后详情保持，compact 仍沿用单栏导航，并已通过 API 35 Pixel Tablet 端到端门禁及 API 36、100%/200% 系统字号视觉检查。设置已接通主题、简繁和现有五级字号，简繁重载不再清空当前导航。单一 bottom region 已以 200% 字号测试锁定 Mini-player 与 footer 零间隙结构，未用假音频 tab 或不存在的 Widget 第三样式占位。科判目录已覆盖真实 1,669 节点/1,155 叶节点，稳定展开 ID 可跨 tab 与 Activity 重建保留，内容升级时清理失效节点，深层叶节点精确进入首段并返回原分支；十卷入口保留为同页标签。真实楞严 1,262 段已证明全部属于十卷且可达。既有 `lengyan://verse?path=...` 已接入产品专属 intent-filter、共享 typed parser、生成的旧路径映射和稳定段落导航；API 35 设备已覆盖运行中 Activity 的隐式 Intent、精确落点和进度持久化。页面 heading、当前科判/卷 selected、字号档位、动态搜索/空态语义已按 ADR 0013 接入；Compose Accessibility Test Framework 已在 API 35 对首页、目录、阅读、搜索、收藏、设置、来源和隐私形成设备门禁。ADR 0014 的 26 个 host-rendered 基准已覆盖 320/393/673/1,000dp、明暗主题、100%/130%/200% 字号、繁简与首页/阅读/目录/收藏/设置/Widget 入口/分享预览/来源/隐私，并由 `./verify.sh android` 默认验证。ADR 0015 已加入 release-derived、不可调试且可 profile 的楞严卷九 Macrobenchmark，常规 Gate 构建测试 APK，`./verify.sh android-benchmark` 仅允许 API 31+ 实体机采集 FrameTiming 与最大内存；在命名参考机完成重复运行并冻结阈值前，不把测试工具存在描述为性能已通过。按 ADR 0006，当前以完整连续滚动而非设备相关分页作为已接受阅读模式；没有新的产品证据与字符区间连续性证明前，分页不是 Gate D 阻塞项。Gate D 尚未完成，剩余真实 TalkBack/Switch Access 人工走查和 reference-device 量化长文性能继续按本阶段交付。
 
 ### Phase 4：音频和离线交付（3-5 周）
 
@@ -869,7 +869,7 @@ Gate F：Widget/提醒/分享在 API 26、33、36 和目标 OEM 上通过；分�
 
 **Phase 5 分享实施检查点（2026-07-26）：** ADR 0016 已接通卷阅读及收藏详情的统一分享入口；分享页只传 stable volume ID，并立即显示最多 420 字的左对齐轻预览，进入页面不做 bitmap 或完整图片测量。用户触发后才在后台逐页生成 1080px 宽、最高 13,500px、JPEG 90 的不透明图片，沿用当前五级阅读字号且不因长文缩小；末页按内容收紧，任务可取消并清除半成品。文字分享、UTF-8 `.txt` 系统存档和全文复制均不设正文上限；用户可见文件名不含日期、时间、UUID 或 `text`。API 35 使用共享真实卷九段落密度完成 1,800/9,000/20,000 字测试，分别为 2/9/19 页、2.50/12.64/28.06 MiB、195/665/1,303 ms，单页实际峰值 27.71 MiB；API 36 已检查首/中/末 JPEG 非白屏、正文左对齐、笔画清晰和末页无大块尾部空白。上述是模拟器回归数据，不替代 Gate F 的 API 26/33、实体机和目标接收端矩阵。
 
-**Phase 5 Widget 实施检查点（2026-07-27）：** ADR 0017 已完成产品中立的 Glance 每日经文核心。`featuredParagraphIDs` 进入共享 product contract 并在所有支持语言中验证；楞严首批 50 个精选稳定段落来自现有 iOS 每日经文池，不复制正文。组件按 launcher 实际尺寸响应，正文保持 17-19sp、左对齐并按句读语义截断；当天选择按产品、内容版本和本地日期锁定，点击后产生的阅读进度不会让经句跳变。独立 DataStore 保存最近有效快照，实时内容失败时继续显示并可点击；所有点击使用显式组件，稳定段落精确进入阅读页。ADR 0019 进一步完成设置页唯一“今日读经”入口：支持时调用系统 `requestPinAppWidget`，不支持、返回失败或平台拒绝时才显示三步 launcher 回退；状态始终从当前产品 receiver 的真实 Widget ID 刷新，已添加时仍允许增加实例，不把小/中/大误作三种样式。API 35 自动门禁覆盖 provider metadata、真实 packaged content、当天稳定性/快照、深链、180x110/196x240/320x320 RemoteViews，以及 pin 能力/状态、失败回退、200% 字号和无“经文卡片”文案；API 36 AOSP Launcher3 已从设置实际打开 3x2 系统预览、完成添加、刷新“已加入”状态，并检查繁体组件渲染与点击精确落到卷九段落。API 26/33、Samsung/目标大陆 OEM、实体 TalkBack/Switch Access 仍未完成；来源/隐私/反馈页面也未实施，因此 Phase 5 与 Gate F 仍未完成。
+**Phase 5 Widget/信息实施检查点（2026-07-27）：** ADR 0017 已完成产品中立的 Glance 每日经文核心。`featuredParagraphIDs` 进入共享 product contract 并在所有支持语言中验证；楞严首批 50 个精选稳定段落来自现有 iOS 每日经文池，不复制正文。组件按 launcher 实际尺寸响应，正文保持 17-19sp、左对齐并按句读语义截断；当天选择按产品、内容版本和本地日期锁定，点击后产生的阅读进度不会让经句跳变。独立 DataStore 保存最近有效快照，实时内容失败时继续显示并可点击；所有点击使用显式组件，稳定段落精确进入阅读页。ADR 0019 进一步完成设置页唯一“今日读经”入口：支持时调用系统 `requestPinAppWidget`，不支持、返回失败或平台拒绝时才显示三步 launcher 回退；状态始终从当前产品 receiver 的真实 Widget ID 刷新，已添加时仍允许增加实例，不把小/中/大误作三种样式。API 35 自动门禁覆盖 provider metadata、真实 packaged content、当天稳定性/快照、深链、180x110/196x240/320x320 RemoteViews，以及 pin 能力/状态、失败回退、200% 字号和无“经文卡片”文案；API 36 AOSP Launcher3 已从设置实际打开 3x2 系统预览、完成添加、刷新“已加入”状态，并检查繁体组件渲染与点击精确落到卷九段落。ADR 0020 已新增设置子导航、严格来源清单解析与缓存/交叉校验、真实来源角色和权利状态、仅 HTTPS 外链，以及符合当前 Android 无网络权限/无备份实现的隐私页；CBETA T0945 明确只作校勘参考，不冒充当前正文来源。API 35 导航与无障碍、200% 字号和 4 张新增截图均已覆盖。API 26/33、Samsung/目标大陆 OEM、实体 TalkBack/Switch Access 仍未完成；多产品反馈 `productID` 协议与完整开源许可清单也未实施，因此 Phase 5 与 Gate F 仍未完成。
 
 **Phase 5 提醒实施检查点（2026-07-27）：** ADR 0018 已完成共享 `:libraries:reminder` 垂直切片。设置页提供标准 Switch 与 24 小时时间选择，只在用户主动开启时请求 Android 13+ 通知权限，拒绝则保持关闭；界面明确使用“约在”而不承诺分钟级到达。调度采用一次性 `setAndAllowWhileIdle` 非精确闹钟，每次触发读取最新偏好并安排下一天，重启、系统时间/时区、locale 和 App 更新通过非导出 receiver 重新核对；清单明确测试不含两种 exact-alarm 权限。通知使用产品文案和显式 Activity Intent，将最近阅读的 stable paragraph ID 与 Unicode 码点偏移送入现有 typed deep-link/reader 路由。JVM 已覆盖正常日期、夏令时缺口/重叠与整分钟边界；API 35 已验证真实繁体渠道/通知、权限清单、receiver 安全属性和精确字符续读。API 26、API 33 权限弹窗、API 36、实体机省电策略及 Samsung/目标大陆 OEM 仍属 Gate F，不能据此宣称系统提醒已完成发布矩阵。
 

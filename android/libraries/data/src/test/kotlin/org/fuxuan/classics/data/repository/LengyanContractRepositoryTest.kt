@@ -6,6 +6,9 @@ import org.fuxuan.classics.core.behavior.ParagraphTextAnchor
 import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
 import org.fuxuan.classics.core.behavior.SearchDocumentKind
 import org.fuxuan.classics.core.behavior.VolumeReadingDocument
+import org.fuxuan.classics.core.content.DocumentedSourceRole
+import org.fuxuan.classics.core.content.SourceReleaseEligibility
+import org.fuxuan.classics.core.content.SourceReviewStatus
 import org.fuxuan.classics.data.contracts.ClassicsContractParser
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -28,11 +31,12 @@ class LengyanContractRepositoryTest {
     }
 
     @Test
-    fun loadsTheSharedProductBookContentAndAudioContracts() = runBlocking {
+    fun loadsTheSharedProductBookSourceContentAndAudioContracts() = runBlocking {
         val repository = DefaultBookRepository(source)
 
         val product = repository.product()
         val book = repository.book()
+        val sourceManifest = repository.sourceManifest()
         val traditional = repository.content("zh-Hant")
         val simplified = repository.content("zh-Hans")
         val audio = requireNotNull(repository.audioCatalog())
@@ -40,6 +44,20 @@ class LengyanContractRepositoryTest {
         assertEquals("lengyan", product.productID)
         assertEquals("lengyanjing", book.bookID)
         assertEquals("legacy-1", book.contentVersion)
+        assertEquals(SourceReviewStatus.LEGACY_UNVERIFIED, sourceManifest.reviewStatus)
+        assertEquals(SourceReleaseEligibility.BLOCKED, sourceManifest.releaseEligibility)
+        assertEquals(2, sourceManifest.sources.size)
+        assertEquals(
+            listOf(
+                DocumentedSourceRole.LEGACY_RUNTIME_INPUT,
+                DocumentedSourceRole.COLLATION_REFERENCE,
+            ),
+            sourceManifest.sources.map { it.role },
+        )
+        assertEquals(
+            "唐 般剌蜜帝譯",
+            sourceManifest.sources.last().attribution("zh-Hant"),
+        )
         assertEquals(10, traditional.volumes.size)
         assertEquals(1_669, traditional.sections.size)
         assertEquals(1_262, traditional.paragraphs.size)
@@ -60,6 +78,92 @@ class LengyanContractRepositoryTest {
         val mappedVolumeIDs = audio.artifacts.mapNotNull { it.contentMapping.volumeID }.toSet()
         assertEquals(traditional.volumes.map { it.volumeID }.toSet(), mappedVolumeIDs)
         assertEquals(1, audio.artifacts.count { it.contentMapping.status == "legacy-unmapped" })
+    }
+
+    @Test
+    fun parsesEveryRegisteredProductSourceManifest() {
+        val parser = ClassicsContractParser()
+
+        listOf("lengyan", "jingang", "yuanjue", "tanjing").forEach { productID ->
+            val manifest = parser.parseSourceManifest(
+                repositoryRoot.resolve("Products/$productID/source-manifest.json")
+                    .readText(Charsets.UTF_8),
+            )
+
+            assertEquals(productID, manifest.productID)
+            assertEquals(SourceReleaseEligibility.BLOCKED, manifest.releaseEligibility)
+        }
+    }
+
+    @Test
+    fun rejectsAnExplicitlyEmptySourceAttributionMap() {
+        val invalid = source.readText("source-manifest.json").replace(
+            oldValue = "\"sourceHeaderAttribution\": {\n        \"zh-Hant\": \"唐 般剌蜜帝譯\"\n      }",
+            newValue = "\"sourceHeaderAttribution\": {}",
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            ClassicsContractParser().parseSourceManifest(invalid)
+        }
+    }
+
+    @Test
+    fun sourceManifestIsReadOnceAndCached() = runBlocking {
+        val reads = mutableMapOf<String, Int>()
+        val repository = DefaultBookRepository(
+            ContractSource { relativePath ->
+                reads[relativePath] = reads.getOrDefault(relativePath, 0) + 1
+                source.readText(relativePath)
+            },
+        )
+
+        val first = repository.sourceManifest()
+        val second = repository.sourceManifest()
+
+        assertSame(first, second)
+        assertEquals(1, reads["source-manifest.json"])
+    }
+
+    @Test
+    fun rejectsASourceManifestForAnotherProduct() {
+        val wrongProductManifest = source.readText("source-manifest.json").replace(
+            oldValue = "\"productID\": \"lengyan\"",
+            newValue = "\"productID\": \"jingang\"",
+        )
+        val repository = DefaultBookRepository(
+            ContractSource { relativePath ->
+                if (relativePath == "source-manifest.json") {
+                    wrongProductManifest
+                } else {
+                    source.readText(relativePath)
+                }
+            },
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { repository.sourceManifest() }
+        }
+    }
+
+    @Test
+    fun rejectsContentThatReferencesAnUndocumentedSource() {
+        val alteredSourceManifest = source.readText("source-manifest.json").replace(
+            oldValue = "lengyan.source.legacy-repository-json",
+            newValue = "lengyan.source.undocumented-replacement",
+        )
+        val repository = DefaultBookRepository(
+            ContractSource { relativePath ->
+                if (relativePath == "source-manifest.json") {
+                    alteredSourceManifest
+                } else {
+                    source.readText(relativePath)
+                }
+            },
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { repository.content("zh-Hant") }
+        }
     }
 
     @Test

@@ -9,6 +9,8 @@ interface BookRepository {
 
     suspend fun book(): BookManifest
 
+    suspend fun sourceManifest(): SourceManifest
+
     suspend fun content(locale: String): ScriptureContent
 
     suspend fun audioCatalog(): AudioCatalog?

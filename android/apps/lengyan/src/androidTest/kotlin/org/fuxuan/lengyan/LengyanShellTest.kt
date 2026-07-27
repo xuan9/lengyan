@@ -34,6 +34,7 @@ import org.fuxuan.classics.core.behavior.LegacyLocationUsage
 import org.fuxuan.classics.core.behavior.ReadingMode
 import org.fuxuan.classics.core.behavior.ScriptureSearchNavigationPolicy
 import org.fuxuan.classics.core.behavior.SearchDocumentKind
+import org.fuxuan.classics.core.content.DocumentedSourceRole
 import org.fuxuan.classics.core.persistence.Favorite
 import org.fuxuan.classics.core.persistence.ReadingProgress
 import org.fuxuan.classics.core.persistence.ReminderPreferences
@@ -403,6 +404,65 @@ class LengyanShellTest {
                 container.userPreferencesRepository.setReminder(originalPreferences.reminder)
             }
         }
+    }
+
+    @Test
+    fun settingsSourceAndPrivacyPagesReflectTheProductContract() {
+        val container = (composeRule.activity.application as LengyanApplication).container
+        val sourceManifest = runBlocking { container.bookRepository.sourceManifest() }
+        val runtimeSource = sourceManifest.sources.first {
+            it.role == DocumentedSourceRole.LEGACY_RUNTIME_INPUT
+        }
+        val collationSource = sourceManifest.sources.first {
+            it.role == DocumentedSourceRole.COLLATION_REFERENCE
+        }
+        val collationIdentifier = requireNotNull(collationSource.canonicalIdentifier)
+
+        composeRule.onNodeWithTag("bottom.settings", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("settings.source", useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+
+        composeRule.onNodeWithTag("source.screen", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("目前資料仍待核實", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("source.list", useUnmergedTree = true)
+            .performScrollToNode(
+                hasTestTag("source.record.${runtimeSource.sourceID}"),
+            )
+        composeRule.onNodeWithText("權利依據待核實", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("source.list", useUnmergedTree = true)
+            .performScrollToNode(
+                hasTestTag("source.record.${collationSource.sourceID}"),
+            )
+        composeRule.onNodeWithText("僅用於校勘，不等於目前正文來源。", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "典籍編號：$collationIdentifier",
+            useUnmergedTree = true,
+        )
+            .assertIsDisplayed()
+
+        composeRule.onNodeWithContentDescription("返回", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("settings.screen", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("settings.privacy", useUnmergedTree = true)
+            .performScrollTo()
+            .performClick()
+        composeRule.onNodeWithTag("privacy.screen", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("本機資料", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "App 不含廣告、第三方分析或跨 App 追蹤。",
+            useUnmergedTree = true,
+        ).performScrollTo().assertIsDisplayed()
+
+        composeRule.onNodeWithTag("bottom.settings", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("settings.screen", useUnmergedTree = true)
+            .assertIsDisplayed()
     }
 
     @Test

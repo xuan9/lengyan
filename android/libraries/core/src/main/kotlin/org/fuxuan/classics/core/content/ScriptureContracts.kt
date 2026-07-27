@@ -454,11 +454,11 @@ data class AudioCatalog(
 }
 
 private const val NORMALIZATION = "utf8-nfc-lf-v1"
-private const val MAX_SAFE_INTEGER = 9_007_199_254_740_991L
-private val PRODUCT_ID_PATTERN = Regex("^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
-private val BOOK_ID_PATTERN = PRODUCT_ID_PATTERN
-private val EDITION_ID_PATTERN = Regex("^[a-z0-9][a-z0-9.-]*$")
-private val LOCALE_PATTERN = Regex("^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$")
+internal const val MAX_SAFE_INTEGER = 9_007_199_254_740_991L
+internal val PRODUCT_ID_PATTERN = Regex("^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
+internal val BOOK_ID_PATTERN = PRODUCT_ID_PATTERN
+internal val EDITION_ID_PATTERN = Regex("^[a-z0-9][a-z0-9.-]*$")
+internal val LOCALE_PATTERN = Regex("^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$")
 private val CONTENT_VERSION_PATTERN = Regex("^[A-Za-z0-9][A-Za-z0-9._-]*$")
 private val VOLUME_ID_PATTERN = Regex("^[a-z][a-z0-9-]*\\.v[0-9]{6}$")
 private val SECTION_ID_PATTERN = Regex("^[a-z][a-z0-9-]*\\.s[0-9]{6}$")
@@ -469,7 +469,7 @@ private val SOURCE_ID_PATTERN = ARTIFACT_ID_PATTERN
 private val ARTIFACT_KEY_PATTERN = Regex("^[a-z0-9][a-z0-9._/-]*$")
 private val MEDIA_TYPE_PATTERN = Regex("^[a-z0-9.+-]+/[a-z0-9.+-]+$")
 private val FILE_EXTENSION_PATTERN = Regex("^[a-z0-9]+$")
-private val SHA256_PATTERN = Regex("^[a-f0-9]{64}$")
+internal val SHA256_PATTERN = Regex("^[a-f0-9]{64}$")
 private val PRODUCT_LIFECYCLES = setOf("production", "development", "source-review", "retired")
 private val NAVIGATION_MODES = setOf("hierarchy-and-volumes", "source-hierarchy", "continuous")
 private val BOOK_CONTRACT_STATES = setOf("legacy-migration", "source-review", "canonical-ready")

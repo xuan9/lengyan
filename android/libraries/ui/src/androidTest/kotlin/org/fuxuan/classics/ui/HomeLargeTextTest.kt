@@ -14,13 +14,27 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.fuxuan.classics.core.content.BookManifest
+import org.fuxuan.classics.core.content.DocumentedSource
+import org.fuxuan.classics.core.content.DocumentedSourceArtifact
+import org.fuxuan.classics.core.content.DocumentedSourceFormat
+import org.fuxuan.classics.core.content.DocumentedSourceRights
+import org.fuxuan.classics.core.content.DocumentedSourceRole
 import org.fuxuan.classics.core.content.ProductFeatures
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
 import org.fuxuan.classics.core.content.ScriptureParagraph
 import org.fuxuan.classics.core.content.ScriptureSection
 import org.fuxuan.classics.core.content.ScriptureVolume
+import org.fuxuan.classics.core.content.SourceApproval
+import org.fuxuan.classics.core.content.SourceApprovalStatus
+import org.fuxuan.classics.core.content.SourceApprovals
+import org.fuxuan.classics.core.content.SourceCommercialUse
+import org.fuxuan.classics.core.content.SourceManifest
+import org.fuxuan.classics.core.content.SourceRedistribution
 import org.fuxuan.classics.core.content.SourceReference
+import org.fuxuan.classics.core.content.SourceReleaseEligibility
+import org.fuxuan.classics.core.content.SourceReviewStatus
+import org.fuxuan.classics.core.content.SourceRightsStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -158,6 +172,59 @@ class HomeLargeTextTest {
                 ),
             ),
         )
-        return LoadedContent(product = product, book = book, content = content)
+        return LoadedContent(
+            product = product,
+            book = book,
+            content = content,
+            sourceManifest = SourceManifest(
+                schemaVersion = 1,
+                productID = product.productID,
+                bookID = book.bookID,
+                editionID = book.editionID,
+                reviewStatus = SourceReviewStatus.LEGACY_UNVERIFIED,
+                releaseEligibility = SourceReleaseEligibility.BLOCKED,
+                approvals = SourceApprovals(
+                    textAccuracy = pendingApproval(),
+                    rights = pendingApproval(),
+                ),
+                sources = listOf(
+                    DocumentedSource(
+                        sourceID = "test-source",
+                        role = DocumentedSourceRole.LEGACY_RUNTIME_INPUT,
+                        format = DocumentedSourceFormat.REPOSITORY_JSON,
+                        title = "Test fixture",
+                        institution = null,
+                        canonicalIdentifier = null,
+                        sourceHeaderAttribution = emptyMap(),
+                        sourceURI = "repo://test/source.json",
+                        revision = null,
+                        retrievedOn = "2026-07-27",
+                        rights = DocumentedSourceRights(
+                            status = SourceRightsStatus.UNKNOWN,
+                            commercialUse = SourceCommercialUse.UNKNOWN,
+                            redistribution = SourceRedistribution.UNKNOWN,
+                            statement = "Test fixture only.",
+                            statementURI = null,
+                            licenseIdentifier = null,
+                        ),
+                        artifacts = listOf(
+                            DocumentedSourceArtifact(
+                                locator = "fixture",
+                                pathWithinSource = "source.json",
+                                bytes = 1,
+                                sha256 = "0".repeat(64),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
     }
+
+    private fun pendingApproval() = SourceApproval(
+        status = SourceApprovalStatus.PENDING,
+        reviewedBy = null,
+        reviewedAt = null,
+        notes = null,
+    )
 }

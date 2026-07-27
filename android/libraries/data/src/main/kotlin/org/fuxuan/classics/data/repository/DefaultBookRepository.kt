@@ -3,15 +3,16 @@ package org.fuxuan.classics.data.repository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.fuxuan.classics.core.content.AudioCatalog
 import org.fuxuan.classics.core.behavior.LegacyLocationResolution
 import org.fuxuan.classics.core.behavior.LegacyLocationResolver
 import org.fuxuan.classics.core.behavior.LegacyLocationUsage
 import org.fuxuan.classics.core.behavior.ScriptureSearchIndex
+import org.fuxuan.classics.core.content.AudioCatalog
 import org.fuxuan.classics.core.content.BookManifest
 import org.fuxuan.classics.core.content.BookRepository
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
+import org.fuxuan.classics.core.content.SourceManifest
 import org.fuxuan.classics.data.contracts.ClassicsContractParser
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
@@ -23,6 +24,7 @@ class DefaultBookRepository(
 ) : BookRepository {
     private val productCache = AtomicReference<ProductManifest?>()
     private val bookCache = AtomicReference<BookManifest?>()
+    private val sourceManifestCache = AtomicReference<SourceManifest?>()
     private val audioCache = AtomicReference<LoadedAudioCatalog?>()
     private val legacyResolverCache = AtomicReference<LoadedLegacyResolver?>()
     private val searchIndexCache = AtomicReference<ScriptureSearchIndex?>()
@@ -34,6 +36,10 @@ class DefaultBookRepository(
 
     override suspend fun book(): BookManifest = withContext(ioDispatcher) {
         loadBook()
+    }
+
+    override suspend fun sourceManifest(): SourceManifest = withContext(ioDispatcher) {
+        loadSourceManifest()
     }
 
     override suspend fun content(locale: String): ScriptureContent = withContext(ioDispatcher) {
@@ -92,6 +98,25 @@ class DefaultBookRepository(
         bookCache.get()!!
     }
 
+    private fun loadSourceManifest(): SourceManifest = sourceManifestCache.get() ?: run {
+        val product = loadProduct()
+        val book = loadBook()
+        val loaded = parser.parseSourceManifest(
+            source.readText(safeRelativePath(product.sourceManifestPath)),
+        )
+        require(loaded.productID == product.productID) {
+            "source manifest belongs to a different product"
+        }
+        require(loaded.bookID == book.bookID) {
+            "source manifest belongs to a different book"
+        }
+        require(loaded.editionID == book.editionID) {
+            "source manifest belongs to a different edition"
+        }
+        sourceManifestCache.compareAndSet(null, loaded)
+        sourceManifestCache.get()!!
+    }
+
     private fun loadContent(locale: String): ScriptureContent {
         val book = loadBook()
         val path = book.contentPackagePaths[locale]
@@ -103,6 +128,22 @@ class DefaultBookRepository(
         require(loaded.contentVersion == book.contentVersion) { "content version does not match book" }
         require(loaded.locale == locale) { "content locale does not match requested locale" }
         require(loaded.normalization == book.normalization) { "content normalization does not match book" }
+        val documentedSourceIDs = loadSourceManifest().sources.mapTo(mutableSetOf()) { it.sourceID }
+        val referencedSourceIDs = buildSet {
+            loaded.volumes.flatMapTo(this) { volume ->
+                volume.sourceReferences.map { it.sourceID }
+            }
+            loaded.sections.flatMapTo(this) { section ->
+                section.sourceReferences.map { it.sourceID }
+            }
+            loaded.paragraphs.flatMapTo(this) { paragraph ->
+                paragraph.sourceReferences.map { it.sourceID }
+            }
+        }
+        val undocumentedSourceIDs = referencedSourceIDs - documentedSourceIDs
+        require(undocumentedSourceIDs.isEmpty()) {
+            "content references undocumented sources: ${undocumentedSourceIDs.sorted().joinToString()}"
+        }
         val unknownFeaturedParagraphs = loadProduct().featuredParagraphIDs.filter {
             loaded.paragraph(it) == null
         }

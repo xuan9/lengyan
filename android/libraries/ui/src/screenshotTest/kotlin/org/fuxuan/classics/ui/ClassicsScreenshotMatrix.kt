@@ -17,13 +17,27 @@ import com.android.tools.screenshot.PreviewTest
 import org.fuxuan.classics.core.behavior.ReadingMode
 import org.fuxuan.classics.core.behavior.VolumeReadingDocument
 import org.fuxuan.classics.core.content.BookManifest
+import org.fuxuan.classics.core.content.DocumentedSource
+import org.fuxuan.classics.core.content.DocumentedSourceArtifact
+import org.fuxuan.classics.core.content.DocumentedSourceFormat
+import org.fuxuan.classics.core.content.DocumentedSourceRights
+import org.fuxuan.classics.core.content.DocumentedSourceRole
 import org.fuxuan.classics.core.content.ProductFeatures
 import org.fuxuan.classics.core.content.ProductManifest
 import org.fuxuan.classics.core.content.ScriptureContent
 import org.fuxuan.classics.core.content.ScriptureParagraph
 import org.fuxuan.classics.core.content.ScriptureSection
 import org.fuxuan.classics.core.content.ScriptureVolume
+import org.fuxuan.classics.core.content.SourceApproval
+import org.fuxuan.classics.core.content.SourceApprovalStatus
+import org.fuxuan.classics.core.content.SourceApprovals
+import org.fuxuan.classics.core.content.SourceCommercialUse
+import org.fuxuan.classics.core.content.SourceManifest
+import org.fuxuan.classics.core.content.SourceRedistribution
 import org.fuxuan.classics.core.content.SourceReference
+import org.fuxuan.classics.core.content.SourceReleaseEligibility
+import org.fuxuan.classics.core.content.SourceReviewStatus
+import org.fuxuan.classics.core.content.SourceRightsStatus
 import org.fuxuan.classics.core.persistence.AudioPreferences
 import org.fuxuan.classics.core.persistence.Favorite
 import org.fuxuan.classics.core.persistence.ProductPreferences
@@ -250,10 +264,54 @@ fun settingsTraditionalScreenshot() {
             dailyVerseWidgetInstalled = false,
             dailyVerseWidgetPinSupported = true,
             onRequestDailyVerseWidgetPin = { true },
+            sourceReviewStatus = SourceReviewStatus.LEGACY_UNVERIFIED,
+            sourceReleaseEligibility = SourceReleaseEligibility.BLOCKED,
+            appVersion = "0.1.0",
+            onOpenSourceInformation = {},
+            onOpenPrivacy = {},
             onSelectTheme = {},
             onSelectLocale = {},
             onSelectFontSize = {},
             onSetReminder = {},
+        )
+    }
+}
+
+@PreviewTest
+@Preview(name = "compact-dark-200", widthDp = 320, heightDp = 700, fontScale = 2f, uiMode = NIGHT)
+@Preview(name = "tablet-light-130", widthDp = 1_000, heightDp = 700, fontScale = 1.3f, uiMode = DAY)
+@Composable
+fun sourceInformationTraditionalScreenshot() {
+    val loaded = screenshotContent("zh-Hant")
+    ScreenshotShell(
+        selected = TopLevelDestination.SETTINGS,
+        strings = AppStrings("zh-Hant"),
+    ) {
+        SourceInfoScreen(
+            manifest = loaded.sourceManifest,
+            productTitle = loaded.product.title("zh-Hant"),
+            locale = "zh-Hant",
+            strings = AppStrings("zh-Hant"),
+            onBack = {},
+            onOpenExternalUri = {},
+        )
+    }
+}
+
+@PreviewTest
+@Preview(name = "phone-light-100", widthDp = 393, heightDp = 852, fontScale = 1f, uiMode = DAY)
+@Preview(name = "compact-dark-200", widthDp = 320, heightDp = 700, fontScale = 2f, uiMode = NIGHT)
+@Composable
+fun privacyTraditionalScreenshot() {
+    ScreenshotShell(
+        selected = TopLevelDestination.SETTINGS,
+        strings = AppStrings("zh-Hant"),
+    ) {
+        PrivacyInfoScreen(
+            strings = AppStrings("zh-Hant"),
+            privacyPolicyUri = "https://example.com/privacy",
+            onBack = {},
+            onOpenExternalUri = {},
         )
     }
 }
@@ -423,5 +481,84 @@ private fun screenshotContent(locale: String): LoadedContent {
             legacyMapPath = null,
         ),
         content = content,
+        sourceManifest = screenshotSourceManifest(),
     )
 }
+
+private fun screenshotSourceManifest(): SourceManifest = SourceManifest(
+    schemaVersion = 1,
+    productID = "screenshot",
+    bookID = "screenshot-book",
+    editionID = "screenshot-edition-v1",
+    reviewStatus = SourceReviewStatus.LEGACY_UNVERIFIED,
+    releaseEligibility = SourceReleaseEligibility.BLOCKED,
+    approvals = SourceApprovals(
+        textAccuracy = pendingSourceApproval("尚未完成逐字審核。"),
+        rights = pendingSourceApproval("現有執行資料的權利依據尚待確認。"),
+    ),
+    sources = listOf(
+        DocumentedSource(
+            sourceID = "screenshot.source.legacy-runtime",
+            role = DocumentedSourceRole.LEGACY_RUNTIME_INPUT,
+            format = DocumentedSourceFormat.REPOSITORY_JSON,
+            title = "Existing app runtime data",
+            institution = null,
+            canonicalIdentifier = null,
+            sourceHeaderAttribution = emptyMap(),
+            sourceURI = "repo://screenshot",
+            revision = "fixture",
+            retrievedOn = "2026-07-27",
+            rights = DocumentedSourceRights(
+                status = SourceRightsStatus.UNKNOWN,
+                commercialUse = SourceCommercialUse.UNKNOWN,
+                redistribution = SourceRedistribution.UNKNOWN,
+                statement = "Fixture runtime source rights are unverified.",
+                statementURI = null,
+                licenseIdentifier = null,
+            ),
+            artifacts = listOf(
+                DocumentedSourceArtifact(
+                    locator = "fixture/content.json",
+                    pathWithinSource = "fixture/content.json",
+                    bytes = 1,
+                    sha256 = "0".repeat(64),
+                ),
+            ),
+        ),
+        DocumentedSource(
+            sourceID = "screenshot.source.collation",
+            role = DocumentedSourceRole.COLLATION_REFERENCE,
+            format = DocumentedSourceFormat.TEI_XML,
+            title = "校勘參考資料示例",
+            institution = "典籍資料機構",
+            canonicalIdentifier = "Catalog X0001",
+            sourceHeaderAttribution = mapOf("zh-Hant" to "譯者資料示例"),
+            sourceURI = "https://example.com/source",
+            revision = "fixture",
+            retrievedOn = "2026-07-27",
+            rights = DocumentedSourceRights(
+                status = SourceRightsStatus.RESTRICTED_NONCOMMERCIAL,
+                commercialUse = SourceCommercialUse.REQUIRES_PERMISSION,
+                redistribution = SourceRedistribution.HEADER_REQUIRED,
+                statement = "Noncommercial collation reference.",
+                statementURI = "https://example.com/rights",
+                licenseIdentifier = null,
+            ),
+            artifacts = listOf(
+                DocumentedSourceArtifact(
+                    locator = "fixtures/collation.xml",
+                    pathWithinSource = "fixtures/collation.xml",
+                    bytes = 1,
+                    sha256 = "1".repeat(64),
+                ),
+            ),
+        ),
+    ),
+)
+
+private fun pendingSourceApproval(notes: String): SourceApproval = SourceApproval(
+    status = SourceApprovalStatus.PENDING,
+    reviewedBy = null,
+    reviewedAt = null,
+    notes = notes,
+)
