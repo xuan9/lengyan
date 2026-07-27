@@ -1,6 +1,6 @@
 # Feedback Worker deployment
 
-Run commands from this directory. The lockfile pins the tested Wrangler 4.112.0;
+Run commands from this directory. The lockfile pins the tested Wrangler 4.114.0;
 the Worker requires at least 4.36.0 for native Rate Limiting bindings.
 
 ```sh
@@ -13,6 +13,13 @@ npm run deploy:dry-run
 
 Then follow “Routine production deployment and health check” below. Do not
 clear data or apply a pending migration as an incidental deployment step.
+
+The repository contains the prepared multi-product feedback contract and
+additive migration `0006_add_feedback_product_id.sql`. This is not evidence that
+the production database or Worker has been migrated. The migration requires a
+human-approved production change window and must be applied and inspected
+before the matching Worker is deployed; deploying the new Worker first would
+make submissions fail because the old table has no `product_id` column.
 
 The following commands are for first-time setup or an intentional credential
 rotation only, not routine deployment. Wrangler prompts securely for each value:
@@ -85,14 +92,56 @@ only the code's explicit generic custom errors and scheduled cleanup failures;
 configure alerts for those failures without logging request bodies or headers.
 
 Migrations are ordered so all deployment histories converge on the minimal
-schema with no diagnostic columns:
+schema with no diagnostic columns and explicit product ownership:
 
-- A fresh database applies `0000` through `0005` in order.
+- A fresh database applies `0000` through `0006` in order.
 - A database that already recorded `0001` applies the harmless
   `CREATE TABLE IF NOT EXISTS` baseline in `0000`, then the remaining migrations.
 - A database that already recorded an earlier draft of `0002` applies `0003`,
   which rebuilds the stricter schema; `0004` clears any remaining diagnostics,
   and `0005` removes those columns entirely.
+- `0006` uses only `ALTER TABLE ... ADD COLUMN` and `CREATE INDEX`. It preserves
+  every row and classifies it as `lengyan`, because the historical endpoint
+  served only that product. Its constrained default also lets the already
+  released client and support form continue writing during the rollout.
+
+The new Worker writes `productID` explicitly, accepts only code-reviewed active
+products, and returns HTTP 400 for an unknown explicit ID. The compatibility
+mapping applies only when the field is absent; it must not be copied as the
+launch strategy for a new product. The active registry currently contains only
+`lengyan`. Product ID is routing metadata, not authentication or an abuse
+control. `ACCEPT_LEGACY_MISSING_PRODUCT_ID` keeps the transition explicit; turn
+it off only after the released Lengyan clients and support form that omit the
+field have completed an approved retirement window.
+
+## Approved rollout procedure for migration 0006
+
+Do not run this procedure without the production-infrastructure and privacy
+approval required by the repository gates.
+
+1. Obtain privacy approval and synchronize the public Simplified/Traditional
+   pages, in-app copy and applicable store disclosures so they name the stable
+   product identifier before D1 begins retaining it.
+2. Confirm that `0006_add_feedback_product_id.sql` is the only pending remote
+   migration. Record a fresh Time Travel bookmark and the current row count
+   without selecting feedback content.
+3. Apply the pending D1 migration during the approved window. Do not deploy the
+   Worker in the same uninspected command sequence.
+4. Inspect `PRAGMA table_info(feedback)` and `PRAGMA index_list(feedback)`.
+   Confirm `product_id` is non-null with the `lengyan` default and
+   `idx_feedback_product_read_created_at` exists. Verify
+   `SELECT product_id, COUNT(*) FROM feedback GROUP BY product_id` reports only
+   the expected legacy `lengyan` classification.
+5. Deploy the matching Worker, then submit and delete one clearly labelled
+   `productID: "lengyan"` test row. Separately verify that a request with an
+   unknown explicit ID returns HTTP 400 and writes no row.
+6. Verify the admin list shows the product label and that its product filter is
+   parameterized. Recheck retention cleanup and generic error observability.
+
+If the Worker must be rolled back, the prior Worker remains compatible because
+the new column has a default. Leave the additive column and index in place; do
+not attempt a destructive schema rollback. If the migration itself fails,
+stop before deploying the Worker and use the approved D1 recovery procedure.
 
 ## Routine production deployment and health check
 
@@ -128,12 +177,13 @@ schema with no diagnostic columns:
 
    ```sh
    npm exec wrangler d1 execute lengyan-feedback-db --remote --command \
-     "PRAGMA table_info(feedback); SELECT MIN(created_at), COUNT(*) FROM feedback;"
+     "PRAGMA table_info(feedback); SELECT product_id, COUNT(*) FROM feedback GROUP BY product_id; SELECT MIN(created_at), COUNT(*) FROM feedback;"
    ```
 
    Confirm there is no `type`, `device_id`, `device`, `device_family`, `os`,
-   `os_version`, or `build` column, and that the oldest active row is newer than
-   the configured 21-day cleanup boundary.
+   `os_version`, or `build` column; every row has a valid expected `product_id`;
+   and the oldest active row is newer than the configured 21-day cleanup
+   boundary.
 8. Review HTTP 429/5xx behavior and the most recent scheduled cleanup result.
    `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET` must remain separate server-only
    secrets and must never be reused as a submission key.
@@ -150,7 +200,9 @@ were cleared once, migrations `0000` through `0005` were recorded, the minimized
 Worker replaced the unused legacy endpoint, the support site was published, and
 the obsolete `FEEDBACK_API_KEY` secret was removed. This paragraph is a release
 record only. In particular, do not clear current rows, delete secrets, or replay
-the legacy migration sequence from it.
+the legacy migration sequence from it. Migration `0006` was prepared later and
+is governed by the separate rollout procedure above; this document does not
+claim that it has been applied remotely.
 
 Migrations `0002` and `0003` retain their historical 58-day migration cutoff
 while assigning random references and clearing legacy device, OS, version, and
@@ -163,7 +215,9 @@ migration, encrypt it or otherwise strictly limit access, use it only to
 validate the migration, and securely delete it immediately afterward. Do not
 retain migration exports as indefinite backups. Migration `0005` preserves only
 feedback content, the public App version, reference, read state, and creation
-time, making diagnostic storage structurally impossible in the final table.
+time, making diagnostic storage structurally impossible. Migration `0006` adds
+only the non-user product identifier and its index; it does not restore any
+diagnostic field.
 
 The rebuilding migrations preserve an already-valid ISO 8601 timestamp and
 normalize other SQLite-readable legacy timestamps to UTC ISO 8601. Rows with an
@@ -194,6 +248,15 @@ privacy-policy URLs are:
 
 - <https://xuan9.github.io/lengyan/privacy.html>
 - <https://xuan9.github.io/lengyan/privacy-hant.html>
+
+Before adding another entry to `ACTIVE_FEEDBACK_PRODUCTS`, require all of the
+following in one reviewed release plan: the permanent product ID is approved
+and matches its product manifest; every new client sends it explicitly; the
+public and in-app privacy text names the feedback data flow; the admin filter
+and Worker tests cover it; and the service deployment precedes no client that
+depends on that ID. Do not use the missing-field Lengyan compatibility path for
+a new App. Android must also complete its separate network-security and Data
+safety review before adding feedback UI or the `INTERNET` permission.
 
 References:
 

@@ -9,6 +9,8 @@ import Foundation
 
 struct FeedbackService {
     private static let legacyDraftKey = "feedbackDraft"
+    private static let productIDInfoKey = "ClassicProductID"
+    private static let productIDPattern = "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
     private static let serviceBaseURL = URL(
         string: "https://lengyan-feedback.dhyana9.workers.dev"
     )!
@@ -30,6 +32,7 @@ struct FeedbackService {
     }
 
     struct FeedbackRequest {
+        let productID: String
         let content: String
     }
 
@@ -56,7 +59,8 @@ struct FeedbackService {
         completion: @escaping (Result<String, SubmissionError>) -> Void
     ) {
         let content = normalizedContent(request.content)
-        guard !content.isEmpty,
+        guard let productID = normalizedProductID(request.productID),
+              !content.isEmpty,
               content.count <= maximumContentLength else {
             completion(.failure(SubmissionError.invalidRequest))
             return
@@ -69,6 +73,7 @@ struct FeedbackService {
 
         let body = makePayload(
             content: content,
+            productID: productID,
             appVersion: currentAppVersion()
         )
 
@@ -118,12 +123,30 @@ struct FeedbackService {
     /// Pure payload builder kept internal so the exact minimization contract can be unit tested.
     static func makePayload(
         content: String,
+        productID: String,
         appVersion: String
     ) -> [String: String] {
         [
             "content": content,
+            "productID": productID,
             "appVersion": appVersion,
         ]
+    }
+
+    static func currentProductID(bundle: Bundle = .main) -> String? {
+        guard let value = bundle.object(forInfoDictionaryKey: productIDInfoKey) as? String else {
+            return nil
+        }
+        return normalizedProductID(value)
+    }
+
+    static func normalizedProductID(_ value: String) -> String? {
+        guard value.count <= 64,
+              let match = value.range(of: productIDPattern, options: .regularExpression),
+              match == value.startIndex..<value.endIndex else {
+            return nil
+        }
+        return value
     }
 
     private static func currentAppVersion() -> String {
@@ -141,5 +164,11 @@ struct FeedbackService {
             return nil
         }
         return reference
+    }
+
+    static func displayReference(_ value: String) -> String? {
+        guard let reference = normalizedReference(value) else { return nil }
+        let midpoint = reference.index(reference.startIndex, offsetBy: 16)
+        return String(reference[..<midpoint]) + "\n" + String(reference[midpoint...])
     }
 }

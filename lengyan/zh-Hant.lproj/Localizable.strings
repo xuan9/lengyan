@@ -102,12 +102,12 @@
 "settings_reminder_time" = "提醒時間";
 "settings_feedback" = "回饋";
 "settings_privacy_policy" = "隱私政策";
-"privacy_policy_updated" = "更新日期：2026 年 7 月 18 日";
+"privacy_policy_updated" = "更新日期：2026 年 7 月 27 日";
 "privacy_policy_local_title" = "日常使用";
 "privacy_policy_local_body" = "閱讀進度、書籤、收藏、播放進度和顯示設定僅保留在裝置本機。App 不含廣告、分析或跨 App 追蹤。";
 "privacy_policy_feedback_title" = "主動回饋";
-"privacy_policy_feedback_body" = "送出回饋時，我們會收到回饋內容和送出時間；App 內回饋還包含 App 版本號。這些資料僅用於處理回饋和改進 App。";
-"privacy_policy_retention_body" = "回饋將於 30 天內刪除。如需提前刪除，可透過「回饋」聯絡我們。";
+"privacy_policy_feedback_body" = "送出回饋時，我們會收到回饋內容、產品識別碼和公開 App 版本；服務還會產生送出時間、隨機查詢編號和處理狀態。這些資料僅用於處理回饋和改進 App。";
+"privacy_policy_retention_body" = "回饋將於 30 天內刪除。如需提前刪除，請保留送出後顯示的查詢編號，並透過「回饋」聯絡我們。";
 "settings_rate" = "評價";
 "settings_acknowledgments" = "致謝";
 "settings_version" = "版本";
@@ -188,6 +188,9 @@
 "feedback_editor_accessibility_hint_format" = "最多可輸入 %d 字";
 "feedback_content_too_long_error_format" = "回饋內容最多 %d 字，請精簡後重試。";
 "feedback_rate_limited_error" = "送出得有些頻繁，請稍後再試";
+"feedback_reference_title" = "回饋查詢編號";
+"feedback_reference_copy" = "複製編號";
+"feedback_reference_copied" = "已複製";
 
 "acknowledgments_intro" = "經典流傳 仰仗諸緣";
 "acknowledgments_text_title" = "文字";

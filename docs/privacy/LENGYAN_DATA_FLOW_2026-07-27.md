@@ -34,7 +34,7 @@ sync or backup features are added.
 |---|---|---|---|
 | Reading and preferences | Reading/listening progress, bookmarks, favorites, locale, appearance and related preferences | App-local files/UserDefaults | The app implements no account or cross-device sync. Apple device backup behavior remains controlled by the user's system settings unless a data class is explicitly excluded. |
 | On-demand audio | Requested immutable audio artifact and ordinary connection metadata inherent to the request | Apple-hosted ODR/Managed Background Assets; Cloudflare HTTPS fallback only under the implemented failover policy | Apple manages hosted resources. Verified fallback files are app cache data and are eligible for cleanup after 28 days without access; uninstall also removes app-owned files. |
-| Feedback | User-entered content and public app version; the service creates a submission time, random reference and read state | Lengyan Cloudflare Worker and D1 | Active rows are cleaned after 21 days. D1 recovery history can retain a pre-deletion state for up to 7 additional days on the current plan; the public maximum remains 30 days. Raw connection addresses are not stored in the feedback table. |
+| Feedback | User-entered content, stable product ID and public app version; the service creates a submission time, random reference and read state | Multi-product Cloudflare Worker and D1 | Active rows are cleaned after 21 days. D1 recovery history can retain a pre-deletion state for up to 7 additional days on the current plan; the public maximum remains 30 days. Raw connection addresses are not stored in the feedback table. |
 | Share and external links | User-selected content or URL | iOS share sheet, selected recipient, or browser | Recipient/browser policies apply after the handoff. |
 
 Apple and Cloudflare necessarily receive ordinary request metadata such as a
@@ -51,9 +51,10 @@ handling and any infrastructure plan change require a fresh privacy review.
   in-app summary remains available when the URL is withheld.
 - The feedback Worker schema, cleanup schedule and D1 recovery window must be
   verified without printing feedback content.
-- Adding a product identifier to feedback requires a coordinated client,
-  Worker, schema, migration, retention and public-policy change. It must not be
-  inferred from an app version or free-form text.
+- The repository implements explicit feedback `productID`, an additive D1
+  migration, an allowlisted Worker and the Lengyan iOS payload. Production
+  migration/deployment remains pending human approval. Missing IDs map only to
+  the historical Lengyan endpoint; a new product must never rely on that path.
 - Open-source license notices are a separate dependency inventory. Do not show
   a partial or copied acknowledgment page as if it were complete.
 - Human approval remains mandatory for privacy and regional compliance.

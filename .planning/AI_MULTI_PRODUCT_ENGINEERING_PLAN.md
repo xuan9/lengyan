@@ -1,7 +1,7 @@
 # AI 驱动的多经典产品工程与维护计划
 
 **日期：** 2026-07-27\
-**版本：** v7（同步楞严 Android Phase 5 垂直切片与来源/隐私数据流）\
+**版本：** v8（同步来源/隐私与多产品反馈 productID 契约）\
 **状态：** 实施中；现有 iOS 保持生产参考，Android 楞严基准版持续补齐发行 Gate\
 **适用产品：** 《楞严经》《金刚经》《圆觉经》《六祖坛经》及后续单经产品
 
@@ -99,7 +99,7 @@ iOS 与 Android 最困难的部分分别依赖 AVFoundation/WidgetKit/UIKit/Swif
 10. 此项已解决：跨平台 artifact 不含 Apple/CDN/source 配置，并已具备 stable volume mapping、rendition、codec/profile、duration、权利、内容版本和 immutable key；旧 manifest 仅作生成兼容层。
 11. `generate-audio-manifest.mjs` 已从 product manifest 解析 artifact、iOS delivery、tooling input 与输出路径，并生成 18 个兼容文件；当前 source-verification Gate 仍会读取 Git 内完整 M4A。后续停止新增大音频并迁移到受控构建存储时，再把普通代码 CI 与 release/audio-integrity CI 分开。
 12. 此前 `241fb0c` 后的收藏详情未提交修改已由 `a299864` 收敛；F0 命令、结果与真实发行缺口记录在 `docs/quality/REFERENCE_BASELINE_2026-07-26.md`。后续迁移不再依赖未提交文件。
-13. 仓库包含反馈 Worker/D1，以及 Apple/Cloudflare 音频网络交付；“完全本地”已不再是完整数据流描述。`docs/privacy/LENGYAN_DATA_FLOW_2026-07-27.md` 与更新后的 `PRIVACY.md` 草案现已区分 iOS 音频/反馈、Android 当前无直接网络权限、系统分享/浏览器交接、备份和保留边界；线上页面、iOS 内嵌文案、商店问卷与地区合规仍需在发布前同步并由人工批准。
+13. 仓库包含反馈 Worker/D1，以及 Apple/Cloudflare 音频网络交付；“完全本地”已不再是完整数据流描述。`docs/privacy/LENGYAN_DATA_FLOW_2026-07-27.md` 与更新后的 `PRIVACY.md` 草案现已区分 iOS 音频/反馈、Android 当前无直接网络权限、系统分享/浏览器交接、备份和保留边界。反馈链路已由显式 `productID`、只含楞严的服务 allowlist、兼容旧客户端的 additive D1 `0006` 迁移和管理筛选形成可执行契约；生产 migration/Worker/线上页面、商店问卷与地区合规仍需在发布前同步并由人工批准。
 14. Foundation 1 已将 Node 固定为 22.17.1，把第三方 GitHub Actions 固定到 commit SHA，并以 Xcode 26 runner 执行真实脚本；GitLab 源仓库自动跑 portable Node gate，macOS build/archive 在有资格的 runner 上手动取证。两套托管配置都需首跑成功后才可关闭 Gate F1。
 15. Apple 双栈生产代码、11 个 pack 和 Cloudflare 全量回读已验证，但 App Store Connect 上传/关联、签名 Validate、TestFlight、Apple-hosted 真下载以及目标地区真机网络仍未验证；这部分是外部发行 Gate，不能由模拟器测试替代。
 16. 当前仓库已有原生 Android/Gradle/Kotlin 工程和楞严基准 App：共享 contracts、产品隔离持久化、阅读/搜索/收藏/分享、Widget、提醒、来源与隐私均已有可继续扩展的垂直切片。它按用户可观察行为移植，但不重写或替换现有 iOS 楞严 App；音频、反馈/许可和完整设备/发行矩阵仍未完成。
@@ -660,7 +660,7 @@ CI 只有真正执行并解析结果才能通过。占位 `echo`、没有阈值�
 ### Track A：Android 楞严与多产品
 
 - Gate F2 后按 `.planning/ANDROID_MULTI_PRODUCT_PORTING_PLAN.md` 建立 Android 原生工程。
-- 当前 Android 楞严已完成工程/CI、共享 contracts、产品隔离持久化、十卷 1,262 段连续阅读、稳定码点续读、2 万字双字号门禁、简繁精确搜索、收藏闭环、主题/简繁/字号/每日提醒设置、不会重复 bottom inset 的统一底部区域、覆盖 1,669 节点/1,155 叶节点的持久科判目录、从产品专属 Intent 到稳定段落的 legacy deep-link 闭环，以及 720dp 以上收藏列表/正文双栏与取消收藏后保留详情的 Pixel Tablet 门禁；现有 iOS runtime 未被替换。页面 heading、当前科判/卷 selected、字号档位和动态状态播报已落地，API 35 的 Compose Accessibility Test Framework 已覆盖首页、目录、阅读、搜索、收藏、设置、来源和隐私。ADR 0014 的 26 场景截图 Gate 已覆盖 320-1,000dp、明暗主题、100%-200% 字号、繁简、Widget 设置入口、分享预览、来源和隐私在内的主页面，并纳入 `./verify.sh android`。ADR 0015 的楞严卷九 Macrobenchmark 已按 release-derived、不可调试目标建立，常规 Gate 只负责编译，独立命令拒绝模拟器并在 API 31+ 实体机采集 FrameTiming 与最大内存；尚未连接命名参考机，因此没有伪造量化结论。ADR 0016 已完成延迟、可取消的 Android 分享垂直切片：文字/UTF-8 文件/复制无正文上限，图片沿用当前阅读字号、左对齐、1080px 宽并按 13,500px/单页约 29 MB 预算分页，语义文件名不含日期或 UUID；真实卷九段落密度下 1,800/9,000/20,000 字在 API 35 为 2/9/19 页，API 36 首中末页已检查非白屏。ADR 0017 已完成共享 Glance 每日经文核心：产品 contract 提供跨语言验证的精选稳定段落，组件按产品/内容版本/本地日期锁定当天段落，以独立版本化快照故障回退，并用显式稳定段落深链进入阅读页；API 35 自动门禁和 API 36 AOSP Launcher3 的 3x2 明暗主题/点击落点已通过。ADR 0018 已完成共享非精确每日提醒：用户主动开启时才请求 Android 13+ 通知权限，一次性 AlarmManager 在触发及系统时间/时区/重启/升级后重算，产品通知以稳定段落和 Unicode 码点偏移精确续读；JVM 日期/夏令时策略与 API 35 真实通知、权限清单、receiver 安全和字符落点均已通过。ADR 0019 已完成单一 Widget 设置入口、受支持 launcher 的系统 pin、真实 Widget ID 状态刷新和失败/不支持时的三步回退；API 35 自动交互与 API 36 Launcher3 实际添加、状态回写和繁体组件渲染已通过。ADR 0020 已让 Android 从真实 `source-manifest` 展示当前正文资料、校勘参考和权利审核状态，以稳定设置子路由提供来源/隐私页面，并将只允许 HTTPS 的浏览器边界与跨平台数据流文档锁定；它没有把 CBETA 参考升级为当前正文来源，也没有伪造人工批准。上述模拟器证据不替代 API 26/33/36、实体 OEM/接收端 Gate。按 ADR 0006，设备相关阅读分页在没有产品证据与连续字符区间证明前维持 deferred。Phase 3 仍需完成真实 TalkBack/Switch Access 人工走查和 reference-device 量化长文性能；Phase 5 仍需多产品反馈 `productID` 契约、完整开源许可清单、Android 音频和完整 Gate F，不能把当前垂直切片描述为可发布 App。
+- 当前 Android 楞严已完成工程/CI、共享 contracts、产品隔离持久化、十卷 1,262 段连续阅读、稳定码点续读、2 万字双字号门禁、简繁精确搜索、收藏闭环、主题/简繁/字号/每日提醒设置、不会重复 bottom inset 的统一底部区域、覆盖 1,669 节点/1,155 叶节点的持久科判目录、从产品专属 Intent 到稳定段落的 legacy deep-link 闭环，以及 720dp 以上收藏列表/正文双栏与取消收藏后保留详情的 Pixel Tablet 门禁；现有 iOS runtime 未被替换。页面 heading、当前科判/卷 selected、字号档位和动态状态播报已落地，API 35 的 Compose Accessibility Test Framework 已覆盖首页、目录、阅读、搜索、收藏、设置、来源和隐私。ADR 0014 的 26 场景截图 Gate 已覆盖 320-1,000dp、明暗主题、100%-200% 字号、繁简、Widget 设置入口、分享预览、来源和隐私在内的主页面，并纳入 `./verify.sh android`。ADR 0015 的楞严卷九 Macrobenchmark 已按 release-derived、不可调试目标建立，常规 Gate 只负责编译，独立命令拒绝模拟器并在 API 31+ 实体机采集 FrameTiming 与最大内存；尚未连接命名参考机，因此没有伪造量化结论。ADR 0016 已完成延迟、可取消的 Android 分享垂直切片：文字/UTF-8 文件/复制无正文上限，图片沿用当前阅读字号、左对齐、1080px 宽并按 13,500px/单页约 29 MB 预算分页，语义文件名不含日期或 UUID；真实卷九段落密度下 1,800/9,000/20,000 字在 API 35 为 2/9/19 页，API 36 首中末页已检查非白屏。ADR 0017 已完成共享 Glance 每日经文核心：产品 contract 提供跨语言验证的精选稳定段落，组件按产品/内容版本/本地日期锁定当天段落，以独立版本化快照故障回退，并用显式稳定段落深链进入阅读页；API 35 自动门禁和 API 36 AOSP Launcher3 的 3x2 明暗主题/点击落点已通过。ADR 0018 已完成共享非精确每日提醒：用户主动开启时才请求 Android 13+ 通知权限，一次性 AlarmManager 在触发及系统时间/时区/重启/升级后重算，产品通知以稳定段落和 Unicode 码点偏移精确续读；JVM 日期/夏令时策略与 API 35 真实通知、权限清单、receiver 安全和字符落点均已通过。ADR 0019 已完成单一 Widget 设置入口、受支持 launcher 的系统 pin、真实 Widget ID 状态刷新和失败/不支持时的三步回退；API 35 自动交互与 API 36 Launcher3 实际添加、状态回写和繁体组件渲染已通过。ADR 0020 已让 Android 从真实 `source-manifest` 展示当前正文资料、校勘参考和权利审核状态，以稳定设置子路由提供来源/隐私页面，并将只允许 HTTPS 的浏览器边界与跨平台数据流文档锁定；它没有把 CBETA 参考升级为当前正文来源，也没有伪造人工批准。上述模拟器证据不替代 API 26/33/36、实体 OEM/接收端 Gate。按 ADR 0006，设备相关阅读分页在没有产品证据与连续字符区间证明前维持 deferred。Phase 3 仍需完成真实 TalkBack/Switch Access 人工走查和 reference-device 量化长文性能；共享反馈 `productID`、iOS 明示 payload、additive D1 迁移和 Worker allowlist 已实现并测试，但生产迁移/部署与 Android 反馈 UI/网络仍未完成。Phase 5 另外仍需完整开源许可清单、Android 音频和完整 Gate F，不能把当前垂直切片描述为可发布 App。
 - 《楞严经》生产级 Android 在有限并行下预计 16-24 周，**不包含 Foundation 0-2**；各阶段完全串行或外部验证受阻时应按最多约 27 周预留。它可与 Track I1/I2 并行，但共享 schema 修改需同一 PR 验证两平台。
 - Android 楞严发布 Gate 通过后才创建《金刚经》Android module；经文/权利/音频已批准后的 Android 增量工程预计 4-6 周。
 - Android 后续顺序同样是《金刚经》→《圆觉经》→《六祖坛经》。
@@ -738,7 +738,7 @@ AI 不得通过创建占位商店 App、生成生产 key、提高最低系统、
 
 ## 17. 最终建议
 
-**可以实施，而且已经进入执行阶段。现有楞严 iOS 继续作为生产参考，不做无价值重写；Android 楞严在同一 monorepo 中按共享 contracts、原生 UI/runtime 和独立产品身份逐步补齐发行 Gate。下一关键路径是完成 Android 音频与目标设备矩阵、建立多产品反馈 `productID` 和完整许可证清单，并在权威正文、权利、隐私和永久身份获得人工批准后，才创建并发布金刚经等新产品 App 壳。**
+**可以实施，而且已经进入执行阶段。现有楞严 iOS 继续作为生产参考，不做无价值重写；Android 楞严在同一 monorepo 中按共享 contracts、原生 UI/runtime 和独立产品身份逐步补齐发行 Gate。下一关键路径是完成 Android 音频与目标设备矩阵、在人工批准后迁移/部署多产品反馈服务并建立完整许可证清单；只有权威正文、权利、隐私和永久身份获得人工批准，才创建并发布金刚经等新产品 App 壳。**
 
 ## 参考
 

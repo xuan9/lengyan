@@ -182,6 +182,7 @@ final class BehaviorContractTests: XCTestCase {
             at: repositoryRoot.appendingPathComponent("Products/lengyan/book-manifest.json")
         )
         XCTAssertEqual(LengyanDailyVerseConfiguration.productID, product.productID)
+        XCTAssertEqual(FeedbackService.currentProductID(), product.productID)
         XCTAssertEqual(LengyanDailyVerseConfiguration.contentVersion, book.contentVersion)
     }
 

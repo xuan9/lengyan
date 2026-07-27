@@ -24,6 +24,8 @@
 	<integer>15</integer>
 	<key>CFBundleDisplayName</key>
 	<string>楞嚴經</string>
+	<key>ClassicProductID</key>
+	<string>lengyan</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

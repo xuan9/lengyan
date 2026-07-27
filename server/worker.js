@@ -1,5 +1,5 @@
 //
-//  Cloudflare Worker — 楞严经 App 反馈收集服务
+//  Cloudflare Worker — 多经典 App 反馈收集服务
 //
 //  POST /           →  App 提交反馈（存 D1）
 //  GET  /privacy    →  按语言跳转到支持站隐私政策
@@ -25,6 +25,12 @@ const MIN_ADMIN_PASSWORD_LENGTH = 16;
 const ADMIN_SESSION_SECONDS = 8 * 60 * 60;
 const ADMIN_COOKIE_NAME = '__Host-lengyan_admin';
 const REFERENCE_PATTERN = /^[a-f0-9]{32}$/;
+const PRODUCT_ID_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+const LEGACY_PRODUCT_ID = 'lengyan';
+const ACCEPT_LEGACY_MISSING_PRODUCT_ID = true;
+const ACTIVE_FEEDBACK_PRODUCTS = Object.freeze([
+  Object.freeze({ productID: 'lengyan', displayName: '楞严经' }),
+]);
 const SUPPORT_SITE_ORIGIN = 'https://xuan9.github.io';
 const SIMPLIFIED_PRIVACY_URL = 'https://xuan9.github.io/lengyan/privacy.html';
 const TRADITIONAL_PRIVACY_URL = 'https://xuan9.github.io/lengyan/privacy-hant.html';
@@ -193,6 +199,10 @@ async function handleSubmit(request, env) {
   }
 
   const body = parsed.value;
+  const productID = resolveSubmissionProductID(body);
+  if (!productID) {
+    return json({ error: 'productID is not supported' }, 400);
+  }
   const content = typeof body.content === 'string' ? body.content.trim() : '';
   if (!content) {
     return json({ error: 'content is required' }, 400);
@@ -206,9 +216,9 @@ async function handleSubmit(request, env) {
 
   const now = new Date();
   // Device, OS, and build diagnostics are deliberately ignored, even if a
-  // modified or older client sends them. Keep only the shared public App version.
-  // Legacy releases combined that version with a build number, so their
-  // ambiguous value is blanked as well.
+  // modified or older client sends them. Keep only product ownership and the
+  // public App version. Legacy releases combined that version with a build
+  // number, so their ambiguous value is blanked as well.
   const isLegacySubmission = ['device', 'os'].some(key => (
     Object.prototype.hasOwnProperty.call(body, key)
   ));
@@ -219,10 +229,11 @@ async function handleSubmit(request, env) {
   try {
     await env.DB.prepare(
       `INSERT INTO feedback
-       (reference, content, app_version, created_at)
-       VALUES (?, ?, ?, ?)`
+       (reference, product_id, content, app_version, created_at)
+       VALUES (?, ?, ?, ?, ?)`
     ).bind(
       reference,
+      productID,
       content,
       appVersion,
       now.toISOString()
@@ -282,17 +293,25 @@ async function handleList(url, env) {
     ? Math.min(Math.max(requestedLimit, 1), 100)
     : 20;
   const status = url.searchParams.get('status'); // unread | read | all
+  const requestedProductID = url.searchParams.get('productID');
   const offset = (page - 1) * limit;
 
   const conds = [];
   const params = [];
+  if (requestedProductID !== null && requestedProductID !== 'all') {
+    if (!activeFeedbackProduct(requestedProductID)) {
+      return json({ error: 'productID is not supported' }, 400);
+    }
+    conds.push('product_id = ?');
+    params.push(requestedProductID);
+  }
   if (status === 'unread') { conds.push('is_read = 0'); }
   else if (status === 'read') { conds.push('is_read = 1'); }
   const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
 
   const [items, countResult] = await Promise.all([
     env.DB.prepare(
-      `SELECT id, reference, content, app_version, is_read, created_at
+      `SELECT id, reference, product_id AS productID, content, app_version, is_read, created_at
        FROM feedback ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
     ).bind(...params, limit, offset).all(),
     env.DB.prepare(`SELECT COUNT(*) as total FROM feedback ${where}`).bind(...params).first(),
@@ -316,7 +335,7 @@ async function handleFind(request, env) {
   }
 
   const result = await env.DB.prepare(
-    `SELECT id, reference, content, app_version, is_read, created_at
+    `SELECT id, reference, product_id AS productID, content, app_version, is_read, created_at
      FROM feedback WHERE reference = ? LIMIT 1`
   ).bind(reference).all();
   const items = result.results || [];
@@ -398,12 +417,18 @@ function prefersTraditionalChinese(acceptLanguage) {
 // ── 管理页面 ──
 
 function adminPage() {
+  const productOptions = ACTIVE_FEEDBACK_PRODUCTS.map(product => (
+    `<option value="${product.productID}">${product.displayName}</option>`
+  )).join('');
+  const productNamesJSON = JSON.stringify(Object.fromEntries(
+    ACTIVE_FEEDBACK_PRODUCTS.map(product => [product.productID, product.displayName])
+  )).replaceAll('<', '\\u003c');
   const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>楞严经 · 反馈管理</title>
+<title>经典 App · 反馈管理</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #FAF8F3; color: #33231A; min-height: 100vh; }
@@ -416,9 +441,10 @@ function adminPage() {
   .header h1 { font-size: 17px; font-weight: 500; letter-spacing: 1px; }
   .header-meta { display: flex; align-items: center; gap: 14px; color: #999; font-size: 13px; }
   .logout { border: 0; padding: 4px 0; background: transparent; color: #756b63; cursor: pointer; }
-  .filters { display: flex; gap: 8px; padding: 12px 24px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 24px; }
   .filters button { padding: 6px 14px; border: 1px solid #d4c5a9; border-radius: 16px; background: #fff; color: #4A3728; font-size: 13px; cursor: pointer; }
   .filters button.active { background: #228B22; color: #fff; border-color: #228B22; }
+  .filters select { min-height: 32px; padding: 4px 10px; border: 1px solid #d4c5a9; border-radius: 8px; background: #fff; color: #4A3728; font-size: 13px; }
   .reference-search { display: flex; gap: 8px; padding: 0 24px 12px; }
   .reference-search input { flex: 1; max-width: 420px; padding: 8px 12px; border: 1px solid #d4c5a9; border-radius: 8px; background: #fff; }
   .reference-search button { padding: 8px 14px; border: 1px solid #d4c5a9; border-radius: 8px; background: #fff; cursor: pointer; }
@@ -448,10 +474,14 @@ function adminPage() {
 
 <div id="mainView" class="hidden">
   <div class="header">
-    <h1>🪷 反馈管理</h1>
+    <h1>🪷 经典 App · 反馈管理</h1>
     <div class="header-meta"><span id="unreadCount"></span><button class="logout" onclick="logout()">退出</button></div>
   </div>
   <div class="filters">
+    <select id="productFilter" aria-label="产品" onchange="changeProduct()">
+      <option value="all">全部产品</option>
+      ${productOptions}
+    </select>
     <button class="active" onclick="filter('all',this)">全部</button>
     <button onclick="filter('unread',this)">未读</button>
     <button onclick="filter('read',this)">已读</button>
@@ -467,6 +497,7 @@ function adminPage() {
 
 <script>
 let currentFilter='all', currentPage=1;
+const productNames=${productNamesJSON};
 async function login(){
   const pw=document.getElementById('pw').value;
   const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
@@ -483,7 +514,8 @@ async function logout(){
 }
 async function load(){
   const reference=document.getElementById('reference').value.trim().toLowerCase();
-  const url=reference?'/api/find':'/api/list?status='+currentFilter+'&page='+currentPage+'&limit=20';
+  const productID=document.getElementById('productFilter').value;
+  const url=reference?'/api/find':'/api/list?status='+currentFilter+'&page='+currentPage+'&limit=20&productID='+encodeURIComponent(productID);
   const options=reference?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reference})}:{};
   const r=await fetch(url,options);
   if(!r.ok){document.getElementById('mainView').classList.add('hidden');document.getElementById('loginView').classList.remove('hidden');return;}
@@ -496,12 +528,13 @@ async function load(){
   document.getElementById('pager').innerHTML=totalPages>1?'<button '+(currentPage<=1?'disabled':'')+' onclick="currentPage--;load()">上一页</button> '+currentPage+'/'+totalPages+' <button '+(currentPage>=totalPages?'disabled':'')+' onclick="currentPage++;load()">下一页</button>':'';
 }
 function filter(s,btn){currentFilter=s;currentPage=1;document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');load();}
+function changeProduct(){currentPage=1;load();}
 function searchReference(){currentPage=1;load();}
 function clearReference(){document.getElementById('reference').value='';currentPage=1;load();}
 async function markRead(ids){await fetch('/api/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});load();}
 async function del(id){if(!confirm('确认删除？'))return;await fetch('/api/'+id,{method:'DELETE'});load();}
 function esc(s){if(!s)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function diagnostics(i){return i.app_version?'v'+esc(i.app_version):'无版本信息';}
+function diagnostics(i){const product=productNames[i.productID]||i.productID||'未知产品';const version=i.app_version?'v'+esc(i.app_version):'无版本信息';return esc(product)+' · '+version;}
 function fmtTime(s){const d=new Date(s);return d.toLocaleDateString('zh-CN')+' '+d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});}
 </script>
 </body>
@@ -519,6 +552,22 @@ function fmtTime(s){const d=new Date(s);return d.toLocaleDateString('zh-CN')+' '
 }
 
 // ── 工具函数 ──
+
+function activeFeedbackProduct(value) {
+  if (typeof value !== 'string'
+    || value.length > 64
+    || !PRODUCT_ID_PATTERN.test(value)) {
+    return null;
+  }
+  return ACTIVE_FEEDBACK_PRODUCTS.find(product => product.productID === value) || null;
+}
+
+function resolveSubmissionProductID(body) {
+  if (!Object.prototype.hasOwnProperty.call(body, 'productID')) {
+    return ACCEPT_LEGACY_MISSING_PRODUCT_ID ? LEGACY_PRODUCT_ID : null;
+  }
+  return activeFeedbackProduct(body.productID)?.productID || null;
+}
 
 function json(data, status = 200, additionalHeaders = {}) {
   return new Response(JSON.stringify(data), {

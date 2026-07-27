@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 enum FeedbackLengthState: Equatable {
     /// Keep the normal form quiet, then leave enough notice for a short
@@ -49,6 +50,8 @@ struct FeedbackView: View {
     @State private var content = ""
     @State private var isSending = false
     @State private var sendSucceeded = false
+    @State private var submittedReference: String?
+    @State private var didCopyReference = false
     @State private var errorMessage: String?
     @State private var showContent = false
     @State private var hasConsumedLegacyDraft = false
@@ -86,51 +89,104 @@ struct FeedbackView: View {
     // MARK: - 致谢页
 
     private var successView: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        GeometryReader { geo in
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 32)
 
-            Image(systemName: "leaf.circle")
-                .font(.system(size: 48, weight: .ultraLight))
-                .foregroundColor(
-                    Color(SutraDesignTokens.shared.color(for: .decorativeGold))
-                        .opacity(showContent ? 0.6 : 0)
-                )
-                .padding(.bottom, 24)
+                    Image(systemName: "leaf.circle")
+                        .font(.system(size: 48, weight: .ultraLight))
+                        .foregroundColor(
+                            Color(SutraDesignTokens.shared.color(for: .decorativeGold))
+                                .opacity(showContent ? 0.6 : 0)
+                        )
+                        .padding(.bottom, 24)
 
-            Text(L10n.str("feedback_success_title"))
-                .font(SutraTypographyBridge.uiBody(weight: .medium))
-                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
-                .opacity(showContent ? 1 : 0)
-                .padding(.bottom, 12)
+                    Text(L10n.str("feedback_success_title"))
+                        .font(SutraTypographyBridge.uiBody(weight: .medium))
+                        .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
+                        .opacity(showContent ? 1 : 0)
+                        .padding(.bottom, 12)
 
-            Text(L10n.str("feedback_success_subtitle"))
-                .font(SutraTypographyBridge.uiCaption(weight: .light))
-                .foregroundColor(SutraDesignSystem.color(.textTertiary))
-                .opacity(showContent ? 1 : 0)
-                .padding(.bottom, 48)
+                    Text(L10n.str("feedback_success_subtitle"))
+                        .font(SutraTypographyBridge.uiCaption(weight: .light))
+                        .foregroundColor(SutraDesignSystem.color(.textTertiary))
+                        .opacity(showContent ? 1 : 0)
+                        .padding(.bottom, 24)
 
-            Button(action: dismiss.callAsFunction) {
-                Text(L10n.str("done"))
-                    .font(.system(size: 16, weight: .medium, design: .serif))
-                    .tracking(3)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 64)
-                    .padding(.vertical, 14)
-                    .background(
-                        Capsule()
-                            .fill(SutraDesignSystem.color(.primary))
-                    )
+                    if let submittedReference {
+                        referenceSection(submittedReference)
+                            .opacity(showContent ? 1 : 0)
+                            .padding(.bottom, 32)
+                    }
+
+                    Button(action: dismiss.callAsFunction) {
+                        Text(L10n.str("done"))
+                            .font(.system(size: 16, weight: .medium, design: .serif))
+                            .tracking(3)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 64)
+                            .padding(.vertical, 14)
+                            .background(
+                                Capsule()
+                                    .fill(SutraDesignSystem.color(.primary))
+                            )
+                    }
+                    .opacity(showContent ? 1 : 0)
+
+                    Spacer(minLength: 32)
+                }
+                .frame(minHeight: geo.size.height)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 24)
             }
-            .opacity(showContent ? 1 : 0)
-
-            Spacer()
+            .background(SutraDesignSystem.backgroundColor())
         }
-        .frame(maxWidth: .infinity)
-        .background(SutraDesignSystem.backgroundColor())
         .onAppear {
             withAnimation(.easeInOut(duration: 0.8)) {
                 showContent = true
             }
+        }
+    }
+
+    private func referenceSection(_ reference: String) -> some View {
+        VStack(spacing: 12) {
+            Text(L10n.str("feedback_reference_title"))
+                .font(SutraTypographyBridge.uiSmall(weight: .regular))
+                .foregroundColor(SutraDesignSystem.color(.textTertiary))
+
+            Text(FeedbackService.displayReference(reference) ?? reference)
+                .font(.system(size: 14, weight: .regular, design: .monospaced))
+                .multilineTextAlignment(.center)
+                .foregroundColor(Color(SutraDesignTokens.shared.color(for: .sutraText)))
+                .accessibilityLabel(
+                    L10n.str("feedback_reference_title") + " " + reference
+                )
+
+            Button {
+                UIPasteboard.general.string = reference
+                didCopyReference = true
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: didCopyReference ? "checkmark" : "doc.on.doc")
+                    Text(
+                        L10n.str(
+                            didCopyReference
+                                ? "feedback_reference_copied"
+                                : "feedback_reference_copy"
+                        )
+                    )
+                }
+                .font(SutraTypographyBridge.uiSmall(weight: .medium))
+                .foregroundColor(SutraDesignSystem.color(.primary))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(SutraDesignTokens.shared.color(for: .card)))
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -267,15 +323,23 @@ struct FeedbackView: View {
             errorMessage = contentTooLongMessage
             return
         }
+        guard let productID = FeedbackService.currentProductID() else {
+            errorMessage = L10n.str("feedback_send_failed")
+            return
+        }
 
         errorMessage = nil
+        didCopyReference = false
         isSending = true
-        FeedbackService.submit(FeedbackService.FeedbackRequest(content: text)) { result in
+        FeedbackService.submit(
+            FeedbackService.FeedbackRequest(productID: productID, content: text)
+        ) { result in
             DispatchQueue.main.async {
                 isSending = false
                 switch result {
-                case .success:
+                case let .success(reference):
                     content = ""
+                    submittedReference = reference
                     sendSucceeded = true
                 case let .failure(error):
                     switch error {

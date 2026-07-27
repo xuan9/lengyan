@@ -302,11 +302,13 @@ class lengyanTests: XCTestCase {
     func testFeedbackPayloadIsMinimal() {
         let payload = FeedbackService.makePayload(
             content: "页面无法翻页",
+            productID: "lengyan",
             appVersion: "1.3"
         )
 
         XCTAssertEqual(payload, [
             "content": "页面无法翻页",
+            "productID": "lengyan",
             "appVersion": "1.3",
         ])
         XCTAssertNil(payload["type"])
@@ -314,6 +316,37 @@ class lengyanTests: XCTestCase {
         XCTAssertNil(payload["deviceFamily"])
         XCTAssertNil(payload["osVersion"])
         XCTAssertNil(payload["build"])
+    }
+
+    func testFeedbackProductIdentityIsExplicitAndContractShaped() {
+        XCTAssertEqual(FeedbackService.currentProductID(), "lengyan")
+        XCTAssertEqual(FeedbackService.normalizedProductID("lengyan"), "lengyan")
+        XCTAssertEqual(FeedbackService.normalizedProductID("jingang-v2"), "jingang-v2")
+        XCTAssertNil(FeedbackService.normalizedProductID("Lengyan"))
+        XCTAssertNil(FeedbackService.normalizedProductID("lengyan--beta"))
+        XCTAssertNil(FeedbackService.normalizedProductID(" lengyan"))
+        XCTAssertNil(FeedbackService.normalizedProductID("lengyan\n"))
+        XCTAssertNil(FeedbackService.normalizedProductID(String(repeating: "a", count: 65)))
+    }
+
+    func testFeedbackSubmissionRejectsInvalidProductBeforeTransport() {
+        let completion = expectation(description: "Invalid product is rejected locally")
+
+        FeedbackService.submit(
+            FeedbackService.FeedbackRequest(
+                productID: "lengyan--invalid",
+                content: "不应发送"
+            )
+        ) { result in
+            if case .failure(.invalidRequest) = result {
+                // Expected.
+            } else {
+                XCTFail("Invalid product identity must fail before transport")
+            }
+            completion.fulfill()
+        }
+
+        wait(for: [completion], timeout: 0.1)
     }
 
     func testFeedbackLengthUsesTheSubmittedTrimmedContent() {
@@ -410,6 +443,11 @@ class lengyanTests: XCTestCase {
         XCTAssertNil(FeedbackService.normalizedReference("LY-abcd_1234"))
         XCTAssertNil(FeedbackService.normalizedReference(validReference.uppercased()))
         XCTAssertNil(FeedbackService.normalizedReference(String(validReference.dropLast())))
+        XCTAssertEqual(
+            FeedbackService.displayReference(validReference),
+            "0123456789abcdef\n0123456789abcdef"
+        )
+        XCTAssertNil(FeedbackService.displayReference("not-a-reference"))
     }
 
     func testFeedbackSubmissionResultDistinguishesLimitFailures() {

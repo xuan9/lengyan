@@ -24,7 +24,7 @@ iOS 版按需向 Apple 托管资源服务获取音频；既定 Apple 路径失�
 
 ### 主动反馈（当前仅 iOS）
 
-提交反馈时，我们会收到用户输入的反馈内容和公开 App 版本号；服务还会生成提交时间、随机查询编号和处理状态。这些信息仅用于处理反馈和改进 App。网络服务方会处理正常连接所需的网络元数据，但反馈数据库不保存原始 IP 地址。
+提交反馈时，我们会收到用户输入的反馈内容、产品标识和公开 App 版本号；服务还会生成提交时间、随机查询编号和处理状态。这些信息仅用于处理反馈和改进 App。网络服务方会处理正常连接所需的网络元数据，但反馈数据库不保存原始 IP 地址。
 
 反馈会在 30 天内删除。如需提前删除，可通过[支持页](https://xuan9.github.io/lengyan/)联系我们并提供反馈查询编号。
 
@@ -52,7 +52,7 @@ iOS 版按需向 Apple 託管資源服務取得音訊；既定 Apple 路徑失�
 
 ### 主動回饋（目前僅 iOS）
 
-送出回饋時，我們會收到使用者輸入的回饋內容和公開 App 版本號；服務還會產生送出時間、隨機查詢編號和處理狀態。這些資料僅用於處理回饋和改進 App。網路服務方會處理正常連線所需的網路中繼資料，但回饋資料庫不保存原始 IP 位址。
+送出回饋時，我們會收到使用者輸入的回饋內容、產品識別碼和公開 App 版本號；服務還會產生送出時間、隨機查詢編號和處理狀態。這些資料僅用於處理回饋和改進 App。網路服務方會處理正常連線所需的網路中繼資料，但回饋資料庫不保存原始 IP 位址。
 
 回饋會在 30 天內刪除。如需提前刪除，可透過[支援頁](https://xuan9.github.io/lengyan/)聯絡我們並提供回饋查詢編號。
 
@@ -80,6 +80,6 @@ When the user shares image or text content, it is handed to the system share she
 
 ### Feedback you choose to send (currently iOS only)
 
-When feedback is submitted, we receive the content entered by the user and the public app version. The service also creates a submission time, random lookup reference, and handling state. This data is used only to process feedback and improve the app. Network providers process metadata needed for a normal connection, but the feedback database does not store raw IP addresses.
+When feedback is submitted, we receive the content entered by the user, the product identifier, and the public app version. The service also creates a submission time, random lookup reference, and handling state. This data is used only to process feedback and improve the app. Network providers process metadata needed for a normal connection, but the feedback database does not store raw IP addresses.
 
 Feedback is deleted within 30 days. To request earlier deletion, contact us through the [support page](https://xuan9.github.io/lengyan/) and include the feedback reference.

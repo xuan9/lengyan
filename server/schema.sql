@@ -4,6 +4,13 @@ CREATE TABLE IF NOT EXISTS feedback (
     length(reference) = 32
     AND reference NOT GLOB '*[^0-9a-f]*'
   ),
+  product_id TEXT NOT NULL DEFAULT 'lengyan' CHECK (
+    length(product_id) BETWEEN 1 AND 64
+    AND substr(product_id, 1, 1) GLOB '[a-z]'
+    AND product_id NOT GLOB '*[^a-z0-9-]*'
+    AND product_id NOT GLOB '*--*'
+    AND substr(product_id, -1, 1) GLOB '[a-z0-9]'
+  ),
   content TEXT NOT NULL,
   app_version TEXT NOT NULL DEFAULT '' CHECK (length(app_version) <= 50),
   is_read INTEGER NOT NULL DEFAULT 0 CHECK (is_read IN (0, 1)),
@@ -18,3 +25,6 @@ CREATE INDEX IF NOT EXISTS idx_feedback_created_at
 
 CREATE INDEX IF NOT EXISTS idx_feedback_is_read_created_at
   ON feedback(is_read, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_feedback_product_read_created_at
+  ON feedback(product_id, is_read, created_at DESC);

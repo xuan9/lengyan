@@ -103,12 +103,12 @@
 "settings_reminder_time" = "提醒时间";
 "settings_feedback" = "反馈";
 "settings_privacy_policy" = "隐私政策";
-"privacy_policy_updated" = "更新日期：2026 年 7 月 18 日";
+"privacy_policy_updated" = "更新日期：2026 年 7 月 27 日";
 "privacy_policy_local_title" = "日常使用";
 "privacy_policy_local_body" = "阅读进度、书签、收藏、播放进度和显示设置仅保存在设备本地。App 不含广告、分析或跨应用追踪。";
 "privacy_policy_feedback_title" = "主动反馈";
-"privacy_policy_feedback_body" = "提交反馈时，我们会收到反馈内容和提交时间；App 内反馈还包含 App 版本号。这些信息仅用于处理反馈和改进 App。";
-"privacy_policy_retention_body" = "反馈将在 30 天内删除。如需提前删除，可通过“反馈”联系我们。";
+"privacy_policy_feedback_body" = "提交反馈时，我们会收到反馈内容、产品标识和公开 App 版本；服务还会生成提交时间、随机查询编号和处理状态。这些信息仅用于处理反馈和改进 App。";
+"privacy_policy_retention_body" = "反馈将在 30 天内删除。如需提前删除，请保留提交后显示的查询编号，并通过“反馈”联系我们。";
 "settings_rate" = "评价";
 "settings_acknowledgments" = "致谢";
 "settings_version" = "版本";
@@ -189,6 +189,9 @@
 "feedback_editor_accessibility_hint_format" = "最多可输入 %d 字";
 "feedback_content_too_long_error_format" = "反馈内容最多 %d 字，请精简后重试。";
 "feedback_rate_limited_error" = "提交得有些频繁，请稍后再试";
+"feedback_reference_title" = "反馈查询编号";
+"feedback_reference_copy" = "复制编号";
+"feedback_reference_copied" = "已复制";
 
 "acknowledgments_intro" = "经典流传 仰仗诸缘";
 "acknowledgments_text_title" = "文字";

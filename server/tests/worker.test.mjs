@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 
 import worker from '../worker.js';
@@ -64,10 +65,21 @@ async function submit(body, env = submitEnv(), additionalHeaders = {}) {
   return { response, payload: await response.json(), env };
 }
 
-test('stores only content and public App version and returns an unguessable reference', async () => {
+async function adminCookie(env) {
+  const response = await worker.fetch(new Request('https://feedback.example/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: env.ADMIN_PASSWORD }),
+  }), env);
+  assert.equal(response.status, 200);
+  return response.headers.get('Set-Cookie').split(';', 1)[0];
+}
+
+test('stores product, content, and public App version and returns an unguessable reference', async () => {
   const db = new MockDB();
   const env = submitEnv(db);
   const { response, payload } = await submit({
+    productID: 'lengyan',
     content: '排版在横屏时出现问题',
     appVersion: '2.1',
     build: '73',
@@ -83,10 +95,41 @@ test('stores only content and public App version and returns an unguessable refe
 
   const insert = db.calls.find(call => call.sql.includes('INSERT INTO feedback'));
   assert.ok(insert);
-  assert.equal(insert.args.length, 4);
-  assert.equal(insert.args[1], '排版在横屏时出现问题');
-  assert.equal(insert.args[2], '2.1');
+  assert.equal(insert.args.length, 5);
+  assert.equal(insert.args[1], 'lengyan');
+  assert.equal(insert.args[2], '排版在横屏时出现问题');
+  assert.equal(insert.args[3], '2.1');
+  assert.match(insert.sql, /product_id/);
   assert.doesNotMatch(insert.sql, /device_id|device_family|os_version|\bbuild\b|\btype\b/);
+});
+
+test('maps missing legacy ownership to Lengyan and rejects inactive product IDs', async () => {
+  const legacyDB = new MockDB();
+  const legacy = await submit({ content: '旧版楞严客户端' }, submitEnv(legacyDB));
+  assert.equal(legacy.response.status, 200);
+  const legacyInsert = legacyDB.calls.find(call => call.sql.includes('INSERT INTO feedback'));
+  assert.equal(legacyInsert.args[1], 'lengyan');
+
+  for (const productID of ['jingang', 'Lengyan', 'lengyan--beta', '', null]) {
+    const db = new MockDB();
+    const rejected = await submit(
+      { productID, content: '不应写入' },
+      submitEnv(db)
+    );
+    assert.equal(rejected.response.status, 400, String(productID));
+    assert.equal(rejected.payload.error, 'productID is not supported');
+    assert.equal(db.calls.length, 0);
+  }
+});
+
+test('rejects non-object submission bodies without touching storage', async () => {
+  for (const body of [null, [], 'feedback']) {
+    const db = new MockDB();
+    const rejected = await submit(body, submitEnv(db));
+    assert.equal(rejected.response.status, 400, String(body));
+    assert.equal(rejected.payload.error, 'invalid JSON object');
+    assert.equal(db.calls.length, 0);
+  }
 });
 
 test('accepts 2000 extended grapheme clusters and rejects 2001', async () => {
@@ -138,7 +181,7 @@ test('discards ambiguous combined diagnostics sent by legacy clients', async () 
 
   assert.equal(response.status, 200);
   const insert = db.calls.find(call => call.sql.includes('INSERT INTO feedback'));
-  assert.equal(insert.args[2], '');
+  assert.equal(insert.args[3], '');
 });
 
 test('never stores device, OS, or build diagnostics', async () => {
@@ -160,7 +203,7 @@ test('never stores device, OS, or build diagnostics', async () => {
     }, submitEnv(db));
 
     const insert = db.calls.find(call => call.sql.includes('INSERT INTO feedback'));
-    assert.equal(insert.args[2], '1.0', device);
+    assert.equal(insert.args[3], '1.0', device);
     assert.doesNotMatch(insert.sql, /device_family|os_version|\bbuild\b/, device);
   }
 
@@ -173,15 +216,86 @@ test('never stores device, OS, or build diagnostics', async () => {
     build: '42',
   }, submitEnv(macDB));
   const macInsert = macDB.calls.find(call => call.sql.includes('INSERT INTO feedback'));
-  assert.equal(macInsert.args[2], '1.0');
+  assert.equal(macInsert.args[3], '1.0');
   assert.doesNotMatch(macInsert.sql, /device_family|os_version|\bbuild\b/);
 });
 
 test('final schema structurally excludes diagnostic columns', () => {
   const schema = readFileSync(new URL('../schema.sql', import.meta.url), 'utf8');
   assert.doesNotMatch(schema, /device_id|device_family|os_version|\bbuild\b|\btype\b/);
+  assert.match(schema, /product_id TEXT NOT NULL DEFAULT 'lengyan'/);
   assert.match(schema, /content TEXT NOT NULL/);
   assert.match(schema, /app_version TEXT NOT NULL/);
+});
+
+test('product migration is additive, classifies existing rows, and matches canonical schema', () => {
+  const migrationsURL = new URL('../migrations/', import.meta.url);
+  const migrationNames = readdirSync(migrationsURL)
+    .filter(name => /^\d{4}_.+\.sql$/.test(name))
+    .sort();
+  assert.equal(migrationNames.at(-1), '0006_add_feedback_product_id.sql');
+
+  const migrated = new DatabaseSync(':memory:');
+  for (const name of migrationNames.slice(0, -1)) {
+    migrated.exec(readFileSync(new URL(name, migrationsURL), 'utf8'));
+  }
+  migrated.prepare(
+    `INSERT INTO feedback
+     (reference, content, app_version, is_read, created_at)
+     VALUES (?, ?, ?, ?, ?)`
+  ).run(
+    '0123456789abcdef0123456789abcdef',
+    '迁移前反馈',
+    '2.1',
+    0,
+    '2026-07-27T12:00:00.000Z'
+  );
+
+  const productMigration = readFileSync(
+    new URL('0006_add_feedback_product_id.sql', migrationsURL),
+    'utf8'
+  );
+  assert.doesNotMatch(productMigration, /DROP\s+TABLE|DELETE\s+FROM|UPDATE\s+feedback/i);
+  migrated.exec(productMigration);
+
+  const migratedRow = migrated.prepare(
+    'SELECT product_id, content FROM feedback WHERE reference = ?'
+  ).get('0123456789abcdef0123456789abcdef');
+  assert.equal(migratedRow.product_id, 'lengyan');
+  assert.equal(migratedRow.content, '迁移前反馈');
+  assert.throws(() => {
+    migrated.prepare(
+      `INSERT INTO feedback
+       (reference, product_id, content, created_at)
+       VALUES (?, ?, ?, ?)`
+    ).run(
+      'fedcba9876543210fedcba9876543210',
+      'Invalid--Product',
+      '不合法产品',
+      '2026-07-27T12:01:00.000Z'
+    );
+  }, /constraint/i);
+
+  const canonical = new DatabaseSync(':memory:');
+  canonical.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8'));
+  const columnShape = database => database.prepare('PRAGMA table_info(feedback)').all()
+    .map(column => ({
+      name: column.name,
+      type: column.type,
+      notnull: column.notnull,
+      defaultValue: column.dflt_value,
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  const indexNames = database => database.prepare(
+    `SELECT name FROM sqlite_master
+     WHERE type = 'index' AND name NOT LIKE 'sqlite_autoindex%'
+     ORDER BY name`
+  ).all().map(index => index.name);
+
+  assert.deepEqual(columnShape(migrated), columnShape(canonical));
+  assert.deepEqual(indexNames(migrated), indexNames(canonical));
+  migrated.close();
+  canonical.close();
 });
 
 test('support site receives narrowly scoped CORS for feedback preflight and POST', async () => {
@@ -342,13 +456,7 @@ test('rate limiting is enforced and missing bindings fail closed', async () => {
 test('admin reference lookup is authenticated, exact, and parameterized', async () => {
   const db = new MockDB();
   const env = submitEnv(db);
-  const loginResponse = await worker.fetch(new Request('https://feedback.example/api/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: env.ADMIN_PASSWORD }),
-  }), env);
-  assert.equal(loginResponse.status, 200);
-  const cookie = loginResponse.headers.get('Set-Cookie').split(';', 1)[0];
+  const cookie = await adminCookie(env);
 
   const reference = '0123456789abcdef0123456789abcdef';
   const listResponse = await worker.fetch(new Request('https://feedback.example/api/find', {
@@ -361,6 +469,35 @@ test('admin reference lookup is authenticated, exact, and parameterized', async 
   const listCall = db.calls.find(call => call.operation === 'all');
   assert.match(listCall.sql, /reference = \?/);
   assert.equal(listCall.args[0], reference);
+});
+
+test('admin product filtering is allowlisted and parameterized', async () => {
+  const db = new MockDB();
+  const env = submitEnv(db);
+  const cookie = await adminCookie(env);
+  const filtered = await worker.fetch(new Request(
+    'https://feedback.example/api/list?status=unread&productID=lengyan&page=2&limit=20',
+    { headers: { Cookie: cookie } }
+  ), env);
+  assert.equal(filtered.status, 200);
+
+  const listCall = db.calls.find(call => call.operation === 'all');
+  const countCall = db.calls.find(call => call.operation === 'first');
+  assert.match(listCall.sql, /product_id = \?/);
+  assert.match(listCall.sql, /product_id AS productID/);
+  assert.deepEqual(listCall.args, ['lengyan', 20, 20]);
+  assert.deepEqual(countCall.args, ['lengyan']);
+
+  const rejectedDB = new MockDB();
+  const rejectedEnv = submitEnv(rejectedDB);
+  const rejectedCookie = await adminCookie(rejectedEnv);
+  const rejected = await worker.fetch(new Request(
+    'https://feedback.example/api/list?productID=jingang',
+    { headers: { Cookie: rejectedCookie } }
+  ), rejectedEnv);
+  assert.equal(rejected.status, 400);
+  assert.equal((await rejected.json()).error, 'productID is not supported');
+  assert.equal(rejectedDB.calls.length, 0);
 });
 
 test('admin rejects weak configuration and logout expires the browser session', async () => {
@@ -390,7 +527,10 @@ test('admin rejects weak configuration and logout expires the browser session', 
   assert.match(logout.headers.get('Set-Cookie'), /Max-Age=0/);
 
   const adminPageResponse = await worker.fetch(new Request('https://feedback.example/admin'), {});
-  assert.match(await adminPageResponse.text(), /onclick="logout\(\)"/);
+  const adminHTML = await adminPageResponse.text();
+  assert.match(adminHTML, /onclick="logout\(\)"/);
+  assert.match(adminHTML, /id="productFilter"/);
+  assert.match(adminHTML, /<option value="lengyan">楞严经<\/option>/);
 });
 
 test('scheduled cleanup deletes rows at the 21-day active-table boundary', async () => {
