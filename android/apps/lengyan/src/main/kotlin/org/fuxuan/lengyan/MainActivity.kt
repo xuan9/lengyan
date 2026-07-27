@@ -14,17 +14,30 @@ import androidx.compose.runtime.setValue
 import org.fuxuan.classics.core.behavior.LegacyVerseDeepLinkParser
 import org.fuxuan.classics.core.behavior.ScriptureDeepLink
 import org.fuxuan.classics.ui.ClassicsApp
+import org.fuxuan.classics.widget.DailyVerseWidgetInstallationState
+import org.fuxuan.classics.widget.DailyVerseWidgetInstaller
+import org.fuxuan.classics.widget.DailyVerseWidgetPinResult
 import org.fuxuan.classics.widget.DAILY_VERSE_PARAGRAPH_ID_EXTRA
 
 class MainActivity : ComponentActivity() {
     private lateinit var deepLinkParser: LegacyVerseDeepLinkParser
+    private lateinit var dailyVerseWidgetInstaller: DailyVerseWidgetInstaller
     private var pendingDeepLink by mutableStateOf<ScriptureDeepLink?>(null)
+    private var dailyVerseWidgetInstallation by mutableStateOf(
+        DailyVerseWidgetInstallationState(
+            isInstalled = false,
+            pinRequestSupported = false,
+        ),
+    )
     private var acceptedDeepLinkRequestKey: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val container = (application as LengyanApplication).container
+        val lengyanApplication = application as LengyanApplication
+        val container = lengyanApplication.container
+        dailyVerseWidgetInstaller = DailyVerseWidgetInstaller(this, lengyanApplication)
+        refreshDailyVerseWidgetInstallation()
         deepLinkParser = LegacyVerseDeepLinkParser(
             productID = container.product.productID,
             scheme = container.product.productID,
@@ -58,7 +71,29 @@ class MainActivity : ComponentActivity() {
                     if (pendingDeepLink == consumed) pendingDeepLink = null
                 },
                 onDarkThemeChanged = ::applyEdgeToEdge,
+                dailyVerseWidgetInstalled = dailyVerseWidgetInstallation.isInstalled,
+                dailyVerseWidgetPinSupported = dailyVerseWidgetInstallation.pinRequestSupported,
+                onRequestDailyVerseWidgetPin = {
+                    val requested = dailyVerseWidgetInstaller.requestPin() ==
+                        DailyVerseWidgetPinResult.REQUESTED
+                    refreshDailyVerseWidgetInstallation()
+                    requested
+                },
             )
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::dailyVerseWidgetInstaller.isInitialized) {
+            refreshDailyVerseWidgetInstallation()
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && ::dailyVerseWidgetInstaller.isInitialized) {
+            refreshDailyVerseWidgetInstallation()
         }
     }
 
@@ -118,6 +153,10 @@ class MainActivity : ComponentActivity() {
         val offset = getIntExtra(EXTRA_CHARACTER_OFFSET, 0).coerceAtLeast(0)
         val requestID = getLongExtra(EXTRA_DEEP_LINK_REQUEST_ID, 0).coerceAtLeast(0)
         return "paragraph:$paragraphID:$offset:$requestID"
+    }
+
+    private fun refreshDailyVerseWidgetInstallation() {
+        dailyVerseWidgetInstallation = dailyVerseWidgetInstaller.installationState()
     }
 
     private fun applyEdgeToEdge(darkTheme: Boolean) {

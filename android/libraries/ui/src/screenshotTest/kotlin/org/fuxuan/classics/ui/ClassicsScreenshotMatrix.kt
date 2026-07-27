@@ -12,6 +12,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.android.tools.screenshot.PreviewTest
 import org.fuxuan.classics.core.behavior.ReadingMode
 import org.fuxuan.classics.core.behavior.VolumeReadingDocument
@@ -244,12 +245,42 @@ fun settingsTraditionalScreenshot() {
                 expandedSectionIDs = emptySet(),
             ),
             supportedLocales = listOf("zh-Hant", "zh-Hans"),
+            productTitle = "楞嚴經",
             strings = AppStrings("zh-Hant"),
+            dailyVerseWidgetInstalled = false,
+            dailyVerseWidgetPinSupported = true,
+            onRequestDailyVerseWidgetPin = { true },
             onSelectTheme = {},
             onSelectLocale = {},
             onSelectFontSize = {},
             onSetReminder = {},
         )
+    }
+}
+
+@PreviewTest
+@Preview(name = "phone-light-100", widthDp = 393, heightDp = 220, fontScale = 1f, uiMode = DAY)
+@Preview(name = "compact-dark-200", widthDp = 320, heightDp = 300, fontScale = 2f, uiMode = NIGHT)
+@Composable
+fun widgetSettingTraditionalScreenshot() {
+    val strings = AppStrings("zh-Hant")
+    ClassicsTheme(darkTheme = isSystemInDarkTheme()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        ) { padding ->
+            DailyVerseWidgetSettingsSection(
+                installed = false,
+                pinRequestSupported = true,
+                strings = strings,
+                onRequestPin = { true },
+                onShowGuide = {},
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+            )
+        }
     }
 }
 

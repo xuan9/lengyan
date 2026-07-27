@@ -6,6 +6,7 @@ import org.fuxuan.classics.core.AppContainer
 interface DailyVerseWidgetHost {
     val dailyVerseWidgetContainer: AppContainer
     val dailyVerseWidgetLaunchComponent: ComponentName
+    val dailyVerseWidgetReceiverComponent: ComponentName
 }
 
 const val DAILY_VERSE_PARAGRAPH_ID_EXTRA =

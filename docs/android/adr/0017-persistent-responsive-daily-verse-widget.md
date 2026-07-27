@@ -54,9 +54,10 @@ valid passage rather than erasing useful content. The stored snapshot contains
 display text, but it is only a local fallback derived from the packaged,
 validated product asset and is replaced after the next successful load.
 
-The current Widget offers one daily-reading interaction. Pin guidance, reminder
-controls, or future actions require separate product and launcher evidence; they
-must not be represented as a fictitious third Widget style.
+The current Widget offers one daily-reading interaction. Its system pin and
+launcher fallback policy is defined separately by ADR 0019; neither responsive
+dimensions nor future actions may be represented as a fictitious third Widget
+style.
 
 ## Verification
 
@@ -70,9 +71,9 @@ and 320x320dp.
 An API 36 AOSP Launcher3 emulator was also used to add the actual 3x2 Widget.
 The launcher reported an approximately 196x240dp host frame; light and dark
 rendering remained left aligned and readable, and tapping opened the displayed
-volume-nine paragraph. API 26, API 33, Samsung and target mainland OEM
-launchers, physical TalkBack/Switch Access, and the settings pin/fallback flow
-remain Gate F work.
+volume-nine paragraph. ADR 0019 subsequently verified the settings pin flow on
+the same launcher. API 26, API 33, Samsung and target mainland OEM launchers,
+and physical TalkBack/Switch Access remain Gate F work.
 
 ## Reconsider When
 

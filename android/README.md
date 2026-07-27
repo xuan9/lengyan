@@ -53,7 +53,11 @@ The daily-verse Widget uses stable paragraph IDs from the product contract,
 locks one selection per local day and content version, and keeps a versioned
 DataStore snapshot for offline/error fallback. Its Glance layout is responsive
 to launcher-provided dimensions and always opens the product's explicit
-activity, targeting the selected paragraph when one is available.
+activity, targeting the selected paragraph when one is available. Settings
+exposes one "今日读经" entry: supported launchers receive the system pin sheet,
+while unsupported or rejected requests receive a short product-localized
+launcher guide. Installed state is read from the product's real Widget IDs and
+refreshed when launcher UI returns focus.
 
 Daily reminders use one-shot inexact `AlarmManager` scheduling. Android 13+
 notification permission is requested only when the user enables the setting;

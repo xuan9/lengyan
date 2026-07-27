@@ -20,7 +20,11 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -29,6 +33,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -38,6 +43,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -62,7 +68,11 @@ import kotlin.math.roundToInt
 internal fun SettingsScreen(
     preferences: ProductPreferences,
     supportedLocales: List<String>,
+    productTitle: String,
     strings: AppStrings,
+    dailyVerseWidgetInstalled: Boolean = false,
+    dailyVerseWidgetPinSupported: Boolean = false,
+    onRequestDailyVerseWidgetPin: (() -> Boolean)? = null,
     onSelectTheme: (ThemePreference) -> Unit,
     onSelectLocale: (String) -> Unit,
     onSelectFontSize: (Int) -> Unit,
@@ -71,6 +81,7 @@ internal fun SettingsScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    var showWidgetGuide by rememberSaveable { mutableStateOf(false) }
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -98,6 +109,14 @@ internal fun SettingsScreen(
         } else {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    if (showWidgetGuide) {
+        WidgetInstallationGuideDialog(
+            productTitle = productTitle,
+            strings = strings,
+            onDismiss = { showWidgetGuide = false },
+        )
     }
 
     Scaffold(
@@ -165,6 +184,17 @@ internal fun SettingsScreen(
                         onSelectFontSize = onSelectFontSize,
                     )
 
+                    if (onRequestDailyVerseWidgetPin != null) {
+                        DailyVerseWidgetSettingsSection(
+                            installed = dailyVerseWidgetInstalled,
+                            pinRequestSupported = dailyVerseWidgetPinSupported,
+                            strings = strings,
+                            onRequestPin = onRequestDailyVerseWidgetPin,
+                            onShowGuide = { showWidgetGuide = true },
+                            modifier = Modifier.padding(top = 28.dp),
+                        )
+                    }
+
                     SettingsHeading(
                         text = strings.dailyPractice,
                         modifier = Modifier.padding(top = 28.dp),
@@ -179,6 +209,112 @@ internal fun SettingsScreen(
             }
         }
     }
+}
+
+@Composable
+internal fun DailyVerseWidgetSettingsSection(
+    installed: Boolean,
+    pinRequestSupported: Boolean,
+    strings: AppStrings,
+    onRequestPin: () -> Boolean,
+    onShowGuide: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        SettingsHeading(text = strings.desktopWidget)
+        DailyVerseWidgetSetting(
+            installed = installed,
+            pinRequestSupported = pinRequestSupported,
+            strings = strings,
+            onRequestPin = onRequestPin,
+            onShowGuide = onShowGuide,
+        )
+    }
+}
+
+@Composable
+internal fun DailyVerseWidgetSetting(
+    installed: Boolean,
+    pinRequestSupported: Boolean,
+    strings: AppStrings,
+    onRequestPin: () -> Boolean,
+    onShowGuide: () -> Unit,
+) {
+    val status = when {
+        installed -> strings.widgetAdded
+        pinRequestSupported -> strings.widgetAdd
+        else -> strings.widgetOpenGuide
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .testTag("settings.widget")
+            .clickable(
+                role = Role.Button,
+                onClick = {
+                    val requested = pinRequestSupported && onRequestPin()
+                    if (!requested) onShowGuide()
+                },
+            )
+            .padding(horizontal = 4.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = strings.todayReadingWidget,
+                style = MaterialTheme.typography.bodyLarge.copy(letterSpacing = 0.sp),
+            )
+            Text(
+                text = status,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium.copy(letterSpacing = 0.sp),
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+internal fun WidgetInstallationGuideDialog(
+    productTitle: String,
+    strings: AppStrings,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag("settings.widget.guide"),
+        title = {
+            Text(
+                text = strings.widgetGuideTitle(strings.todayReadingWidget),
+                style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 0.sp),
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                strings.widgetGuideSteps(productTitle).forEachIndexed { index, step ->
+                    Text(
+                        text = "${index + 1}. $step",
+                        style = MaterialTheme.typography.bodyLarge.copy(letterSpacing = 0.sp),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(strings.widgetGuideDone)
+            }
+        },
+    )
 }
 
 @Composable

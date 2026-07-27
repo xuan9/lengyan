@@ -107,6 +107,9 @@ fun ClassicsApp(
     pendingDeepLink: ScriptureDeepLink? = null,
     onDeepLinkConsumed: (ScriptureDeepLink) -> Unit = {},
     onDarkThemeChanged: (Boolean) -> Unit = {},
+    dailyVerseWidgetInstalled: Boolean = false,
+    dailyVerseWidgetPinSupported: Boolean = false,
+    onRequestDailyVerseWidgetPin: (() -> Boolean)? = null,
 ) {
     val preferences by container.userPreferencesRepository.preferences.collectAsState(initial = null)
     val systemDarkTheme = isSystemInDarkTheme()
@@ -131,6 +134,9 @@ fun ClassicsApp(
                     preferences = currentPreferences,
                     pendingDeepLink = pendingDeepLink,
                     onDeepLinkConsumed = onDeepLinkConsumed,
+                    dailyVerseWidgetInstalled = dailyVerseWidgetInstalled,
+                    dailyVerseWidgetPinSupported = dailyVerseWidgetPinSupported,
+                    onRequestDailyVerseWidgetPin = onRequestDailyVerseWidgetPin,
                 )
             }
         }
@@ -143,6 +149,9 @@ private fun ContentNavigation(
     preferences: ProductPreferences,
     pendingDeepLink: ScriptureDeepLink?,
     onDeepLinkConsumed: (ScriptureDeepLink) -> Unit,
+    dailyVerseWidgetInstalled: Boolean,
+    dailyVerseWidgetPinSupported: Boolean,
+    onRequestDailyVerseWidgetPin: (() -> Boolean)?,
 ) {
     var retryKey by remember { mutableIntStateOf(0) }
     val loadState by produceState<ContentLoadState>(
@@ -175,6 +184,9 @@ private fun ContentNavigation(
             preferences = preferences,
             pendingDeepLink = pendingDeepLink,
             onDeepLinkConsumed = onDeepLinkConsumed,
+            dailyVerseWidgetInstalled = dailyVerseWidgetInstalled,
+            dailyVerseWidgetPinSupported = dailyVerseWidgetPinSupported,
+            onRequestDailyVerseWidgetPin = onRequestDailyVerseWidgetPin,
         )
     }
 }
@@ -186,6 +198,9 @@ private fun LoadedContentNavigation(
     preferences: ProductPreferences,
     pendingDeepLink: ScriptureDeepLink?,
     onDeepLinkConsumed: (ScriptureDeepLink) -> Unit,
+    dailyVerseWidgetInstalled: Boolean,
+    dailyVerseWidgetPinSupported: Boolean,
+    onRequestDailyVerseWidgetPin: (() -> Boolean)?,
 ) {
     val readBackStack = rememberNavBackStack(HomeRoute)
     val favoritesBackStack = rememberNavBackStack(FavoritesRoute)
@@ -557,7 +572,11 @@ private fun LoadedContentNavigation(
             TopLevelDestination.SETTINGS -> SettingsScreen(
                 preferences = preferences,
                 supportedLocales = loaded.product.supportedLocales,
+                productTitle = loaded.product.title(preferences.locale),
                 strings = strings,
+                dailyVerseWidgetInstalled = dailyVerseWidgetInstalled,
+                dailyVerseWidgetPinSupported = dailyVerseWidgetPinSupported,
+                onRequestDailyVerseWidgetPin = onRequestDailyVerseWidgetPin,
                 onSelectTheme = { theme ->
                     navigationScope.launch {
                         container.userPreferencesRepository.setTheme(theme)

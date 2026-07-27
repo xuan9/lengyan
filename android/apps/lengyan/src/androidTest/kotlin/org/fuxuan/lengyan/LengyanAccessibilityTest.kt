@@ -103,6 +103,11 @@ class LengyanAccessibilityTest {
         composeRule.onNodeWithTag("settings.screen", useUnmergedTree = true).assertIsDisplayed()
         checkCurrentScreen()
 
+        composeRule.onNodeWithTag("settings.widget", useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+        checkCurrentScreen()
+
         composeRule.onNodeWithTag("settings.reminder.enabled", useUnmergedTree = true)
             .performScrollTo()
             .assertIsDisplayed()

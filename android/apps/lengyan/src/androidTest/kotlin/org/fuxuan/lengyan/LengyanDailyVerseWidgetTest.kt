@@ -19,10 +19,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.fuxuan.classics.widget.DailyVerseAppWidget
 import org.fuxuan.classics.widget.DailyVerseWidgetDataLoader
+import org.fuxuan.classics.widget.DailyVerseWidgetHost
+import org.fuxuan.classics.widget.DailyVerseWidgetInstaller
 import org.fuxuan.classics.widget.DailyVerseWidgetStateStore
 import org.fuxuan.classics.core.persistence.ReadingProgress
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +39,7 @@ class LengyanDailyVerseWidgetTest {
     @Test
     fun providerIsDiscoverableWithResponsiveDailyUpdateMetadata() {
         val context = targetContext()
+        val application = context.applicationContext as LengyanApplication
         val component = ComponentName(context, LengyanDailyVerseWidgetReceiver::class.java)
         val provider = AppWidgetManager.getInstance(context).installedProviders
             .firstOrNull { it.provider == component }
@@ -47,6 +51,29 @@ class LengyanDailyVerseWidgetTest {
         assertEquals(3_600_000, provider.updatePeriodMillis)
         assertTrue(provider.resizeMode and AppWidgetProviderInfo.RESIZE_HORIZONTAL != 0)
         assertTrue(provider.resizeMode and AppWidgetProviderInfo.RESIZE_VERTICAL != 0)
+        assertEquals(component, application.dailyVerseWidgetReceiverComponent)
+    }
+
+    @Test
+    fun installerReportsRealLauncherStateAndRejectsACrossPackageReceiver() {
+        val context = targetContext()
+        val application = context.applicationContext as LengyanApplication
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val component = application.dailyVerseWidgetReceiverComponent
+        val state = DailyVerseWidgetInstaller(context, application).installationState()
+
+        assertEquals(appWidgetManager.getAppWidgetIds(component).isNotEmpty(), state.isInstalled)
+        assertEquals(appWidgetManager.isRequestPinAppWidgetSupported, state.pinRequestSupported)
+
+        val invalidHost = object : DailyVerseWidgetHost by application {
+            override val dailyVerseWidgetReceiverComponent = ComponentName(
+                "org.fuxuan.invalid",
+                "org.fuxuan.invalid.WidgetReceiver",
+            )
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            DailyVerseWidgetInstaller(context, invalidHost)
+        }
     }
 
     @Test

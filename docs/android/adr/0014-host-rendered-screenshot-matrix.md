@@ -19,10 +19,10 @@ and tablets in both Chinese scripts.
 - Keep the experimental plugin inside the existing `build-logic` classpath so
   it resolves against the repository's pinned AGP and Kotlin versions and
   remains compatible with configuration cache.
-- Validate 20 pairwise scenarios spanning 320dp, 393dp, 673dp, and 1,000dp
+- Validate 22 pairwise scenarios spanning 320dp, 393dp, 673dp, and 1,000dp
   widths; light and dark themes; 100%, 130%, and 200% system font scales;
   Traditional and Simplified Chinese; and home, reader, directory, favorites,
-  settings, and share-preview screens.
+  settings, its Widget entry, and share-preview screens.
 - Use synthetic scripture data that obeys the same domain contracts as packaged
   content. Do not duplicate production scripture text in screenshot fixtures.
 - Run `:libraries:ui:validateDebugScreenshotTest` from the public
@@ -32,7 +32,7 @@ and tablets in both Chinese scripts.
 ## Consequences
 
 Visual changes now fail CI when rendered pixels differ from reviewed references.
-The 20 PNGs add about 1.6 MiB to the repository and no bytes to production APKs.
+The 22 PNGs add about 1.7 MiB to the repository and no bytes to production APKs.
 The Android plugin is experimental, so its pinned version and configuration-cache
 behavior must be revalidated before upgrades. Layoutlib rendering complements,
 but does not replace, managed-device tests or manual checks on representative
@@ -40,7 +40,7 @@ physical hardware.
 
 ## Verification
 
-- All 20 references render and validate with zero failures.
+- All 22 references render and validate with zero failures.
 - Representative compact/200%, phone/dark, tablet/split, reader, and settings
   images were inspected for clipping, overlap, blank output, and incorrect
   framing.

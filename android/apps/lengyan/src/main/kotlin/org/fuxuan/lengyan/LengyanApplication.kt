@@ -54,6 +54,9 @@ class LengyanApplication : Application(), DailyReminderHost, DailyVerseWidgetHos
     override val dailyVerseWidgetLaunchComponent: ComponentName
         get() = ComponentName(this, MainActivity::class.java)
 
+    override val dailyVerseWidgetReceiverComponent: ComponentName
+        get() = ComponentName(this, LengyanDailyVerseWidgetReceiver::class.java)
+
     override val dailyReminderContainer: AppContainer
         get() = container
 
@@ -114,8 +117,9 @@ class LengyanApplication : Application(), DailyReminderHost, DailyVerseWidgetHos
     }
 
     private fun hasInstalledDailyVerseWidget(): Boolean {
-        val component = ComponentName(this, LengyanDailyVerseWidgetReceiver::class.java)
-        return AppWidgetManager.getInstance(this).getAppWidgetIds(component).isNotEmpty()
+        return AppWidgetManager.getInstance(this)
+            .getAppWidgetIds(dailyVerseWidgetReceiverComponent)
+            .isNotEmpty()
     }
 
     private fun observeDailyReminderInputs() {

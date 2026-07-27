@@ -27,6 +27,12 @@ internal class AppStrings(locale: String) {
     val language = if (simplified) "语言" else "語言"
     val fontSize = if (simplified) "正文字号" else "正文字號"
     val fontPreview = if (simplified) "如是我闻" else "如是我聞"
+    val desktopWidget = if (simplified) "桌面组件" else "桌面組件"
+    val todayReadingWidget = if (simplified) "今日读经" else "今日讀經"
+    val widgetAdd = if (simplified) "添加到桌面" else "加入桌面"
+    val widgetAdded = if (simplified) "已添加，可再次添加" else "已加入，可再次加入"
+    val widgetOpenGuide = if (simplified) "查看添加步骤" else "查看加入步驟"
+    val widgetGuideDone = "知道了"
     val dailyPractice = if (simplified) "每日修习" else "每日修習"
     val dailyReminder = if (simplified) "每日读经提醒" else "每日讀經提醒"
     val reminderTime = if (simplified) "提醒时间" else "提醒時間"
@@ -101,6 +107,26 @@ internal class AppStrings(locale: String) {
         "约在 $time 提醒"
     } else {
         "約在 $time 提醒"
+    }
+
+    fun widgetGuideTitle(widgetName: String): String = if (simplified) {
+        "添加“$widgetName”"
+    } else {
+        "加入「$widgetName」"
+    }
+
+    fun widgetGuideSteps(productTitle: String): List<String> = if (simplified) {
+        listOf(
+            "长按桌面空白处。",
+            "打开系统的桌面组件列表。",
+            "找到《$productTitle》的“$todayReadingWidget”，拖到桌面。",
+        )
+    } else {
+        listOf(
+            "長按桌面空白處。",
+            "打開系統的桌面組件列表。",
+            "找到《$productTitle》的「$todayReadingWidget」，拖到桌面。",
+        )
     }
 
     fun shareCharacterCount(count: Int): String = if (simplified) {

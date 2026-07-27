@@ -42,9 +42,10 @@ managed-device command currently verifies the shell, packaged Lengyan contracts,
 cross-script search, DataStore, Room, the Room v1 schema origin, the real volume
 reader, stable rotation resume, complete 20,000-character layout at default and
 200% system font scale, the daily-verse Widget provider/schedule/snapshot/route,
-the inexact daily-reminder permission/notification/text-anchor flow, and the
-Pixel Tablet favorites split-detail lifecycle.
-The Android command also validates 20 host-rendered screenshot references across
+the Widget system-pin/state/fallback flow, the inexact daily-reminder
+permission/notification/text-anchor flow, and the Pixel Tablet favorites
+split-detail lifecycle.
+The Android command also validates 22 host-rendered screenshot references across
 compact phone, phone, foldable, and tablet widths; light/dark themes; 100%, 130%,
 and 200% font scales; Traditional/Simplified Chinese; and all implemented primary
 screens. The normal Android Gate also compiles the release-derived Macrobenchmark

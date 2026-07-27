@@ -382,6 +382,11 @@ class LengyanShellTest {
                         "第 3 级，共 5 级",
                     ),
                 )
+            composeRule.onNodeWithTag("settings.widget", useUnmergedTree = true)
+                .performScrollTo()
+                .assertIsDisplayed()
+            composeRule.onNodeWithText("今日读经", useUnmergedTree = true)
+                .assertIsDisplayed()
             composeRule.onNodeWithTag("settings.reminder.enabled", useUnmergedTree = true)
                 .performScrollTo()
                 .assertIsDisplayed()
