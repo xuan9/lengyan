@@ -865,6 +865,8 @@ Gate E：至少三类真机完成 2 小时后台播放、断网/Range 下载恢�
 
 **Phase 4 缓存执行检查点（2026-07-27）：** Media3 content metadata 现以 schema v1 持久保存 request/product/artifact/rendition、完整 expected bytes/SHA-256、reserved/verified 状态和最近访问时间；worker-only 串行执行器在下载前按完整预期体积预留，先清理 28 天过期项再按 LRU 满足 192 MiB/同 App runtime 512 MiB soft budget。相同 request ID 的不可变合同变化会被拒绝，当前/下一卷等 protected key 不允许换 rendition 或清理冲突副本。实际 evictor 先在 DownloadManager application looper 登记 listener，再从工作线程检查索引、发起删除并等待 `onDownloadRemoved`，返回时 DownloadIndex 和 cache span 均不可用。API 35 已证明带真实 span 的 verified metadata 可跨 `SimpleCache` 重建，并证明资源在 28 天边界由一次维护同时清空索引、字节和账本；JVM 覆盖预算、过期、重复记录、受保护替换和部分删除失败。只有 metadata、尚无 span 的零字节排队项会按 Media3 语义在 cache 重建时消失，仍须在后续进程恢复协调器中从 catalog/DownloadIndex 重建；计费网络执行、cache-backed Player、播放位置、完整进程死亡、真实 host/codec/权利和生产 UI 继续未完成，楞严正式 release 隔离不变。
 
+**Phase 4 预取网络执行检查点（2026-07-27）：** 全局 Media3 `Requirements` 固定只要求联网，不使用会同时拦截用户播放的 `NETWORK_UNMETERED`。共享 application-looper 协调器以 schema-v1 `DownloadRequest.data` 持久区分用户播放与自动下一卷预取，并用专属非零 stop reason 逐请求执行策略：计费或离线时保留 stopped 任务与部分缓存，provider/用户关闭时不新建预取；策略恢复时只清除自己的 reason，其他子系统 reason 原样保留。用户点同卷会在同 request/cache key 上提升为 user playback，且 user ownership 单调优先，迟到的 prefetch callback 不能重新降级或暂停；坏缓存修复的产品注入入口也保留当前传输意图。API 35 已证明计费预取在提升前 0 个 body request、0 cache bytes，Media3 runtime 释放重建后 request marker 与 stop reason 仍在，用户提升后只发 1 个 body request 并完成；这是 runtime 重建，不冒充 OS 杀进程。正式楞严仍不依赖 media 模块；产品启动时从 catalog/DownloadIndex 重建零字节 reservation、实时监听网络与偏好、cache-backed Player、播放位置、完整进程死亡、真实 host/codec/权利和生产 UI 继续未完成。
+
 ### Phase 5：系统集成（3-5 周）
 
 交付：

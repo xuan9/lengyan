@@ -17,12 +17,19 @@ class Media3AudioDownloadSpec private constructor(
 ) {
     val requestID: String = buildRequestID(key, renditionID)
 
-    fun toDownloadRequest(): DownloadRequest = DownloadRequest.Builder(
+    fun toDownloadRequest(
+        transferPurpose: AudioTransferPurpose? = null,
+    ): DownloadRequest = DownloadRequest.Builder(
         requestID,
         Uri.parse(uri.toString()),
     )
         .setMimeType(mediaType)
         .setCustomCacheKey(requestID)
+        .apply {
+            transferPurpose?.let { purpose ->
+                setData(AudioTransferRequestMetadata.encode(purpose))
+            }
+        }
         .build()
 
     companion object {

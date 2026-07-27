@@ -6,7 +6,6 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadManager
-import androidx.media3.exoplayer.offline.DownloadRequest
 import java.util.concurrent.Executor
 
 sealed interface AudioDownloadIntegrityIssue {
@@ -72,9 +71,11 @@ sealed interface AudioDownloadIntegrityEvent {
     }
 }
 
-@OptIn(UnstableApi::class)
 fun interface AudioDownloadRepairEnqueuer {
-    fun enqueue(request: DownloadRequest)
+    fun enqueue(
+        spec: Media3AudioDownloadSpec,
+        transferPurpose: AudioTransferPurpose?,
+    )
 }
 
 fun interface AudioDownloadIntegrityListener {
@@ -105,7 +106,10 @@ class Media3AudioDownloadIntegrityCoordinator(
         downloadManager.addListener(this)
     }
 
-    fun track(spec: Media3AudioDownloadSpec) {
+    fun track(
+        spec: Media3AudioDownloadSpec,
+        transferPurpose: AudioTransferPurpose? = null,
+    ) {
         requireApplicationThread()
         check(!released) { "audio download integrity coordinator is released" }
 
@@ -113,11 +117,13 @@ class Media3AudioDownloadIntegrityCoordinator(
             require(existing.spec.hasSameContract(spec)) {
                 "audio download request ID maps to conflicting integrity contracts"
             }
+            existing.transferPurpose = existing.transferPurpose.promotedWith(transferPurpose)
             return
         }
         tracked[spec.requestID] = TrackedDownload(
             spec = spec,
             generation = nextGeneration++,
+            transferPurpose = transferPurpose,
         )
     }
 
@@ -147,6 +153,11 @@ class Media3AudioDownloadIntegrityCoordinator(
         finalException: Exception?,
     ) {
         if (!isActiveCallback(downloadManager)) return
+        tracked[download.request.id]?.let { entry ->
+            entry.transferPurpose = entry.transferPurpose.promotedWith(
+                download.request.classicsAudioTransferPurpose(),
+            )
+        }
         if (download.state == Download.STATE_COMPLETED) {
             beginVerification(download.request.id)
         }
@@ -286,7 +297,7 @@ class Media3AudioDownloadIntegrityCoordinator(
         entry.phase = IntegrityPhase.IDLE
         entry.pendingIssue = null
         try {
-            repairEnqueuer.enqueue(entry.spec.toDownloadRequest())
+            repairEnqueuer.enqueue(entry.spec, entry.transferPurpose)
         } catch (exception: Exception) {
             entry.phase = IntegrityPhase.REJECTED
             listener.onIntegrityEvent(
@@ -352,6 +363,7 @@ class Media3AudioDownloadIntegrityCoordinator(
     private data class TrackedDownload(
         val spec: Media3AudioDownloadSpec,
         var generation: Long,
+        var transferPurpose: AudioTransferPurpose?,
         var phase: IntegrityPhase = IntegrityPhase.IDLE,
         var repairAttempts: Int = 0,
         var pendingIssue: AudioDownloadIntegrityIssue? = null,
@@ -374,5 +386,16 @@ class Media3AudioDownloadIntegrityCoordinator(
         data class Failure(
             val issue: AudioDownloadIntegrityIssue.OperationFailure,
         ) : VerificationOutcome
+    }
+
+    private fun AudioTransferPurpose?.promotedWith(
+        incoming: AudioTransferPurpose?,
+    ): AudioTransferPurpose? = when {
+        this == AudioTransferPurpose.USER_PLAYBACK ||
+            incoming == AudioTransferPurpose.USER_PLAYBACK -> AudioTransferPurpose.USER_PLAYBACK
+        this == AudioTransferPurpose.AUTOMATIC_NEXT_PREFETCH ||
+            incoming == AudioTransferPurpose.AUTOMATIC_NEXT_PREFETCH ->
+            AudioTransferPurpose.AUTOMATIC_NEXT_PREFETCH
+        else -> null
     }
 }

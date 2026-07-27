@@ -116,8 +116,28 @@ drops metadata-only entries that have no cache span during reconstruction; a
 zero-byte queued download must therefore be rebuilt from the catalog and
 DownloadIndex by the still-open process-recovery coordinator.
 
-Startup reconciliation/product orchestration, metered-network prefetch
-enforcement, cached playback wiring, playback-position persistence, complete
+The sixth foundation slice keeps the global Media3 requirement at `NETWORK` and
+applies automatic-prefetch policy with an application-owned, per-request stop
+reason. A schema-v1 marker in `DownloadRequest.data` distinguishes user playback
+from automatic next-volume prefetch across runtime recreation. Metered or offline
+prefetch requests are retained in `STATE_STOPPED`; provider- or user-disabled new
+prefetches are not created. Policy reevaluation only clears its own stop reason,
+preserves another subsystem's reason, and never applies the unmetered restriction
+to a user-owned task. Construction requires an initial policy snapshot so restored
+downloads are reconciled while Media3 is still paused, before product code resumes
+the manager.
+
+Promotion rewrites the same request as user playback and preserves its cache key
+and cached spans. User ownership is monotonic in memory so a late prefetch
+callback cannot demote or stop a promoted request. Integrity repair also carries
+the latest purpose through its product-injected reenqueue boundary. On API 35, a
+metered prefetch made zero HTTP body requests and cached zero bytes, retained its
+purpose and stop reason after the Media3 runtime was released and recreated, then
+completed with one body request after user promotion. This is runtime-recreation
+evidence, not an OS process-kill claim.
+
+Product startup reconciliation, live connectivity/preference observation,
+cache-backed playback wiring, playback-position persistence, complete
 process-death recovery evidence, a measured production host, format selection,
 and Android redistribution approval remain open Phase 4 work. No audio entry is
 shown while Lengyan delivery remains `planned`.

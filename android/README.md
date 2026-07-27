@@ -52,15 +52,20 @@ catalog, injectable session/download service lifecycles, an application-scoped
 download runtime, stable product/artifact/rendition cache keys, and cache-only
 length/SHA-256 verification. It also has one-attempt corrupt-download repair and
 a persistent, serialized cache-policy executor that waits for Media3 index/cache
-removal. The planned Lengyan product does not depend on that module or register
-media components. The separate harness owns the network and foreground-service
+removal. Its per-request transfer coordinator persists user/prefetch intent,
+stops automatic prefetch under the current network policy without changing the
+global user-download requirement, and promotes the same task for user playback.
+The planned Lengyan product does not depend on that module or register media
+components. The separate harness owns the network and foreground-service
 permissions used by device tests; its loopback server proves non-zero HTTP Range
 recovery after an interrupted response, bounded integrity repair, metadata
-restoration around real cache spans, and complete 28-day expiry removal. Startup
-reconciliation, metered prefetch control, cached playback, playback position, a
-measured host, and media rights approval remain Phase 4 work. Shared libraries
-remain product-neutral; each app module owns its permanent package identity,
-generated product assets, system component registration, and composition root.
+restoration around real cache spans, complete 28-day expiry removal, and zero-byte
+metered prefetch followed by runtime restoration and user promotion. Product
+startup reconciliation and live network/preference observation, cached playback,
+playback position, a measured host, and media rights approval remain Phase 4 work.
+Shared libraries remain product-neutral; each app module owns its permanent
+package identity, generated product assets, system component registration, and
+composition root.
 
 The daily-verse Widget uses stable paragraph IDs from the product contract,
 locks one selection per local day and content version, and keeps a versioned
