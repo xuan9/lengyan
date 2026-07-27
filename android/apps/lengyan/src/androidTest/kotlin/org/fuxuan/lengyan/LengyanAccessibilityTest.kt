@@ -96,10 +96,14 @@ class LengyanAccessibilityTest {
                 ),
             )
         }
-        composeRule.onNodeWithTag(
-            "favorite.row.paragraph:${paragraph.paragraphID}",
-            useUnmergedTree = true,
-        ).assertIsDisplayed()
+        val favoriteRowTag = "favorite.row.paragraph:${paragraph.paragraphID}"
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            runCatching {
+                composeRule.onNodeWithTag(favoriteRowTag, useUnmergedTree = true)
+                    .assertIsDisplayed()
+            }.isSuccess
+        }
+        composeRule.onNodeWithTag(favoriteRowTag, useUnmergedTree = true).assertIsDisplayed()
         checkCurrentScreen()
 
         composeRule.onNodeWithTag("bottom.settings", useUnmergedTree = true).performClick()
