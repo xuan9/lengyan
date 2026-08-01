@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《楞严经 - 听读》App 支持</title>
+    <meta name="description" content="《楞严经 - 听读》App 支持页面。提交阅读、音频下载、播放或其他使用问题。">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src https://lengyan-feedback.dhyana9.workers.dev; base-uri 'none'; form-action 'none'">
+    <link rel="canonical" href="https://xuan9.github.io/lengyan/">
+    <style>
+        :root {
+            --bg-color: #FAF8F3;
+            --primary-color: #4A5D3A;
+            --text-primary: #2C2824;
+            --text-secondary: #6A6258;
+            --gold-color: #C5A87B;
+            --card-bg: #FFFFFF;
+            --border-color: #E6DFD3;
+            --transition-curve: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "PingFang TC", sans-serif;
+            background: radial-gradient(circle at top, #FDFCF7 0%, #FAF8F3 100%);
+            color: var(--text-primary);
+            line-height: 1.8;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* 顶部金线 */
+        .top-gold-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold-color), #E8D5B5 50%, var(--gold-color));
+            width: 100%;
+        }
+
+        /* 语言栏 */
+        .lang-toggle {
+            position: absolute;
+            top: 16px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 0.85rem;
+            z-index: 10;
+        }
+
+        .lang-toggle button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s var(--transition-curve);
+            outline: none;
+        }
+
+        .lang-toggle button:hover {
+            color: var(--primary-color);
+        }
+
+        .lang-toggle button.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .toggle-separator {
+            color: var(--border-color);
+            user-select: none;
+            font-weight: 300;
+        }
+
+        /* 页眉 */
+        header {
+            text-align: center;
+            padding: 36px 24px 8px; 
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: 400;
+            color: var(--primary-color);
+            letter-spacing: 0.15rem;
+            margin-bottom: 12px;
+            font-family: ui-serif, "Songti SC", "Songti TC", STSong, Georgia, serif;
+        }
+
+        .subtitle {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.1rem;
+            font-weight: 300;
+            font-family: ui-serif, "Songti SC", "Songti TC", STSong, serif;
+        }
+
+        /* 分隔符 */
+        .divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 16px auto 24px; 
+            max-width: 140px;
+        }
+
+        .divider-line {
+            height: 1px;
+            background-color: var(--border-color);
+            flex-grow: 1;
+        }
+
+        .divider-dot {
+            width: 5px;
+            height: 5px;
+            background-color: var(--gold-color);
+            border-radius: 50%;
+            margin: 0 12px;
+        }
+
+        /* 主容器 */
+        main {
+            max-width: 760px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 24px;
+            flex-grow: 1;
+        }
+
+        /* 内容卡片 */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(230, 223, 211, 0.7);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 8px 30px rgba(74, 93, 58, 0.015);
+            margin-bottom: 32px;
+            transition: transform 0.4s var(--transition-curve), box-shadow 0.4s var(--transition-curve);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 36px rgba(74, 93, 58, 0.03);
+        }
+
+        .card.featured {
+            border: 1px solid rgba(197, 168, 123, 0.4);
+            box-shadow: 0 8px 32px rgba(197, 168, 123, 0.03);
+        }
+
+        .card.featured:hover {
+            box-shadow: 0 16px 40px rgba(197, 168, 123, 0.08);
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+            font-weight: 500;
+            font-family: ui-serif, "Songti SC", "Songti TC", STSong, serif;
+            border-left: 3px solid var(--gold-color);
+            padding-left: 14px;
+            line-height: 1.4;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin: 28px 0 14px;
+            font-weight: 500;
+            font-family: ui-serif, "Songti SC", "Songti TC", STSong, serif;
+        }
+
+        p {
+            margin-bottom: 18px;
+            color: var(--text-primary);
+            text-align: justify;
+            font-size: 0.98rem;
+        }
+
+        ul {
+            margin-bottom: 24px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        li strong {
+            font-family: ui-serif, "Songti SC", "Songti TC", STSong, serif;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--primary-color);
+            transition: all 0.3s var(--transition-curve);
+        }
+
+        a:hover {
+            color: var(--gold-color);
+            border-bottom-color: var(--gold-color);
+        }
+
+        button:focus-visible,
+        textarea:focus-visible,
+        a:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 3px;
+        }
+
+        /* 对话反馈表单 */
+        .feedback-form-container {
+            margin-top: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .feedback-label {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .feedback-limit {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.65;
+            margin: -4px 0 2px;
+            min-width: max-content;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+
+        .feedback-limit[hidden] {
+            display: none;
+        }
+
+        .feedback-limit.at-limit {
+            color: #A14F45;
+            font-weight: 500;
+        }
+
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 16px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.98rem;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            box-shadow: inset 0 2px 6px rgba(74, 93, 58, 0.02);
+            transition: border-color 0.3s var(--transition-curve), background-color 0.3s var(--transition-curve);
+        }
+
+        textarea:focus {
+            border-color: var(--primary-color);
+            background-color: #FFFFFF;
+        }
+
+        textarea::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.65;
+        }
+
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+            border: 1px solid var(--primary-color);
+            border-radius: 24px;
+            padding: 12px 32px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s var(--transition-curve);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(74, 93, 58, 0.08);
+            min-height: 44px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background-color: #3C4B2E;
+            border-color: #3C4B2E;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(74, 93, 58, 0.16);
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .submit-btn:disabled {
+            background-color: var(--border-color);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #FFF;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .feedback-status {
+            font-size: 0.92rem;
+            border-radius: 8px;
+            padding: 14px 18px;
+            display: none;
+            animation: fadeIn 0.4s var(--transition-curve) forwards;
+            line-height: 1.6;
+        }
+
+        .feedback-status:empty {
+            display: none;
+        }
+
+        .feedback-status.success {
+            background-color: rgba(74, 93, 58, 0.06);
+            border: 1px solid rgba(74, 93, 58, 0.3);
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .feedback-status.error {
+            background-color: rgba(220, 53, 69, 0.06);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #dc3545;
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 页脚区域 */
+        footer {
+            text-align: center;
+            padding: 50px 24px;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+            background: rgba(250, 248, 243, 0.6);
+        }
+
+        footer p {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 0.88rem;
+        }
+
+        /* 移动端 */
+        @media (max-width: 600px) {
+            .lang-toggle {
+                position: static;
+                align-self: stretch;
+                justify-content: flex-end;
+                padding: 6px 12px 0;
+            }
+
+            .lang-toggle button {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+
+            header {
+                padding: 4px 16px 4px;
+            }
+            
+            .logo {
+                font-size: 1.85rem;
+                letter-spacing: 0.1rem;
+            }
+            
+            .subtitle {
+                font-size: 0.98rem;
+            }
+
+            .divider {
+                margin: 12px auto 20px;
+            }
+
+            .card {
+                padding: 24px 20px;
+                margin-bottom: 24px;
+                border-radius: 10px;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+                margin-bottom: 18px;
+                padding-left: 10px;
+            }
+
+            p {
+                font-size: 0.95rem;
+                margin-bottom: 14px;
+            }
+
+            li {
+                font-size: 0.92rem;
+                margin-bottom: 10px;
+            }
+
+            textarea {
+                height: 130px;
+                padding: 12px 14px;
+                font-size: 0.95rem;
+            }
+
+            .feedback-limit {
+                margin-left: auto;
+            }
+
+            .submit-btn {
+                width: 100%;
+                border-radius: 8px;
+                padding: 14px 24px;
+                font-size: 0.98rem;
+            }
+
+            footer {
+                padding: 36px 16px;
+            }
+        }
+
+        /* 极窄屏幕 */
+        @media (max-width: 360px) {
+            .logo {
+                font-size: 1.65rem;
+            }
+            .card {
+                padding: 20px 14px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-gold-bar"></div>
+
+    <!-- 语言切换 -->
+    <div class="lang-toggle">
+        <button id="btn-zh" type="button" aria-label="切换至简体中文" aria-pressed="false">简体</button>
+        <span class="toggle-separator" aria-hidden="true">|</span>
+        <button id="btn-zht" type="button" aria-label="切換至繁體中文" aria-pressed="false">繁體</button>
+    </div>
+
+    <header>
+        <h1 class="logo" data-i18n="logo">楞严经 - 听读</h1>
+        <div class="subtitle" data-i18n="subtitle">阅读与听读支持</div>
+        <div class="divider" aria-hidden="true">
+            <div class="divider-line"></div>
+            <div class="divider-dot"></div>
+            <div class="divider-line"></div>
+        </div>
+    </header>
+
+    <main>
+        <!-- 反馈与支持 -->
+        <div class="card featured">
+            <h2 data-i18n="card_feedback_title">问题反馈与支持</h2>
+            <p data-i18n="card_feedback_desc">如果您在阅读、音频下载、播放或其他使用过程中遇到问题，或有改进建议，请在下方提交。</p>
+            
+            <form class="feedback-form-container" id="feedbackForm" action="#" method="post">
+                <label class="feedback-label" for="feedbackContent" data-i18n="feedback_label">问题或建议</label>
+                <textarea id="feedbackContent" name="content" maxlength="2000" required autocomplete="off" data-i18n-placeholder="placeholder" aria-describedby="feedbackLimit feedbackStatus"></textarea>
+                <p class="feedback-limit" id="feedbackLimit" hidden></p>
+                <div class="visually-hidden" id="feedbackLimitLive" role="status" aria-live="polite" aria-atomic="true"></div>
+
+                <div class="feedback-status" id="feedbackStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+
+                <div>
+                    <button class="submit-btn" id="submitBtn" type="submit" disabled>
+                        <span class="spinner" id="btnSpinner" aria-hidden="true"></span>
+                        <span id="btnText" data-i18n="btn_submit">提交</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+
+        <!-- 关于应用 -->
+        <div class="card">
+            <h2 data-i18n="about_title">关于《楞严经 - 听读》App</h2>
+            <p data-i18n="about_desc">一款安静、无广告的原生听读工具，提供《大佛顶首楞严经》十卷原文、科判与配套音频。</p>
+            
+            <h3 data-i18n="features_title">主要功能</h3>
+            <ul>
+                <li data-i18n-html="feature_1"><strong>阅读排版</strong>：支持字号与主题调整。</li>
+                <li data-i18n-html="feature_2"><strong>科判与检索</strong>：按结构浏览并搜索经文。</li>
+                <li data-i18n-html="feature_3"><strong>音频播放</strong>：支持后台播放、锁定屏幕控制与进度恢复。</li>
+                <li data-i18n-html="feature_4"><strong>屏幕小组件</strong>：可在主屏幕或锁定屏幕显示每日一段经文。</li>
+                <li data-i18n-html="feature_5"><strong>收藏与分享</strong>：收藏经文，并分享文字或图文卡片。</li>
+            </ul>
+        </div>
+    </main>
+
+    <footer>
+        <p data-i18n="footer_p1">&copy; 2026 楞严经 - 听读 App</p>
+        <p><a href="https://xuan9.github.io/lengyan/privacy.html" data-i18n="privacy_link">隐私政策</a></p>
+    </footer>
+
+    <script>
+        // 简体与繁体资源
+        const LOCALES = {
+            zh: {
+                page_title: "《楞严经 - 听读》App 支持",
+                page_description: "《楞严经 - 听读》App 支持页面。提交阅读、音频下载、播放或其他使用问题。",
+                logo: "楞严经 - 听读",
+                subtitle: "阅读与听读支持",
+                card_feedback_title: "问题反馈与支持",
+                card_feedback_desc: "如果您在阅读、音频下载、播放或其他使用过程中遇到问题，或有改进建议，请在下方提交。",
+                feedback_label: "问题或建议",
+                placeholder: "请写下您遇到的问题或建议……",
+                btn_submit: "提交",
+                about_title: "关于《楞严经 - 听读》App",
+                about_desc: "一款安静、无广告的原生听读工具，提供《大佛顶首楞严经》十卷原文、科判与配套音频。",
+                features_title: "主要功能",
+                feature_1: "<strong>阅读排版</strong>：支持字号与主题调整。",
+                feature_2: "<strong>科判与检索</strong>：按结构浏览并搜索经文。",
+                feature_3: "<strong>音频播放</strong>：支持后台播放、锁定屏幕控制与进度恢复。",
+                feature_4: "<strong>屏幕小组件</strong>：可在主屏幕或锁定屏幕显示每日一段经文。",
+                feature_5: "<strong>收藏与分享</strong>：收藏经文，并分享文字或图文卡片。",
+                footer_p1: "© 2026 楞严经 - 听读 App",
+                privacy_link: "隐私政策",
+                remaining_count: "还可输入 {count} 字",
+                limit_reached: "已达 {limit} 字上限；超出的内容不会加入。",
+                sending: "正在发送...",
+                success_msg: "已收到，感谢您的反馈。",
+                error_msg: "暂时无法提交，请稍后再试。",
+                too_long_msg: "内容过长，请精简到 2000 字以内再提交。",
+                rate_limited_msg: "提交得有些频繁，请稍后再试。"
+            },
+            zht: {
+                page_title: "《楞嚴經 - 聽讀》App 支援",
+                page_description: "《楞嚴經 - 聽讀》App 支援頁面。提交閱讀、音訊下載、播放或其他使用問題。",
+                logo: "楞嚴經 - 聽讀",
+                subtitle: "閱讀與聽讀支援",
+                card_feedback_title: "問題回饋與支援",
+                card_feedback_desc: "如果您在閱讀、音訊下載、播放或其他使用過程中遇到問題，或有改進建議，請在下方送出。",
+                feedback_label: "問題或建議",
+                placeholder: "請寫下您遇到的問題或建議……",
+                btn_submit: "送出",
+                about_title: "關於《楞嚴經 - 聽讀》App",
+                about_desc: "一款安靜、無廣告的原生聽讀工具，提供《大佛頂首楞嚴經》十卷原文、科判與配套音訊。",
+                features_title: "主要功能",
+                feature_1: "<strong>閱讀排版</strong>：支援字級與主題調整。",
+                feature_2: "<strong>科判與檢索</strong>：按結構瀏覽並搜尋經文。",
+                feature_3: "<strong>音訊播放</strong>：支援背景播放、鎖定畫面控制與進度恢復。",
+                feature_4: "<strong>畫面小工具</strong>：可在主畫面或鎖定畫面顯示每日一段經文。",
+                feature_5: "<strong>收藏與分享</strong>：收藏經文，並分享文字或圖文卡片。",
+                footer_p1: "© 2026 楞嚴經 - 聽讀 App",
+                privacy_link: "隱私權政策",
+                remaining_count: "還可輸入 {count} 字",
+                limit_reached: "已達 {limit} 字上限；超出的內容不會加入。",
+                sending: "正在發送...",
+                success_msg: "已收到，感謝您的回饋。",
+                error_msg: "暫時無法提交，請稍後再試。",
+                too_long_msg: "內容過長，請精簡至 2000 字以內再提交。",
+                rate_limited_msg: "提交得有些頻繁，請稍後再試。"
+            }
+        };
+
+        const FEEDBACK_ENDPOINT = "https://lengyan-feedback.dhyana9.workers.dev";
+        const FEEDBACK_LIMIT_WARNING_THRESHOLD = 200;
+        const FEEDBACK_LIMIT_ANNOUNCEMENT_POINTS = [100, 50, 20, 0];
+
+        let currentLang = 'zh';
+        let currentStatus = null;
+        let isSubmitting = false;
+        let previousFeedbackRemaining = null;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // 自动语言检测
+            const browserLang = navigator.language || navigator.userLanguage || '';
+            const isTraditional = ['zh-TW', 'zh-HK', 'zh-MO', 'zh-hant'].some(l => browserLang.toLowerCase().includes(l.toLowerCase()));
+            currentLang = isTraditional ? 'zht' : 'zh';
+            
+            applyLocale(currentLang);
+            document.getElementById('btn-zh').addEventListener('click', () => changeLang('zh'));
+            document.getElementById('btn-zht').addEventListener('click', () => changeLang('zht'));
+            document.getElementById('feedbackContent').addEventListener('input', handleFeedbackInput);
+            document.getElementById('feedbackForm').addEventListener('submit', submitWebFeedback);
+        });
+
+        function changeLang(lang) {
+            if (!LOCALES[lang] || lang === currentLang) return;
+            currentLang = lang;
+            applyLocale(lang);
+        }
+
+        function applyLocale(lang) {
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'zh-TW';
+            document.title = LOCALES[lang].page_title;
+            document.querySelector('meta[name="description"]').content = LOCALES[lang].page_description;
+            
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (LOCALES[lang] && LOCALES[lang][key]) {
+                    el.textContent = LOCALES[lang][key];
+                }
+            });
+
+            const htmlElements = document.querySelectorAll('[data-i18n-html]');
+            htmlElements.forEach(el => {
+                const key = el.getAttribute('data-i18n-html');
+                if (LOCALES[lang] && LOCALES[lang][key]) {
+                    el.innerHTML = LOCALES[lang][key];
+                }
+            });
+
+            const textareas = document.querySelectorAll('[data-i18n-placeholder]');
+            textareas.forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (LOCALES[lang] && LOCALES[lang][key]) {
+                    el.placeholder = LOCALES[lang][key];
+                }
+            });
+
+            const privacyLink = document.querySelector('[data-i18n="privacy_link"]');
+            if (privacyLink) {
+                privacyLink.href = lang === 'zh'
+                    ? 'https://xuan9.github.io/lengyan/privacy.html'
+                    : 'https://xuan9.github.io/lengyan/privacy-hant.html';
+            }
+
+            document.getElementById('btn-zh').className = lang === 'zh' ? 'active' : '';
+            document.getElementById('btn-zht').className = lang === 'zht' ? 'active' : '';
+            document.getElementById('btn-zh').setAttribute('aria-pressed', String(lang === 'zh'));
+            document.getElementById('btn-zht').setAttribute('aria-pressed', String(lang === 'zht'));
+
+            if (currentStatus) {
+                showStatus(currentStatus.key, currentStatus.type);
+            }
+
+            if (isSubmitting) {
+                document.getElementById('btnText').textContent = LOCALES[lang].sending;
+            }
+
+            updateFeedbackLimit(false);
+            checkInput();
+        }
+
+        function handleFeedbackInput() {
+            if (currentStatus) {
+                clearStatus();
+            }
+            updateFeedbackLimit(true);
+            checkInput();
+        }
+
+        function checkInput() {
+            const textarea = document.getElementById('feedbackContent');
+            const submitBtn = document.getElementById('submitBtn');
+            const text = textarea.value.trim();
+            submitBtn.disabled = isSubmitting || text.length === 0;
+        }
+
+        function feedbackLimitText(remaining, limit) {
+            const key = remaining === 0 ? 'limit_reached' : 'remaining_count';
+            return LOCALES[currentLang][key]
+                .replace('{count}', String(remaining))
+                .replace('{limit}', String(limit));
+        }
+
+        function updateFeedbackLimit(announce) {
+            const textarea = document.getElementById('feedbackContent');
+            const limitText = document.getElementById('feedbackLimit');
+            const liveRegion = document.getElementById('feedbackLimitLive');
+            const limit = textarea.maxLength;
+            const remaining = Math.max(0, limit - textarea.value.length);
+            const isNearLimit = remaining <= FEEDBACK_LIMIT_WARNING_THRESHOLD;
+            const message = feedbackLimitText(remaining, limit);
+
+            limitText.hidden = !isNearLimit;
+            limitText.textContent = isNearLimit ? message : '';
+            limitText.classList.toggle('at-limit', remaining === 0);
+
+            if (!announce || !isNearLimit) {
+                liveRegion.textContent = '';
+            } else {
+                const enteredWarningZone = previousFeedbackRemaining !== null
+                    && previousFeedbackRemaining > FEEDBACK_LIMIT_WARNING_THRESHOLD;
+                const crossedAnnouncementPoint = previousFeedbackRemaining !== null
+                    && remaining < previousFeedbackRemaining
+                    && FEEDBACK_LIMIT_ANNOUNCEMENT_POINTS.some(point =>
+                        previousFeedbackRemaining > point && remaining <= point
+                    );
+                const leftLimit = previousFeedbackRemaining === 0 && remaining > 0;
+
+                liveRegion.textContent = enteredWarningZone || crossedAnnouncementPoint || leftLimit
+                    ? message
+                    : '';
+            }
+
+            previousFeedbackRemaining = remaining;
+        }
+
+        function clearStatus() {
+            const statusDiv = document.getElementById('feedbackStatus');
+            currentStatus = null;
+            statusDiv.textContent = '';
+            statusDiv.className = 'feedback-status';
+        }
+
+        function showStatus(key, type) {
+            const statusDiv = document.getElementById('feedbackStatus');
+            currentStatus = { key, type };
+            statusDiv.textContent = LOCALES[currentLang][key];
+            statusDiv.className = `feedback-status ${type}`;
+        }
+
+        async function submitWebFeedback(event) {
+            event.preventDefault();
+            const textarea = document.getElementById('feedbackContent');
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('btnSpinner');
+            const btnText = document.getElementById('btnText');
+            const contentText = textarea.value.trim();
+
+            if (!contentText || isSubmitting) return;
+            if (contentText.length > textarea.maxLength) {
+                showStatus('too_long_msg', 'error');
+                return;
+            }
+
+            isSubmitting = true;
+            textarea.disabled = true;
+            submitBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            btnText.textContent = LOCALES[currentLang].sending;
+            clearStatus();
+            const controller = new AbortController();
+            const requestTimeout = setTimeout(() => controller.abort(), 15000);
+
+            try {
+                const response = await fetch(FEEDBACK_ENDPOINT, {
+                    method: 'POST',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    cache: 'no-store',
+                    referrerPolicy: 'no-referrer',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    signal: controller.signal,
+                    body: JSON.stringify({ content: contentText })
+                });
+
+                if (response.ok) {
+                    showStatus('success_msg', 'success');
+                    textarea.value = '';
+                    updateFeedbackLimit(false);
+                    checkInput();
+                } else if (response.status === 413) {
+                    showStatus('too_long_msg', 'error');
+                } else if (response.status === 429) {
+                    showStatus('rate_limited_msg', 'error');
+                } else {
+                    showStatus('error_msg', 'error');
+                }
+            } catch (error) {
+                showStatus('error_msg', 'error');
+            } finally {
+                clearTimeout(requestTimeout);
+                isSubmitting = false;
+                textarea.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = LOCALES[currentLang].btn_submit;
+                checkInput();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《楞严经 - 听读》App 隐私政策</title>
+    <meta name="description" content="《楞严经 - 听读》App 与支持网站隐私政策。">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+    <link rel="canonical" href="https://xuan9.github.io/lengyan/privacy.html">
+    <style>
+        :root {
+            --bg-color: #FAF8F3;
+            --primary-color: #4A5D3A;
+            --text-primary: #2C2824;
+            --text-secondary: #6A6258;
+            --gold-color: #C5A87B;
+            --card-bg: #FFFFFF;
+            --border-color: #E6DFD3;
+            --transition-curve: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at top, #FDFCF7 0%, #FAF8F3 100%);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "PingFang TC", sans-serif;
+            line-height: 1.8;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .top-gold-bar {
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold-color), #E8D5B5 50%, var(--gold-color));
+        }
+
+        .back-nav {
+            position: absolute;
+            top: 16px;
+            right: 24px;
+            z-index: 10;
+        }
+
+        .back-link {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.3s var(--transition-curve), border-color 0.3s var(--transition-curve), transform 0.3s var(--transition-curve);
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .back-link:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 3px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 45px 24px 8px;
+            text-align: center;
+        }
+
+        .logo,
+        h2 {
+            font-family: ui-serif, "Songti SC", "Songti TC", STSong, Georgia, serif;
+        }
+
+        .logo {
+            margin-bottom: 12px;
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            font-weight: 400;
+            letter-spacing: 0.15rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-family: ui-serif, "Songti SC", "Songti TC", STSong, serif;
+            font-size: 1.05rem;
+            font-weight: 300;
+            letter-spacing: 0.1rem;
+        }
+
+        .divider {
+            max-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 16px auto 24px;
+        }
+
+        .divider-line {
+            height: 1px;
+            flex: 1;
+            background: var(--border-color);
+        }
+
+        .divider-dot {
+            width: 5px;
+            height: 5px;
+            margin: 0 12px;
+            border-radius: 50%;
+            background: var(--gold-color);
+        }
+
+        main {
+            width: 100%;
+            max-width: 760px;
+            flex: 1;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .card {
+            margin-bottom: 32px;
+            padding: 40px;
+            border: 1px solid rgba(230, 223, 211, 0.7);
+            border-radius: 12px;
+            background: var(--card-bg);
+            box-shadow: 0 8px 30px rgba(74, 93, 58, 0.015);
+        }
+
+        h2 {
+            margin: 32px 0 16px;
+            padding-left: 12px;
+            border-left: 3px solid var(--gold-color);
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        h2:first-of-type {
+            margin-top: 28px;
+        }
+
+        p {
+            margin-bottom: 18px;
+            color: var(--text-primary);
+            font-size: 0.98rem;
+            text-align: justify;
+        }
+
+        .updated {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+        }
+
+        a:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 600px) {
+            .back-nav {
+                position: static;
+                align-self: stretch;
+                padding: 8px 16px 0;
+                text-align: right;
+            }
+
+            .back-link {
+                min-height: 36px;
+                padding: 4px 12px;
+                font-size: 0.8rem;
+            }
+
+            header {
+                padding: 6px 16px 4px;
+            }
+
+            .logo {
+                font-size: 1.85rem;
+                letter-spacing: 0.1rem;
+            }
+
+            .subtitle {
+                font-size: 0.98rem;
+            }
+
+            .divider {
+                margin: 12px auto 20px;
+            }
+
+            .card {
+                margin-bottom: 24px;
+                padding: 24px 20px;
+                border-radius: 10px;
+            }
+
+            h2 {
+                margin-top: 24px;
+                margin-bottom: 12px;
+                padding-left: 10px;
+                font-size: 1.15rem;
+            }
+
+            p {
+                margin-bottom: 14px;
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-gold-bar"></div>
+
+    <nav class="back-nav" aria-label="页面导航">
+        <a href="https://xuan9.github.io/lengyan/" class="back-link">返回支持页</a>
+    </nav>
+
+    <header>
+        <h1 class="logo">楞严经 - 听读</h1>
+        <div class="subtitle">隐私政策</div>
+        <div class="divider" aria-hidden="true">
+            <div class="divider-line"></div>
+            <div class="divider-dot"></div>
+            <div class="divider-line"></div>
+        </div>
+    </header>
+
+    <main>
+        <article class="card">
+            <p class="updated">更新日期：2026 年 8 月 1 日</p>
+
+            <h2>本机数据</h2>
+            <p>阅读记录、收藏和设置仅保存在设备上，开发者不会收集。App 无账户、广告、第三方分析或追踪。</p>
+
+            <h2>删除与支持</h2>
+            <p>删除 App 可移除本机数据；系统备份由 iOS 控制。支持网站仅接收您主动提交的内容和时间，用于处理问题，30 天内删除；需提前删除请通过该网站联系。</p>
+        </article>
+    </main>
+</body>
+</html>
